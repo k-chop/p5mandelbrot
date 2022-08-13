@@ -61,12 +61,12 @@ const colors: ColorMapper[] = [
   },
   (p, n) => {
     // monochrome
-    const brightness = p.map(n % 360, 0, 360, 0, 100);
+    const brightness = p.map(n % 360, 0, 360, 20, 100);
     return p.color(0, 0, brightness);
   },
   (p, n) => {
     // fire
-    const brightness = p.map(n % 360, 0, 360, 100, 0);
+    const brightness = p.map(n % 360, 0, 360, 20, 100);
     return p.color(0, 90, brightness);
   },
 ];
