@@ -45,10 +45,14 @@ const calcVars = (p: p5) => {
   };
 };
 
-const drawInfo = (p: p5, vars: ReturnType<typeof calcVars>) => {
+const drawInfo = (p: p5, vars: ReturnType<typeof calcVars>, millis: string) => {
   const { mouseX, mouseY, r, N } = vars;
   p.fill(255);
-  p.text(`X: ${mouseX}, Y: ${mouseY}, r: ${r}, N: ${N}`, 10, 25);
+  p.text(
+    `X: ${mouseX}, Y: ${mouseY}, r: ${r}, N: ${N}, time: ${millis}ms`,
+    10,
+    25
+  );
 };
 
 type ColorMapper = (p: p5, n: number) => p5.Color;
@@ -79,6 +83,7 @@ const sketch = (p: p5) => {
   let buffer: p5.Graphics;
   let lastCalc: MandelBrotParams = { x: 0, y: 0, r: 0, N: 0, R: 0 };
   let lastColorIdx = 0;
+  let lastTime = "0";
 
   p.setup = () => {
     p.createCanvas(1600, 900);
@@ -143,11 +148,13 @@ const sketch = (p: p5) => {
       currentColorIdx === lastColorIdx
     ) {
       p.image(buffer, 0, 0);
-      drawInfo(p, vars);
+      drawInfo(p, vars, lastTime);
       return;
     }
     lastCalc = { ...currentParams };
     lastColorIdx = currentColorIdx;
+
+    const before = performance.now();
 
     buffer.background(0);
 
@@ -187,7 +194,10 @@ const sketch = (p: p5) => {
     buffer.updatePixels();
 
     p.image(buffer, 0, 0);
-    drawInfo(p, vars);
+
+    const after = performance.now();
+    lastTime = (after - before).toFixed();
+    drawInfo(p, vars, lastTime);
   };
 };
 
