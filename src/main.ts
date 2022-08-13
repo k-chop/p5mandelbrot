@@ -55,22 +55,38 @@ const drawInfo = (p: p5, vars: ReturnType<typeof calcVars>, millis: string) => {
   );
 };
 
+const posterize = (
+  p: p5,
+  value: number,
+  numberOfTones: number,
+  lower: number,
+  upper: number
+) => {
+  return p.map(
+    Math.floor(value % numberOfTones),
+    0,
+    numberOfTones,
+    lower,
+    upper
+  );
+};
+
 type ColorMapper = (p: p5, n: number) => p5.Color;
 
 const colors: ColorMapper[] = [
   (p, n) => {
     // hue 0~360
-    const hue = p.map(n % 360, 0, 360, 0, 360);
-    return p.color(hue, 90, 100);
+    const hue = posterize(p, n, 64, 0, 360);
+    return p.color(hue, 75, 100);
   },
   (p, n) => {
     // monochrome
-    const brightness = p.map(n % 360, 0, 360, 20, 100);
+    const brightness = posterize(p, n, 20, 20, 100);
     return p.color(0, 0, brightness);
   },
   (p, n) => {
     // fire
-    const brightness = p.map(n % 360, 0, 360, 20, 100);
+    const brightness = posterize(p, n, 32, 30, 100);
     return p.color(0, 90, brightness);
   },
 ];
