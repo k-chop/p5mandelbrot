@@ -19,6 +19,8 @@ const currentParams: MandelBrotParams = {
   R: 2,
 };
 
+let currentColorIdx = 0;
+
 const isSameParams = (a: MandelBrotParams, b: MandelBrotParams) =>
   a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.R === b.R;
 
@@ -49,15 +51,42 @@ const drawInfo = (p: p5, vars: ReturnType<typeof calcVars>) => {
   p.text(`X: ${mouseX}, Y: ${mouseY}, r: ${r}, N: ${N}`, 10, 25);
 };
 
+type ColorMapper = (p: p5, n: number) => p5.Color;
+
+const colors: ColorMapper[] = [
+  (p, n) => {
+    // hue 0~360
+    const hue = p.map(n % 360, 0, 360, 0, 360);
+    return p.color(hue, 90, 100);
+  },
+  (p, n) => {
+    // monochrome
+    const brightness = p.map(n % 360, 0, 360, 0, 100);
+    return p.color(0, 0, brightness);
+  },
+  (p, n) => {
+    // fire
+    const brightness = p.map(n % 360, 0, 360, 100, 0);
+    return p.color(0, 90, brightness);
+  },
+];
+
+const mappedColor = (p: p5, n: number) => {
+  return colors[currentColorIdx % colors.length](p, n);
+};
+
 const sketch = (p: p5) => {
   let buffer: p5.Graphics;
   let lastCalc: MandelBrotParams = { x: 0, y: 0, r: 0, N: 0, R: 0 };
+  let lastColorIdx = 0;
 
   p.setup = () => {
     p.createCanvas(1600, 900);
     buffer = p.createGraphics(1600, 900);
     p.pixelDensity(1);
     p.frameRate(30);
+
+    p.colorMode(p.HSB, 360, 100, 100, 100);
   };
 
   p.mouseClicked = () => {
@@ -87,6 +116,11 @@ const sketch = (p: p5) => {
       let diff = 100;
 
       if (event.shiftKey) diff *= 10;
+      if (event.key === "1") currentColorIdx = 0;
+      if (event.key === "2") currentColorIdx = 1;
+      if (event.key === "3") currentColorIdx = 2;
+      if (event.key === "4") currentColorIdx = 3;
+      if (event.key === "5") currentColorIdx = 4;
       if (event.key === "0") currentParams.N = DEFAULT_N;
       if (event.key === "9") currentParams.N = DEFAULT_N * 20;
       if (event.key === "ArrowRight") currentParams.N += diff;
@@ -102,12 +136,16 @@ const sketch = (p: p5) => {
     const { xmin, ymax, dpp, N } = vars;
     const R2 = currentParams.R * currentParams.R;
 
-    if (isSameParams(lastCalc, currentParams)) {
+    if (
+      isSameParams(lastCalc, currentParams) &&
+      currentColorIdx === lastColorIdx
+    ) {
       p.image(buffer, 0, 0);
       drawInfo(p, vars);
       return;
     }
     lastCalc = { ...currentParams };
+    lastColorIdx = currentColorIdx;
 
     buffer.background(0);
 
@@ -135,13 +173,11 @@ const sketch = (p: p5) => {
         }
 
         const pixelIndex = (j + i * p.width) * 4;
-        let bright = n % 255;
-        if (n == N) {
-          bright = 0;
-        } else {
-          buffer.pixels[pixelIndex + 0] = bright;
-          buffer.pixels[pixelIndex + 1] = bright;
-          buffer.pixels[pixelIndex + 2] = bright;
+        const hsb = mappedColor(p, n);
+        if (n != N) {
+          buffer.pixels[pixelIndex + 0] = p.red(hsb);
+          buffer.pixels[pixelIndex + 1] = p.green(hsb);
+          buffer.pixels[pixelIndex + 2] = p.blue(hsb);
           buffer.pixels[pixelIndex + 3] = 255;
         }
       }
