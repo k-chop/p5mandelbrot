@@ -10,6 +10,8 @@ interface MandelBrotParams {
 }
 
 const DEFAULT_N = 500;
+const DEFAULT_WIDTH = 1600;
+const DEFAULT_HEIGHT = 900;
 
 const currentParams: MandelBrotParams = {
   x: -1.26222,
@@ -72,28 +74,63 @@ const posterize = (
   }
 };
 
-type ColorMapper = (p: p5, n: number) => p5.Color;
+const draw = (
+  p: p5,
+  buffer: p5.Graphics,
+  pixelIndex: number,
+  iterationTime: number,
+  offset?: number
+) => {
+  const hsb = mappedColor(p, iterationTime, offset);
+
+  if (iterationTime != currentParams.N) {
+    buffer.pixels[pixelIndex + 0] = p.red(hsb);
+    buffer.pixels[pixelIndex + 1] = p.green(hsb);
+    buffer.pixels[pixelIndex + 2] = p.blue(hsb);
+    buffer.pixels[pixelIndex + 3] = 255;
+  }
+};
+
+const drawAll = (
+  p: p5,
+  buffer: p5.Graphics,
+  iterationTimeBuffer: Uint32Array
+) => {
+  buffer.background(0);
+  buffer.loadPixels();
+
+  for (let i = 0; i < buffer.height; i++) {
+    for (let j = 0; j < buffer.width; j++) {
+      const n = iterationTimeBuffer[j + i * buffer.width];
+      const pixelIndex = (j + i * buffer.width) * 4;
+      draw(p, buffer, pixelIndex, n, p.frameCount);
+    }
+  }
+  buffer.updatePixels();
+};
+
+type ColorMapper = (p: p5, n: number, offset?: number) => p5.Color;
 
 const colors: ColorMapper[] = [
-  (p, n) => {
+  (p, n, offset = 0) => {
     // hue 0~360
-    const hue = posterize(p, n, 128, 0, 360);
+    const hue = posterize(p, n + offset, 256, 0, 360);
     return p.color(hue, 75, 100);
   },
-  (p, n) => {
+  (p, n, offset = 0) => {
     // monochrome
-    const brightness = posterize(p, n, 128, 20, 100);
+    const brightness = posterize(p, n + offset, 128, 20, 100);
     return p.color(0, 0, brightness);
   },
-  (p, n) => {
+  (p, n, offset = 0) => {
     // fire
-    const brightness = posterize(p, n, 128, 30, 100);
+    const brightness = posterize(p, n + offset, 128, 30, 100);
     return p.color(0, 90, brightness);
   },
 ];
 
-const mappedColor = (p: p5, n: number) => {
-  return colors[currentColorIdx % colors.length](p, n);
+const mappedColor = (p: p5, n: number, offset = 0) => {
+  return colors[currentColorIdx % colors.length](p, n, offset);
 };
 
 const sketch = (p: p5) => {
@@ -101,12 +138,14 @@ const sketch = (p: p5) => {
   let lastCalc: MandelBrotParams = { x: 0, y: 0, r: 0, N: 0, R: 0 };
   let lastColorIdx = 0;
   let lastTime = "0";
+  let iterationTimeBuffer: Uint32Array;
 
   p.setup = () => {
-    p.createCanvas(1600, 900);
-    buffer = p.createGraphics(1600, 900);
+    p.createCanvas(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    buffer = p.createGraphics(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     p.pixelDensity(1);
     p.frameRate(30);
+    iterationTimeBuffer = new Uint32Array(buffer.height * buffer.width);
 
     p.colorMode(p.HSB, 360, 100, 100, 100);
   };
@@ -209,14 +248,9 @@ const sketch = (p: p5) => {
           n++;
         }
 
-        const pixelIndex = (j + i * p.width) * 4;
-        const hsb = mappedColor(p, n);
-        if (n != N) {
-          buffer.pixels[pixelIndex + 0] = p.red(hsb);
-          buffer.pixels[pixelIndex + 1] = p.green(hsb);
-          buffer.pixels[pixelIndex + 2] = p.blue(hsb);
-          buffer.pixels[pixelIndex + 3] = 255;
-        }
+        iterationTimeBuffer[j + i * p.width] = n;
+
+        draw(p, buffer, (j + i * p.width) * 4, n);
       }
     }
     buffer.updatePixels();
