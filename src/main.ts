@@ -99,8 +99,10 @@ const sketch = (p: p5) => {
   p.mouseWheel = (event: { deltaY: number }) => {
     const { mouseX, mouseY } = calcVars(p);
 
-    currentParams.x = mouseX;
-    currentParams.y = mouseY;
+    if (p.keyIsDown(p.SHIFT)) {
+      currentParams.x = mouseX;
+      currentParams.y = mouseY;
+    }
 
     if (event) {
       if (event.deltaY > 0) {
