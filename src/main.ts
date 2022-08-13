@@ -139,7 +139,18 @@ const sketch = (p: p5) => {
     if (event) {
       let diff = 100;
 
-      if (event.shiftKey) diff *= 10;
+      if (event.shiftKey) {
+        const N = currentParams.N;
+        if (N < 1000) {
+          diff = 100;
+        } else if (N < 10000) {
+          diff = 1000;
+        } else if (N < 100000) {
+          diff = 10000;
+        } else {
+          diff = 100000;
+        }
+      }
       if (event.key === "1") currentColorIdx = 0;
       if (event.key === "2") currentColorIdx = 1;
       if (event.key === "3") currentColorIdx = 2;
