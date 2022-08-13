@@ -114,7 +114,7 @@ type ColorMapper = (p: p5, n: number, offset?: number) => p5.Color;
 const colors: ColorMapper[] = [
   (p, n, offset = 0) => {
     // hue 0~360
-    const hue = posterize(p, n + offset, 256, 0, 360);
+    const hue = posterize(p, n + offset, 128, 0, 360);
     return p.color(hue, 75, 100);
   },
   (p, n, offset = 0) => {
