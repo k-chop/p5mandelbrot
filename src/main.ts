@@ -235,16 +235,14 @@ const sketch = (p: p5) => {
         const ci = ymax - dpp * i;
 
         let n = 0;
-        while (n < N) {
-          const tr = zr * zr - zi * zi + cr;
-          const ti = zr * zi * 2 + ci;
-          zr = tr;
-          zi = ti;
+        let zr2 = 0.0;
+        let zi2 = 0.0;
+        while (zr2 + zi2 <= R2 && n < N) {
+          zi = (zr + zr) * zi + ci;
+          zr = zr2 - zi2 + cr;
+          zr2 = zr * zr;
+          zi2 = zi * zi;
 
-          const absz = zr * zr + zi * zi;
-          if (absz > R2) {
-            break;
-          }
           n++;
         }
 
