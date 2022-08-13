@@ -9,11 +9,13 @@ interface MandelBrotParams {
   R: number;
 }
 
+const DEFAULT_N = 500;
+
 const currentParams: MandelBrotParams = {
   x: -1.26222,
   y: -0.04592,
   r: 0.01,
-  N: 500,
+  N: DEFAULT_N,
   R: 2,
 };
 
@@ -80,10 +82,15 @@ const sketch = (p: p5) => {
     }
   };
 
-  p.keyPressed = (event: { keyCode: number } | undefined) => {
+  p.keyPressed = (event: KeyboardEvent | undefined) => {
     if (event) {
-      if (event.keyCode === p.RIGHT_ARROW) currentParams.N += 100;
-      if (event.keyCode === p.LEFT_ARROW) currentParams.N -= 100;
+      let diff = 100;
+
+      if (event.shiftKey) diff *= 10;
+      if (event.key === "0") currentParams.N = DEFAULT_N;
+      if (event.key === "9") currentParams.N = DEFAULT_N * 20;
+      if (event.key === "ArrowRight") currentParams.N += diff;
+      if (event.key === "ArrowLeft") currentParams.N -= diff;
     }
   };
 
@@ -113,22 +120,23 @@ const sketch = (p: p5) => {
         const cr = xmin + dpp * j;
         const ci = ymax - dpp * i;
 
-        let k = 0;
-        while (k < N) {
-          const tzr = zr * zr - zi * zi + cr;
-          zi = zr * zi * 2 + ci;
-          zr = tzr;
+        let n = 0;
+        while (n < N) {
+          const tr = zr * zr - zi * zi + cr;
+          const ti = zr * zi * 2 + ci;
+          zr = tr;
+          zi = ti;
 
           const absz = zr * zr + zi * zi;
           if (absz > R2) {
             break;
           }
-          k++;
+          n++;
         }
 
         const pixelIndex = (j + i * p.width) * 4;
-        let bright = k % 255;
-        if (k == N) {
+        let bright = n % 255;
+        if (n == N) {
           bright = 0;
         } else {
           buffer.pixels[pixelIndex + 0] = bright;
