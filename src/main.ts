@@ -10,8 +10,9 @@ interface MandelBrotParams {
 }
 
 const DEFAULT_N = 500;
-const DEFAULT_WIDTH = 1600;
+const DEFAULT_WIDTH = 900;
 const DEFAULT_HEIGHT = 900;
+const WORKER_COUNT = 8;
 
 const currentParams: MandelBrotParams = {
   x: -1.26222,
@@ -20,6 +21,12 @@ const currentParams: MandelBrotParams = {
   N: DEFAULT_N,
   R: 2,
 };
+
+const workers: Worker[] = [];
+for (let i = 0; i < WORKER_COUNT; i++) {
+  const path = new URL("./worker.ts", import.meta.url);
+  workers.push(new Worker(path, { type: "module" }));
+}
 
 let currentColorIdx = 0;
 
@@ -144,7 +151,7 @@ const sketch = (p: p5) => {
     p.createCanvas(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     buffer = p.createGraphics(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     p.pixelDensity(1);
-    p.frameRate(30);
+    p.frameRate(10);
     iterationTimeBuffer = new Uint32Array(buffer.height * buffer.width);
 
     p.colorMode(p.HSB, 360, 100, 100, 100);
@@ -207,7 +214,6 @@ const sketch = (p: p5) => {
     const col = buffer.width;
 
     const vars = calcVars(p);
-    const { xmin, ymax, dpp, N } = vars;
     const R2 = currentParams.R * currentParams.R;
 
     if (
@@ -227,37 +233,45 @@ const sketch = (p: p5) => {
 
     buffer.loadPixels();
 
-    for (let i = 0; i < row; i++) {
-      for (let j = 0; j < col; j++) {
-        let zr = 0.0;
-        let zi = 0.0;
-        const cr = xmin + dpp * j;
-        const ci = ymax - dpp * i;
+    const singleRow = Math.floor(row / workers.length);
+    let currentRowOffset = 0;
+    let completed = 0;
+    workers.forEach((worker, idx) => {
+      const isLast = idx === workers.length - 1;
+      const start = currentRowOffset;
+      let end = currentRowOffset + singleRow;
+      currentRowOffset = end;
 
-        let n = 0;
-        let zr2 = 0.0;
-        let zi2 = 0.0;
-        while (zr2 + zi2 <= R2 && n < N) {
-          zi = (zr + zr) * zi + ci;
-          zr = zr2 - zi2 + cr;
-          zr2 = zr * zr;
-          zi2 = zi * zi;
+      if (isLast) end = row;
 
-          n++;
-        }
+      const f = (ev: MessageEvent<ArrayBuffer>) => {
+        const result = new Uint8ClampedArray(ev.data);
+        const pixels = buffer.pixels as unknown as Uint8ClampedArray;
 
-        iterationTimeBuffer[j + i * p.width] = n;
+        pixels.set(result, start * col * 4);
+        completed++;
 
-        draw(p, buffer, (j + i * p.width) * 4, n);
+        worker.removeEventListener("message", f);
+      };
+
+      worker.addEventListener("message", f);
+
+      worker.postMessage({ ...vars, row, col, R2, start, end });
+    });
+
+    let id = setInterval(() => {
+      if (completed === workers.length) {
+        buffer.updatePixels();
+
+        p.image(buffer, 0, 0);
+
+        const after = performance.now();
+        lastTime = (after - before).toFixed();
+        drawInfo(p, vars, lastTime);
+
+        clearInterval(id);
       }
-    }
-    buffer.updatePixels();
-
-    p.image(buffer, 0, 0);
-
-    const after = performance.now();
-    lastTime = (after - before).toFixed();
-    drawInfo(p, vars, lastTime);
+    }, 50);
   };
 };
 
