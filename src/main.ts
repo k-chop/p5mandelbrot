@@ -12,7 +12,7 @@ interface MandelBrotParams {
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 900;
 const DEFAULT_HEIGHT = 900;
-const WORKER_COUNT = 8;
+const WORKER_COUNT = 32;
 
 const currentParams: MandelBrotParams = {
   x: -1.26222,
