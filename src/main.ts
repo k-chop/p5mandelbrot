@@ -258,10 +258,14 @@ const sketch = (p: p5) => {
 
       if (isLast) end = row;
 
-      const f = (ev: MessageEvent<ArrayBuffer>) => {
-        const result = new Uint8ClampedArray(ev.data);
+      const f = (ev: MessageEvent<[ArrayBuffer, ArrayBuffer]>) => {
+        const [pixelsBuffer, iterationsBuffer] = ev.data;
 
-        canvasArrayBuffer.set(result, start * col * 4);
+        const pixelsResult = new Uint8ClampedArray(pixelsBuffer);
+        const iterationsResult = new Uint32Array(iterationsBuffer);
+
+        iterationTimeBuffer.set(iterationsResult, start * col);
+        canvasArrayBuffer.set(pixelsResult, start * col * 4);
         completed++;
 
         if (completed === WORKER_COUNT) {

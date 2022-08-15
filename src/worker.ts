@@ -18,7 +18,8 @@ type Parameter = {
 self.addEventListener("message", (event) => {
   const { col, xmin, ymax, dpp, R2, N, start, end } = event.data as Parameter;
 
-  const array = new Uint8ClampedArray((end - start) * col * 4);
+  const iterations = new Uint32Array((end - start) * col);
+  const pixels = new Uint8ClampedArray((end - start) * col * 4);
 
   for (let i = start; i < end; i++) {
     for (let j = 0; j < col; j++) {
@@ -39,15 +40,18 @@ self.addEventListener("message", (event) => {
         n++;
       }
 
-      const pixelIndex = (j + (i - start) * col) * 4;
+      const index = j + (i - start) * col;
+      iterations[index] = n;
+
+      const indexForPixels = index * 4;
       // FIXME: add color
       const a = (n / N) * 255;
-      array[pixelIndex + 0] = a;
-      array[pixelIndex + 1] = a;
-      array[pixelIndex + 2] = a;
-      array[pixelIndex + 3] = 255;
+      pixels[indexForPixels + 0] = a;
+      pixels[indexForPixels + 1] = a;
+      pixels[indexForPixels + 2] = a;
+      pixels[indexForPixels + 3] = 255;
     }
   }
 
-  self.postMessage(array, [array.buffer]);
+  self.postMessage([pixels, iterations], [pixels.buffer, iterations.buffer]);
 });
