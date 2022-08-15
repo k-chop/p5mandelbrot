@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-declare const self: ServiceWorkerGlobalScope;
+declare const self: DedicatedWorkerGlobalScope;
 
 export {};
 
@@ -15,7 +15,7 @@ type Parameter = {
   end: number;
 };
 
-onmessage = (event) => {
+self.addEventListener("message", (event) => {
   const { col, xmin, ymax, dpp, R2, N, start, end } = event.data as Parameter;
 
   const array = new Uint8ClampedArray((end - start) * col * 4);
@@ -49,5 +49,5 @@ onmessage = (event) => {
     }
   }
 
-  postMessage(array, [array.buffer]);
-};
+  self.postMessage(array, [array.buffer]);
+});
