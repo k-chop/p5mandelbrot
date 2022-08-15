@@ -61,14 +61,23 @@ const calcVars = (p: p5) => {
   };
 };
 
-const drawInfo = (p: p5, vars: ReturnType<typeof calcVars>, millis: string) => {
+const drawInfo = (
+  p: p5,
+  vars: ReturnType<typeof calcVars>,
+  millis: string,
+  progress: string
+) => {
   const { mouseX, mouseY, r, N } = vars;
+  p.fill(0, 35);
+  p.rect(5, 5, DEFAULT_WIDTH - 10, 22);
+  p.rect(5, DEFAULT_HEIGHT - 25, DEFAULT_WIDTH - 10, 22);
   p.fill(255);
-  p.text(
-    `X: ${mouseX}, Y: ${mouseY}, r: ${r}, N: ${N}, time: ${millis}ms`,
-    10,
-    25
-  );
+  p.text(`X: ${mouseX}, Y: ${mouseY}, r: ${r}, N: ${N}`, 10, 20);
+  if (progress !== "100") {
+    p.text(`Generating... ${progress}%`, 10, DEFAULT_HEIGHT - 10);
+  } else {
+    p.text(`Done! time: ${millis}ms`, 10, DEFAULT_HEIGHT - 10);
+  }
 };
 
 const posterize = (
@@ -150,6 +159,7 @@ const sketch = (p: p5) => {
   let canvasArrayBuffer: Uint8ClampedArray;
   let running = false;
   let colorsArray: Uint8ClampedArray[];
+  let completed = 0;
 
   p.setup = () => {
     p.createCanvas(DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -158,6 +168,7 @@ const sketch = (p: p5) => {
     iterationTimeBuffer = new Uint32Array(buffer.height * buffer.width);
     canvasArrayBuffer = new Uint8ClampedArray(buffer.height * buffer.width * 4);
 
+    p.noStroke();
     p.colorMode(p.HSB, 360, 100, 100, 100);
     colorsArray = buildColors(p);
   };
@@ -229,7 +240,12 @@ const sketch = (p: p5) => {
     ) {
       p.background(0);
       p.image(buffer, 0, 0);
-      drawInfo(p, vars, lastTime);
+      drawInfo(
+        p,
+        vars,
+        lastTime,
+        ((completed * 100) / workers.length).toFixed()
+      );
       return;
     }
     lastCalc = { ...currentParams };
@@ -241,11 +257,11 @@ const sketch = (p: p5) => {
     }
 
     running = true;
+    completed = 0;
     const before = performance.now();
 
     const singleRow = Math.floor(row / workers.length);
     let currentRowOffset = 0;
-    let completed = 0;
     workers.forEach((worker, idx) => {
       const isLast = idx === workers.length - 1;
       const start = currentRowOffset;
