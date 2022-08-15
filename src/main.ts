@@ -23,10 +23,17 @@ const currentParams: MandelBrotParams = {
 };
 
 const workers: Worker[] = [];
-for (let i = 0; i < WORKER_COUNT; i++) {
-  const path = new URL("./worker.ts", import.meta.url);
-  workers.push(new Worker(path, { type: "module" }));
-}
+
+const resetWorker = () => {
+  workers.splice(0);
+
+  for (let i = 0; i < WORKER_COUNT; i++) {
+    const path = new URL("./worker.ts", import.meta.url);
+    workers.push(new Worker(path, { type: "module" }));
+  }
+};
+
+resetWorker();
 
 let currentColorIdx = 0;
 
@@ -116,6 +123,8 @@ const drawAll = (
   buffer.updatePixels();
 };
 
+const launchMandelbrotCalculatorWorkers = () => {};
+
 type ColorMapper = (p: p5, n: number, offset?: number) => p5.Color;
 
 const colors: ColorMapper[] = [
@@ -146,12 +155,12 @@ const sketch = (p: p5) => {
   let lastColorIdx = 0;
   let lastTime = "0";
   let iterationTimeBuffer: Uint32Array;
+  let running = false;
 
   p.setup = () => {
     p.createCanvas(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     buffer = p.createGraphics(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     p.pixelDensity(1);
-    p.frameRate(10);
     iterationTimeBuffer = new Uint32Array(buffer.height * buffer.width);
 
     p.colorMode(p.HSB, 360, 100, 100, 100);
@@ -220,6 +229,7 @@ const sketch = (p: p5) => {
       isSameParams(lastCalc, currentParams) &&
       currentColorIdx === lastColorIdx
     ) {
+      p.background(0);
       p.image(buffer, 0, 0);
       drawInfo(p, vars, lastTime);
       return;
@@ -227,10 +237,15 @@ const sketch = (p: p5) => {
     lastCalc = { ...currentParams };
     lastColorIdx = currentColorIdx;
 
+    if (running) {
+      workers.forEach((worker) => worker.terminate());
+      resetWorker();
+    }
+
+    running = true;
     const before = performance.now();
 
     buffer.background(0);
-
     buffer.loadPixels();
 
     const singleRow = Math.floor(row / workers.length);
@@ -250,11 +265,12 @@ const sketch = (p: p5) => {
 
         pixels.set(result, start * col * 4);
         completed++;
-
-        worker.removeEventListener("message", f);
       };
 
-      worker.addEventListener("message", f);
+      worker.addEventListener("message", f, { once: true });
+      worker.addEventListener("error", () => {
+        completed++;
+      });
 
       worker.postMessage({ ...vars, row, col, R2, start, end });
     });
@@ -263,11 +279,9 @@ const sketch = (p: p5) => {
       if (completed === workers.length) {
         buffer.updatePixels();
 
-        p.image(buffer, 0, 0);
-
+        running = false;
         const after = performance.now();
         lastTime = (after - before).toFixed();
-        drawInfo(p, vars, lastTime);
 
         clearInterval(id);
       }
