@@ -180,7 +180,9 @@ const sketch = (p: p5) => {
 
     if (event) {
       if (event.deltaY > 0) {
-        currentParams.r *= 2;
+        if (currentParams.r * 2 < 5) {
+          currentParams.r *= 2;
+        }
       } else {
         currentParams.r *= 0.5;
       }
