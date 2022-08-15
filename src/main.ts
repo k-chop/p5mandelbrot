@@ -155,6 +155,7 @@ const sketch = (p: p5) => {
   let lastColorIdx = 0;
   let lastTime = "0";
   let iterationTimeBuffer: Uint32Array;
+  let canvasArrayBuffer: Uint8ClampedArray;
   let running = false;
 
   p.setup = () => {
@@ -162,6 +163,7 @@ const sketch = (p: p5) => {
     buffer = p.createGraphics(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     p.pixelDensity(1);
     iterationTimeBuffer = new Uint32Array(buffer.height * buffer.width);
+    canvasArrayBuffer = new Uint8ClampedArray(buffer.height * buffer.width * 4);
 
     p.colorMode(p.HSB, 360, 100, 100, 100);
   };
@@ -245,9 +247,6 @@ const sketch = (p: p5) => {
     running = true;
     const before = performance.now();
 
-    buffer.background(0);
-    buffer.loadPixels();
-
     const singleRow = Math.floor(row / workers.length);
     let currentRowOffset = 0;
     let completed = 0;
@@ -261,12 +260,17 @@ const sketch = (p: p5) => {
 
       const f = (ev: MessageEvent<ArrayBuffer>) => {
         const result = new Uint8ClampedArray(ev.data);
-        const pixels = buffer.pixels as unknown as Uint8ClampedArray;
 
-        pixels.set(result, start * col * 4);
+        canvasArrayBuffer.set(result, start * col * 4);
         completed++;
 
         if (completed === WORKER_COUNT) {
+          buffer.background(0);
+          buffer.loadPixels();
+
+          const pixels = buffer.pixels as unknown as Uint8ClampedArray;
+          pixels.set(canvasArrayBuffer, 0);
+
           buffer.updatePixels();
 
           running = false;
