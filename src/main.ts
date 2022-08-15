@@ -265,6 +265,14 @@ const sketch = (p: p5) => {
 
         pixels.set(result, start * col * 4);
         completed++;
+
+        if (completed === WORKER_COUNT) {
+          buffer.updatePixels();
+
+          running = false;
+          const after = performance.now();
+          lastTime = (after - before).toFixed();
+        }
       };
 
       worker.addEventListener("message", f, { once: true });
@@ -274,18 +282,6 @@ const sketch = (p: p5) => {
 
       worker.postMessage({ ...vars, row, col, R2, start, end });
     });
-
-    let id = setInterval(() => {
-      if (completed === workers.length) {
-        buffer.updatePixels();
-
-        running = false;
-        const after = performance.now();
-        lastTime = (after - before).toFixed();
-
-        clearInterval(id);
-      }
-    }, 50);
   };
 };
 
