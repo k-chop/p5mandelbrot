@@ -99,7 +99,6 @@ const colors: ColorMapper[] = [
     f: (p, n) => {
       // hue 0~360
       const hue = posterize(p, n, 128, 0, 360);
-      console.log(hue);
       return p.color(hue, 75, 100);
     },
   },
