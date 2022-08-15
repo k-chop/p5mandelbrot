@@ -88,65 +88,58 @@ const posterize = (
   }
 };
 
-const draw = (
-  p: p5,
-  buffer: p5.Graphics,
-  pixelIndex: number,
-  iterationTime: number,
-  offset?: number
-) => {
-  const hsb = mappedColor(p, iterationTime, offset);
-
-  if (iterationTime != currentParams.N) {
-    buffer.pixels[pixelIndex + 0] = p.red(hsb);
-    buffer.pixels[pixelIndex + 1] = p.green(hsb);
-    buffer.pixels[pixelIndex + 2] = p.blue(hsb);
-    buffer.pixels[pixelIndex + 3] = 255;
-  }
+type ColorMapper = {
+  size: number;
+  f: (p: p5, n: number, offset?: number) => p5.Color;
 };
-
-const drawAll = (
-  p: p5,
-  buffer: p5.Graphics,
-  iterationTimeBuffer: Uint32Array
-) => {
-  buffer.background(0);
-  buffer.loadPixels();
-
-  for (let i = 0; i < buffer.height; i++) {
-    for (let j = 0; j < buffer.width; j++) {
-      const n = iterationTimeBuffer[j + i * buffer.width];
-      const pixelIndex = (j + i * buffer.width) * 4;
-      draw(p, buffer, pixelIndex, n, p.frameCount);
-    }
-  }
-  buffer.updatePixels();
-};
-
-const launchMandelbrotCalculatorWorkers = () => {};
-
-type ColorMapper = (p: p5, n: number, offset?: number) => p5.Color;
 
 const colors: ColorMapper[] = [
-  (p, n, offset = 0) => {
-    // hue 0~360
-    const hue = posterize(p, n + offset, 128, 0, 360);
-    return p.color(hue, 75, 100);
+  {
+    size: 256,
+    f: (p, n) => {
+      // hue 0~360
+      const hue = posterize(p, n, 128, 0, 360);
+      console.log(hue);
+      return p.color(hue, 75, 100);
+    },
   },
-  (p, n, offset = 0) => {
-    // monochrome
-    const brightness = posterize(p, n + offset, 128, 20, 100);
-    return p.color(0, 0, brightness);
+  {
+    size: 256,
+    f: (p, n) => {
+      // monochrome
+      const brightness = posterize(p, n, 128, 20, 100);
+      return p.color(0, 0, brightness);
+    },
   },
-  (p, n, offset = 0) => {
-    // fire
-    const brightness = posterize(p, n + offset, 128, 30, 100);
-    return p.color(0, 90, brightness);
+  {
+    size: 256,
+    f: (p, n) => {
+      // fire
+      const brightness = posterize(p, n, 128, 30, 100);
+      return p.color(0, 90, brightness);
+    },
   },
 ];
 
-const mappedColor = (p: p5, n: number, offset = 0) => {
-  return colors[currentColorIdx % colors.length](p, n, offset);
+const buildColors = (p: p5) => {
+  const result: Uint8ClampedArray[] = [];
+
+  colors.forEach((colorMapper) => {
+    const array = new Uint8ClampedArray(colorMapper.size * 4);
+
+    for (let i = 0; i < colorMapper.size; i++) {
+      const color = colorMapper.f(p, i);
+      const idx = i * 4;
+      array[idx + 0] = p.red(color);
+      array[idx + 1] = p.green(color);
+      array[idx + 2] = p.blue(color);
+      array[idx + 3] = 255;
+    }
+
+    result.push(array);
+  });
+
+  return result;
 };
 
 const sketch = (p: p5) => {
@@ -157,6 +150,7 @@ const sketch = (p: p5) => {
   let iterationTimeBuffer: Uint32Array;
   let canvasArrayBuffer: Uint8ClampedArray;
   let running = false;
+  let colorsArray: Uint8ClampedArray[];
 
   p.setup = () => {
     p.createCanvas(DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -166,6 +160,7 @@ const sketch = (p: p5) => {
     canvasArrayBuffer = new Uint8ClampedArray(buffer.height * buffer.width * 4);
 
     p.colorMode(p.HSB, 360, 100, 100, 100);
+    colorsArray = buildColors(p);
   };
 
   p.mouseClicked = () => {
@@ -288,7 +283,8 @@ const sketch = (p: p5) => {
         completed++;
       });
 
-      worker.postMessage({ ...vars, row, col, R2, start, end });
+      const palette = colorsArray[currentColorIdx];
+      worker.postMessage({ ...vars, row, col, R2, start, end, palette });
     });
   };
 };

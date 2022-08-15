@@ -3,7 +3,7 @@ declare const self: DedicatedWorkerGlobalScope;
 
 export {};
 
-type Parameter = {
+interface Parameter {
   row: number;
   col: number;
   xmin: number;
@@ -13,10 +13,12 @@ type Parameter = {
   N: number;
   start: number;
   end: number;
-};
+  palette: Uint8ClampedArray;
+}
 
 self.addEventListener("message", (event) => {
-  const { col, xmin, ymax, dpp, R2, N, start, end } = event.data as Parameter;
+  const { col, xmin, ymax, dpp, R2, N, start, end, palette } =
+    event.data as Parameter;
 
   const iterations = new Uint32Array((end - start) * col);
   const pixels = new Uint8ClampedArray((end - start) * col * 4);
@@ -43,13 +45,20 @@ self.addEventListener("message", (event) => {
       const index = j + (i - start) * col;
       iterations[index] = n;
 
-      const indexForPixels = index * 4;
-      // FIXME: add color
-      const a = (n / N) * 255;
-      pixels[indexForPixels + 0] = a;
-      pixels[indexForPixels + 1] = a;
-      pixels[indexForPixels + 2] = a;
-      pixels[indexForPixels + 3] = 255;
+      const pixelIndex = index * 4;
+
+      if (n !== N) {
+        const paletteIdx = (n % (palette.length / 4)) * 4;
+        pixels[pixelIndex + 0] = palette[paletteIdx + 0];
+        pixels[pixelIndex + 1] = palette[paletteIdx + 1];
+        pixels[pixelIndex + 2] = palette[paletteIdx + 2];
+        pixels[pixelIndex + 3] = palette[paletteIdx + 3];
+      } else {
+        pixels[pixelIndex + 0] = 0;
+        pixels[pixelIndex + 1] = 0;
+        pixels[pixelIndex + 2] = 0;
+        pixels[pixelIndex + 3] = 255;
+      }
     }
   }
 
