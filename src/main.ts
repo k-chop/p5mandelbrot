@@ -65,14 +65,25 @@ const drawInfo = (
   p: p5,
   vars: ReturnType<typeof calcVars>,
   millis: string,
-  progress: string
+  progress: string,
+  iterationsBuffer: Uint32Array
 ) => {
   const { mouseX, mouseY, r, N } = vars;
   p.fill(0, 35);
   p.rect(5, 5, DEFAULT_WIDTH - 10, 22);
   p.rect(5, DEFAULT_HEIGHT - 25, DEFAULT_WIDTH - 10, 22);
   p.fill(255);
-  p.text(`X: ${mouseX}, Y: ${mouseY}, r: ${r}, N: ${N}`, 10, 20);
+
+  const pixelIdx = p.mouseX + p.mouseY * p.width;
+  console.log(pixelIdx);
+
+  const iteration = iterationsBuffer[Math.floor(pixelIdx)];
+  p.text(
+    `X: ${mouseX}, Y: ${mouseY}, r: ${r}, N: ${N}, iteration: ${iteration}`,
+    10,
+    20
+  );
+
   if (progress !== "100") {
     p.text(`Generating... ${progress}%`, 10, DEFAULT_HEIGHT - 10);
   } else {
@@ -244,7 +255,8 @@ const sketch = (p: p5) => {
         p,
         vars,
         lastTime,
-        ((completed * 100) / workers.length).toFixed()
+        ((completed * 100) / workers.length).toFixed(),
+        iterationTimeBuffer
       );
       return;
     }
