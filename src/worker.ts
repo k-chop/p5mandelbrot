@@ -60,7 +60,14 @@ self.addEventListener("message", (event) => {
         pixels[pixelIndex + 3] = 255;
       }
     }
+    self.postMessage({
+      type: "progress",
+      progress: (i - start) / (end - start),
+    });
   }
 
-  self.postMessage([pixels, iterations], [pixels.buffer, iterations.buffer]);
+  self.postMessage({ type: "result", pixels, iterations }, [
+    pixels.buffer,
+    iterations.buffer,
+  ]);
 });

@@ -1,6 +1,17 @@
 import "./style.css";
 import p5 from "p5";
 
+interface WorkerResult {
+  type: "result";
+  pixels: ArrayBuffer;
+  iterations: ArrayBuffer;
+}
+
+interface WorkerProgress {
+  type: "progress";
+  progress: number;
+}
+
 interface MandelBrotParams {
   x: number;
   y: number;
@@ -171,6 +182,7 @@ const sketch = (p: p5) => {
   let running = false;
   let colorsArray: Uint8ClampedArray[];
   let completed = 0;
+  const progresses = Array.from({ length: workers.length }, () => 0);
 
   p.setup = () => {
     p.createCanvas(DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -255,7 +267,7 @@ const sketch = (p: p5) => {
         p,
         vars,
         lastTime,
-        ((completed * 100) / workers.length).toFixed(),
+        ((progresses.reduce((p, c) => p + c) * 100) / workers.length).toFixed(),
         iterationTimeBuffer
       );
       return;
@@ -270,6 +282,7 @@ const sketch = (p: p5) => {
 
     running = true;
     completed = 0;
+    progresses.fill(0);
     const before = performance.now();
 
     const singleRow = Math.floor(row / workers.length);
@@ -282,32 +295,41 @@ const sketch = (p: p5) => {
 
       if (isLast) end = row;
 
-      const f = (ev: MessageEvent<[ArrayBuffer, ArrayBuffer]>) => {
-        const [pixelsBuffer, iterationsBuffer] = ev.data;
+      const f = (ev: MessageEvent<WorkerResult | WorkerProgress>) => {
+        const data = ev.data;
+        if (data.type == "result") {
+          const { pixels, iterations } = data;
 
-        const pixelsResult = new Uint8ClampedArray(pixelsBuffer);
-        const iterationsResult = new Uint32Array(iterationsBuffer);
+          const pixelsResult = new Uint8ClampedArray(pixels);
+          const iterationsResult = new Uint32Array(iterations);
 
-        iterationTimeBuffer.set(iterationsResult, start * col);
-        canvasArrayBuffer.set(pixelsResult, start * col * 4);
-        completed++;
+          iterationTimeBuffer.set(iterationsResult, start * col);
+          canvasArrayBuffer.set(pixelsResult, start * col * 4);
+          progresses[idx] = 1.0;
+          completed++;
 
-        if (completed === WORKER_COUNT) {
-          buffer.background(0);
-          buffer.loadPixels();
+          if (completed === WORKER_COUNT) {
+            buffer.background(0);
+            buffer.loadPixels();
 
-          const pixels = buffer.pixels as unknown as Uint8ClampedArray;
-          pixels.set(canvasArrayBuffer, 0);
+            const pixels = buffer.pixels as unknown as Uint8ClampedArray;
+            pixels.set(canvasArrayBuffer, 0);
 
-          buffer.updatePixels();
+            buffer.updatePixels();
 
-          running = false;
-          const after = performance.now();
-          lastTime = (after - before).toFixed();
+            running = false;
+            const after = performance.now();
+            lastTime = (after - before).toFixed();
+          }
+
+          worker.removeEventListener("message", f);
+        } else {
+          const { progress } = data;
+          progresses[idx] = progress;
         }
       };
 
-      worker.addEventListener("message", f, { once: true });
+      worker.addEventListener("message", f);
       worker.addEventListener("error", () => {
         completed++;
       });
