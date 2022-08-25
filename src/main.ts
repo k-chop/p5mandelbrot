@@ -1,5 +1,6 @@
 import "./style.css";
 import p5 from "p5";
+import { BigNumber } from "bignumber.js";
 
 interface WorkerResult {
   type: "result";
@@ -13,9 +14,9 @@ interface WorkerProgress {
 }
 
 interface MandelBrotParams {
-  x: number;
-  y: number;
-  r: number;
+  x: BigNumber;
+  y: BigNumber;
+  r: BigNumber;
   N: number;
   R: number;
 }
@@ -26,10 +27,10 @@ const DEFAULT_HEIGHT = 900;
 const WORKER_COUNT = 32;
 
 const currentParams: MandelBrotParams = {
-  x: -1.26222,
-  y: -0.04592,
-  r: 0.01,
-  N: DEFAULT_N,
+  x: new BigNumber("-1.26218651425400902904981861591339111328125"),
+  y: new BigNumber("-0.04588463776626568303518138408660888671875"),
+  r: new BigNumber("1.818989403545856475830078125e-14"),
+  N: 1300,
   R: 2,
 };
 
@@ -52,12 +53,13 @@ const isSameParams = (a: MandelBrotParams, b: MandelBrotParams) =>
   a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.R === b.R;
 
 const calcVars = (p: p5) => {
-  const xmin =
-    currentParams.x - currentParams.r * ((p.width - 1) / (p.height - 1));
-  const ymax = currentParams.y + currentParams.r;
-  const dpp = (2 * currentParams.r) / (p.height - 1);
-  const mouseX = xmin + dpp * p.mouseX;
-  const mouseY = ymax - dpp * p.mouseY;
+  const xmin = currentParams.x.minus(
+    currentParams.r.times((p.width - 1) / (p.height - 1))
+  );
+  const ymax = currentParams.y.plus(currentParams.r);
+  const dpp = currentParams.r.times(2).div(p.height - 1);
+  const mouseX = xmin.plus(dpp.times(p.mouseX));
+  const mouseY = ymax.minus(dpp.times(p.mouseY));
   const r = currentParams.r;
   const N = currentParams.N;
 
@@ -89,7 +91,9 @@ const drawInfo = (
 
   const iteration = iterationsBuffer[Math.floor(pixelIdx)];
   p.text(
-    `X: ${mouseX}, Y: ${mouseY}, r: ${r}, N: ${N}, iteration: ${iteration}`,
+    `X: ${mouseX.toPrecision(10)}, Y: ${mouseY.toPrecision(
+      10
+    )}, r: ${r.toPrecision(10)}, N: ${N}, iteration: ${iteration}`,
     10,
     20
   );
@@ -173,7 +177,13 @@ const buildColors = (p: p5) => {
 
 const sketch = (p: p5) => {
   let buffer: p5.Graphics;
-  let lastCalc: MandelBrotParams = { x: 0, y: 0, r: 0, N: 0, R: 0 };
+  let lastCalc: MandelBrotParams = {
+    x: new BigNumber(0),
+    y: new BigNumber(0),
+    r: new BigNumber(0),
+    N: 0,
+    R: 0,
+  };
   let lastColorIdx = 0;
   let lastTime = "0";
   let iterationTimeBuffer: Uint32Array;
@@ -212,11 +222,11 @@ const sketch = (p: p5) => {
 
     if (event) {
       if (event.deltaY > 0) {
-        if (currentParams.r * 2 < 5) {
-          currentParams.r *= 2;
+        if (currentParams.r.times(2).lt(5)) {
+          currentParams.r = currentParams.r.times(2);
         }
       } else {
-        currentParams.r *= 0.5;
+        currentParams.r = currentParams.r.times(0.5);
       }
     }
   };
@@ -244,6 +254,28 @@ const sketch = (p: p5) => {
       if (event.key === "5") currentColorIdx = 4;
       if (event.key === "0") currentParams.N = DEFAULT_N;
       if (event.key === "9") currentParams.N = DEFAULT_N * 20;
+      if (event.key === "o") {
+        const { x, y, r } = currentParams;
+        const str = JSON.stringify({
+          x: x.toString(),
+          y: y.toString(),
+          r: r.toString(),
+        });
+        navigator.clipboard.writeText(str);
+      }
+      if (event.key === "i") {
+        navigator.clipboard
+          .readText()
+          .then((s) => {
+            const p = JSON.parse(s);
+            if (p.x) currentParams.x = new BigNumber(p.x);
+            if (p.y) currentParams.y = new BigNumber(p.y);
+            if (p.r) currentParams.r = new BigNumber(p.r);
+          })
+          .catch(() => {
+            console.log("Clipboard import failed.");
+          });
+      }
       if (event.key === "ArrowRight") currentParams.N += diff;
       if (event.key === "ArrowLeft") currentParams.N -= diff;
     }
@@ -334,7 +366,13 @@ const sketch = (p: p5) => {
       });
 
       const palette = colorsArray[currentColorIdx];
-      worker.postMessage({ ...vars, row, col, R2, start, end, palette });
+      const numberVars = {
+        xmin: vars.xmin.toNumber(),
+        ymax: vars.ymax.toNumber(),
+        dpp: vars.dpp.toNumber(),
+        N: vars.N,
+      };
+      worker.postMessage({ ...numberVars, row, col, R2, start, end, palette });
     });
   };
 };
