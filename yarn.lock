@@ -17,6 +17,11 @@ bignumber.js@^9.1.0:
   resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-9.1.0.tgz#8d340146107fe3a6cb8d40699643c302e8773b62"
   integrity sha512-4LwHK4nfDOraBCtst+wOWIHbu1vhvAPJK8g8nROd4iuc3PSEjWif/qwbkh8jwCJz6yDBvtU4KPynETgrfh7y3A==
 
+double.js@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/double.js/-/double.js-1.1.0.tgz#c4e2fb2fb00a2ee676176b06ec12b535c2de7b30"
+  integrity sha512-Ji5j8HuAJNOHYddMvW+Y7RrGRdQwIZuWBDh7MkE9EKi43gR6l6nYvlUThNpvCxBHJnBZkGFx293N9rsYqXX/Cw==
+
 esbuild-android-64@0.14.54:
   version "0.14.54"
   resolved "https://registry.yarnpkg.com/esbuild-android-64/-/esbuild-android-64-0.14.54.tgz#505f41832884313bbaffb27704b8bcaa2d8616be"

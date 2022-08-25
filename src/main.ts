@@ -24,7 +24,7 @@ interface MandelBrotParams {
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 900;
 const DEFAULT_HEIGHT = 900;
-const WORKER_COUNT = 32;
+const WORKER_COUNT = 64;
 
 const currentParams: MandelBrotParams = {
   x: new BigNumber("-1.40867236936669836954369923114776611328125"),
@@ -40,7 +40,7 @@ const resetWorker = () => {
   workers.splice(0);
 
   for (let i = 0; i < WORKER_COUNT; i++) {
-    const path = new URL("./worker.ts", import.meta.url);
+    const path = new URL("./doublejs-worker.ts", import.meta.url);
     workers.push(new Worker(path, { type: "module" }));
   }
 };
