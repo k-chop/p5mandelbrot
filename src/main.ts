@@ -86,7 +86,6 @@ const drawInfo = (
   p.fill(255);
 
   const pixelIdx = p.mouseX + p.mouseY * p.width;
-  console.log(pixelIdx);
 
   const iteration = iterationsBuffer[Math.floor(pixelIdx)];
   p.text(
