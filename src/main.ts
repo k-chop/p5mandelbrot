@@ -30,7 +30,7 @@ const currentParams: MandelBrotParams = {
   x: new BigNumber("-1.26218651425400902904981861591339111328125"),
   y: new BigNumber("-0.04588463776626568303518138408660888671875"),
   r: new BigNumber("1.818989403545856475830078125e-14"),
-  N: 1300,
+  N: 100,
   R: 2,
 };
 
@@ -40,7 +40,7 @@ const resetWorker = () => {
   workers.splice(0);
 
   for (let i = 0; i < WORKER_COUNT; i++) {
-    const path = new URL("./worker.ts", import.meta.url);
+    const path = new URL("./bignumber-worker.ts", import.meta.url);
     workers.push(new Worker(path, { type: "module" }));
   }
 };
@@ -357,6 +357,7 @@ const sketch = (p: p5) => {
         } else {
           const { progress } = data;
           progresses[idx] = progress;
+          console.log(`worker[${idx}]: ${(progress * 100).toFixed(1)}`);
         }
       };
 
@@ -367,9 +368,9 @@ const sketch = (p: p5) => {
 
       const palette = colorsArray[currentColorIdx];
       const numberVars = {
-        xmin: vars.xmin.toNumber(),
-        ymax: vars.ymax.toNumber(),
-        dpp: vars.dpp.toNumber(),
+        xmin: vars.xmin.toString(),
+        ymax: vars.ymax.toString(),
+        dpp: vars.dpp.toString(),
         N: vars.N,
       };
       worker.postMessage({ ...numberVars, row, col, R2, start, end, palette });
