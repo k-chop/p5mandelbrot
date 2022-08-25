@@ -27,10 +27,10 @@ const DEFAULT_HEIGHT = 900;
 const WORKER_COUNT = 32;
 
 const currentParams: MandelBrotParams = {
-  x: new BigNumber("-1.26218651425400902904981861591339111328125"),
-  y: new BigNumber("-0.04588463776626568303518138408660888671875"),
-  r: new BigNumber("1.818989403545856475830078125e-14"),
-  N: 100,
+  x: new BigNumber("-1.40867236936669836954369923114776611328125"),
+  y: new BigNumber("0.13573367440664611574869923114776611328125"),
+  r: new BigNumber("0.00000363797880709171295166015625"),
+  N: DEFAULT_N,
   R: 2,
 };
 
@@ -40,7 +40,7 @@ const resetWorker = () => {
   workers.splice(0);
 
   for (let i = 0; i < WORKER_COUNT; i++) {
-    const path = new URL("./bignumber-worker.ts", import.meta.url);
+    const path = new URL("./worker.ts", import.meta.url);
     workers.push(new Worker(path, { type: "module" }));
   }
 };
@@ -368,9 +368,9 @@ const sketch = (p: p5) => {
 
       const palette = colorsArray[currentColorIdx];
       const numberVars = {
-        xmin: vars.xmin.toString(),
-        ymax: vars.ymax.toString(),
-        dpp: vars.dpp.toString(),
+        xmin: vars.xmin.toNumber(),
+        ymax: vars.ymax.toNumber(),
+        dpp: vars.dpp.toNumber(),
         N: vars.N,
       };
       worker.postMessage({ ...numberVars, row, col, R2, start, end, palette });
