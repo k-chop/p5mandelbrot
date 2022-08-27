@@ -53,20 +53,17 @@ const isSameParams = (a: MandelBrotParams, b: MandelBrotParams) =>
   a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.R === b.R;
 
 const calcVars = (p: p5) => {
-  const xmin = currentParams.x.minus(
-    currentParams.r.times((p.width - 1) / (p.height - 1))
+  const normalizedMouseX = new BigNumber(2 * p.mouseX).div(p.width).minus(1);
+  const normalizedMouseY = new BigNumber(2 * p.mouseY).div(p.height).minus(1);
+  const mouseX = currentParams.x.plus(normalizedMouseX.times(currentParams.r));
+  const mouseY = currentParams.y.plus(
+    normalizedMouseY.times(currentParams.r).negated()
   );
-  const ymax = currentParams.y.plus(currentParams.r);
-  const dpp = currentParams.r.times(2).div(p.height - 1);
-  const mouseX = xmin.plus(dpp.times(p.mouseX));
-  const mouseY = ymax.minus(dpp.times(p.mouseY));
+
   const r = currentParams.r;
   const N = currentParams.N;
 
   return {
-    xmin,
-    ymax,
-    dpp,
     mouseX,
     mouseY,
     r,
@@ -83,7 +80,7 @@ const drawInfo = (
 ) => {
   const { mouseX, mouseY, r, N } = vars;
   p.fill(0, 35);
-  p.rect(5, 5, DEFAULT_WIDTH - 10, 22);
+  p.rect(5, 5, DEFAULT_WIDTH - 10, 80);
   p.rect(5, DEFAULT_HEIGHT - 25, DEFAULT_WIDTH - 10, 22);
   p.fill(255);
 
@@ -91,9 +88,11 @@ const drawInfo = (
 
   const iteration = iterationsBuffer[Math.floor(pixelIdx)];
   p.text(
-    `X: ${mouseX.toPrecision(10)}, Y: ${mouseY.toPrecision(
+    `centerX: ${currentParams.x}\nmouseX: ${mouseX}\ncenterY: ${
+      currentParams.y
+    }\nmouseY: ${mouseY}\nr: ${r.toPrecision(
       10
-    )}, r: ${r.toPrecision(10)}, N: ${N}, iteration: ${iteration}`,
+    )}, N: ${N}, iteration: ${iteration}`,
     10,
     20
   );
@@ -368,9 +367,9 @@ const sketch = (p: p5) => {
 
       const palette = colorsArray[currentColorIdx];
       const numberVars = {
-        xmin: vars.xmin.toNumber(),
-        ymax: vars.ymax.toNumber(),
-        dpp: vars.dpp.toNumber(),
+        cx: currentParams.x.toString(),
+        cy: currentParams.y.toString(),
+        r: currentParams.r.toString(),
         N: vars.N,
       };
       worker.postMessage({ ...numberVars, row, col, R2, start, end, palette });

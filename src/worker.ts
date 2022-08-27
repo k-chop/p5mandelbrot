@@ -6,9 +6,9 @@ export {};
 interface Parameter {
   row: number;
   col: number;
-  xmin: number;
-  ymax: number;
-  dpp: number;
+  cx: string;
+  cy: string;
+  r: string;
   R2: number;
   N: number;
   start: number;
@@ -17,18 +17,32 @@ interface Parameter {
 }
 
 self.addEventListener("message", (event) => {
-  const { col, xmin, ymax, dpp, R2, N, start, end, palette } =
-    event.data as Parameter;
+  const {
+    row,
+    col,
+    cx: cxStr,
+    cy: cyStr,
+    r: rStr,
+    R2,
+    N,
+    start,
+    end,
+    palette,
+  } = event.data as Parameter;
 
   const iterations = new Uint32Array((end - start) * col);
   const pixels = new Uint8ClampedArray((end - start) * col * 4);
 
-  for (let i = start; i < end; i++) {
-    for (let j = 0; j < col; j++) {
+  const cx = parseFloat(cxStr);
+  const cy = parseFloat(cyStr);
+  const r = parseFloat(rStr);
+
+  for (let y = start; y < end; y++) {
+    for (let x = 0; x < col; x++) {
       let zr = 0.0;
       let zi = 0.0;
-      const cr = xmin + dpp * j;
-      const ci = ymax - dpp * i;
+      const cr = cx + ((x * 2) / col - 1.0) * r;
+      const ci = cy - ((y * 2) / row - 1.0) * r;
 
       let n = 0;
       let zr2 = 0.0;
@@ -42,7 +56,7 @@ self.addEventListener("message", (event) => {
         n++;
       }
 
-      const index = j + (i - start) * col;
+      const index = x + (y - start) * col;
       iterations[index] = n;
 
       const pixelIndex = index * 4;
@@ -62,7 +76,7 @@ self.addEventListener("message", (event) => {
     }
     self.postMessage({
       type: "progress",
-      progress: (i - start) / (end - start),
+      progress: (y - start) / (end - start),
     });
   }
 

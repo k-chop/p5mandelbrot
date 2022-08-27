@@ -6,9 +6,9 @@ import { Double } from "double.js";
 interface Parameter {
   row: number;
   col: number;
-  xmin: string;
-  ymax: string;
-  dpp: string;
+  cx: string;
+  cy: string;
+  r: string;
   R2: number;
   N: number;
   start: number;
@@ -18,10 +18,11 @@ interface Parameter {
 
 self.addEventListener("message", (event) => {
   const {
+    row,
     col,
-    xmin: xminStr,
-    ymax: ymaxStr,
-    dpp: dppStr,
+    cx: cxStr,
+    cy: cyStr,
+    r: rStr,
     R2: R2Number,
     N,
     start,
@@ -32,17 +33,17 @@ self.addEventListener("message", (event) => {
   const iterations = new Uint32Array((end - start) * col);
   const pixels = new Uint8ClampedArray((end - start) * col * 4);
 
-  const xmin = new Double(xminStr);
-  const ymax = new Double(ymaxStr);
-  const dpp = new Double(dppStr);
+  const cx = new Double(cxStr);
+  const cy = new Double(cyStr);
+  const r = new Double(rStr);
   const R2 = new Double(R2Number);
 
-  for (let i = start; i < end; i++) {
-    for (let j = 0; j < col; j++) {
+  for (let y = start; y < end; y++) {
+    for (let x = 0; x < col; x++) {
       let zr = new Double(0.0);
       let zi = new Double(0.0);
-      const cr = xmin.add(dpp.mul(j));
-      const ci = ymax.sub(dpp.mul(i));
+      const cr = cx.add(new Double(x).mul(2).div(col).sub(1).mul(r));
+      const ci = cy.sub(new Double(y).mul(2).div(row).sub(1).mul(r));
 
       let n = 0;
       let zr2 = new Double(0.0);
@@ -56,7 +57,7 @@ self.addEventListener("message", (event) => {
         n++;
       }
 
-      const index = j + (i - start) * col;
+      const index = x + (y - start) * col;
       iterations[index] = n;
 
       const pixelIndex = index * 4;
@@ -76,7 +77,7 @@ self.addEventListener("message", (event) => {
     }
     self.postMessage({
       type: "progress",
-      progress: (i - start) / (end - start),
+      progress: (y - start) / (end - start),
     });
   }
 
