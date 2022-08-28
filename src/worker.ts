@@ -1,20 +1,7 @@
 /// <reference lib="webworker" />
 declare const self: DedicatedWorkerGlobalScope;
 
-export {};
-
-interface Parameter {
-  row: number;
-  col: number;
-  cx: string;
-  cy: string;
-  r: string;
-  R2: number;
-  N: number;
-  start: number;
-  end: number;
-  palette: Uint8ClampedArray;
-}
+import { WorkerParams } from "./main";
 
 self.addEventListener("message", (event) => {
   const {
@@ -28,7 +15,7 @@ self.addEventListener("message", (event) => {
     start,
     end,
     palette,
-  } = event.data as Parameter;
+  } = event.data as WorkerParams;
 
   const iterations = new Uint32Array((end - start) * col);
   const pixels = new Uint8ClampedArray((end - start) * col * 4);

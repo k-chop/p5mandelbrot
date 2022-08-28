@@ -21,6 +21,19 @@ interface MandelBrotParams {
   R: number;
 }
 
+export interface WorkerParams {
+  row: number;
+  col: number;
+  cx: string;
+  cy: string;
+  r: string;
+  R2: number;
+  N: number;
+  start: number;
+  end: number;
+  palette: Uint8ClampedArray;
+}
+
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 900;
 const DEFAULT_HEIGHT = 900;
@@ -35,17 +48,30 @@ const currentParams: MandelBrotParams = {
 };
 
 const workers: Worker[] = [];
+type WorkerType = "normal" | "doublejs";
+const workerPaths: Record<WorkerType, URL> = {
+  normal: new URL("./worker.ts", import.meta.url),
+  doublejs: new URL("./doublejs-worker.ts", import.meta.url),
+};
+const estimateWorkerType = (): WorkerType => {
+  if (currentParams.r.lt(new BigNumber("1.0e-14"))) {
+    return "doublejs";
+  }
+  return "normal";
+};
+let currentWorkerType: WorkerType = estimateWorkerType();
 
-const resetWorker = () => {
+const resetWorker = (type: WorkerType) => {
+  workers.forEach((worker) => worker.terminate());
   workers.splice(0);
 
   for (let i = 0; i < WORKER_COUNT; i++) {
-    const path = new URL("./doublejs-worker.ts", import.meta.url);
+    const path = workerPaths[type];
     workers.push(new Worker(path, { type: "module" }));
   }
 };
 
-resetWorker();
+resetWorker(currentWorkerType);
 
 let currentColorIdx = 0;
 
@@ -90,7 +116,7 @@ const drawInfo = (
       currentParams.y
     }\nmouseY: ${mouseY}\nr: ${r.toPrecision(
       10
-    )}, N: ${N}, iteration: ${iteration}`,
+    )}, N: ${N}, iteration: ${iteration}, mode: ${currentWorkerType}`,
     10,
     20
   );
@@ -181,6 +207,7 @@ const sketch = (p: p5) => {
     N: 0,
     R: 0,
   };
+  let shouldRedraw = false;
   let lastColorIdx = 0;
   let lastTime = "0";
   let iterationTimeBuffer: Uint32Array;
@@ -251,6 +278,12 @@ const sketch = (p: p5) => {
       if (event.key === "5") currentColorIdx = 4;
       if (event.key === "0") currentParams.N = DEFAULT_N;
       if (event.key === "9") currentParams.N = DEFAULT_N * 20;
+      if (event.key === "m") {
+        currentWorkerType =
+          currentWorkerType === "normal" ? "doublejs" : "normal";
+        resetWorker(currentWorkerType);
+        shouldRedraw = true;
+      }
       if (event.key === "o") {
         const { x, y, r } = currentParams;
         const str = JSON.stringify({
@@ -286,6 +319,7 @@ const sketch = (p: p5) => {
     const R2 = currentParams.R * currentParams.R;
 
     if (
+      !shouldRedraw &&
       isSameParams(lastCalc, currentParams) &&
       currentColorIdx === lastColorIdx
     ) {
@@ -305,9 +339,10 @@ const sketch = (p: p5) => {
 
     if (running) {
       workers.forEach((worker) => worker.terminate());
-      resetWorker();
+      resetWorker(currentWorkerType);
     }
 
+    shouldRedraw = false;
     running = true;
     completed = 0;
     progresses.fill(0);
