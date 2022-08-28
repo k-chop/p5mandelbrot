@@ -56,9 +56,7 @@ const calcVars = (p: p5) => {
   const normalizedMouseX = new BigNumber(2 * p.mouseX).div(p.width).minus(1);
   const normalizedMouseY = new BigNumber(2 * p.mouseY).div(p.height).minus(1);
   const mouseX = currentParams.x.plus(normalizedMouseX.times(currentParams.r));
-  const mouseY = currentParams.y.plus(
-    normalizedMouseY.times(currentParams.r).negated()
-  );
+  const mouseY = currentParams.y.minus(normalizedMouseY.times(currentParams.r));
 
   const r = currentParams.r;
   const N = currentParams.N;
