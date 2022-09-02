@@ -113,7 +113,7 @@ const drawInfo = (
   const iteration = iterationsBuffer[Math.floor(pixelIdx)];
 
   const ifInside = (val: { toString: () => String }) => {
-    return isInside(p) ? val.toString() : "-";
+    return isInside(p) ? val?.toString() : "-";
   };
 
   p.text(
