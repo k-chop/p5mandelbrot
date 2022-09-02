@@ -2,6 +2,7 @@
 declare const self: DedicatedWorkerGlobalScope;
 
 import { Double } from "double.js";
+import { fillColor } from "./color";
 import { WorkerParams } from "./main";
 
 self.addEventListener("message", (event) => {
@@ -48,20 +49,7 @@ self.addEventListener("message", (event) => {
       const index = x + (y - start) * col;
       iterations[index] = n;
 
-      const pixelIndex = index * 4;
-
-      if (n !== N) {
-        const paletteIdx = (n % (palette.length / 4)) * 4;
-        pixels[pixelIndex + 0] = palette[paletteIdx + 0];
-        pixels[pixelIndex + 1] = palette[paletteIdx + 1];
-        pixels[pixelIndex + 2] = palette[paletteIdx + 2];
-        pixels[pixelIndex + 3] = palette[paletteIdx + 3];
-      } else {
-        pixels[pixelIndex + 0] = 0;
-        pixels[pixelIndex + 1] = 0;
-        pixels[pixelIndex + 2] = 0;
-        pixels[pixelIndex + 3] = 255;
-      }
+      fillColor(index, pixels, palette, n, N);
     }
     self.postMessage({
       type: "progress",
