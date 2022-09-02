@@ -1,7 +1,7 @@
 import "./style.css";
 import p5 from "p5";
 import { BigNumber } from "bignumber.js";
-import { buildColors } from "./color";
+import { buildColors, recolor } from "./color";
 
 interface WorkerResult {
   type: "result";
@@ -258,11 +258,18 @@ const sketch = (p: p5) => {
     const vars = calcVars(p);
     const R2 = currentParams.R * currentParams.R;
 
-    if (
-      !shouldRedraw &&
-      isSameParams(lastCalc, currentParams) &&
-      currentColorIdx === lastColorIdx
-    ) {
+    if (!shouldRedraw && isSameParams(lastCalc, currentParams)) {
+      if (lastColorIdx !== currentColorIdx) {
+        lastColorIdx = currentColorIdx;
+        recolor(
+          p,
+          buffer,
+          currentParams.N,
+          iterationTimeBuffer,
+          colorsArray[currentColorIdx]
+        );
+      }
+
       p.background(0);
       p.image(buffer, 0, 0);
       drawInfo(
@@ -275,7 +282,6 @@ const sketch = (p: p5) => {
       return;
     }
     lastCalc = { ...currentParams };
-    lastColorIdx = currentColorIdx;
 
     if (running) {
       workers.forEach((worker) => worker.terminate());

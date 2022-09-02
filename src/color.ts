@@ -69,3 +69,37 @@ export const buildColors = (p: p5) => {
 
   return result;
 };
+
+export const recolor = (
+  p: p5,
+  buffer: p5.Graphics,
+  maxIteration: number,
+  iterationsResult: Uint32Array,
+  palette: Uint8ClampedArray
+) => {
+  buffer.background(0);
+  buffer.loadPixels();
+
+  for (let y = 0; y < p.height; y++) {
+    for (let x = 0; x < p.width; x++) {
+      const index = x + y * p.width;
+      const n = iterationsResult[index];
+      const pixelIndex = index * 4;
+
+      if (n !== maxIteration) {
+        const paletteIdx = (n % (palette.length / 4)) * 4;
+        buffer.pixels[pixelIndex + 0] = palette[paletteIdx + 0];
+        buffer.pixels[pixelIndex + 1] = palette[paletteIdx + 1];
+        buffer.pixels[pixelIndex + 2] = palette[paletteIdx + 2];
+        buffer.pixels[pixelIndex + 3] = palette[paletteIdx + 3];
+      } else {
+        buffer.pixels[pixelIndex + 0] = 0;
+        buffer.pixels[pixelIndex + 1] = 0;
+        buffer.pixels[pixelIndex + 2] = 0;
+        buffer.pixels[pixelIndex + 3] = 255;
+      }
+    }
+  }
+
+  buffer.updatePixels();
+};
