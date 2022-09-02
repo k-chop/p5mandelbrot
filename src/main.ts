@@ -110,14 +110,18 @@ const drawInfo = (
   p.fill(255);
 
   const pixelIdx = p.mouseX + p.mouseY * p.width;
-
   const iteration = iterationsBuffer[Math.floor(pixelIdx)];
+
+  const ifInside = (val: { toString: () => String }) => {
+    return isInside(p) ? val.toString() : "-";
+  };
+
   p.text(
-    `centerX: ${currentParams.x}\nmouseX: ${mouseX}\ncenterY: ${
+    `centerX: ${currentParams.x}\nmouseX: ${ifInside(mouseX)}\ncenterY: ${
       currentParams.y
-    }\nmouseY: ${mouseY}\nr: ${r.toPrecision(
+    }\nmouseY: ${ifInside(mouseY)}\nr: ${r.toPrecision(
       10
-    )}, N: ${N}, iteration: ${iteration}, mode: ${currentWorkerType}`,
+    )}, N: ${N}, iteration: ${ifInside(iteration)}, mode: ${currentWorkerType}`,
     10,
     20
   );
