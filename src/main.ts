@@ -129,6 +129,9 @@ const drawInfo = (
   }
 };
 
+const isInside = (p: p5) =>
+  0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
+
 const sketch = (p: p5) => {
   let buffer: p5.Graphics;
   let lastCalc: MandelBrotParams = {
@@ -161,6 +164,7 @@ const sketch = (p: p5) => {
   };
 
   p.mouseClicked = () => {
+    if (!isInside(p)) return;
     const { mouseX, mouseY } = calcVars(p);
 
     currentParams.x = mouseX;
@@ -168,6 +172,7 @@ const sketch = (p: p5) => {
   };
 
   p.mouseWheel = (event: { deltaY: number }) => {
+    if (!isInside(p)) return;
     const { mouseX, mouseY } = calcVars(p);
 
     if (p.keyIsDown(p.SHIFT)) {
