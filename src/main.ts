@@ -172,6 +172,9 @@ const sketch = (p: p5) => {
       if (event.key === "5") currentColorIdx = 4;
       if (event.key === "0") currentParams.N = DEFAULT_N;
       if (event.key === "9") currentParams.N = DEFAULT_N * 20;
+      if (event.key === "r") {
+        currentParams.r = new BigNumber("2.0");
+      }
       if (event.key === "m") {
         toggleWorkerType();
         shouldRedraw = true;
