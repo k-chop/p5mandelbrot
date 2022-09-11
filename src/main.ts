@@ -25,8 +25,8 @@ const currentParams: MandelbrotParams = {
 const workers: Worker[] = [];
 
 const workerPaths: Record<MandelbrotWorkerType, URL> = {
-  normal: new URL("./worker.ts", import.meta.url),
-  doublejs: new URL("./doublejs-worker.ts", import.meta.url),
+  normal: new URL("./mandelbrot-worker.ts", import.meta.url),
+  doublejs: new URL("./mandelbrot-doublejs-worker.ts", import.meta.url),
 };
 const estimateWorkerType = (): MandelbrotWorkerType => {
   if (currentParams.r.lt(new BigNumber("1.0e-14"))) {
