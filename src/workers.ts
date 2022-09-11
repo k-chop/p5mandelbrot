@@ -1,4 +1,6 @@
 import { MandelbrotWorkerType } from "./types";
+import MandelbrotWorker from "./mandelbrot-worker?worker&inline";
+import MandelbrotDoubleJsWorker from "./mandelbrot-doublejs-worker?worker&inline";
 
 const DEFAULT_WORKER_COUNT = 64;
 
@@ -6,9 +8,9 @@ const _workers: Worker[] = [];
 let _currentWorkerType: MandelbrotWorkerType = "normal";
 let _workerCount = DEFAULT_WORKER_COUNT;
 
-export const workerPaths: Record<MandelbrotWorkerType, URL> = {
-  normal: new URL("./mandelbrot-worker.ts", import.meta.url),
-  doublejs: new URL("./mandelbrot-doublejs-worker.ts", import.meta.url),
+export const workerPaths: Record<MandelbrotWorkerType, new () => Worker> = {
+  normal: MandelbrotWorker,
+  doublejs: MandelbrotDoubleJsWorker,
 };
 
 export const currentWorkerType = (): MandelbrotWorkerType => _currentWorkerType;
@@ -25,8 +27,8 @@ export const resetWorkers = (): void => {
   _workers.splice(0);
 
   for (let i = 0; i < _workerCount; i++) {
-    const path = workerPaths[_currentWorkerType];
-    _workers.push(new Worker(path, { type: "module" }));
+    const workerConstructor = workerPaths[_currentWorkerType];
+    _workers.push(new workerConstructor());
   }
 };
 
