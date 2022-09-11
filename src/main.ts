@@ -2,17 +2,19 @@ import "./style.css";
 import p5 from "p5";
 import { BigNumber } from "bignumber.js";
 import { buildColors, recolor } from "./color";
+import { MandelbrotParams, WorkerProgress, WorkerResult } from "./types";
 import {
-  MandelbrotParams,
-  MandelbrotWorkerType,
-  WorkerProgress,
-  WorkerResult,
-} from "./types";
+  currentWorkerType,
+  registerWorkerTask,
+  resetWorkers,
+  terminateWorkers,
+  toggleWorkerType,
+  workersLength,
+} from "./workers";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 900;
 const DEFAULT_HEIGHT = 900;
-const WORKER_COUNT = 64;
 
 const currentParams: MandelbrotParams = {
   x: new BigNumber("-1.40867236936669836954369923114776611328125"),
@@ -22,31 +24,7 @@ const currentParams: MandelbrotParams = {
   R: 2,
 };
 
-const workers: Worker[] = [];
-
-const workerPaths: Record<MandelbrotWorkerType, URL> = {
-  normal: new URL("./mandelbrot-worker.ts", import.meta.url),
-  doublejs: new URL("./mandelbrot-doublejs-worker.ts", import.meta.url),
-};
-const estimateWorkerType = (): MandelbrotWorkerType => {
-  if (currentParams.r.lt(new BigNumber("1.0e-14"))) {
-    return "doublejs";
-  }
-  return "normal";
-};
-let currentWorkerType: MandelbrotWorkerType = estimateWorkerType();
-
-const resetWorker = (type: MandelbrotWorkerType) => {
-  workers.forEach((worker) => worker.terminate());
-  workers.splice(0);
-
-  for (let i = 0; i < WORKER_COUNT; i++) {
-    const path = workerPaths[type];
-    workers.push(new Worker(path, { type: "module" }));
-  }
-};
-
-resetWorker(currentWorkerType);
+resetWorkers();
 
 let currentColorIdx = 0;
 
@@ -95,7 +73,9 @@ const drawInfo = (
       currentParams.y
     }\nmouseY: ${ifInside(mouseY)}\nr: ${r.toPrecision(
       10
-    )}, N: ${N}, iteration: ${ifInside(iteration)}, mode: ${currentWorkerType}`,
+    )}, N: ${N}, iteration: ${ifInside(
+      iteration
+    )}, mode: ${currentWorkerType()}`,
     10,
     20
   );
@@ -127,7 +107,7 @@ const sketch = (p: p5) => {
   let running = false;
   let colorsArray: Uint8ClampedArray[];
   let completed = 0;
-  const progresses = Array.from({ length: workers.length }, () => 0);
+  const progresses = Array.from({ length: workersLength() }, () => 0);
 
   p.setup = () => {
     p.createCanvas(DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -193,9 +173,7 @@ const sketch = (p: p5) => {
       if (event.key === "0") currentParams.N = DEFAULT_N;
       if (event.key === "9") currentParams.N = DEFAULT_N * 20;
       if (event.key === "m") {
-        currentWorkerType =
-          currentWorkerType === "normal" ? "doublejs" : "normal";
-        resetWorker(currentWorkerType);
+        toggleWorkerType();
         shouldRedraw = true;
       }
       if (event.key === "o") {
@@ -250,7 +228,10 @@ const sketch = (p: p5) => {
         p,
         vars,
         lastTime,
-        ((progresses.reduce((p, c) => p + c) * 100) / workers.length).toFixed(),
+        (
+          (progresses.reduce((p, c) => p + c) * 100) /
+          workersLength()
+        ).toFixed(),
         iterationTimeBuffer
       );
       return;
@@ -258,8 +239,7 @@ const sketch = (p: p5) => {
     lastCalc = { ...currentParams };
 
     if (running) {
-      workers.forEach((worker) => worker.terminate());
-      resetWorker(currentWorkerType);
+      terminateWorkers();
     }
 
     shouldRedraw = false;
@@ -268,9 +248,10 @@ const sketch = (p: p5) => {
     progresses.fill(0);
     const before = performance.now();
 
-    const singleRow = Math.floor(row / workers.length);
+    const singleRow = Math.floor(row / workersLength());
     let currentRowOffset = 0;
-    workers.forEach((worker, idx) => {
+
+    registerWorkerTask((worker, idx, workers, isCompleted) => {
       const isLast = idx === workers.length - 1;
       const start = currentRowOffset;
       let end = currentRowOffset + singleRow;
@@ -291,7 +272,7 @@ const sketch = (p: p5) => {
           progresses[idx] = 1.0;
           completed++;
 
-          if (completed === WORKER_COUNT) {
+          if (isCompleted(completed)) {
             buffer.background(0);
             buffer.loadPixels();
 
