@@ -2,7 +2,7 @@ import { MandelbrotWorkerType } from "./types";
 import MandelbrotWorker from "./mandelbrot-worker?worker&inline";
 import MandelbrotDoubleJsWorker from "./mandelbrot-doublejs-worker?worker&inline";
 
-const DEFAULT_WORKER_COUNT = 64;
+const DEFAULT_WORKER_COUNT = 16;
 
 const _workers: Worker[] = [];
 let _currentWorkerType: MandelbrotWorkerType = "normal";
