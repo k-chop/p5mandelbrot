@@ -19,3 +19,18 @@ body {
   display: flex;
   justify-content: center;
 }
+
+.description {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+
+  list-style-type: none;
+
+  margin: 16px;
+  padding: 8px;
+  padding-left: 12px;
+
+  background-color:rgba(255, 255, 255, 0.77);
+  color: #080808
+}
