@@ -1,9 +1,10 @@
 import { MandelbrotWorkerType } from "./types";
 
-const WORKER_COUNT = 64;
+const DEFAULT_WORKER_COUNT = 64;
 
 const _workers: Worker[] = [];
 let _currentWorkerType: MandelbrotWorkerType = "normal";
+let _workerCount = DEFAULT_WORKER_COUNT;
 
 export const workerPaths: Record<MandelbrotWorkerType, URL> = {
   normal: new URL("./mandelbrot-worker.ts", import.meta.url),
@@ -23,7 +24,7 @@ export const resetWorkers = (): void => {
   _workers.forEach((worker) => worker.terminate());
   _workers.splice(0);
 
-  for (let i = 0; i < WORKER_COUNT; i++) {
+  for (let i = 0; i < _workerCount; i++) {
     const path = workerPaths[_currentWorkerType];
     _workers.push(new Worker(path, { type: "module" }));
   }
@@ -43,6 +44,6 @@ export const registerWorkerTask = (
   ) => void
 ): void => {
   _workers.forEach((worker, idx, workers) =>
-    f(worker, idx, workers, (completed) => completed === WORKER_COUNT)
+    f(worker, idx, workers, (completed) => completed === _workerCount)
   );
 };
