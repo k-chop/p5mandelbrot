@@ -3,7 +3,7 @@ declare const self: DedicatedWorkerGlobalScope;
 
 import { Double } from "double.js";
 import { fillColor } from "./color";
-import { WorkerParams } from "./main";
+import { WorkerParams } from "./types";
 
 self.addEventListener("message", (event) => {
   const {

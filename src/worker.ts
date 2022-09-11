@@ -2,7 +2,7 @@
 declare const self: DedicatedWorkerGlobalScope;
 
 import { fillColor } from "./color";
-import { WorkerParams } from "./main";
+import { WorkerParams } from "./types";
 
 self.addEventListener("message", (event) => {
   const {

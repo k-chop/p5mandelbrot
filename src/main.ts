@@ -2,45 +2,19 @@ import "./style.css";
 import p5 from "p5";
 import { BigNumber } from "bignumber.js";
 import { buildColors, recolor } from "./color";
-
-interface WorkerResult {
-  type: "result";
-  pixels: ArrayBuffer;
-  iterations: ArrayBuffer;
-}
-
-interface WorkerProgress {
-  type: "progress";
-  progress: number;
-}
-
-interface MandelBrotParams {
-  x: BigNumber;
-  y: BigNumber;
-  r: BigNumber;
-  N: number;
-  R: number;
-}
-
-export interface WorkerParams {
-  row: number;
-  col: number;
-  cx: string;
-  cy: string;
-  r: string;
-  R2: number;
-  N: number;
-  start: number;
-  end: number;
-  palette: Uint8ClampedArray;
-}
+import {
+  MandelbrotParams,
+  MandelbrotWorkerType,
+  WorkerProgress,
+  WorkerResult,
+} from "./types";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 900;
 const DEFAULT_HEIGHT = 900;
 const WORKER_COUNT = 64;
 
-const currentParams: MandelBrotParams = {
+const currentParams: MandelbrotParams = {
   x: new BigNumber("-1.40867236936669836954369923114776611328125"),
   y: new BigNumber("0.13573367440664611574869923114776611328125"),
   r: new BigNumber("0.00000363797880709171295166015625"),
@@ -49,20 +23,20 @@ const currentParams: MandelBrotParams = {
 };
 
 const workers: Worker[] = [];
-type WorkerType = "normal" | "doublejs";
-const workerPaths: Record<WorkerType, URL> = {
+
+const workerPaths: Record<MandelbrotWorkerType, URL> = {
   normal: new URL("./worker.ts", import.meta.url),
   doublejs: new URL("./doublejs-worker.ts", import.meta.url),
 };
-const estimateWorkerType = (): WorkerType => {
+const estimateWorkerType = (): MandelbrotWorkerType => {
   if (currentParams.r.lt(new BigNumber("1.0e-14"))) {
     return "doublejs";
   }
   return "normal";
 };
-let currentWorkerType: WorkerType = estimateWorkerType();
+let currentWorkerType: MandelbrotWorkerType = estimateWorkerType();
 
-const resetWorker = (type: WorkerType) => {
+const resetWorker = (type: MandelbrotWorkerType) => {
   workers.forEach((worker) => worker.terminate());
   workers.splice(0);
 
@@ -76,7 +50,7 @@ resetWorker(currentWorkerType);
 
 let currentColorIdx = 0;
 
-const isSameParams = (a: MandelBrotParams, b: MandelBrotParams) =>
+const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
   a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.R === b.R;
 
 const calcVars = (p: p5) => {
@@ -138,7 +112,7 @@ const isInside = (p: p5) =>
 
 const sketch = (p: p5) => {
   let buffer: p5.Graphics;
-  let lastCalc: MandelBrotParams = {
+  let lastCalc: MandelbrotParams = {
     x: new BigNumber(0),
     y: new BigNumber(0),
     r: new BigNumber(0),
