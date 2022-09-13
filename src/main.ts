@@ -201,6 +201,14 @@ const sketch = (p: p5) => {
             console.log("Clipboard import failed.");
           });
       }
+      if (event.key === "ArrowDown") {
+        if (currentParams.r.times(2).lt(5)) {
+          currentParams.r = currentParams.r.times(2);
+        }
+      }
+      if (event.key === "ArrowUp") {
+        currentParams.r = currentParams.r.times(0.5);
+      }
       if (event.key === "ArrowRight") currentParams.N += diff;
       if (event.key === "ArrowLeft") currentParams.N -= diff;
     }
