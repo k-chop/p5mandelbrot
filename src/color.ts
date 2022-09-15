@@ -44,7 +44,8 @@ const colors: ColorMapper[] = [
     f: (p, n) => {
       // fire
       const brightness = posterize(p, n, 128, 30, 100);
-      return p.color(0, 90, brightness);
+      const hue = posterize(p, n, 128, -30, 60);
+      return p.color(hue, 90, brightness);
     },
   },
 ];
