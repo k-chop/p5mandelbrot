@@ -323,4 +323,5 @@ const sketch = (p: p5) => {
   };
 };
 
-new p5(sketch);
+const p5root = document.getElementById("p5root");
+new p5(sketch, p5root!);
