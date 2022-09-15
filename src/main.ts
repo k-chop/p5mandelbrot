@@ -225,7 +225,8 @@ const sketch = (p: p5) => {
       if (lastColorIdx !== currentColorIdx) {
         lastColorIdx = currentColorIdx;
         recolor(
-          p,
+          p.width,
+          p.height,
           buffer,
           currentParams.N,
           iterationTimeBuffer,

@@ -95,7 +95,8 @@ export const fillColor = (
 };
 
 export const recolor = (
-  p: p5,
+  width: number,
+  height: number,
   buffer: p5.Graphics,
   maxIteration: number,
   iterationsResult: Uint32Array,
@@ -104,9 +105,9 @@ export const recolor = (
   buffer.background(0);
   buffer.loadPixels();
 
-  for (let y = 0; y < p.height; y++) {
-    for (let x = 0; x < p.width; x++) {
-      const index = x + y * p.width;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const index = x + y * width;
       const n = iterationsResult[index];
 
       const pixels = buffer.pixels as unknown as Uint8ClampedArray;
