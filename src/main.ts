@@ -112,7 +112,6 @@ const sketch = (p: p5) => {
   p.setup = () => {
     p.createCanvas(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     buffer = p.createGraphics(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-    p.pixelDensity(1);
     iterationTimeBuffer = new Uint32Array(buffer.height * buffer.width);
     canvasArrayBuffer = new Uint8ClampedArray(buffer.height * buffer.width * 4);
 
@@ -274,24 +273,23 @@ const sketch = (p: p5) => {
       const f = (ev: MessageEvent<WorkerResult | WorkerProgress>) => {
         const data = ev.data;
         if (data.type == "result") {
-          const { pixels, iterations } = data;
+          const { iterations } = data;
 
-          const pixelsResult = new Uint8ClampedArray(pixels);
           const iterationsResult = new Uint32Array(iterations);
 
           iterationTimeBuffer.set(iterationsResult, start * col);
-          canvasArrayBuffer.set(pixelsResult, start * col * 4);
           progresses[idx] = 1.0;
           completed++;
 
           if (isCompleted(completed)) {
-            buffer.background(0);
-            buffer.loadPixels();
-
-            const pixels = buffer.pixels as unknown as Uint8ClampedArray;
-            pixels.set(canvasArrayBuffer, 0);
-
-            buffer.updatePixels();
+            recolor(
+              p.width,
+              p.height,
+              buffer,
+              currentParams.N,
+              iterationTimeBuffer,
+              colorsArray[currentColorIdx]
+            );
 
             running = false;
             const after = performance.now();

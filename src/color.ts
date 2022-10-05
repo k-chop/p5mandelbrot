@@ -72,27 +72,38 @@ export const buildColors = (p: p5) => {
 };
 
 export const fillColor = (
-  index: number,
+  x: number,
+  y: number,
+  width: number,
   pixels: Uint8ClampedArray,
   palette: Uint8ClampedArray,
   iteration: number,
-  maxIteration: number
+  maxIteration: number,
+  density: number
 ) => {
-  const pixelIndex = index * 4;
+  for (let i = 0; i < density; i++) {
+    for (let j = 0; j < density; j++) {
+      const pixelIndex =
+        4 * ((y * density + j) * width * density + (x * density + i));
 
-  if (iteration !== maxIteration) {
-    const paletteIdx = (iteration % (palette.length / 4)) * 4;
-    pixels[pixelIndex + 0] = palette[paletteIdx + 0];
-    pixels[pixelIndex + 1] = palette[paletteIdx + 1];
-    pixels[pixelIndex + 2] = palette[paletteIdx + 2];
-    pixels[pixelIndex + 3] = palette[paletteIdx + 3];
-  } else {
-    pixels[pixelIndex + 0] = 0;
-    pixels[pixelIndex + 1] = 0;
-    pixels[pixelIndex + 2] = 0;
-    pixels[pixelIndex + 3] = 255;
+      if (iteration !== maxIteration) {
+        const paletteIdx = (iteration % (palette.length / 4)) * 4;
+        pixels[pixelIndex + 0] = palette[paletteIdx + 0];
+        pixels[pixelIndex + 1] = palette[paletteIdx + 1];
+        pixels[pixelIndex + 2] = palette[paletteIdx + 2];
+        pixels[pixelIndex + 3] = palette[paletteIdx + 3];
+      } else {
+        pixels[pixelIndex + 0] = 0;
+        pixels[pixelIndex + 1] = 0;
+        pixels[pixelIndex + 2] = 0;
+        pixels[pixelIndex + 3] = 255;
+      }
+    }
   }
 };
+
+const calcLogicalIndex = (x: number, y: number, width: number): number =>
+  x + y * width;
 
 export const recolor = (
   width: number,
@@ -104,14 +115,15 @@ export const recolor = (
 ) => {
   buffer.background(0);
   buffer.loadPixels();
+  const density = buffer.pixelDensity();
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      const index = x + y * width;
-      const n = iterationsResult[index];
+      const logicalIndex = calcLogicalIndex(x, y, width);
+      const n = iterationsResult[logicalIndex];
 
       const pixels = buffer.pixels as unknown as Uint8ClampedArray;
-      fillColor(index, pixels, palette, n, maxIteration);
+      fillColor(x, y, width, pixels, palette, n, maxIteration, density);
     }
   }
 

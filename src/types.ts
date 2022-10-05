@@ -2,7 +2,6 @@ import { BigNumber } from "bignumber.js";
 
 export interface WorkerResult {
   type: "result";
-  pixels: ArrayBuffer;
   iterations: ArrayBuffer;
 }
 
@@ -29,7 +28,6 @@ export interface WorkerParams {
   N: number;
   start: number;
   end: number;
-  palette: Uint8ClampedArray;
 }
 
 export type MandelbrotWorkerType = "normal" | "doublejs";
