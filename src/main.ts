@@ -103,7 +103,6 @@ const sketch = (p: p5) => {
   let lastColorIdx = 0;
   let lastTime = "0";
   let iterationTimeBuffer: Uint32Array;
-  let canvasArrayBuffer: Uint8ClampedArray;
   let running = false;
   let colorsArray: Uint8ClampedArray[];
   let completed = 0;
@@ -113,8 +112,6 @@ const sketch = (p: p5) => {
     p.createCanvas(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     buffer = p.createGraphics(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     iterationTimeBuffer = new Uint32Array(buffer.height * buffer.width);
-    canvasArrayBuffer = new Uint8ClampedArray(buffer.height * buffer.width * 4);
-
     p.noStroke();
     p.colorMode(p.HSB, 360, 100, 100, 100);
     colorsArray = buildColors(p);
