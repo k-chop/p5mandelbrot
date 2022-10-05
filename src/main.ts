@@ -13,8 +13,8 @@ import {
 } from "./workers";
 
 const DEFAULT_N = 500;
-const DEFAULT_WIDTH = 900;
-const DEFAULT_HEIGHT = 900;
+const DEFAULT_WIDTH = 800;
+const DEFAULT_HEIGHT = 800;
 
 const currentParams: MandelbrotParams = {
   x: new BigNumber("-1.40867236936669836954369923114776611328125"),
