@@ -57,8 +57,8 @@ const drawInfo = (
 ) => {
   const { mouseX, mouseY, r, N } = vars;
   p.fill(0, 35);
-  p.rect(5, 5, DEFAULT_WIDTH - 10, 80);
-  p.rect(5, DEFAULT_HEIGHT - 25, DEFAULT_WIDTH - 10, 22);
+  p.rect(5, 5, p.width - 10, 80);
+  p.rect(5, p.height - 25, p.width - 10, 22);
   p.fill(255);
 
   const pixelIdx = p.mouseX + p.mouseY * p.width;
@@ -81,9 +81,9 @@ const drawInfo = (
   );
 
   if (progress !== "100") {
-    p.text(`Generating... ${progress}%`, 10, DEFAULT_HEIGHT - 10);
+    p.text(`Generating... ${progress}%`, 10, p.height - 10);
   } else {
-    p.text(`Done! time: ${millis}ms`, 10, DEFAULT_HEIGHT - 10);
+    p.text(`Done! time: ${millis}ms`, 10, p.height - 10);
   }
 };
 
