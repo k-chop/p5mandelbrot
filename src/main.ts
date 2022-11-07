@@ -219,6 +219,9 @@ const sketch = (p: p5) => {
 
     if (!shouldRedraw && isSameParams(lastCalc, currentParams)) {
       if (lastColorIdx !== currentColorIdx) {
+        if (!colorsArray[currentColorIdx]) {
+          currentColorIdx = 0;
+        }
         lastColorIdx = currentColorIdx;
         recolor(
           p.width,
