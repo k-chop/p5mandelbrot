@@ -11,6 +11,7 @@ import {
   toggleWorkerType,
   workersLength,
 } from "./workers";
+import { copyBufferAsRect } from "./buffer";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -264,11 +265,15 @@ const sketch = (p: p5) => {
 
     registerWorkerTask((worker, idx, workers, isCompleted) => {
       const isLast = idx === workers.length - 1;
-      const start = currentRowOffset;
-      let end = currentRowOffset + singleRow;
-      currentRowOffset = end;
+      const startY = currentRowOffset;
+      let endY = currentRowOffset + singleRow;
+      currentRowOffset = endY;
 
-      if (isLast) end = row;
+      if (isLast) endY = row;
+
+      // 仮
+      let startX = 0;
+      let endX = col;
 
       const f = (ev: MessageEvent<WorkerResult | WorkerProgress>) => {
         const data = ev.data;
@@ -277,7 +282,16 @@ const sketch = (p: p5) => {
 
           const iterationsResult = new Uint32Array(iterations);
 
-          iterationTimeBuffer.set(iterationsResult, start * col);
+          copyBufferAsRect(
+            iterationTimeBuffer,
+            iterationsResult,
+            col,
+            startX,
+            endX,
+            startY,
+            endY
+          );
+
           progresses[idx] = 1.0;
           completed++;
 
@@ -300,7 +314,6 @@ const sketch = (p: p5) => {
         } else {
           const { progress } = data;
           progresses[idx] = progress;
-          console.log(`worker[${idx}]: ${(progress * 100).toFixed(1)}`);
         }
       };
 
@@ -316,7 +329,17 @@ const sketch = (p: p5) => {
         r: currentParams.r.toString(),
         N: vars.N,
       };
-      worker.postMessage({ ...numberVars, row, col, R2, start, end, palette });
+      worker.postMessage({
+        ...numberVars,
+        row,
+        col,
+        R2,
+        startY,
+        endY,
+        startX,
+        endX,
+        palette,
+      });
     });
   };
 };

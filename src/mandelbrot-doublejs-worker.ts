@@ -13,19 +13,21 @@ self.addEventListener("message", (event) => {
     r: rStr,
     R2: R2Number,
     N,
-    start,
-    end,
+    startX,
+    endX,
+    startY,
+    endY,
   } = event.data as WorkerParams;
 
-  const iterations = new Uint32Array((end - start) * col);
+  const iterations = new Uint32Array((endY - startY) * (endX - startX));
 
   const cx = new Double(cxStr);
   const cy = new Double(cyStr);
   const r = new Double(rStr);
   const R2 = new Double(R2Number);
 
-  for (let y = start; y < end; y++) {
-    for (let x = 0; x < col; x++) {
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
       let zr = new Double(0.0);
       let zi = new Double(0.0);
       const cr = cx.add(new Double(x).mul(2).div(col).sub(1).mul(r));
@@ -43,12 +45,12 @@ self.addEventListener("message", (event) => {
         n++;
       }
 
-      const index = x + (y - start) * col;
+      const index = x - startX + (y - startY) * (endX - startX);
       iterations[index] = n;
     }
     self.postMessage({
       type: "progress",
-      progress: (y - start) / (end - start),
+      progress: (y - startY) / (endY - startY),
     });
   }
 

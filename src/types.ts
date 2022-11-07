@@ -26,8 +26,10 @@ export interface WorkerParams {
   r: string;
   R2: number;
   N: number;
-  start: number;
-  end: number;
+  startX: number;
+  endX: number;
+  startY: number;
+  endY: number;
 }
 
 export type MandelbrotWorkerType = "normal" | "doublejs";

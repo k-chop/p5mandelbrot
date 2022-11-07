@@ -12,18 +12,20 @@ self.addEventListener("message", (event) => {
     r: rStr,
     R2,
     N,
-    start,
-    end,
+    startX,
+    endX,
+    startY,
+    endY,
   } = event.data as WorkerParams;
 
-  const iterations = new Uint32Array((end - start) * col);
+  const iterations = new Uint32Array((endY - startY) * (endX - startX));
 
   const cx = parseFloat(cxStr);
   const cy = parseFloat(cyStr);
   const r = parseFloat(rStr);
 
-  for (let y = start; y < end; y++) {
-    for (let x = 0; x < col; x++) {
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
       let zr = 0.0;
       let zi = 0.0;
       const cr = cx + ((x * 2) / col - 1.0) * r;
@@ -41,12 +43,12 @@ self.addEventListener("message", (event) => {
         n++;
       }
 
-      const index = x + (y - start) * col;
+      const index = x - startX + (y - startY) * (endX - startX);
       iterations[index] = n;
     }
     self.postMessage({
       type: "progress",
-      progress: (y - start) / (end - start),
+      progress: (y - startY) / (endY - startY),
     });
   }
 
