@@ -127,6 +127,7 @@ const sketch = (p: p5) => {
   let running = false;
   let colorsArray: Uint8ClampedArray[];
   let completed = 0;
+  let lastCompleted = 0;
   const progresses = Array.from({ length: workersLength() }, () => 0);
 
   p.setup = () => {
@@ -247,6 +248,39 @@ const sketch = (p: p5) => {
     const vars = calcVars(p);
     const R2 = currentParams.R * currentParams.R;
 
+    const drawBufferAndInfo = () => {
+      p.background(0);
+      p.image(buffer, 0, 0);
+      drawInfo(
+        p,
+        vars,
+        lastTime,
+        (
+          (progresses.reduce((p, c) => p + c) * 100) /
+          activeWorkerCount()
+        ).toFixed(),
+        iterationTimeBuffer
+      );
+    };
+
+    if (
+      running &&
+      lastCompleted !== completed &&
+      !shouldRedraw &&
+      isSameParams(lastCalc, currentParams)
+    ) {
+      recolor(
+        p.width,
+        p.height,
+        buffer,
+        currentParams.N,
+        iterationTimeBuffer,
+        colorsArray[currentColorIdx]
+      );
+      drawBufferAndInfo();
+      return;
+    }
+
     if (!shouldRedraw && isSameParams(lastCalc, currentParams)) {
       if (lastColorIdx !== currentColorIdx) {
         if (!colorsArray[currentColorIdx]) {
@@ -263,18 +297,7 @@ const sketch = (p: p5) => {
         );
       }
 
-      p.background(0);
-      p.image(buffer, 0, 0);
-      drawInfo(
-        p,
-        vars,
-        lastTime,
-        (
-          (progresses.reduce((p, c) => p + c) * 100) /
-          activeWorkerCount()
-        ).toFixed(),
-        iterationTimeBuffer
-      );
+      drawBufferAndInfo();
       return;
     }
     lastCalc = { ...currentParams };
@@ -286,6 +309,7 @@ const sketch = (p: p5) => {
     shouldRedraw = false;
     running = true;
     completed = 0;
+    lastCompleted = -1;
     progresses.fill(0);
     const before = performance.now();
 
