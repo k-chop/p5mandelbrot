@@ -10,6 +10,11 @@ export interface WorkerProgress {
   progress: number;
 }
 
+export interface OffsetParams {
+  x: number;
+  y: number;
+}
+
 export interface MandelbrotParams {
   x: BigNumber;
   y: BigNumber;

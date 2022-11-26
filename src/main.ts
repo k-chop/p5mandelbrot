@@ -2,8 +2,14 @@ import "./style.css";
 import p5 from "p5";
 import { BigNumber } from "bignumber.js";
 import { buildColors, recolor } from "./color";
-import { MandelbrotParams, WorkerProgress, WorkerResult } from "./types";
 import {
+  MandelbrotParams,
+  OffsetParams,
+  WorkerProgress,
+  WorkerResult,
+} from "./types";
+import {
+  activeWorkerCount,
   currentWorkerType,
   registerWorkerTask,
   resetWorkers,
@@ -11,7 +17,8 @@ import {
   toggleWorkerType,
   workersLength,
 } from "./workers";
-import { copyBufferAsRect } from "./buffer";
+import { copyBufferRectToRect } from "./buffer";
+import { divideRect } from "./rect";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -25,9 +32,21 @@ const currentParams: MandelbrotParams = {
   R: 2,
 };
 
+const offsetParams: OffsetParams = {
+  x: 0,
+  y: 0,
+};
+
 resetWorkers();
 
 let currentColorIdx = 0;
+
+const zoom = (currentParams: MandelbrotParams, times: number) => {
+  currentParams.r = currentParams.r.times(times);
+
+  offsetParams.x = 0;
+  offsetParams.y = 0;
+};
 
 const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
   a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.R === b.R;
@@ -104,6 +123,7 @@ const sketch = (p: p5) => {
   let lastColorIdx = 0;
   let lastTime = "0";
   let iterationTimeBuffer: Uint32Array;
+  let iterationTimeBufferTemp: Uint32Array;
   let running = false;
   let colorsArray: Uint8ClampedArray[];
   let completed = 0;
@@ -113,6 +133,7 @@ const sketch = (p: p5) => {
     p.createCanvas(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     buffer = p.createGraphics(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     iterationTimeBuffer = new Uint32Array(buffer.height * buffer.width);
+    iterationTimeBufferTemp = new Uint32Array(buffer.height * buffer.width);
     p.noStroke();
     p.colorMode(p.HSB, 360, 100, 100, 100);
     colorsArray = buildColors(p);
@@ -121,6 +142,12 @@ const sketch = (p: p5) => {
   p.mouseClicked = () => {
     if (!isInside(p)) return;
     const { mouseX, mouseY } = calcVars(p);
+
+    const pixelDiffX = Math.floor(p.mouseX - p.width / 2);
+    const pixelDiffY = Math.floor(p.mouseY - p.height / 2);
+
+    offsetParams.x = pixelDiffX;
+    offsetParams.y = pixelDiffY;
 
     currentParams.x = mouseX;
     currentParams.y = mouseY;
@@ -138,10 +165,10 @@ const sketch = (p: p5) => {
     if (event) {
       if (event.deltaY > 0) {
         if (currentParams.r.times(2).lt(5)) {
-          currentParams.r = currentParams.r.times(2);
+          zoom(currentParams, 2);
         }
       } else {
-        currentParams.r = currentParams.r.times(0.5);
+        zoom(currentParams, 0.5);
       }
     }
   };
@@ -200,11 +227,11 @@ const sketch = (p: p5) => {
       }
       if (event.key === "ArrowDown") {
         if (currentParams.r.times(2).lt(5)) {
-          currentParams.r = currentParams.r.times(2);
+          zoom(currentParams, 2);
         }
       }
       if (event.key === "ArrowUp") {
-        currentParams.r = currentParams.r.times(0.5);
+        zoom(currentParams, 0.5);
       }
       if (event.key === "ArrowRight") currentParams.N += diff;
       if (event.key === "ArrowLeft") currentParams.N -= diff;
@@ -242,7 +269,7 @@ const sketch = (p: p5) => {
         lastTime,
         (
           (progresses.reduce((p, c) => p + c) * 100) /
-          workersLength()
+          activeWorkerCount()
         ).toFixed(),
         iterationTimeBuffer
       );
@@ -260,87 +287,137 @@ const sketch = (p: p5) => {
     progresses.fill(0);
     const before = performance.now();
 
-    const singleRow = Math.floor(row / workersLength());
-    let currentRowOffset = 0;
+    const minSide = Math.sqrt((buffer.width * buffer.height) / workersLength());
 
-    registerWorkerTask((worker, idx, workers, isCompleted) => {
-      const isLast = idx === workers.length - 1;
-      const startY = currentRowOffset;
-      let endY = currentRowOffset + singleRow;
-      currentRowOffset = endY;
+    let calculationRects = divideRect(
+      [{ x: 0, y: 0, width: buffer.width, height: buffer.height }],
+      workersLength(),
+      minSide
+    );
 
-      if (isLast) endY = row;
+    if (offsetParams.x !== 0 || offsetParams.y !== 0) {
+      const offsetX = offsetParams.x;
+      const offsetY = offsetParams.y;
 
-      // 仮
-      let startX = 0;
-      let endX = col;
+      copyBufferRectToRect(
+        iterationTimeBufferTemp,
+        iterationTimeBuffer,
+        buffer.width,
+        buffer.width,
+        buffer.width - Math.abs(offsetX),
+        buffer.height - Math.abs(offsetY),
+        Math.abs(Math.min(0, offsetX)),
+        Math.abs(Math.min(0, offsetY)),
+        Math.max(0, offsetX),
+        Math.max(0, offsetY)
+      );
 
-      const f = (ev: MessageEvent<WorkerResult | WorkerProgress>) => {
-        const data = ev.data;
-        if (data.type == "result") {
-          const { iterations } = data;
+      [iterationTimeBuffer, iterationTimeBufferTemp] = [
+        iterationTimeBufferTemp,
+        iterationTimeBuffer,
+      ];
 
-          const iterationsResult = new Uint32Array(iterations);
+      const rects = [];
+      if (offsetY !== 0) {
+        // (1) 上下の横長矩形（offsetYが0なら存在しない）
+        rects.push({
+          x: 0,
+          y: offsetY > 0 ? buffer.height - offsetY : 0,
+          width: buffer.width,
+          height: Math.abs(offsetY),
+        });
+      }
+      if (offsetX !== 0) {
+        // (2) 1に含まれる分を除いた左右の縦長矩形（offsetXが0なら存在しない）
+        rects.push({
+          x: offsetX > 0 ? buffer.width - offsetX : 0,
+          y: offsetY > 0 ? 0 : Math.abs(offsetY),
+          width: Math.abs(offsetX),
+          height: buffer.height - Math.abs(offsetY),
+        });
+      }
 
-          copyBufferAsRect(
-            iterationTimeBuffer,
-            iterationsResult,
-            col,
-            startX,
-            endX,
-            startY,
-            endY
-          );
+      calculationRects = divideRect(rects, workersLength(), minSide);
+    }
 
-          progresses[idx] = 1.0;
-          completed++;
+    registerWorkerTask(
+      calculationRects,
+      (worker, rect, idx, workers, isCompleted) => {
+        const startX = rect.x;
+        const endX = rect.x + rect.width;
+        const startY = rect.y;
+        const endY = rect.y + rect.height;
 
-          if (isCompleted(completed)) {
-            recolor(
-              p.width,
-              p.height,
-              buffer,
-              currentParams.N,
+        const f = (ev: MessageEvent<WorkerResult | WorkerProgress>) => {
+          const data = ev.data;
+          if (data.type == "result") {
+            const { iterations } = data;
+
+            const iterationsResult = new Uint32Array(iterations);
+
+            copyBufferRectToRect(
               iterationTimeBuffer,
-              colorsArray[currentColorIdx]
+              iterationsResult,
+              buffer.width,
+              rect.width,
+              rect.width,
+              rect.height,
+              rect.x,
+              rect.y,
+              0,
+              0
             );
 
-            running = false;
-            const after = performance.now();
-            lastTime = (after - before).toFixed();
+            progresses[idx] = 1.0;
+            completed++;
+
+            if (isCompleted(completed)) {
+              recolor(
+                p.width,
+                p.height,
+                buffer,
+                currentParams.N,
+                iterationTimeBuffer,
+                colorsArray[currentColorIdx]
+              );
+
+              running = false;
+              const after = performance.now();
+              lastTime = (after - before).toFixed();
+            }
+
+            worker.removeEventListener("message", f);
+          } else {
+            const { progress } = data;
+            progresses[idx] = progress;
           }
+        };
 
-          worker.removeEventListener("message", f);
-        } else {
-          const { progress } = data;
-          progresses[idx] = progress;
-        }
-      };
+        worker.addEventListener("message", f);
+        worker.addEventListener("error", () => {
+          completed++;
+        });
 
-      worker.addEventListener("message", f);
-      worker.addEventListener("error", () => {
-        completed++;
-      });
-
-      const palette = colorsArray[currentColorIdx];
-      const numberVars = {
-        cx: currentParams.x.toString(),
-        cy: currentParams.y.toString(),
-        r: currentParams.r.toString(),
-        N: vars.N,
-      };
-      worker.postMessage({
-        ...numberVars,
-        row,
-        col,
-        R2,
-        startY,
-        endY,
-        startX,
-        endX,
-        palette,
-      });
-    });
+        const palette = colorsArray[currentColorIdx];
+        const numberVars = {
+          cx: currentParams.x.toString(),
+          cy: currentParams.y.toString(),
+          r: currentParams.r.toString(),
+          N: vars.N,
+        };
+        worker.postMessage({
+          ...numberVars,
+          row,
+          col,
+          R2,
+          startY,
+          endY,
+          startX,
+          endX,
+          palette,
+        });
+      }
+    );
   };
 };
 
