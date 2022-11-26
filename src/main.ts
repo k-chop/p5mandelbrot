@@ -201,6 +201,8 @@ const sketch = (p: p5) => {
       }
       if (event.key === "m") {
         toggleWorkerType();
+        offsetParams.x = 0;
+        offsetParams.y = 0;
         shouldRedraw = true;
       }
       if (event.key === "o") {
