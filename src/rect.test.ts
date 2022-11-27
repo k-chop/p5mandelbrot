@@ -1,5 +1,49 @@
 import { describe, expect, it } from "vitest";
-import { divideRect } from "./rect";
+import { calculateDivideArea, divideRect } from "./rect";
+
+describe("calculateDivideArea", () => {
+  it("16", () => {
+    expect(calculateDivideArea(16)).toEqual({
+      longSideCount: 4,
+      shortSideCount: 4,
+    });
+  });
+
+  it("1", () => {
+    expect(calculateDivideArea(1)).toEqual({
+      longSideCount: 1,
+      shortSideCount: 1,
+    });
+  });
+
+  it("2", () => {
+    expect(calculateDivideArea(2)).toEqual({
+      longSideCount: 2,
+      shortSideCount: 1,
+    });
+  });
+
+  it("6", () => {
+    expect(calculateDivideArea(6)).toEqual({
+      longSideCount: 3,
+      shortSideCount: 2,
+    });
+  });
+
+  it("64", () => {
+    expect(calculateDivideArea(64)).toEqual({
+      longSideCount: 8,
+      shortSideCount: 8,
+    });
+  });
+
+  it("128", () => {
+    expect(calculateDivideArea(128)).toEqual({
+      longSideCount: 16,
+      shortSideCount: 8,
+    });
+  });
+});
 
 describe("divideRect", () => {
   it("期待分割数が矩形の数より小さい場合はエラー", () => {
@@ -77,7 +121,7 @@ describe("divideRect", () => {
         height: 300,
       },
     ];
-    const result = divideRect(rects, 2, 10);
+    const result = divideRect(rects, 2, 1);
     const expected = [
       {
         x: 0,
@@ -119,28 +163,28 @@ describe("divideRect", () => {
         height: 200,
       },
       {
+        height: 150,
+        width: 150,
         x: 200,
         y: 200,
-        width: 300,
-        height: 75,
       },
       {
-        height: 75,
-        width: 300,
-        x: 200,
-        y: 275,
+        height: 150,
+        width: 150,
+        x: 350,
+        y: 200,
       },
       {
-        height: 75,
-        width: 300,
+        height: 150,
+        width: 150,
         x: 200,
         y: 350,
       },
       {
-        height: 75,
-        width: 300,
-        x: 200,
-        y: 425,
+        height: 150,
+        width: 150,
+        x: 350,
+        y: 350,
       },
     ];
     expect(expected).toEqual(result);

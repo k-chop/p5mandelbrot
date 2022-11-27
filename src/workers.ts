@@ -3,6 +3,7 @@ import MandelbrotWorker from "./mandelbrot-worker?worker&inline";
 import MandelbrotDoubleJsWorker from "./mandelbrot-doublejs-worker?worker&inline";
 import { Rect } from "./rect";
 
+// 処理領域の分割しやすさの関係でワーカーの数は1または偶数に制限しておく
 const DEFAULT_WORKER_COUNT = 16;
 
 const _workers: Worker[] = [];
