@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { copyBufferRectToRect } from "./buffer";
-import { divideRect } from "./rect";
+import { divideRect, Rect } from "./rect";
 import {
   MandelbrotParams,
   OffsetParams,
@@ -26,18 +26,23 @@ let lastCalc: MandelbrotParams = {
   N: 0,
   R: 0,
 };
-let shouldRedraw = false;
-let lastColorIdx = 0;
-let lastTime = "0";
+
+let needsReCalculation = false;
+let running = false;
+
 let iterationTimeBuffer: Uint32Array;
 let iterationTimeBufferTemp: Uint32Array;
-let running = false;
+
+let lastColorIdx = 0;
+let currentColorIdx = 0;
 let colorsArray: Uint8ClampedArray[];
+
 let completed = 0;
 let lastCompleted = 0;
+let lastTime = "0";
+
 let width = DEFAULT_WIDTH;
 let height = DEFAULT_HEIGHT;
-let currentColorIdx = 0;
 
 const progresses = Array.from({ length: getWorkerCount() }, () => 0);
 
@@ -52,6 +57,32 @@ let currentParams: MandelbrotParams = {
 let offsetParams: OffsetParams = {
   x: 0,
   y: 0,
+};
+
+export const calcVars = (
+  mouseX: number,
+  mouseY: number,
+  width: number,
+  height: number
+) => {
+  const normalizedMouseX = new BigNumber(2 * mouseX).div(width).minus(1);
+  const normalizedMouseY = new BigNumber(2 * mouseY).div(height).minus(1);
+  const currentMouseX = currentParams.x.plus(
+    normalizedMouseX.times(currentParams.r)
+  );
+  const currentMouseY = currentParams.y.minus(
+    normalizedMouseY.times(currentParams.r)
+  );
+
+  const r = currentParams.r;
+  const N = currentParams.N;
+
+  return {
+    mouseX: currentMouseX,
+    mouseY: currentMouseY,
+    r,
+    N,
+  };
 };
 
 export const getCanvasSize = () => ({ width, height });
@@ -91,7 +122,7 @@ export const resetRadius = () => setCurrentParams({ r: new BigNumber("2.0") });
 export const changeMode = () => {
   toggleWorkerType();
   setOffsetParams({ x: 0, y: 0 });
-  shouldRedraw = true;
+  needsReCalculation = true;
 };
 
 export const exportParamsToClipboard = () => {
@@ -155,21 +186,21 @@ export const shouldDrawCompletedArea = () => {
   return (
     running &&
     hasNewCompletedArea &&
-    !shouldRedraw &&
+    !needsReCalculation &&
     isSameParams(lastCalc, currentParams)
   );
 };
 
 export const shouldDrawColorChanged = () => {
   return (
-    !shouldRedraw &&
+    !needsReCalculation &&
     isSameParams(lastCalc, currentParams) &&
     lastColorIdx !== currentColorIdx
   );
 };
 
 export const shouldDrawWithoutRecolor = () => {
-  return !shouldRedraw && isSameParams(lastCalc, currentParams);
+  return !needsReCalculation && isSameParams(lastCalc, currentParams);
 };
 
 export const updateColor = () => {
@@ -183,7 +214,7 @@ export const startCalculation = (onComplete: () => void) => {
     terminateWorkers();
   }
 
-  shouldRedraw = false;
+  needsReCalculation = false;
   running = true;
   completed = 0;
   lastCompleted = -1;
@@ -216,32 +247,9 @@ export const startCalculation = (onComplete: () => void) => {
       Math.max(0, offsetY)
     );
 
-    [iterationTimeBuffer, iterationTimeBufferTemp] = [
-      iterationTimeBufferTemp,
-      iterationTimeBuffer,
-    ];
+    swapIterationTimeBuffer();
 
-    const rects = [];
-    if (offsetY !== 0) {
-      // (1) 上下の横長矩形（offsetYが0なら存在しない）
-      rects.push({
-        x: 0,
-        y: offsetY > 0 ? height - offsetY : 0,
-        width,
-        height: Math.abs(offsetY),
-      });
-    }
-    if (offsetX !== 0) {
-      // (2) 1に含まれる分を除いた左右の縦長矩形（offsetXが0なら存在しない）
-      rects.push({
-        x: offsetX > 0 ? width - offsetX : 0,
-        y: offsetY > 0 ? 0 : Math.abs(offsetY),
-        width: Math.abs(offsetX),
-        height: height - Math.abs(offsetY),
-      });
-    }
-
-    calculationRects = divideRect(rects, getWorkerCount(), minSide);
+    calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
   }
 
   registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
@@ -293,15 +301,11 @@ export const startCalculation = (onComplete: () => void) => {
       completed++;
     });
 
-    const palette = colorsArray[currentColorIdx];
-    const numberVars = {
+    worker.postMessage({
       cx: currentParams.x.toString(),
       cy: currentParams.y.toString(),
       r: currentParams.r.toString(),
       N: currentParams.N,
-    };
-    worker.postMessage({
-      ...numberVars,
       row: height,
       col: width,
       R2: currentParams.R * currentParams.R,
@@ -309,7 +313,7 @@ export const startCalculation = (onComplete: () => void) => {
       endY,
       startX,
       endX,
-      palette,
+      palette: getPalette(),
     });
   });
 };
@@ -317,28 +321,37 @@ export const startCalculation = (onComplete: () => void) => {
 const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
   a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.R === b.R;
 
-export const calcVars = (
-  mouseX: number,
-  mouseY: number,
-  width: number,
-  height: number
-) => {
-  const normalizedMouseX = new BigNumber(2 * mouseX).div(width).minus(1);
-  const normalizedMouseY = new BigNumber(2 * mouseY).div(height).minus(1);
-  const currentMouseX = currentParams.x.plus(
-    normalizedMouseX.times(currentParams.r)
-  );
-  const currentMouseY = currentParams.y.minus(
-    normalizedMouseY.times(currentParams.r)
-  );
+const getOffsetRects = (): Rect[] => {
+  const offsetX = offsetParams.x;
+  const offsetY = offsetParams.y;
 
-  const r = currentParams.r;
-  const N = currentParams.N;
+  const rects: Rect[] = [];
 
-  return {
-    mouseX: currentMouseX,
-    mouseY: currentMouseY,
-    r,
-    N,
-  };
+  if (offsetY !== 0) {
+    // (1) 上下の横長矩形（offsetYが0なら存在しない）
+    rects.push({
+      x: 0,
+      y: offsetY > 0 ? height - offsetY : 0,
+      width,
+      height: Math.abs(offsetY),
+    });
+  }
+  if (offsetX !== 0) {
+    // (2) 1に含まれる分を除いた左右の縦長矩形（offsetXが0なら存在しない）
+    rects.push({
+      x: offsetX > 0 ? width - offsetX : 0,
+      y: offsetY > 0 ? 0 : Math.abs(offsetY),
+      width: Math.abs(offsetX),
+      height: height - Math.abs(offsetY),
+    });
+  }
+
+  return rects;
+};
+
+const swapIterationTimeBuffer = () => {
+  [iterationTimeBuffer, iterationTimeBufferTemp] = [
+    iterationTimeBufferTemp,
+    iterationTimeBuffer,
+  ];
 };
