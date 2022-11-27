@@ -23,7 +23,7 @@ export const toggleWorkerType = (): void => {
   resetWorkers();
 };
 
-export const workersLength = (): number => _workers.length;
+export const getWorkerCount = (): number => _workerCount;
 
 export const activeWorkerCount = (): number => _activeWorkerCount;
 
