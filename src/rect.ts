@@ -62,12 +62,7 @@ export const divideRect = (
     const max = Math.max(...divideCounts);
     const idx = divideCounts.findIndex((v) => v === max);
 
-    // 0にならないように引く
-    if (divideCounts[idx] === 2) {
-      divideCounts[idx] = 1;
-    } else {
-      divideCounts[idx] = divideCounts[idx] - 2;
-    }
+    divideCounts[idx] = Math.max(divideCounts[idx] - 2, 1);
   }
 
   const totalDivideCount = divideCounts.reduce((a, b) => a + b);
