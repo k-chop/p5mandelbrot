@@ -20,17 +20,41 @@ body {
   justify-content: center;
 }
 
-.description {
-  position: fixed;
-  right: 0;
-  bottom: 0;
+main {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
 
+  width: 90%;
+}
+
+#header {
+  width: 100%;
+
+  margin: 0 0 8px 0;
+  padding: 4px 0 4px 8px;
+
+  background-color: rgba(255, 255, 255, 0.77);
+  color: #080808;
+}
+
+#footer {
+  width: 100%;
+
+  margin: 0 0 8px 0;
+  padding: 4px 0 4px 8px;
+
+  background-color: rgba(255, 255, 255, 0.77);
+  color: #080808;
+}
+
+.description {
   list-style-type: none;
 
-  margin: 16px;
+  margin: 0 0 8px 8px;
   padding: 8px;
   padding-left: 12px;
 
-  background-color:rgba(255, 255, 255, 0.77);
-  color: #080808
+  background-color: rgba(255, 255, 255, 0.77);
+  color: #080808;
 }

@@ -30,8 +30,23 @@ import {
   setupCamera,
 } from "./camera";
 import { Rect } from "./rect";
+import React from "react";
+import ReactDOMClient from "react-dom/client";
+import { AppRoot } from "./view/app-root";
+import { createStore, updateStore } from "./store/store";
 
 resetWorkers();
+
+createStore({
+  centerX: "",
+  centerY: "",
+  mouseX: "",
+  mouseY: "",
+  r: "",
+  N: 0,
+  iteration: 0,
+  mode: "",
+});
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
@@ -40,11 +55,6 @@ const drawInfo = (p: p5) => {
     p.width,
     p.height
   );
-
-  p.fill(0, 35);
-  p.rect(5, 5, p.width - 10, 80);
-  p.rect(5, p.height - 25, p.width - 10, 22);
-  p.fill(255);
 
   const iteration = getIterationTimeAt(p.mouseX, p.mouseY);
 
@@ -56,23 +66,18 @@ const drawInfo = (p: p5) => {
   const progress = getProgressString();
   const millis = getPreviousRenderTime();
 
-  p.text(
-    `centerX: ${params.x}\nmouseX: ${ifInside(mouseX)}\ncenterY: ${
-      params.y
-    }\nmouseY: ${ifInside(mouseY)}\nr: ${r.toPrecision(
-      10
-    )}, N: ${N}, iteration: ${ifInside(
-      iteration
-    )}, mode: ${currentWorkerType()}`,
-    10,
-    20
-  );
+  // TODO: たぶんrの値見て精度を決めるべき
+  updateStore("centerX", params.x.toPrecision(20));
+  updateStore("centerY", params.y.toPrecision(20));
+  updateStore("mouseX", mouseX.toPrecision(20));
+  updateStore("mouseY", mouseY.toPrecision(20));
+  updateStore("r", r.toPrecision(10));
+  updateStore("N", N);
+  updateStore("iteration", ifInside(iteration));
+  updateStore("mode", currentWorkerType());
 
-  if (progress !== "100") {
-    p.text(`Generating... ${progress}%`, 10, p.height - 10);
-  } else {
-    p.text(`Done! time: ${millis}ms`, 10, p.height - 10);
-  }
+  updateStore("progress", progress);
+  updateStore("millis", millis);
 };
 
 const isInside = (p: p5) =>
@@ -105,8 +110,11 @@ const sketch = (p: p5) => {
     setCurrentParams({ x: mouseX, y: mouseY });
   };
 
-  p.mouseWheel = (event: { deltaY: number }) => {
+  p.mouseWheel = (event: WheelEvent) => {
     if (!isInside(p)) return;
+
+    // canvas内ではスクロールしないようにする
+    event.preventDefault();
 
     const { mouseX, mouseY } = calcVars(p.mouseX, p.mouseY, p.width, p.height);
 
@@ -155,6 +163,8 @@ const sketch = (p: p5) => {
       if (event.key === "ArrowUp") zoom(0.5);
       if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
       if (event.key === "ArrowLeft") setCurrentParams({ N: params.N - diff });
+
+      event.preventDefault();
     }
   };
 
@@ -174,3 +184,11 @@ const sketch = (p: p5) => {
 
 const p5root = document.getElementById("p5root");
 new p5(sketch, p5root!);
+
+// Canvas以外の要素
+const container = document.getElementById("app-root")!;
+ReactDOMClient.createRoot(container).render(
+  <React.StrictMode>
+    <AppRoot />
+  </React.StrictMode>
+);
