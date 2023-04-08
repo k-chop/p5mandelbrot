@@ -21,6 +21,7 @@ export interface MandelbrotParams {
   r: BigNumber;
   N: number;
   R: number;
+  mode: MandelbrotWorkerType;
 }
 
 export interface WorkerParams {

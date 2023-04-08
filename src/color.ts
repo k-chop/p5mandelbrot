@@ -1,4 +1,6 @@
 import p5 from "p5";
+import { Rect } from "./rect";
+import { getCanvasWidth } from "./camera";
 
 type ColorMapper = {
   size: number;
@@ -74,7 +76,7 @@ export const buildColors = (p: p5) => {
 export const fillColor = (
   x: number,
   y: number,
-  width: number,
+  canvasWidth: number,
   pixels: Uint8ClampedArray,
   palette: Uint8ClampedArray,
   iteration: number,
@@ -84,7 +86,7 @@ export const fillColor = (
   for (let i = 0; i < density; i++) {
     for (let j = 0; j < density; j++) {
       const pixelIndex =
-        4 * ((y * density + j) * width * density + (x * density + i));
+        4 * ((y * density + j) * canvasWidth * density + (x * density + i));
 
       if (iteration !== maxIteration) {
         const paletteIdx = (iteration % (palette.length / 4)) * 4;
@@ -105,20 +107,20 @@ export const fillColor = (
 const calcLogicalIndex = (x: number, y: number, width: number): number =>
   x + y * width;
 
-export const recolor = (
-  width: number,
-  height: number,
+export const renderIterationToPixel = (
+  rect: Rect,
   buffer: p5.Graphics,
   maxIteration: number,
   iterationsResult: Uint32Array,
   palette: Uint8ClampedArray
 ) => {
-  buffer.background(0);
+  const width = getCanvasWidth();
+
   buffer.loadPixels();
   const density = buffer.pixelDensity();
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+  for (let y = rect.y; y < rect.y + rect.height; y++) {
+    for (let x = rect.x; x < rect.x + rect.width; x++) {
       const logicalIndex = calcLogicalIndex(x, y, width);
       const n = iterationsResult[logicalIndex];
 

@@ -25,20 +25,15 @@ let lastCalc: MandelbrotParams = {
   r: new BigNumber(0),
   N: 0,
   R: 0,
+  mode: "normal",
 };
 
-let needsReCalculation = false;
 let running = false;
 
 let iterationTimeBuffer: Uint32Array;
 let iterationTimeBufferTemp: Uint32Array;
 
-let lastColorIdx = 0;
-let currentColorIdx = 0;
-let colorsArray: Uint8ClampedArray[];
-
 let completed = 0;
-let lastCompleted = 0;
 let lastTime = "0";
 
 let width = DEFAULT_WIDTH;
@@ -52,6 +47,7 @@ let currentParams: MandelbrotParams = {
   r: new BigNumber("0.00000363797880709171295166015625"),
   N: DEFAULT_N,
   R: 2,
+  mode: "normal",
 };
 
 let offsetParams: OffsetParams = {
@@ -120,9 +116,9 @@ export const setDeepIterationCount = () =>
 export const resetRadius = () => setCurrentParams({ r: new BigNumber("2.0") });
 
 export const changeMode = () => {
-  toggleWorkerType();
+  const mode = toggleWorkerType();
+  setCurrentParams({ mode });
   setOffsetParams({ x: 0, y: 0 });
-  needsReCalculation = true;
 };
 
 export const exportParamsToClipboard = () => {
@@ -150,26 +146,12 @@ export const importParamsFromClipboard = () => {
     });
 };
 
-export const initializeBuffer = () => {
+export const initializeIterationBuffer = () => {
   const { width, height } = getCanvasSize();
 
   iterationTimeBuffer = new Uint32Array(height * width);
   iterationTimeBufferTemp = new Uint32Array(height * width);
 };
-
-export const setColorsArray = (colors: Uint8ClampedArray[]) => {
-  colorsArray = colors;
-};
-
-export const setColorIndex = (index: number) => {
-  if (colorsArray[index]) {
-    currentColorIdx = index;
-  } else {
-    currentColorIdx = 0;
-  }
-};
-
-export const getPalette = () => colorsArray[currentColorIdx];
 
 export const zoom = (times: number) => {
   if (1 < times && currentParams.r.times(times).gte(5)) {
@@ -180,44 +162,21 @@ export const zoom = (times: number) => {
   setOffsetParams({ x: 0, y: 0 });
 };
 
-export const shouldDrawCompletedArea = () => {
-  const hasNewCompletedArea = lastCompleted !== completed;
-
-  return (
-    running &&
-    hasNewCompletedArea &&
-    !needsReCalculation &&
-    isSameParams(lastCalc, currentParams)
-  );
+export const paramsChanged = () => {
+  return !isSameParams(lastCalc, currentParams);
 };
 
-export const shouldDrawColorChanged = () => {
-  return (
-    !needsReCalculation &&
-    isSameParams(lastCalc, currentParams) &&
-    lastColorIdx !== currentColorIdx
-  );
-};
-
-export const shouldDrawWithoutRecolor = () => {
-  return !needsReCalculation && isSameParams(lastCalc, currentParams);
-};
-
-export const updateColor = () => {
-  lastColorIdx = currentColorIdx;
-};
-
-export const startCalculation = (onComplete: () => void) => {
+export const startCalculation = (
+  onBufferChanged: (updatedRect: Rect) => void
+) => {
   updateCurrentParams();
 
   if (running) {
     terminateWorkers();
   }
 
-  needsReCalculation = false;
   running = true;
   completed = 0;
-  lastCompleted = -1;
   progresses.fill(0);
 
   const before = performance.now();
@@ -238,6 +197,15 @@ export const startCalculation = (onComplete: () => void) => {
     // 進捗を直接表示用のバッファに直接書き込んでるからだと思われる
     // なんとかせい
 
+    // 移動した分の再描画範囲を計算
+    const iterationBufferTransferedRect = {
+      x: offsetX >= 0 ? 0 : Math.abs(offsetX),
+      y: offsetY >= 0 ? 0 : Math.abs(offsetY),
+      width: width - Math.abs(offsetX),
+      height: height - Math.abs(offsetY),
+    } satisfies Rect;
+
+    // これはたぶんそのうちいらなくなる
     copyBufferRectToRect(
       iterationTimeBufferTemp,
       iterationTimeBuffer,
@@ -252,6 +220,9 @@ export const startCalculation = (onComplete: () => void) => {
     );
 
     swapIterationTimeBuffer();
+
+    // 新しく計算しない部分を先に描画しておく
+    onBufferChanged(iterationBufferTransferedRect);
 
     calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
   }
@@ -285,9 +256,10 @@ export const startCalculation = (onComplete: () => void) => {
         progresses[idx] = 1.0;
         completed++;
 
-        if (isCompleted(completed)) {
-          onComplete();
+        // TODO: たぶん適度にdebounceしたほうがいい
+        onBufferChanged(rect);
 
+        if (isCompleted(completed)) {
           running = false;
           const after = performance.now();
           lastTime = (after - before).toFixed();
@@ -317,13 +289,17 @@ export const startCalculation = (onComplete: () => void) => {
       endY,
       startX,
       endX,
-      palette: getPalette(),
     });
   });
 };
 
 const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
-  a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.R === b.R;
+  a.x === b.x &&
+  a.y === b.y &&
+  a.r === b.r &&
+  a.N === b.N &&
+  a.R === b.R &&
+  a.mode === b.mode;
 
 const getOffsetRects = (): Rect[] => {
   const offsetX = offsetParams.x;
