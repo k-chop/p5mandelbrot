@@ -129,8 +129,11 @@ const sketch = (p: p5) => {
     setCurrentParams({ x: mouseX, y: mouseY });
   };
 
-  p.mouseWheel = (event: { deltaY: number }) => {
+  p.mouseWheel = (event: WheelEvent) => {
     if (!isInside(p)) return;
+
+    // canvas内ではスクロールしないようにする
+    event.preventDefault();
 
     const { mouseX, mouseY } = calcVars(p.mouseX, p.mouseY, p.width, p.height);
 
