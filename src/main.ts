@@ -21,7 +21,6 @@ import {
   setOffsetParams,
   shouldDrawWithoutRecolor,
   shouldDrawColorChanged,
-  shouldDrawCompletedArea,
   zoom,
   startCalculation,
   initializeIterationBuffer,
@@ -162,12 +161,7 @@ const sketch = (p: p5) => {
     p.image(result, 0, 0);
     drawInfo(p);
 
-    if (
-      shouldDrawCompletedArea() ||
-      shouldDrawColorChanged() ||
-      shouldDrawWithoutRecolor()
-    )
-      return;
+    if (shouldDrawColorChanged() || shouldDrawWithoutRecolor()) return;
 
     startCalculation((updatedRect: Rect) => {
       renderToMainBuffer(updatedRect);

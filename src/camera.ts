@@ -1,7 +1,6 @@
 import p5 from "p5";
 import { renderIterationToPixel } from "./color";
 import {
-  shouldDrawCompletedArea,
   shouldDrawColorChanged,
   updateColor,
   getIterationTimes,
@@ -27,7 +26,7 @@ export const setupCamera = (p: p5, w: number, h: number) => {
 };
 
 export const nextBuffer = (p: p5): p5.Graphics => {
-  if (shouldDrawCompletedArea() || shouldDrawColorChanged()) {
+  if (shouldDrawColorChanged()) {
     updateColor();
 
     renderToMainBuffer(bufferRect);

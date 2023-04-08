@@ -38,7 +38,6 @@ let currentColorIdx = 0;
 let colorsArray: Uint8ClampedArray[];
 
 let completed = 0;
-let lastCompleted = 0;
 let lastTime = "0";
 
 let width = DEFAULT_WIDTH;
@@ -180,17 +179,6 @@ export const zoom = (times: number) => {
   setOffsetParams({ x: 0, y: 0 });
 };
 
-export const shouldDrawCompletedArea = () => {
-  const hasNewCompletedArea = lastCompleted !== completed;
-
-  return (
-    running &&
-    hasNewCompletedArea &&
-    !needsReCalculation &&
-    isSameParams(lastCalc, currentParams)
-  );
-};
-
 export const shouldDrawColorChanged = () => {
   return (
     !needsReCalculation &&
@@ -219,7 +207,6 @@ export const startCalculation = (
   needsReCalculation = false;
   running = true;
   completed = 0;
-  lastCompleted = -1;
   progresses.fill(0);
 
   const before = performance.now();
