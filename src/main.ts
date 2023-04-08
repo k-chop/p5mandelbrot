@@ -78,13 +78,13 @@ const isInside = (p: p5) =>
   0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
 
 const sketch = (p: p5) => {
-  let buffer: p5.Graphics;
+  let mainBuffer: p5.Graphics;
 
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
     p.createCanvas(width, height);
-    buffer = p.createGraphics(width, height);
+    mainBuffer = p.createGraphics(width, height);
 
     p.noStroke();
     p.colorMode(p.HSB, 360, 100, 100, 100);
@@ -168,20 +168,20 @@ const sketch = (p: p5) => {
       recolor(
         p.width,
         p.height,
-        buffer,
+        mainBuffer,
         params.N,
         getIterationTimes(),
         getPalette()
       );
 
       p.background(0);
-      p.image(buffer, 0, 0);
+      p.image(mainBuffer, 0, 0);
       drawInfo(p);
 
       return;
     } else if (shouldDrawWithoutRecolor()) {
       p.background(0);
-      p.image(buffer, 0, 0);
+      p.image(mainBuffer, 0, 0);
       drawInfo(p);
 
       return;
@@ -191,7 +191,7 @@ const sketch = (p: p5) => {
       recolor(
         p.width,
         p.height,
-        buffer,
+        mainBuffer,
         params.N,
         getIterationTimes(),
         getPalette()
