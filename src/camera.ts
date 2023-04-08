@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { recolor } from "./color";
+import { renderIterationToPixel } from "./color";
 import {
   shouldDrawCompletedArea,
   shouldDrawColorChanged,
@@ -17,6 +17,8 @@ let height: number;
 
 let bufferRect: Rect;
 
+export const getCanvasWidth = () => width;
+
 export const setupCamera = (p: p5, w: number, h: number) => {
   mainBuffer = p.createGraphics(w, h);
   width = w;
@@ -28,18 +30,17 @@ export const nextBuffer = (p: p5): p5.Graphics => {
   if (shouldDrawCompletedArea() || shouldDrawColorChanged()) {
     updateColor();
 
-    renderToMainBuffer(p, bufferRect);
+    renderToMainBuffer(bufferRect);
   }
 
   return mainBuffer;
 };
 
-export const renderToMainBuffer = (p: p5, rect: Rect) => {
+export const renderToMainBuffer = (rect: Rect) => {
   const params = getCurrentParams();
 
-  recolor(
-    width,
-    height,
+  renderIterationToPixel(
+    rect,
     mainBuffer,
     params.N,
     getIterationTimes(),

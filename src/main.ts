@@ -170,7 +170,7 @@ const sketch = (p: p5) => {
       return;
 
     startCalculation((updatedRect: Rect) => {
-      renderToMainBuffer(p, updatedRect);
+      renderToMainBuffer(updatedRect);
     });
   };
 };

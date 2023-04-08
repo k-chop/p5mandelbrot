@@ -208,7 +208,7 @@ export const updateColor = () => {
 };
 
 export const startCalculation = (
-  bufferChanged: (updatedRect: Rect) => void
+  onBufferChanged: (updatedRect: Rect) => void
 ) => {
   updateCurrentParams();
 
@@ -240,6 +240,15 @@ export const startCalculation = (
     // 進捗を直接表示用のバッファに直接書き込んでるからだと思われる
     // なんとかせい
 
+    // 移動した分の再描画範囲を計算
+    const iterationBufferTransferedRect = {
+      x: offsetX >= 0 ? 0 : Math.abs(offsetX),
+      y: offsetY >= 0 ? 0 : Math.abs(offsetY),
+      width: width - Math.abs(offsetX),
+      height: height - Math.abs(offsetY),
+    } satisfies Rect;
+
+    // これはたぶんそのうちいらなくなる
     copyBufferRectToRect(
       iterationTimeBufferTemp,
       iterationTimeBuffer,
@@ -254,6 +263,9 @@ export const startCalculation = (
     );
 
     swapIterationTimeBuffer();
+
+    // 新しく計算しない部分を先に描画しておく
+    onBufferChanged(iterationBufferTransferedRect);
 
     calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
   }
@@ -287,7 +299,8 @@ export const startCalculation = (
         progresses[idx] = 1.0;
         completed++;
 
-        bufferChanged(rect);
+        // TODO: たぶん適度にdebounceしたほうがいい
+        onBufferChanged(rect);
 
         if (isCompleted(completed)) {
           running = false;
