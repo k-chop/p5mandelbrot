@@ -18,9 +18,10 @@ export const workerPaths: Record<MandelbrotWorkerType, new () => Worker> = {
 
 export const currentWorkerType = (): MandelbrotWorkerType => _currentWorkerType;
 
-export const toggleWorkerType = (): void => {
+export const toggleWorkerType = (): MandelbrotWorkerType => {
   _currentWorkerType = _currentWorkerType === "normal" ? "doublejs" : "normal";
   resetWorkers();
+  return _currentWorkerType;
 };
 
 export const getWorkerCount = (): number => _workerCount;

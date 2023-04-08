@@ -25,9 +25,9 @@ let lastCalc: MandelbrotParams = {
   r: new BigNumber(0),
   N: 0,
   R: 0,
+  mode: "normal",
 };
 
-let needsReCalculation = false;
 let running = false;
 
 let iterationTimeBuffer: Uint32Array;
@@ -51,6 +51,7 @@ let currentParams: MandelbrotParams = {
   r: new BigNumber("0.00000363797880709171295166015625"),
   N: DEFAULT_N,
   R: 2,
+  mode: "normal",
 };
 
 let offsetParams: OffsetParams = {
@@ -119,9 +120,9 @@ export const setDeepIterationCount = () =>
 export const resetRadius = () => setCurrentParams({ r: new BigNumber("2.0") });
 
 export const changeMode = () => {
-  toggleWorkerType();
+  const mode = toggleWorkerType();
+  setCurrentParams({ mode });
   setOffsetParams({ x: 0, y: 0 });
-  needsReCalculation = true;
 };
 
 export const exportParamsToClipboard = () => {
@@ -179,16 +180,12 @@ export const zoom = (times: number) => {
   setOffsetParams({ x: 0, y: 0 });
 };
 
-export const shouldDrawColorChanged = () => {
-  return (
-    !needsReCalculation &&
-    isSameParams(lastCalc, currentParams) &&
-    lastColorIdx !== currentColorIdx
-  );
+export const colorChanged = () => {
+  return lastColorIdx !== currentColorIdx;
 };
 
-export const shouldDrawWithoutRecolor = () => {
-  return !needsReCalculation && isSameParams(lastCalc, currentParams);
+export const paramsChanged = () => {
+  return !isSameParams(lastCalc, currentParams);
 };
 
 export const updateColor = () => {
@@ -204,7 +201,6 @@ export const startCalculation = (
     terminateWorkers();
   }
 
-  needsReCalculation = false;
   running = true;
   completed = 0;
   progresses.fill(0);
@@ -325,7 +321,12 @@ export const startCalculation = (
 };
 
 const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
-  a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.R === b.R;
+  a.x === b.x &&
+  a.y === b.y &&
+  a.r === b.r &&
+  a.N === b.N &&
+  a.R === b.R &&
+  a.mode === b.mode;
 
 const getOffsetRects = (): Rect[] => {
   const offsetX = offsetParams.x;

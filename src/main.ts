@@ -19,8 +19,8 @@ import {
   setCurrentParams,
   setDeepIterationCount,
   setOffsetParams,
-  shouldDrawWithoutRecolor,
-  shouldDrawColorChanged,
+  paramsChanged,
+  colorChanged,
   zoom,
   startCalculation,
   initializeIterationBuffer,
@@ -161,7 +161,7 @@ const sketch = (p: p5) => {
     p.image(result, 0, 0);
     drawInfo(p);
 
-    if (shouldDrawColorChanged() || shouldDrawWithoutRecolor()) return;
+    if (!paramsChanged()) return;
 
     startCalculation((updatedRect: Rect) => {
       renderToMainBuffer(updatedRect);
