@@ -27,6 +27,7 @@ import {
   initializeIterationBuffer,
 } from "./mandelbrot";
 import { nextBuffer, renderToMainBuffer, setupCamera } from "./camera";
+import { Rect } from "./rect";
 
 resetWorkers();
 
@@ -168,8 +169,8 @@ const sketch = (p: p5) => {
     )
       return;
 
-    startCalculation(() => {
-      renderToMainBuffer(p);
+    startCalculation((updatedRect: Rect) => {
+      renderToMainBuffer(p, updatedRect);
     });
   };
 };

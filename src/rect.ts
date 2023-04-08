@@ -1,3 +1,6 @@
+/**
+ * pixel単位の矩形
+ */
 export interface Rect {
   x: number;
   y: number;

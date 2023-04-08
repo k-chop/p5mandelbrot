@@ -8,29 +8,33 @@ import {
   getPalette,
   getCurrentParams,
 } from "./mandelbrot";
+import { Rect } from "./rect";
 
 let mainBuffer: p5.Graphics;
 
 let width: number;
 let height: number;
 
+let bufferRect: Rect;
+
 export const setupCamera = (p: p5, w: number, h: number) => {
   mainBuffer = p.createGraphics(w, h);
   width = w;
   height = h;
+  bufferRect = { x: 0, y: 0, width: w, height: h };
 };
 
 export const nextBuffer = (p: p5): p5.Graphics => {
   if (shouldDrawCompletedArea() || shouldDrawColorChanged()) {
     updateColor();
 
-    renderToMainBuffer(p);
+    renderToMainBuffer(p, bufferRect);
   }
 
   return mainBuffer;
 };
 
-export const renderToMainBuffer = (p: p5) => {
+export const renderToMainBuffer = (p: p5, rect: Rect) => {
   const params = getCurrentParams();
 
   recolor(

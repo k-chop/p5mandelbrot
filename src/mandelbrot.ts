@@ -207,7 +207,9 @@ export const updateColor = () => {
   lastColorIdx = currentColorIdx;
 };
 
-export const startCalculation = (onComplete: () => void) => {
+export const startCalculation = (
+  bufferChanged: (updatedRect: Rect) => void
+) => {
   updateCurrentParams();
 
   if (running) {
@@ -285,9 +287,9 @@ export const startCalculation = (onComplete: () => void) => {
         progresses[idx] = 1.0;
         completed++;
 
-        if (isCompleted(completed)) {
-          onComplete();
+        bufferChanged(rect);
 
+        if (isCompleted(completed)) {
           running = false;
           const after = performance.now();
           lastTime = (after - before).toFixed();
