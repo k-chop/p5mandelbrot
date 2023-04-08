@@ -30,6 +30,9 @@ import {
   setupCamera,
 } from "./camera";
 import { Rect } from "./rect";
+import React from "react";
+import ReactDOMClient from "react-dom/client";
+import { AppRoot } from "./view/app-root";
 
 resetWorkers();
 
@@ -174,3 +177,11 @@ const sketch = (p: p5) => {
 
 const p5root = document.getElementById("p5root");
 new p5(sketch, p5root!);
+
+// Canvas以外の要素
+const container = document.getElementById("app-root")!;
+ReactDOMClient.createRoot(container).render(
+  <React.StrictMode>
+    <AppRoot />
+  </React.StrictMode>
+);
