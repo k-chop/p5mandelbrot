@@ -33,8 +33,20 @@ import { Rect } from "./rect";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
 import { AppRoot } from "./view/app-root";
+import { createStore, updateStore } from "./store/store";
 
 resetWorkers();
+
+createStore({
+  centerX: "",
+  centerY: "",
+  mouseX: "",
+  mouseY: "",
+  r: "",
+  N: 0,
+  iteration: 0,
+  mode: "",
+});
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
@@ -58,6 +70,15 @@ const drawInfo = (p: p5) => {
   const params = getCurrentParams();
   const progress = getProgressString();
   const millis = getPreviousRenderTime();
+
+  updateStore("centerX", params.x.toPrecision(20));
+  updateStore("centerY", params.y.toPrecision(20));
+  updateStore("mouseX", mouseX.toPrecision(20));
+  updateStore("mouseY", mouseY.toPrecision(20));
+  updateStore("r", r.toPrecision(10));
+  updateStore("N", N);
+  updateStore("iteration", ifInside(iteration));
+  updateStore("mode", currentWorkerType());
 
   p.text(
     `centerX: ${params.x}\nmouseX: ${ifInside(mouseX)}\ncenterY: ${

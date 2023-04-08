@@ -7,6 +7,9 @@ dependencies:
   double.js:
     specifier: ^1.1.0
     version: 1.1.0
+  eventmit:
+    specifier: ^2.0.4
+    version: 2.0.4
   p5:
     specifier: ^1.6.0
     version: 1.6.0
@@ -786,6 +789,10 @@ packages:
     resolution: {integrity: sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==}
     engines: {node: '>=0.8.0'}
     dev: true
+
+  /eventmit@2.0.4:
+    resolution: {integrity: sha512-ajC4xDTMb8ydU8+VCwd/NLZzjl3piZXguctx+4vcbieC+aRHhHHoTG5vlwndebPyejAoBfUDTs3Ykax4xRTgXw==}
+    dev: false
 
   /fsevents@2.3.2:
     resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
