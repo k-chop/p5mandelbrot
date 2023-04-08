@@ -150,7 +150,7 @@ export const importParamsFromClipboard = () => {
     });
 };
 
-export const initializeBuffer = () => {
+export const initializeIterationBuffer = () => {
   const { width, height } = getCanvasSize();
 
   iterationTimeBuffer = new Uint32Array(height * width);

@@ -1,6 +1,6 @@
 import "./style.css";
 import p5 from "p5";
-import { buildColors, recolor } from "./color";
+import { buildColors } from "./color";
 import { currentWorkerType, resetWorkers } from "./workers";
 import {
   calcVars,
@@ -9,8 +9,6 @@ import {
   getCanvasSize,
   getCurrentParams,
   getIterationTimeAt,
-  getIterationTimes,
-  getPalette,
   getPreviousRenderTime,
   getProgressString,
   importParamsFromClipboard,
@@ -24,11 +22,11 @@ import {
   shouldDrawWithoutRecolor,
   shouldDrawColorChanged,
   shouldDrawCompletedArea,
-  updateColor,
   zoom,
   startCalculation,
-  initializeBuffer,
+  initializeIterationBuffer,
 } from "./mandelbrot";
+import { nextBuffer, renderToMainBuffer, setupCamera } from "./camera";
 
 resetWorkers();
 
@@ -78,18 +76,16 @@ const isInside = (p: p5) =>
   0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
 
 const sketch = (p: p5) => {
-  let mainBuffer: p5.Graphics;
-
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
     p.createCanvas(width, height);
-    mainBuffer = p.createGraphics(width, height);
+    setupCamera(p, width, height);
 
     p.noStroke();
     p.colorMode(p.HSB, 360, 100, 100, 100);
 
-    initializeBuffer();
+    initializeIterationBuffer();
 
     setColorsArray(buildColors(p));
   };
@@ -160,42 +156,20 @@ const sketch = (p: p5) => {
   };
 
   p.draw = () => {
-    const params = getCurrentParams();
+    const result = nextBuffer(p);
+    p.background(0);
+    p.image(result, 0, 0);
+    drawInfo(p);
 
-    if (shouldDrawCompletedArea() || shouldDrawColorChanged()) {
-      updateColor();
-
-      recolor(
-        p.width,
-        p.height,
-        mainBuffer,
-        params.N,
-        getIterationTimes(),
-        getPalette()
-      );
-
-      p.background(0);
-      p.image(mainBuffer, 0, 0);
-      drawInfo(p);
-
+    if (
+      shouldDrawCompletedArea() ||
+      shouldDrawColorChanged() ||
+      shouldDrawWithoutRecolor()
+    )
       return;
-    } else if (shouldDrawWithoutRecolor()) {
-      p.background(0);
-      p.image(mainBuffer, 0, 0);
-      drawInfo(p);
-
-      return;
-    }
 
     startCalculation(() => {
-      recolor(
-        p.width,
-        p.height,
-        mainBuffer,
-        params.N,
-        getIterationTimes(),
-        getPalette()
-      );
+      renderToMainBuffer(p);
     });
   };
 };
