@@ -164,11 +164,11 @@ const sketch = (p: p5) => {
     p.image(result, 0, 0);
     drawInfo(p);
 
-    if (!paramsChanged()) return;
-
-    startCalculation((updatedRect: Rect) => {
-      renderToMainBuffer(updatedRect);
-    });
+    if (paramsChanged()) {
+      startCalculation((updatedRect: Rect) => {
+        renderToMainBuffer(updatedRect);
+      });
+    }
   };
 };
 
