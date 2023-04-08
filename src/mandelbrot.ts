@@ -234,6 +234,10 @@ export const startCalculation = (onComplete: () => void) => {
     const offsetX = offsetParams.x;
     const offsetY = offsetParams.y;
 
+    // 拡大待ち中や移動が終わる前に再度移動すると表示が壊れる
+    // 進捗を直接表示用のバッファに直接書き込んでるからだと思われる
+    // なんとかせい
+
     copyBufferRectToRect(
       iterationTimeBufferTemp,
       iterationTimeBuffer,

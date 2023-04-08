@@ -9,14 +9,14 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@types/p5": "^1.4.3",
-    "typescript": "^4.9.3",
-    "vite": "^3.2.4",
-    "vitest": "^0.25.3"
+    "@types/p5": "^1.6.0",
+    "typescript": "^5.0.4",
+    "vite": "^4.2.1",
+    "vitest": "^0.29.8"
   },
   "dependencies": {
-    "bignumber.js": "^9.1.0",
+    "bignumber.js": "^9.1.1",
     "double.js": "^1.1.0",
-    "p5": "^1.5.0"
+    "p5": "^1.6.0"
   }
 }
