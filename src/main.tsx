@@ -71,6 +71,7 @@ const drawInfo = (p: p5) => {
   const progress = getProgressString();
   const millis = getPreviousRenderTime();
 
+  // TODO: たぶんrの値見て精度を決めるべき
   updateStore("centerX", params.x.toPrecision(20));
   updateStore("centerY", params.y.toPrecision(20));
   updateStore("mouseX", mouseX.toPrecision(20));
