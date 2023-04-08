@@ -56,11 +56,6 @@ const drawInfo = (p: p5) => {
     p.height
   );
 
-  p.fill(0, 35);
-  p.rect(5, 5, p.width - 10, 80);
-  p.rect(5, p.height - 25, p.width - 10, 22);
-  p.fill(255);
-
   const iteration = getIterationTimeAt(p.mouseX, p.mouseY);
 
   const ifInside = (val: { toString: () => String }) => {
@@ -81,23 +76,8 @@ const drawInfo = (p: p5) => {
   updateStore("iteration", ifInside(iteration));
   updateStore("mode", currentWorkerType());
 
-  p.text(
-    `centerX: ${params.x}\nmouseX: ${ifInside(mouseX)}\ncenterY: ${
-      params.y
-    }\nmouseY: ${ifInside(mouseY)}\nr: ${r.toPrecision(
-      10
-    )}, N: ${N}, iteration: ${ifInside(
-      iteration
-    )}, mode: ${currentWorkerType()}`,
-    10,
-    20
-  );
-
-  if (progress !== "100") {
-    p.text(`Generating... ${progress}%`, 10, p.height - 10);
-  } else {
-    p.text(`Done! time: ${millis}ms`, 10, p.height - 10);
-  }
+  updateStore("progress", progress);
+  updateStore("millis", millis);
 };
 
 const isInside = (p: p5) =>
