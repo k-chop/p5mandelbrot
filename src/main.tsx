@@ -182,6 +182,8 @@ const sketch = (p: p5) => {
       if (event.key === "ArrowUp") zoom(0.5);
       if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
       if (event.key === "ArrowLeft") setCurrentParams({ N: params.N - diff });
+
+      event.preventDefault();
     }
   };
 
