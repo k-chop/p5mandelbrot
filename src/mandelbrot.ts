@@ -33,10 +33,6 @@ let running = false;
 let iterationTimeBuffer: Uint32Array;
 let iterationTimeBufferTemp: Uint32Array;
 
-let lastColorIdx = 0;
-let currentColorIdx = 0;
-let colorsArray: Uint8ClampedArray[];
-
 let completed = 0;
 let lastTime = "0";
 
@@ -157,20 +153,6 @@ export const initializeIterationBuffer = () => {
   iterationTimeBufferTemp = new Uint32Array(height * width);
 };
 
-export const setColorsArray = (colors: Uint8ClampedArray[]) => {
-  colorsArray = colors;
-};
-
-export const setColorIndex = (index: number) => {
-  if (colorsArray[index]) {
-    currentColorIdx = index;
-  } else {
-    currentColorIdx = 0;
-  }
-};
-
-export const getPalette = () => colorsArray[currentColorIdx];
-
 export const zoom = (times: number) => {
   if (1 < times && currentParams.r.times(times).gte(5)) {
     return;
@@ -180,16 +162,8 @@ export const zoom = (times: number) => {
   setOffsetParams({ x: 0, y: 0 });
 };
 
-export const colorChanged = () => {
-  return lastColorIdx !== currentColorIdx;
-};
-
 export const paramsChanged = () => {
   return !isSameParams(lastCalc, currentParams);
-};
-
-export const updateColor = () => {
-  lastColorIdx = currentColorIdx;
 };
 
 export const startCalculation = (
@@ -315,7 +289,6 @@ export const startCalculation = (
       endY,
       startX,
       endX,
-      palette: getPalette(),
     });
   });
 };

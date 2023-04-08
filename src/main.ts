@@ -14,18 +14,21 @@ import {
   importParamsFromClipboard,
   resetIterationCount,
   resetRadius,
-  setColorIndex,
-  setColorsArray,
   setCurrentParams,
   setDeepIterationCount,
   setOffsetParams,
   paramsChanged,
-  colorChanged,
   zoom,
   startCalculation,
   initializeIterationBuffer,
 } from "./mandelbrot";
-import { nextBuffer, renderToMainBuffer, setupCamera } from "./camera";
+import {
+  nextBuffer,
+  renderToMainBuffer,
+  setColorIndex,
+  setColorsArray,
+  setupCamera,
+} from "./camera";
 import { Rect } from "./rect";
 
 resetWorkers();
