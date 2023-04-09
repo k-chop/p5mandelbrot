@@ -123,14 +123,14 @@ export const renderIterationsToPixel = (
   for (const iteration of iterationsResult) {
     const { rect, buffer } = iteration;
 
-    // FIXME: たぶん先にworldRectとiterationのrectが交差するか確認した方がいい
-    for (let y = rect.y; y < rect.y + rect.height; y++) {
-      // 描画範囲外
-      if (y < worldRect.y || worldRect.y + worldRect.height < y) continue;
+    // worldRectとiterationのrectが一致する箇所だけ描画する
+    const startY = Math.max(rect.y, worldRect.y);
+    const startX = Math.max(rect.x, worldRect.x);
+    const endY = Math.min(rect.y + rect.height, worldRect.y + worldRect.height);
+    const endX = Math.min(rect.x + rect.width, worldRect.x + worldRect.width);
 
-      for (let x = rect.x; x < rect.x + rect.width; x++) {
-        // 描画範囲外
-        if (x < worldRect.x || worldRect.x + worldRect.width < x) continue;
+    for (let y = startY; y < endY; y++) {
+      for (let x = startX; x < endX; x++) {
         // バッファ内で対応する点のiterationを取得
         const bufferLocalLogicalIndex = calcLogicalIndex(
           x - rect.x,
