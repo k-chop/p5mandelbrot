@@ -1,25 +1,26 @@
 import { Rect } from "./rect";
 import { IterationBuffer } from "./types";
 
-let iterationBuffer: IterationBuffer[] = [];
+// FIXME: もっと賢くデータを持つ
+let iterationCache: IterationBuffer[] = [];
 
-export const addIterationBuffer = (rect: Rect, buffer: Uint32Array): void => {
-  iterationBuffer.push({ rect, buffer });
+export const addIterationCache = (rect: Rect, buffer: Uint32Array): void => {
+  iterationCache.push({ rect, buffer });
 };
 
-export const getIterationBuffers = (): IterationBuffer[] => {
-  return iterationBuffer;
+export const getIterationCache = (): IterationBuffer[] => {
+  return iterationCache;
 };
 
-export const clearIterationBuffer = (): void => {
-  iterationBuffer = [];
+export const clearIterationCache = (): void => {
+  iterationCache = [];
 };
 
-export const translateIterationBuffer = (
+export const translateRectInIterationCache = (
   offsetX: number,
   offsetY: number
 ): void => {
-  iterationBuffer = iterationBuffer.map((iteration) => {
+  iterationCache = iterationCache.map((iteration) => {
     return {
       rect: {
         x: iteration.rect.x - offsetX,

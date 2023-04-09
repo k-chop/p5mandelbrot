@@ -14,9 +14,9 @@ import {
   getWorkerCount,
 } from "./workers";
 import {
-  addIterationBuffer,
-  clearIterationBuffer,
-  translateIterationBuffer,
+  addIterationCache,
+  clearIterationCache,
+  translateRectInIterationCache,
 } from "./aggregator";
 
 const DEFAULT_N = 500;
@@ -198,10 +198,9 @@ export const startCalculation = (
     const offsetX = offsetParams.x;
     const offsetY = offsetParams.y;
 
-    // 拡大待ち中や移動が終わる前に再度移動すると表示が壊れる
-    // 進捗を直接表示用のバッファに直接書き込んでるからだと思われる
+    // FIXME: 拡大待ち中や移動が終わる前に再度移動すると表示が壊れる
+    // 拡大開始したときに既にCacheが消えてるからそりゃそうだ
     // なんとかせい
-    // FIXME: たぶん生成完了してからBufferを消せばいい
 
     // 移動した分の再描画範囲を計算
     const iterationBufferTransferedRect = {
@@ -211,15 +210,16 @@ export const startCalculation = (
       height: height - Math.abs(offsetY),
     } satisfies Rect;
 
-    translateIterationBuffer(offsetX, offsetY);
+    // FIXME: キャッシュ側を毎回書き換えるのはどう考えても悪手
+    translateRectInIterationCache(offsetX, offsetY);
 
     // 新しく計算しない部分を先に描画しておく
     onBufferChanged(iterationBufferTransferedRect);
 
     calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
   } else {
-    // 移動していない場合は再利用するBufferがないので消す
-    clearIterationBuffer();
+    // 移動していない場合は再利用するCacheがないので消す
+    clearIterationCache();
   }
 
   registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
@@ -234,7 +234,7 @@ export const startCalculation = (
         const { iterations } = data;
 
         const iterationsResult = new Uint32Array(iterations);
-        addIterationBuffer(rect, iterationsResult);
+        addIterationCache(rect, iterationsResult);
 
         progresses[idx] = 1.0;
         completed++;

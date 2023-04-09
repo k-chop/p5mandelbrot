@@ -2,7 +2,7 @@ import p5 from "p5";
 import { renderIterationsToPixel } from "./color";
 import { getCurrentParams } from "./mandelbrot";
 import { Rect } from "./rect";
-import { getIterationBuffers } from "./aggregator";
+import { getIterationCache } from "./aggregator";
 
 let mainBuffer: p5.Graphics;
 
@@ -62,7 +62,7 @@ export const renderToMainBuffer = (rect: Rect) => {
     rect,
     mainBuffer,
     params.N,
-    getIterationBuffers(),
+    getIterationCache(),
     getPalette()
   );
 };
