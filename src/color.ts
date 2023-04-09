@@ -105,8 +105,11 @@ export const fillColor = (
   }
 };
 
-const calcLogicalIndex = (x: number, y: number, width: number): number =>
-  x + y * width;
+export const bufferLocalLogicalIndex = (
+  x: number,
+  y: number,
+  rect: Rect
+): number => x - rect.x + (y - rect.y) * rect.width;
 
 export const renderIterationsToPixel = (
   worldRect: Rect,
@@ -132,12 +135,8 @@ export const renderIterationsToPixel = (
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
         // バッファ内で対応する点のiterationを取得
-        const bufferLocalLogicalIndex = calcLogicalIndex(
-          x - rect.x,
-          y - rect.y,
-          rect.width
-        );
-        const n = buffer[bufferLocalLogicalIndex];
+        const idx = bufferLocalLogicalIndex(x, y, rect);
+        const n = buffer[idx];
 
         const pixels = graphics.pixels as unknown as Uint8ClampedArray;
         fillColor(x, y, canvasWidth, pixels, palette, n, maxIteration, density);

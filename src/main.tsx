@@ -8,7 +8,6 @@ import {
   exportParamsToClipboard,
   getCanvasSize,
   getCurrentParams,
-  getIterationTimeAt,
   getPreviousRenderTime,
   getProgressString,
   importParamsFromClipboard,
@@ -20,7 +19,6 @@ import {
   paramsChanged,
   zoom,
   startCalculation,
-  initializeIterationBuffer,
 } from "./mandelbrot";
 import {
   nextBuffer,
@@ -34,6 +32,7 @@ import React from "react";
 import ReactDOMClient from "react-dom/client";
 import { AppRoot } from "./view/app-root";
 import { createStore, updateStore } from "./store/store";
+import { getIterationTimeAt } from "./aggregator";
 
 resetWorkers();
 
@@ -73,7 +72,9 @@ const drawInfo = (p: p5) => {
   updateStore("mouseY", mouseY.toPrecision(20));
   updateStore("r", r.toPrecision(10));
   updateStore("N", N);
-  updateStore("iteration", ifInside(iteration));
+  if (iteration !== -1) {
+    updateStore("iteration", ifInside(iteration));
+  }
   updateStore("mode", currentWorkerType());
 
   updateStore("progress", progress);
@@ -92,8 +93,6 @@ const sketch = (p: p5) => {
 
     p.noStroke();
     p.colorMode(p.HSB, 360, 100, 100, 100);
-
-    initializeIterationBuffer();
 
     setColorsArray(buildColors(p));
   };

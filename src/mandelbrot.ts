@@ -34,9 +34,6 @@ let lastCalc: MandelbrotParams = {
 
 let running = false;
 
-let iterationTimeBuffer: Uint32Array;
-let iterationTimeBufferTemp: Uint32Array;
-
 let completed = 0;
 let lastTime = "0";
 
@@ -94,13 +91,6 @@ export const getProgressString = () =>
 
 export const getPreviousRenderTime = () => lastTime;
 
-export const getIterationTimes = () => iterationTimeBuffer;
-
-export const getIterationTimeAt = (x: number, y: number) => {
-  const index = y * width + x;
-  return iterationTimeBuffer[Math.floor(index)];
-};
-
 export const updateCurrentParams = () => {
   lastCalc = { ...currentParams };
 };
@@ -148,13 +138,6 @@ export const importParamsFromClipboard = () => {
     .catch(() => {
       console.log("Clipboard import failed.");
     });
-};
-
-export const initializeIterationBuffer = () => {
-  const { width, height } = getCanvasSize();
-
-  iterationTimeBuffer = new Uint32Array(height * width);
-  iterationTimeBufferTemp = new Uint32Array(height * width);
 };
 
 export const zoom = (times: number) => {
@@ -310,11 +293,4 @@ const getOffsetRects = (): Rect[] => {
   }
 
   return rects;
-};
-
-const swapIterationTimeBuffer = () => {
-  [iterationTimeBuffer, iterationTimeBufferTemp] = [
-    iterationTimeBufferTemp,
-    iterationTimeBuffer,
-  ];
 };

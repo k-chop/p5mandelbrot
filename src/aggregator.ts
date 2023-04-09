@@ -1,3 +1,4 @@
+import { bufferLocalLogicalIndex } from "./color";
 import { Rect } from "./rect";
 import { IterationBuffer } from "./types";
 
@@ -14,6 +15,26 @@ export const getIterationCache = (): IterationBuffer[] => {
 
 export const clearIterationCache = (): void => {
   iterationCache = [];
+};
+
+/**
+ * マウスXY座標の位置のiteration回数を取得する
+ */
+export const getIterationTimeAt = (x: number, y: number) => {
+  for (const iteration of iterationCache) {
+    if (x < iteration.rect.x || iteration.rect.x + iteration.rect.width < x)
+      continue;
+    if (y < iteration.rect.y || iteration.rect.y + iteration.rect.height < y)
+      continue;
+    const idx = bufferLocalLogicalIndex(
+      Math.floor(x),
+      Math.floor(y),
+      iteration.rect
+    );
+
+    return iteration.buffer[idx];
+  }
+  return -1;
 };
 
 export const translateRectInIterationCache = (
