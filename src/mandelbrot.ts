@@ -168,8 +168,7 @@ export const startCalculation = (
 
   const before = performance.now();
 
-  // FIXME: 割り切れないパターンのときにおかしくなるのでテスト追加してね
-  const minSide = 100; //Math.sqrt((width * height) / getWorkerCount());
+  const minSide = Math.floor(Math.sqrt((width * height) / getWorkerCount()));
 
   let calculationRects = divideRect(
     [{ x: 0, y: 0, width, height }],
