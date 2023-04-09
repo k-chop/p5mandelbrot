@@ -1,12 +1,45 @@
-/**
- * pixel単位の矩形
- */
+import BigNumber from "bignumber.js";
+
+/** pixel単位の矩形 */
 export interface Rect {
   x: number;
   y: number;
   width: number;
   height: number;
 }
+
+/** 複素数平面座標の矩形 */
+export type RealRect = {
+  topLeftX: BigNumber;
+  topLeftY: BigNumber;
+  bottomRightX: BigNumber;
+  bottomRightY: BigNumber;
+};
+
+export const calculateRealRect = (
+  cx: BigNumber,
+  cy: BigNumber,
+  rect: Rect,
+  canvasWidth: number,
+  canvasHeight: number,
+  r: BigNumber
+): RealRect => {
+  const topLeftX = cx.plus((rect.x * 2) / canvasWidth - 1.0).times(r);
+  const topLeftY = cy.minus((rect.y * 2) / canvasHeight - 1.0).times(r);
+  const bottomRightX = cx
+    .plus(((rect.x + rect.width) * 2) / canvasWidth - 1.0)
+    .times(r);
+  const bottomRightY = cy
+    .minus(((rect.y + rect.height) * 2) / canvasHeight - 1.0)
+    .times(r);
+
+  return {
+    topLeftX,
+    topLeftY,
+    bottomRightX,
+    bottomRightY,
+  };
+};
 
 export const calculateDivideArea = (
   divideCount: number
