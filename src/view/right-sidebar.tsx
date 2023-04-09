@@ -47,8 +47,8 @@ const Descriptions = () => {
       <li>- 1,2,3: Change color scheme</li>
       <li>- m: Toggle float precision (64bit, 128bit)</li>
       <li>- r: Reset r to 2.0</li>
-      <li>- ←→: Change iteration count (±100)</li>
-      <li>- Shift + ←→: Change iteration count wisely (maybe)</li>
+      <li>- ←→: Change max iteration (±100)</li>
+      <li>- Shift + ←→: Change max iteration wisely (maybe)</li>
       <li>- 9: Reset iteration count to 10000</li>
       <li>- 0: Reset iteration count to 500</li>
     </ul>
