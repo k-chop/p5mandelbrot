@@ -221,6 +221,7 @@ export const startCalculation = (
     clearIterationBuffer();
   }
 
+  // FIXME: よくわからんけどワーカー数を変えると描画がぶっ壊れるのでなにかおかしい
   registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
     const startX = rect.x;
     const endX = rect.x + rect.width;
