@@ -14,7 +14,7 @@ import {
   toggleWorkerType,
   getWorkerCount,
 } from "./workers";
-import { addIterationBuffer } from "./aggregator";
+import { addIterationBuffer, translateIterationBuffer } from "./aggregator";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -208,23 +208,26 @@ export const startCalculation = (
       height: height - Math.abs(offsetY),
     } satisfies Rect;
 
+    translateIterationBuffer(offsetX, offsetY);
+
     // これはたぶんそのうちいらなくなる
     // FIXME: iterationBufferのrectだけ切り替えれば良い
-    copyBufferRectToRect(
-      iterationTimeBufferTemp,
-      iterationTimeBuffer,
-      width,
-      width,
-      width - Math.abs(offsetX),
-      height - Math.abs(offsetY),
-      Math.abs(Math.min(0, offsetX)),
-      Math.abs(Math.min(0, offsetY)),
-      Math.max(0, offsetX),
-      Math.max(0, offsetY)
-    );
+    // copyBufferRectToRect(
+    //   iterationTimeBufferTemp,
+    //   iterationTimeBuffer,
+    //   width,
+    //   width,
+    //   width - Math.abs(offsetX),
+    //   height - Math.abs(offsetY),
+    //   Math.abs(Math.min(0, offsetX)),
+    //   Math.abs(Math.min(0, offsetY)),
+    //   Math.max(0, offsetX),
+    //   Math.max(0, offsetY)
+    // );
 
-    swapIterationTimeBuffer();
+    // swapIterationTimeBuffer();
 
+    console.log(iterationBufferTransferedRect);
     // 新しく計算しない部分を先に描画しておく
     onBufferChanged(iterationBufferTransferedRect);
 

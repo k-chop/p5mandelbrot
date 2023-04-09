@@ -176,7 +176,8 @@ const sketch = (p: p5) => {
     drawInfo(p);
 
     if (paramsChanged()) {
-      clearIterationBuffer();
+      // FIXME: ここで消すと移動時にbufferをtranslateできない
+      // clearIterationBuffer();
 
       startCalculation((updatedRect: Rect) => {
         renderToMainBuffer(updatedRect);
