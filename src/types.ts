@@ -1,4 +1,5 @@
 import { BigNumber } from "bignumber.js";
+import { Rect } from "./rect";
 
 export interface WorkerResult {
   type: "result";
@@ -39,3 +40,8 @@ export interface WorkerParams {
 }
 
 export type MandelbrotWorkerType = "normal" | "doublejs";
+
+export interface IterationBuffer {
+  rect: Rect;
+  buffer: Uint32Array;
+}

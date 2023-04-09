@@ -34,6 +34,7 @@ import React from "react";
 import ReactDOMClient from "react-dom/client";
 import { AppRoot } from "./view/app-root";
 import { createStore, updateStore } from "./store/store";
+import { clearIterationBuffer } from "./aggregator";
 
 resetWorkers();
 
@@ -175,6 +176,8 @@ const sketch = (p: p5) => {
     drawInfo(p);
 
     if (paramsChanged()) {
+      clearIterationBuffer();
+
       startCalculation((updatedRect: Rect) => {
         renderToMainBuffer(updatedRect);
       });

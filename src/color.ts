@@ -1,6 +1,7 @@
 import p5 from "p5";
 import { Rect } from "./rect";
 import { getCanvasWidth } from "./camera";
+import { IterationBuffer } from "./types";
 
 type ColorMapper = {
   size: number;
@@ -107,27 +108,42 @@ export const fillColor = (
 const calcLogicalIndex = (x: number, y: number, width: number): number =>
   x + y * width;
 
-export const renderIterationToPixel = (
-  rect: Rect,
-  buffer: p5.Graphics,
+export const renderIterationsToPixel = (
+  worldRect: Rect,
+  graphics: p5.Graphics,
   maxIteration: number,
-  iterationsResult: Uint32Array,
+  iterationsResult: IterationBuffer[],
   palette: Uint8ClampedArray
 ) => {
-  const width = getCanvasWidth();
+  const canvasWidth = getCanvasWidth();
 
-  buffer.loadPixels();
-  const density = buffer.pixelDensity();
+  graphics.loadPixels();
+  const density = graphics.pixelDensity();
 
-  for (let y = rect.y; y < rect.y + rect.height; y++) {
-    for (let x = rect.x; x < rect.x + rect.width; x++) {
-      const logicalIndex = calcLogicalIndex(x, y, width);
-      const n = iterationsResult[logicalIndex];
+  for (const iteration of iterationsResult) {
+    const { rect, buffer } = iteration;
 
-      const pixels = buffer.pixels as unknown as Uint8ClampedArray;
-      fillColor(x, y, width, pixels, palette, n, maxIteration, density);
+    // FIXME: たぶん先にworldRectとiterationのrectが交差するか確認した方がいい
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      // 描画範囲外
+      if (y < worldRect.y || worldRect.y + worldRect.height < y) continue;
+
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        // 描画範囲外
+        if (x < worldRect.x || worldRect.x + worldRect.width < x) continue;
+        // バッファ内で対応する点のiterationを取得
+        const bufferLocalLogicalIndex = calcLogicalIndex(
+          x - rect.x,
+          y - rect.y,
+          rect.width
+        );
+        const n = buffer[bufferLocalLogicalIndex];
+
+        const pixels = graphics.pixels as unknown as Uint8ClampedArray;
+        fillColor(x, y, canvasWidth, pixels, palette, n, maxIteration, density);
+      }
     }
   }
 
-  buffer.updatePixels();
+  graphics.updatePixels();
 };

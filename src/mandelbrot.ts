@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { copyBufferRectToRect } from "./buffer";
-import { divideRect, Rect } from "./rect";
+import { calculateRealRect, divideRect, Rect } from "./rect";
 import {
   MandelbrotParams,
   OffsetParams,
@@ -14,6 +14,7 @@ import {
   toggleWorkerType,
   getWorkerCount,
 } from "./workers";
+import { addIterationBuffer } from "./aggregator";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -166,6 +167,8 @@ export const paramsChanged = () => {
   return !isSameParams(lastCalc, currentParams);
 };
 
+// aggregatorを導入して、複数のiterationBufferからrenderingできるようにする
+
 export const startCalculation = (
   onBufferChanged: (updatedRect: Rect) => void
 ) => {
@@ -206,6 +209,7 @@ export const startCalculation = (
     } satisfies Rect;
 
     // これはたぶんそのうちいらなくなる
+    // FIXME: iterationBufferのrectだけ切り替えれば良い
     copyBufferRectToRect(
       iterationTimeBufferTemp,
       iterationTimeBuffer,
@@ -239,19 +243,7 @@ export const startCalculation = (
         const { iterations } = data;
 
         const iterationsResult = new Uint32Array(iterations);
-
-        copyBufferRectToRect(
-          iterationTimeBuffer,
-          iterationsResult,
-          width,
-          rect.width,
-          rect.width,
-          rect.height,
-          rect.x,
-          rect.y,
-          0,
-          0
-        );
+        addIterationBuffer(rect, iterationsResult);
 
         progresses[idx] = 1.0;
         completed++;

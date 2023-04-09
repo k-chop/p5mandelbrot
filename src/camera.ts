@@ -1,7 +1,8 @@
 import p5 from "p5";
-import { renderIterationToPixel } from "./color";
-import { getIterationTimes, getCurrentParams } from "./mandelbrot";
+import { renderIterationsToPixel } from "./color";
+import { getCurrentParams } from "./mandelbrot";
 import { Rect } from "./rect";
+import { getIterationBuffers } from "./aggregator";
 
 let mainBuffer: p5.Graphics;
 
@@ -57,11 +58,11 @@ export const nextBuffer = (p: p5): p5.Graphics => {
 export const renderToMainBuffer = (rect: Rect) => {
   const params = getCurrentParams();
 
-  renderIterationToPixel(
+  renderIterationsToPixel(
     rect,
     mainBuffer,
     params.N,
-    getIterationTimes(),
+    getIterationBuffers(),
     getPalette()
   );
 };
