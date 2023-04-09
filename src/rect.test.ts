@@ -106,6 +106,23 @@ describe("divideRect", () => {
     expect(expected).toEqual(result);
   });
 
+  it("単純なケースの分割", () => {
+    const rects = [
+      {
+        x: 0,
+        y: 0,
+        width: 800,
+        height: 800,
+      },
+    ];
+    const result = divideRect(rects, 2, 100);
+    const expected = [
+      { x: 0, y: 0, width: 800, height: 400 },
+      { x: 0, y: 400, width: 800, height: 400 },
+    ];
+    expect(expected).toEqual(result);
+  });
+
   it("expectedDivideCountを超えない", () => {
     const rects = [
       {

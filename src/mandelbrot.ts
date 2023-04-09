@@ -1,5 +1,4 @@
 import BigNumber from "bignumber.js";
-import { copyBufferRectToRect } from "./buffer";
 import { divideRect, Rect } from "./rect";
 import {
   MandelbrotParams,
@@ -14,6 +13,11 @@ import {
   toggleWorkerType,
   getWorkerCount,
 } from "./workers";
+import {
+  addIterationCache,
+  clearIterationCache,
+  translateRectInIterationCache,
+} from "./aggregator";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -29,9 +33,6 @@ let lastCalc: MandelbrotParams = {
 };
 
 let running = false;
-
-let iterationTimeBuffer: Uint32Array;
-let iterationTimeBufferTemp: Uint32Array;
 
 let completed = 0;
 let lastTime = "0";
@@ -90,13 +91,6 @@ export const getProgressString = () =>
 
 export const getPreviousRenderTime = () => lastTime;
 
-export const getIterationTimes = () => iterationTimeBuffer;
-
-export const getIterationTimeAt = (x: number, y: number) => {
-  const index = y * width + x;
-  return iterationTimeBuffer[Math.floor(index)];
-};
-
 export const updateCurrentParams = () => {
   lastCalc = { ...currentParams };
 };
@@ -146,13 +140,6 @@ export const importParamsFromClipboard = () => {
     });
 };
 
-export const initializeIterationBuffer = () => {
-  const { width, height } = getCanvasSize();
-
-  iterationTimeBuffer = new Uint32Array(height * width);
-  iterationTimeBufferTemp = new Uint32Array(height * width);
-};
-
 export const zoom = (times: number) => {
   if (1 < times && currentParams.r.times(times).gte(5)) {
     return;
@@ -181,7 +168,7 @@ export const startCalculation = (
 
   const before = performance.now();
 
-  const minSide = Math.sqrt((width * height) / getWorkerCount());
+  const minSide = Math.floor(Math.sqrt((width * height) / getWorkerCount()));
 
   let calculationRects = divideRect(
     [{ x: 0, y: 0, width, height }],
@@ -193,8 +180,8 @@ export const startCalculation = (
     const offsetX = offsetParams.x;
     const offsetY = offsetParams.y;
 
-    // 拡大待ち中や移動が終わる前に再度移動すると表示が壊れる
-    // 進捗を直接表示用のバッファに直接書き込んでるからだと思われる
+    // FIXME: 拡大待ち中や移動が終わる前に再度移動すると表示が壊れる
+    // 拡大開始したときに既にCacheが消えてるからそりゃそうだ
     // なんとかせい
 
     // 移動した分の再描画範囲を計算
@@ -205,26 +192,16 @@ export const startCalculation = (
       height: height - Math.abs(offsetY),
     } satisfies Rect;
 
-    // これはたぶんそのうちいらなくなる
-    copyBufferRectToRect(
-      iterationTimeBufferTemp,
-      iterationTimeBuffer,
-      width,
-      width,
-      width - Math.abs(offsetX),
-      height - Math.abs(offsetY),
-      Math.abs(Math.min(0, offsetX)),
-      Math.abs(Math.min(0, offsetY)),
-      Math.max(0, offsetX),
-      Math.max(0, offsetY)
-    );
-
-    swapIterationTimeBuffer();
+    // FIXME: キャッシュ側を毎回書き換えるのはどう考えても悪手
+    translateRectInIterationCache(offsetX, offsetY);
 
     // 新しく計算しない部分を先に描画しておく
     onBufferChanged(iterationBufferTransferedRect);
 
     calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
+  } else {
+    // 移動していない場合は再利用するCacheがないので消す
+    clearIterationCache();
   }
 
   registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
@@ -239,19 +216,7 @@ export const startCalculation = (
         const { iterations } = data;
 
         const iterationsResult = new Uint32Array(iterations);
-
-        copyBufferRectToRect(
-          iterationTimeBuffer,
-          iterationsResult,
-          width,
-          rect.width,
-          rect.width,
-          rect.height,
-          rect.x,
-          rect.y,
-          0,
-          0
-        );
+        addIterationCache(rect, iterationsResult);
 
         progresses[idx] = 1.0;
         completed++;
@@ -327,11 +292,4 @@ const getOffsetRects = (): Rect[] => {
   }
 
   return rects;
-};
-
-const swapIterationTimeBuffer = () => {
-  [iterationTimeBuffer, iterationTimeBufferTemp] = [
-    iterationTimeBufferTemp,
-    iterationTimeBuffer,
-  ];
 };
