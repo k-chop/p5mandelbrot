@@ -185,7 +185,8 @@ export const startCalculation = (
 
   const before = performance.now();
 
-  const minSide = Math.sqrt((width * height) / getWorkerCount());
+  // FIXME: 割り切れないパターンのときにおかしくなるのでテスト追加してね
+  const minSide = 100; //Math.sqrt((width * height) / getWorkerCount());
 
   let calculationRects = divideRect(
     [{ x: 0, y: 0, width, height }],
@@ -221,7 +222,6 @@ export const startCalculation = (
     clearIterationBuffer();
   }
 
-  // FIXME: よくわからんけどワーカー数を変えると描画がぶっ壊れるのでなにかおかしい
   registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
     const startX = rect.x;
     const endX = rect.x + rect.width;

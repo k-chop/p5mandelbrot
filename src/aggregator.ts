@@ -19,7 +19,6 @@ export const translateIterationBuffer = (
   offsetX: number,
   offsetY: number
 ): void => {
-  console.log(offsetX, offsetY);
   iterationBuffer = iterationBuffer.map((iteration) => {
     return {
       rect: {
