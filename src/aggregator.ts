@@ -2,6 +2,11 @@ import { bufferLocalLogicalIndex } from "./color";
 import { Rect } from "./rect";
 import { IterationBuffer } from "./types";
 
+// FIXME: たぶんIterationBufferは複素数平面座標に対するキャッシュを持つべき
+// それならrがどうであれ使い回せるはず
+// 一方でちゃんとピクセル座標と誤差なく対応させられるかわからない
+// BigNumberだし比較重いかも
+
 // FIXME: もっと賢くデータを持つ
 let iterationCache: IterationBuffer[] = [];
 
