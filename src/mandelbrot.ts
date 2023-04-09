@@ -1,6 +1,5 @@
 import BigNumber from "bignumber.js";
-import { copyBufferRectToRect } from "./buffer";
-import { calculateRealRect, divideRect, Rect } from "./rect";
+import { divideRect, Rect } from "./rect";
 import {
   MandelbrotParams,
   OffsetParams,
@@ -14,7 +13,11 @@ import {
   toggleWorkerType,
   getWorkerCount,
 } from "./workers";
-import { addIterationBuffer, translateIterationBuffer } from "./aggregator";
+import {
+  addIterationBuffer,
+  clearIterationBuffer,
+  translateIterationBuffer,
+} from "./aggregator";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -167,8 +170,6 @@ export const paramsChanged = () => {
   return !isSameParams(lastCalc, currentParams);
 };
 
-// aggregatorを導入して、複数のiterationBufferからrenderingできるようにする
-
 export const startCalculation = (
   onBufferChanged: (updatedRect: Rect) => void
 ) => {
@@ -199,6 +200,7 @@ export const startCalculation = (
     // 拡大待ち中や移動が終わる前に再度移動すると表示が壊れる
     // 進捗を直接表示用のバッファに直接書き込んでるからだと思われる
     // なんとかせい
+    // FIXME: たぶん生成完了してからBufferを消せばいい
 
     // 移動した分の再描画範囲を計算
     const iterationBufferTransferedRect = {
@@ -210,28 +212,13 @@ export const startCalculation = (
 
     translateIterationBuffer(offsetX, offsetY);
 
-    // これはたぶんそのうちいらなくなる
-    // FIXME: iterationBufferのrectだけ切り替えれば良い
-    // copyBufferRectToRect(
-    //   iterationTimeBufferTemp,
-    //   iterationTimeBuffer,
-    //   width,
-    //   width,
-    //   width - Math.abs(offsetX),
-    //   height - Math.abs(offsetY),
-    //   Math.abs(Math.min(0, offsetX)),
-    //   Math.abs(Math.min(0, offsetY)),
-    //   Math.max(0, offsetX),
-    //   Math.max(0, offsetY)
-    // );
-
-    // swapIterationTimeBuffer();
-
-    console.log(iterationBufferTransferedRect);
     // 新しく計算しない部分を先に描画しておく
     onBufferChanged(iterationBufferTransferedRect);
 
     calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
+  } else {
+    // 移動していない場合は再利用するBufferがないので消す
+    clearIterationBuffer();
   }
 
   registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
