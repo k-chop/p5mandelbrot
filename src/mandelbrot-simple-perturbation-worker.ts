@@ -29,19 +29,31 @@ self.addEventListener("message", (event) => {
   // TODO: とりあえず手抜きでなんと毎回Reference Pointを計算する
   for (let y = startY; y < endY; y++) {
     for (let x = startX; x < endX; x++) {
+      // z
       let zr = new Double(0.0);
       let zi = new Double(0.0);
+      // Δz
+      let dzr = 0.0;
+      let dzi = 0.0;
+
+      // c
       const cr = cx.add(new Double(x).mul(2).div(col).sub(1).mul(r));
       const ci = cy.sub(new Double(y).mul(2).div(row).sub(1).mul(r));
+      // Δc
+      const dcr = cx.sub(cr).toNumber();
+      const dci = cy.sub(ci).toNumber();
 
       let n = 0;
-      let zr2 = new Double(0.0);
-      let zi2 = new Double(0.0);
-      while (zr2.add(zi2).le(R2) && n < N) {
-        zi = zr.add(zr).mul(zi).add(ci);
-        zr = zr2.sub(zi2).add(cr);
-        zr2 = zr.mul(zr);
-        zi2 = zi.mul(zi);
+      while (dzr * dzr + dzi * dzi <= R2.toNumber() && n < N) {
+        const dzrT = zr.toNumber() * 2 + dzr;
+        const dziT = zi.toNumber() * 2 + dzi;
+        dzr = dzrT * dzr - dziT * dzi + dcr;
+        dzi = dzrT * dzi + dziT * dzr + dci;
+
+        const tzr = zr.mul(zr).sub(zi.mul(zi)).add(cr);
+        const tzi = zr.mul(zi).add(zr.mul(zi)).add(ci);
+        zr = tzr;
+        zi = tzi;
 
         n++;
       }
