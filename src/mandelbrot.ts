@@ -10,7 +10,7 @@ import {
   activeWorkerCount,
   registerWorkerTask,
   terminateWorkers,
-  toggleWorkerType,
+  cycleWorkerType,
   getWorkerCount,
 } from "./workers";
 import {
@@ -110,7 +110,7 @@ export const setDeepIterationCount = () =>
 export const resetRadius = () => setCurrentParams({ r: new BigNumber("2.0") });
 
 export const changeMode = () => {
-  const mode = toggleWorkerType();
+  const mode = cycleWorkerType();
   setCurrentParams({ mode });
   setOffsetParams({ x: 0, y: 0 });
 };

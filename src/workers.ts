@@ -1,6 +1,7 @@
-import { MandelbrotWorkerType } from "./types";
+import { MandelbrotWorkerType, mandelbrotWorkerTypes } from "./types";
 import MandelbrotWorker from "./mandelbrot-worker?worker&inline";
 import MandelbrotDoubleJsWorker from "./mandelbrot-doublejs-worker?worker&inline";
+import MandelbrotSimplePerturbationWorker from "./mandelbrot-simple-perturbation-worker?worker&inline";
 import { Rect } from "./rect";
 
 // 処理領域の分割しやすさの関係でワーカーの数は1または偶数に制限しておく
@@ -14,12 +15,18 @@ let _activeWorkerCount = _workers.length;
 export const workerPaths: Record<MandelbrotWorkerType, new () => Worker> = {
   normal: MandelbrotWorker,
   doublejs: MandelbrotDoubleJsWorker,
+  simplePerturbation: MandelbrotSimplePerturbationWorker,
 };
 
 export const currentWorkerType = (): MandelbrotWorkerType => _currentWorkerType;
 
-export const toggleWorkerType = (): MandelbrotWorkerType => {
-  _currentWorkerType = _currentWorkerType === "normal" ? "doublejs" : "normal";
+export const cycleWorkerType = (): MandelbrotWorkerType => {
+  const currentIndex = mandelbrotWorkerTypes.findIndex(
+    (v) => v === _currentWorkerType
+  );
+  _currentWorkerType =
+    mandelbrotWorkerTypes[(currentIndex + 1) % mandelbrotWorkerTypes.length];
+
   resetWorkers();
   return _currentWorkerType;
 };
