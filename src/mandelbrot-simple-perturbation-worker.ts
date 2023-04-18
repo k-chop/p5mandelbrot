@@ -36,8 +36,6 @@ self.addEventListener("message", (event) => {
   const r = new Double(rStr);
   const R2 = new Double(R2Number);
 
-  console.log(cxStr, cyStr, startX, startY, endX, endY);
-
   const znr: number[] = [];
   const zni: number[] = [];
 
