@@ -59,8 +59,8 @@ self.addEventListener("message", (event) => {
     const cr = cx.add(new Double(x).mul(2).div(col).sub(1).mul(r));
     const ci = cy.sub(new Double(y).mul(2).div(row).sub(1).mul(r));
     // Δc
-    const dcr = cx.sub(cr).toNumber();
-    const dci = cy.sub(ci).toNumber();
+    const dcr = cr.sub(cx).toNumber();
+    const dci = ci.sub(cy).toNumber();
 
     let n = 0;
     while (dzr * dzr + dzi * dzi <= R2.toNumber() && n < N) {
