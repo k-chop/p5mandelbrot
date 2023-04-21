@@ -9,13 +9,13 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@types/p5": "^1.6.0",
-    "@types/react": "^18.0.33",
+    "@types/p5": "^1.6.1",
+    "@types/react": "^18.0.37",
     "@types/react-dom": "^18.0.11",
-    "@vitejs/plugin-react": "^3.1.0",
+    "@vitejs/plugin-react": "^4.0.0",
     "typescript": "^5.0.4",
-    "vite": "^4.2.1",
-    "vitest": "^0.29.8"
+    "vite": "^4.3.1",
+    "vitest": "^0.30.1"
   },
   "dependencies": {
     "bignumber.js": "^9.1.1",
