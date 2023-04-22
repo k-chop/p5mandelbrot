@@ -12,7 +12,7 @@ export const Parameters = () => {
   const mode = useStoreValue("mode");
 
   return (
-    <Table ml="1rem">
+    <Table mx="md">
       <tr>
         <td>centerX</td>
         <td>
