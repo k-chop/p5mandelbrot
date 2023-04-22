@@ -1,8 +1,10 @@
 /// <reference lib="webworker" />
 declare const self: DedicatedWorkerGlobalScope;
 
-import { Double } from "double.js";
+import BigNumber from "bignumber.js";
 import { WorkerParams } from "./types";
+
+const PRECISION = 100;
 
 let lastOutput: unknown;
 let count = 0;
@@ -31,10 +33,10 @@ self.addEventListener("message", (event) => {
 
   const iterations = new Uint32Array((endY - startY) * (endX - startX));
 
-  const cx = new Double(cxStr);
-  const cy = new Double(cyStr);
-  const r = new Double(rStr);
-  const R2 = new Double(R2Number);
+  const cx = new BigNumber(cxStr);
+  const cy = new BigNumber(cyStr);
+  const r = new BigNumber(rStr);
+  const R2 = new BigNumber(R2Number);
 
   const znr: number[] = [];
   const zni: number[] = [];
@@ -47,18 +49,18 @@ self.addEventListener("message", (event) => {
     _zni?: number[]
   ): number {
     // z
-    let zr = new Double(0.0);
-    let zi = new Double(0.0);
+    let zr = new BigNumber(0.0);
+    let zi = new BigNumber(0.0);
     // Δz
     let dzr = 0.0;
     let dzi = 0.0;
 
     // c
-    const cr = cx.add(new Double(x).mul(2).div(col).sub(1).mul(r));
-    const ci = cy.sub(new Double(y).mul(2).div(row).sub(1).mul(r));
+    const cr = cx.plus(new BigNumber(x).times(2).div(col).minus(1).times(r));
+    const ci = cy.minus(new BigNumber(y).times(2).div(row).minus(1).times(r));
     // Δc
-    const dcr = cr.sub(cx).toNumber();
-    const dci = ci.sub(cy).toNumber();
+    const dcr = cr.minus(cx).toNumber();
+    const dci = ci.minus(cy).toNumber();
 
     let n = 0;
     while (dzr * dzr + dzi * dzi <= R2.toNumber() && n < N) {
@@ -82,8 +84,16 @@ self.addEventListener("message", (event) => {
       dzi = dziT2;
 
       if (isReferencePoint) {
-        const tzr = zr.mul(zr).sub(zi.mul(zi)).add(cr);
-        const tzi = zr.mul(zi).add(zr.mul(zi)).add(ci);
+        const tzr = zr
+          .times(zr)
+          .minus(zi.times(zi).precision(PRECISION))
+          .plus(cr)
+          .precision(PRECISION);
+        const tzi = zr
+          .times(zi)
+          .plus(zr.times(zi).precision(PRECISION))
+          .plus(ci)
+          .precision(PRECISION);
         zr = tzr;
         zi = tzi;
       }
