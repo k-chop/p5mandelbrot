@@ -18,6 +18,10 @@
     "vitest": "^0.30.1"
   },
   "dependencies": {
+    "@emotion/react": "^11.10.6",
+    "@mantine/core": "^6.0.8",
+    "@mantine/hooks": "^6.0.8",
+    "@tabler/icons-react": "^2.17.0",
     "bignumber.js": "^9.1.1",
     "double.js": "^1.1.0",
     "eventmit": "^2.0.4",
