@@ -89,7 +89,13 @@ export const fillColor = (
       const pixelIndex =
         4 * ((y * density + j) * canvasWidth * density + (x * density + i));
 
-      if (iteration !== maxIteration) {
+      // iterationが-1のときはglitchが起きているので白で塗りつぶす
+      if (iteration === 4294967295) {
+        pixels[pixelIndex + 0] = 255;
+        pixels[pixelIndex + 1] = 255;
+        pixels[pixelIndex + 2] = 255;
+        pixels[pixelIndex + 3] = 255;
+      } else if (iteration !== maxIteration) {
         const paletteIdx = (iteration % (palette.length / 4)) * 4;
         pixels[pixelIndex + 0] = palette[paletteIdx + 0];
         pixels[pixelIndex + 1] = palette[paletteIdx + 1];

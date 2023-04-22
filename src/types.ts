@@ -39,7 +39,12 @@ export interface WorkerParams {
   endY: number;
 }
 
-export type MandelbrotWorkerType = "normal" | "doublejs";
+export const mandelbrotWorkerTypes = [
+  "normal",
+  "doublejs",
+  "simplePerturbation",
+] as const;
+export type MandelbrotWorkerType = typeof mandelbrotWorkerTypes[number];
 
 export interface IterationBuffer {
   rect: Rect;
