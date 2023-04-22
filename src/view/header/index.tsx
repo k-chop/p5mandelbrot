@@ -1,7 +1,7 @@
 import { ActionIcon, Flex, Grid, Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconHelp } from "@tabler/icons-react";
-import { Descriptions } from "./components/description";
+import { Descriptions } from "./description";
 
 export const Header = () => {
   const [opened, { open, close }] = useDisclosure(false);

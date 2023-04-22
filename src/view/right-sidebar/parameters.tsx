@@ -1,15 +1,7 @@
-import { Container, Flex, Table, Text } from "@mantine/core";
-import { useStoreValue } from "../store/store";
+import { Table, Text } from "@mantine/core";
+import { useStoreValue } from "../../store/store";
 
-export const RightSidebar = () => {
-  return (
-    <Flex w="100%">
-      <Parameters />
-    </Flex>
-  );
-};
-
-const Parameters = () => {
+export const Parameters = () => {
   const centerX = useStoreValue("centerX");
   const centerY = useStoreValue("centerY");
   const mouseX = useStoreValue("mouseX");
