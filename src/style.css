@@ -35,9 +35,6 @@
 }
 
 #sidebar-right {
+  max-width: 22%;
   width: 30%;
-}
-
-.description {
-  list-style-type: none;
 }

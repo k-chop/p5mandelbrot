@@ -1,4 +1,4 @@
-import { Flex } from "@mantine/core";
+import { Container, Flex, Table, Text } from "@mantine/core";
 import { useStoreValue } from "../store/store";
 
 export const RightSidebar = () => {
@@ -20,17 +20,55 @@ const Parameters = () => {
   const mode = useStoreValue("mode");
 
   return (
-    <div className="description">
-      <ul>
-        <li>centerX: {centerX}</li>
-        <li>centerY: {centerY}</li>
-        <li>mouseX: {mouseX}</li>
-        <li>mouseY: {mouseY}</li>
-        <li>r: {r}</li>
-        <li>N: {N}</li>
-        <li>iteration: {iteration}</li>
-        <li>mode: {mode}</li>
-      </ul>
-    </div>
+    <Table ml="1rem">
+      <tr>
+        <td>centerX</td>
+        <td>
+          <Text align="right">{centerX}</Text>
+        </td>
+      </tr>
+      <tr>
+        <td>centerY</td>
+        <td>
+          <Text align="right">{centerY}</Text>
+        </td>
+      </tr>
+      <tr>
+        <td>mouseX</td>
+        <td>
+          <Text align="right">{mouseX}</Text>
+        </td>
+      </tr>
+      <tr>
+        <td>mouseY</td>
+        <td>
+          <Text align="right">{mouseY}</Text>
+        </td>
+      </tr>
+      <tr>
+        <td>r</td>
+        <td>
+          <Text align="right">{r}</Text>
+        </td>
+      </tr>
+      <tr>
+        <td>N</td>
+        <td>
+          <Text align="right">{N}</Text>
+        </td>
+      </tr>
+      <tr>
+        <td>iteration</td>
+        <td>
+          <Text align="right">{iteration}</Text>
+        </td>
+      </tr>
+      <tr>
+        <td>mode</td>
+        <td>
+          <Text align="right">{mode}</Text>
+        </td>
+      </tr>
+    </Table>
   );
 };
