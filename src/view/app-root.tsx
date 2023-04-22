@@ -1,3 +1,4 @@
+import { MantineProvider } from "@mantine/core";
 import { Footer } from "./footer";
 import { Header } from "./header";
 import { RightSidebar } from "./right-sidebar";

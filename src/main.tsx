@@ -33,6 +33,7 @@ import ReactDOMClient from "react-dom/client";
 import { AppRoot } from "./view/app-root";
 import { createStore, updateStore } from "./store/store";
 import { getIterationTimeAt } from "./aggregator";
+import { MantineProvider } from "@mantine/core";
 
 resetWorkers();
 
@@ -188,6 +189,8 @@ new p5(sketch, p5root!);
 const container = document.getElementById("app-root")!;
 ReactDOMClient.createRoot(container).render(
   <React.StrictMode>
-    <AppRoot />
+    <MantineProvider theme={{ colorScheme: "dark" }} withNormalizeCSS>
+      <AppRoot />
+    </MantineProvider>
   </React.StrictMode>
 );
