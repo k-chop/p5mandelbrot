@@ -79,7 +79,7 @@ self.addEventListener("message", (event) => {
         dziT = _zni![n] * 2 + dzi;
       }
       const dzrT2 = dzrT * dzr - dziT * dzi + dcr;
-      const dziT2 = (dzi = dzrT * dzi + dziT * dzr + dci);
+      const dziT2 = dzrT * dzi + dziT * dzr + dci;
       dzr = dzrT2;
       dzi = dziT2;
 
