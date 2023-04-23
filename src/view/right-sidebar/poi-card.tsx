@@ -11,6 +11,8 @@ type POICardProps = {
 export const POICard = ({ poi, onDelete, onApply }: POICardProps) => {
   const { x, y, r } = poi;
 
+  // TODO: できればbackgroundImageで画像のプレビューを表示したい
+
   return (
     <Card shadow="sm" radius="md">
       <Group position="apart">
