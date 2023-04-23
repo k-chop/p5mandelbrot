@@ -1,11 +1,8 @@
-import { Container, Group, Modal, Text, TextInput } from "@mantine/core";
-import { useStoreValue } from "../../store/store";
+import { Container, Group, Text } from "@mantine/core";
 import { GLITCHED_POINT_ITERATION } from "../../mandelbrot";
-import { useModalState } from "../modal/use-modal-state";
+import { useStoreValue } from "../../store/store";
 
 export const Parameters = () => {
-  const [opened, { open, close }] = useModalState();
-
   const centerX = useStoreValue("centerX");
   const centerY = useStoreValue("centerY");
   const mouseX = useStoreValue("mouseX");
@@ -23,9 +20,6 @@ export const Parameters = () => {
   // TODO: たぶんrの値見て表示の精度を決めるべき
   return (
     <>
-      <Modal opened={opened} onClose={close} centered withCloseButton={false}>
-        <TextInput data-autofocus label="Input new r value" />
-      </Modal>
       <Container w="100%">
         <Group position="apart">
           <Text>CenterX</Text>
@@ -45,7 +39,7 @@ export const Parameters = () => {
         </Group>
         <Group position="apart">
           <Text>r</Text>
-          <Text onClick={open}>{r.toPrecision(10)}</Text>
+          <Text>{r.toPrecision(10)}</Text>
         </Group>
         <Group position="apart">
           <Text>MAX Iteration</Text>
