@@ -8,7 +8,13 @@ export const Header = () => {
 
   return (
     <>
-      <Modal opened={opened} onClose={close} title="Instructions" centered>
+      <Modal
+        opened={opened}
+        onClose={close}
+        title="Instructions"
+        centered
+        size="lg"
+      >
         <Instructions />
       </Modal>
       <Grid>
