@@ -1,10 +1,10 @@
 import { ActionIcon, Flex, Grid, Modal } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconHelp } from "@tabler/icons-react";
+import { useModalState } from "../modal/use-modal-state";
 import { Instructions } from "./instructions";
 
 export const Header = () => {
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, { open, close }] = useModalState();
 
   return (
     <>

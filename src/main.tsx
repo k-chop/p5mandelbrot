@@ -31,7 +31,7 @@ import { Rect } from "./rect";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
 import { AppRoot } from "./view/app-root";
-import { createStore, updateStore } from "./store/store";
+import { createStore, getStore, updateStore } from "./store/store";
 import { getIterationTimeAt } from "./aggregator";
 import { MantineProvider } from "@mantine/core";
 import BigNumber from "bignumber.js";
@@ -49,6 +49,7 @@ createStore({
   iteration: 0,
   mode: "normal",
   poi: [],
+  modalOpened: false,
 });
 
 // localStorageから復帰
@@ -106,6 +107,7 @@ const sketch = (p: p5) => {
 
   p.mouseClicked = () => {
     if (!isInside(p)) return;
+    if (getStore("modalOpened")) return;
 
     const { mouseX, mouseY } = calcVars(p.mouseX, p.mouseY, p.width, p.height);
 
@@ -118,6 +120,7 @@ const sketch = (p: p5) => {
 
   p.mouseWheel = (event: WheelEvent) => {
     if (!isInside(p)) return;
+    if (getStore("modalOpened")) return;
 
     // canvas内ではスクロールしないようにする
     event.preventDefault();
@@ -138,6 +141,8 @@ const sketch = (p: p5) => {
   };
 
   p.keyPressed = (event: KeyboardEvent | undefined) => {
+    if (getStore("modalOpened")) return;
+
     if (event) {
       let diff = 100;
       const params = getCurrentParams();

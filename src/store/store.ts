@@ -12,7 +12,7 @@ export const createStore = <T>(value: T): Store<T> => {
   return store;
 };
 
-const getStore = (key: string) => store[key];
+export const getStore = (key: string) => store[key];
 
 export const updateStore = (key: string, value: any) => {
   if (store[key] === value) return;
