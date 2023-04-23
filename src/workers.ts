@@ -1,7 +1,7 @@
 import { MandelbrotWorkerType, mandelbrotWorkerTypes } from "./types";
-import MandelbrotWorker from "./mandelbrot-worker?worker&inline";
-import MandelbrotDoubleJsWorker from "./mandelbrot-doublejs-worker?worker&inline";
-import MandelbrotSimplePerturbationWorker from "./mandelbrot-simple-perturbation-worker?worker&inline";
+import MandelbrotWorker from "./workers/mandelbrot-worker?worker&inline";
+import MandelbrotDoubleJsWorker from "./workers/mandelbrot-doublejs-worker?worker&inline";
+import MandelbrotSimplePerturbationWorker from "./workers/mandelbrot-simple-perturbation-worker?worker&inline";
 import { Rect } from "./rect";
 
 // 処理領域の分割しやすさの関係でワーカーの数は1または偶数に制限しておく

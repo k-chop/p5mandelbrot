@@ -2,7 +2,7 @@
 declare const self: DedicatedWorkerGlobalScope;
 
 import BigNumber from "bignumber.js";
-import { WorkerParams } from "./types";
+import { WorkerParams } from "../types";
 
 type Complex = {
   r: number;

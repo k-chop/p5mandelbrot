@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 declare const self: DedicatedWorkerGlobalScope;
 
-import { WorkerParams } from "./types";
+import { WorkerParams } from "../types";
 
 self.addEventListener("message", (event) => {
   const {
