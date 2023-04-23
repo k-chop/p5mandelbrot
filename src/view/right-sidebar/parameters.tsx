@@ -1,4 +1,4 @@
-import { Container, Group, Table, Text } from "@mantine/core";
+import { Container, Group, Text } from "@mantine/core";
 import { useStoreValue } from "../../store/store";
 import { GLITCHED_POINT_ITERATION } from "../../mandelbrot";
 
