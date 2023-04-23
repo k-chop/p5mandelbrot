@@ -1,4 +1,4 @@
-import { Table, Text } from "@mantine/core";
+import { Container, Group, Table, Text } from "@mantine/core";
 import { useStoreValue } from "../../store/store";
 
 export const Parameters = () => {
@@ -12,55 +12,39 @@ export const Parameters = () => {
   const mode = useStoreValue("mode");
 
   return (
-    <Table mx="md">
-      <tr>
-        <td>centerX</td>
-        <td>
-          <Text align="right">{centerX}</Text>
-        </td>
-      </tr>
-      <tr>
-        <td>centerY</td>
-        <td>
-          <Text align="right">{centerY}</Text>
-        </td>
-      </tr>
-      <tr>
-        <td>mouseX</td>
-        <td>
-          <Text align="right">{mouseX}</Text>
-        </td>
-      </tr>
-      <tr>
-        <td>mouseY</td>
-        <td>
-          <Text align="right">{mouseY}</Text>
-        </td>
-      </tr>
-      <tr>
-        <td>r</td>
-        <td>
-          <Text align="right">{r}</Text>
-        </td>
-      </tr>
-      <tr>
-        <td>N</td>
-        <td>
-          <Text align="right">{N}</Text>
-        </td>
-      </tr>
-      <tr>
-        <td>iteration</td>
-        <td>
-          <Text align="right">{iteration}</Text>
-        </td>
-      </tr>
-      <tr>
-        <td>mode</td>
-        <td>
-          <Text align="right">{mode}</Text>
-        </td>
-      </tr>
-    </Table>
+    <Container w="100%">
+      <Group position="apart">
+        <Text>centerX</Text>
+        <Text>{centerX}</Text>
+      </Group>
+      <Group position="apart">
+        <Text>centerY</Text>
+        <Text>{centerY}</Text>
+      </Group>
+      <Group position="apart">
+        <Text>mouseX</Text>
+        <Text>{mouseX}</Text>
+      </Group>
+      <Group position="apart">
+        <Text>mouseY</Text>
+        <Text>{mouseY}</Text>
+      </Group>
+      <Group position="apart">
+        <Text>r</Text>
+        <Text>{r}</Text>
+      </Group>
+      <Group position="apart">
+        <Text>N</Text>
+        <Text>{N}</Text>
+      </Group>
+      <Group position="apart">
+        <Text>iteration</Text>
+        <Text>{iteration}</Text>
+      </Group>
+      <Group position="apart">
+        <Text>mode</Text>
+        <Text>{mode}</Text>
+      </Group>
+    </Container>
   );
 };
