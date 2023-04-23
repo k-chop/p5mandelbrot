@@ -15,19 +15,19 @@ export const Parameters = () => {
   return (
     <Container w="100%">
       <Group position="apart">
-        <Text>centerX</Text>
+        <Text>CenterX</Text>
         <Text>{centerX.toPrecision(20)}</Text>
       </Group>
       <Group position="apart">
-        <Text>centerY</Text>
+        <Text>CenterY</Text>
         <Text>{centerY.toPrecision(20)}</Text>
       </Group>
       <Group position="apart">
-        <Text>mouseX</Text>
+        <Text>MouseX</Text>
         <Text>{mouseX.minus(centerX).toPrecision(10)}</Text>
       </Group>
       <Group position="apart">
-        <Text>mouseY</Text>
+        <Text>MouseY</Text>
         <Text>{centerY.minus(mouseY).toPrecision(10)}</Text>
       </Group>
       <Group position="apart">
@@ -35,15 +35,15 @@ export const Parameters = () => {
         <Text>{r.toPrecision(10)}</Text>
       </Group>
       <Group position="apart">
-        <Text>N</Text>
+        <Text>MAX Iteration</Text>
         <Text>{N}</Text>
       </Group>
       <Group position="apart">
-        <Text>iteration</Text>
+        <Text>Iteration at cursor</Text>
         <Text>{iteration}</Text>
       </Group>
       <Group position="apart">
-        <Text>mode</Text>
+        <Text>Mode</Text>
         <Text>{mode}</Text>
       </Group>
     </Container>
