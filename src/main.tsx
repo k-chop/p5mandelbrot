@@ -35,6 +35,7 @@ import { createStore, updateStore } from "./store/store";
 import { getIterationTimeAt } from "./aggregator";
 import { MantineProvider } from "@mantine/core";
 import BigNumber from "bignumber.js";
+import { readPOIListFromStorage } from "./store/sync-storage";
 
 resetWorkers();
 
@@ -49,6 +50,10 @@ createStore({
   mode: "normal",
   poi: [],
 });
+
+// localStorageから復帰
+const hydratedPOIList = readPOIListFromStorage();
+updateStore("poi", hydratedPOIList);
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
