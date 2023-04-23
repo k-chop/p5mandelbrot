@@ -2,6 +2,7 @@ import p5 from "p5";
 import { Rect } from "./rect";
 import { getCanvasWidth } from "./camera";
 import { IterationBuffer } from "./types";
+import { GLITCHED_POINT_ITERATION } from "./mandelbrot";
 
 type ColorMapper = {
   size: number;
@@ -90,7 +91,7 @@ export const fillColor = (
         4 * ((y * density + j) * canvasWidth * density + (x * density + i));
 
       // iterationが-1のときはglitchが起きているので白で塗りつぶす
-      if (iteration === 4294967295) {
+      if (iteration === GLITCHED_POINT_ITERATION) {
         pixels[pixelIndex + 0] = 255;
         pixels[pixelIndex + 1] = 255;
         pixels[pixelIndex + 2] = 255;

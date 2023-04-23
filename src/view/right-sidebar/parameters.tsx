@@ -1,5 +1,6 @@
 import { Container, Group, Table, Text } from "@mantine/core";
 import { useStoreValue } from "../../store/store";
+import { GLITCHED_POINT_ITERATION } from "../../mandelbrot";
 
 export const Parameters = () => {
   const centerX = useStoreValue("centerX");
@@ -10,6 +11,11 @@ export const Parameters = () => {
   const N = useStoreValue("N");
   const iteration = useStoreValue("iteration");
   const mode = useStoreValue("mode");
+
+  const iterationString =
+    iteration === GLITCHED_POINT_ITERATION.toString()
+      ? "<<glitched>>"
+      : iteration?.toString();
 
   // TODO: たぶんrの値見て表示の精度を決めるべき
   return (
@@ -40,7 +46,7 @@ export const Parameters = () => {
       </Group>
       <Group position="apart">
         <Text>Iteration at cursor</Text>
-        <Text>{iteration}</Text>
+        <Text>{iterationString}</Text>
       </Group>
       <Group position="apart">
         <Text>Mode</Text>

@@ -24,6 +24,8 @@ const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
 const DEFAULT_HEIGHT = 800;
 
+export const GLITCHED_POINT_ITERATION = 4294967295;
+
 let lastCalc: MandelbrotParams = {
   x: new BigNumber(0),
   y: new BigNumber(0),
