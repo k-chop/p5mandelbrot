@@ -12,6 +12,7 @@ import {
   terminateWorkers,
   cycleWorkerType,
   getWorkerCount,
+  setWorkerType,
 } from "./workers";
 import {
   addIterationCache,
@@ -84,6 +85,13 @@ export const getCanvasSize = () => ({ width, height });
 
 export const getCurrentParams = () => currentParams;
 
+export const cloneParams = (params: MandelbrotParams): MandelbrotParams => ({
+  ...params,
+  x: BigNumber(params.x),
+  y: BigNumber(params.y),
+  r: BigNumber(params.r),
+});
+
 export const getProgressString = () =>
   ((progresses.reduce((p, c) => p + c) * 100) / activeWorkerCount()).toFixed();
 
@@ -94,7 +102,13 @@ export const updateCurrentParams = () => {
 };
 
 export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
+  const needModeChange = currentParams.mode !== params.mode;
+
   currentParams = { ...currentParams, ...params };
+  if (needModeChange) {
+    setWorkerType(currentParams.mode);
+    setOffsetParams({ x: 0, y: 0 });
+  }
 };
 
 export const setOffsetParams = (params: Partial<OffsetParams>) => {
@@ -107,7 +121,7 @@ export const setDeepIterationCount = () =>
 
 export const resetRadius = () => setCurrentParams({ r: new BigNumber("2.0") });
 
-export const changeMode = () => {
+export const cycleMode = () => {
   const mode = cycleWorkerType();
   setCurrentParams({ mode });
   setOffsetParams({ x: 0, y: 0 });

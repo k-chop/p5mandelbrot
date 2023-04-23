@@ -1,30 +1,35 @@
 import { Card, Group, ActionIcon, Text } from "@mantine/core";
-import {
-  IconArrowBackUp,
-  IconArrowBigLeftLine,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconArrowBigLeftLine, IconTrash } from "@tabler/icons-react";
+import { MandelbrotParams } from "../../types";
 
-export const POICard = () => {
+type POICardProps = {
+  poi: MandelbrotParams;
+  onDelete: () => void;
+  onApply: () => void;
+};
+
+export const POICard = ({ poi, onDelete, onApply }: POICardProps) => {
+  const { x, y, r } = poi;
+
   return (
     <Card shadow="sm" radius="md">
       <Group position="apart">
         <Text>centerX</Text>
-        <Text>-1.4086723693666983695</Text>
+        <Text>{x.toPrecision(20)}</Text>
       </Group>
       <Group position="apart">
         <Text>centerY</Text>
-        <Text>0.13573367440664611575</Text>
+        <Text>{y.toPrecision(20)}</Text>
       </Group>
       <Group position="apart">
         <Text>r</Text>
-        <Text>0.000003637978807</Text>
+        <Text>{r.toPrecision(10)}</Text>
       </Group>
       <Group position="apart" mt="xs">
-        <ActionIcon size="md" radius="md" variant="filled">
+        <ActionIcon size="md" radius="md" variant="filled" onClick={onApply}>
           <IconArrowBigLeftLine />
         </ActionIcon>
-        <ActionIcon size="md" radius="md" variant="filled">
+        <ActionIcon size="md" radius="md" variant="filled" onClick={onDelete}>
           <IconTrash />
         </ActionIcon>
       </Group>

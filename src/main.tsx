@@ -4,7 +4,7 @@ import { buildColors } from "./color";
 import { currentWorkerType, resetWorkers } from "./workers";
 import {
   calcVars,
-  changeMode,
+  cycleMode,
   exportParamsToClipboard,
   getCanvasSize,
   getCurrentParams,
@@ -47,6 +47,7 @@ createStore({
   N: 0,
   iteration: 0,
   mode: "normal",
+  poi: [],
 });
 
 const drawInfo = (p: p5) => {
@@ -156,7 +157,7 @@ const sketch = (p: p5) => {
       if (event.key === "0") resetIterationCount();
       if (event.key === "9") setDeepIterationCount();
       if (event.key === "r") resetRadius();
-      if (event.key === "m") changeMode();
+      if (event.key === "m") cycleMode();
       if (event.key === "o") exportParamsToClipboard();
       if (event.key === "i") importParamsFromClipboard();
       if (event.key === "ArrowDown") zoom(2);

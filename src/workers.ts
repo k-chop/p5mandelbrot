@@ -31,6 +31,11 @@ export const cycleWorkerType = (): MandelbrotWorkerType => {
   return _currentWorkerType;
 };
 
+export const setWorkerType = (type: MandelbrotWorkerType): void => {
+  _currentWorkerType = type;
+  resetWorkers();
+};
+
 export const getWorkerCount = (): number => _workerCount;
 
 export const activeWorkerCount = (): number => _activeWorkerCount;
