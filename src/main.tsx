@@ -34,18 +34,19 @@ import { AppRoot } from "./view/app-root";
 import { createStore, updateStore } from "./store/store";
 import { getIterationTimeAt } from "./aggregator";
 import { MantineProvider } from "@mantine/core";
+import BigNumber from "bignumber.js";
 
 resetWorkers();
 
 createStore({
-  centerX: "",
-  centerY: "",
-  mouseX: "",
-  mouseY: "",
-  r: "",
+  centerX: new BigNumber(0),
+  centerY: new BigNumber(0),
+  mouseX: new BigNumber(0),
+  mouseY: new BigNumber(0),
+  r: new BigNumber(0),
   N: 0,
   iteration: 0,
-  mode: "",
+  mode: "normal",
 });
 
 const drawInfo = (p: p5) => {
@@ -66,12 +67,11 @@ const drawInfo = (p: p5) => {
   const progress = getProgressString();
   const millis = getPreviousRenderTime();
 
-  // TODO: たぶんrの値見て精度を決めるべき
-  updateStore("centerX", params.x.toPrecision(20));
-  updateStore("centerY", params.y.toPrecision(20));
-  updateStore("mouseX", mouseX.toPrecision(20));
-  updateStore("mouseY", mouseY.toPrecision(20));
-  updateStore("r", r.toPrecision(10));
+  updateStore("centerX", params.x);
+  updateStore("centerY", params.y);
+  updateStore("mouseX", mouseX);
+  updateStore("mouseY", mouseY);
+  updateStore("r", r);
   updateStore("N", N);
   if (iteration !== -1) {
     updateStore("iteration", ifInside(iteration));
