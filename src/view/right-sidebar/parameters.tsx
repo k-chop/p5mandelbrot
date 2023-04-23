@@ -24,11 +24,11 @@ export const Parameters = () => {
       </Group>
       <Group position="apart">
         <Text>mouseX</Text>
-        <Text>{mouseX.toPrecision(20)}</Text>
+        <Text>{mouseX.minus(centerX).toPrecision(10)}</Text>
       </Group>
       <Group position="apart">
         <Text>mouseY</Text>
-        <Text>{mouseY.toPrecision(20)}</Text>
+        <Text>{centerY.minus(mouseY).toPrecision(10)}</Text>
       </Group>
       <Group position="apart">
         <Text>r</Text>
