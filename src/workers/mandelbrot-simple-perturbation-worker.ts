@@ -2,7 +2,7 @@
 declare const self: DedicatedWorkerGlobalScope;
 
 import BigNumber from "bignumber.js";
-import { WorkerParams } from "./types";
+import { WorkerParams } from "../types";
 
 type Complex = {
   r: number;
@@ -91,7 +91,6 @@ self.addEventListener("message", (event) => {
     cx: cxStr,
     cy: cyStr,
     r: rStr,
-    R2: R2Number,
     N,
     startX,
     endX,
@@ -104,7 +103,6 @@ self.addEventListener("message", (event) => {
   const cx = new BigNumber(cxStr);
   const cy = new BigNumber(cyStr);
   const r = new BigNumber(rStr);
-  const R2 = new BigNumber(R2Number);
 
   function calcIterationAt(
     pixelX: number,
@@ -131,9 +129,11 @@ self.addEventListener("message", (event) => {
 
     let n = 0;
     let gcrNorm = 0.0;
-    const r2 = R2.toNumber();
+    // Xnのnormが4以上なら発散することは証明されているので、たぶんXn+Δnのnormも4以上なら発散する
+    // 4より大きい値にしてもいい
+    const bailout = 4.0;
 
-    while (gcrNorm < r2 && n < N) {
+    while (gcrNorm < bailout && n < N) {
       let dzrT: number;
       let dziT: number;
 

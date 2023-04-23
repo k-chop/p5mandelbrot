@@ -1,12 +1,12 @@
 :root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Figtree", sans-serif;
   font-size: 16px;
   line-height: 24px;
-  font-weight: 400;
+  font-weight: 500;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #1a1b1e;
+  color: #c1c2c5;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,47 +15,26 @@
   -webkit-text-size-adjust: 100%;
 }
 
-body {
-  display: flex;
-  justify-content: center;
-}
-
-main {
+#main {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
-
-  width: 90%;
 }
 
 #header {
-  width: 100%;
+  width: 95%;
 
-  margin: 0 0 8px 0;
   padding: 4px 0 4px 8px;
-
-  background-color: rgba(255, 255, 255, 0.77);
-  color: #080808;
 }
 
 #footer {
-  width: 100%;
+  width: 95%;
 
-  margin: 0 0 8px 0;
   padding: 4px 0 4px 8px;
-
-  background-color: rgba(255, 255, 255, 0.77);
-  color: #080808;
 }
 
-.description {
-  list-style-type: none;
-
-  margin: 0 0 8px 8px;
-  padding: 8px;
-  padding-left: 12px;
-
-  background-color: rgba(255, 255, 255, 0.77);
-  color: #080808;
+#sidebar-right {
+  max-width: 22%;
+  width: 30%;
 }

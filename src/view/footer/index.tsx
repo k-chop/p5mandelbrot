@@ -1,4 +1,4 @@
-import { useStoreValue } from "../store/store";
+import { useStoreValue } from "../../store/store";
 
 export const Footer = () => {
   // TODO: debounceした方がいいかも
