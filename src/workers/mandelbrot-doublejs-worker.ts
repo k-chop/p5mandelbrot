@@ -6,8 +6,8 @@ import { WorkerParams } from "../types";
 
 self.addEventListener("message", (event) => {
   const {
-    row,
-    col,
+    pixelHeight,
+    pixelWidth,
     cx: cxStr,
     cy: cyStr,
     r: rStr,
@@ -29,8 +29,8 @@ self.addEventListener("message", (event) => {
     for (let x = startX; x < endX; x++) {
       let zr = new Double(0.0);
       let zi = new Double(0.0);
-      const cr = cx.add(new Double(x).mul(2).div(col).sub(1).mul(r));
-      const ci = cy.sub(new Double(y).mul(2).div(row).sub(1).mul(r));
+      const cr = cx.add(new Double(x).mul(2).div(pixelWidth).sub(1).mul(r));
+      const ci = cy.sub(new Double(y).mul(2).div(pixelHeight).sub(1).mul(r));
 
       let n = 0;
       let zr2 = new Double(0.0);

@@ -25,8 +25,8 @@ export interface MandelbrotParams {
 }
 
 export interface WorkerParams {
-  row: number;
-  col: number;
+  pixelHeight: number;
+  pixelWidth: number;
   cx: string;
   cy: string;
   r: string;

@@ -71,23 +71,33 @@ function pixelToComplexCoordinate(
   cx: BigNumber,
   cy: BigNumber,
   r: BigNumber,
-  col: number,
-  row: number
+  pixelWidth: number,
+  pixelHeight: number
 ): ComplexArbitrary {
   return {
     r: cx.plus(
-      new BigNumber(pixelX).times(2).div(col).minus(1).times(r).sd(PRECISION)
+      new BigNumber(pixelX)
+        .times(2)
+        .div(pixelWidth)
+        .minus(1)
+        .times(r)
+        .sd(PRECISION)
     ),
     i: cy.minus(
-      new BigNumber(pixelY).times(2).div(row).minus(1).times(r).sd(PRECISION)
+      new BigNumber(pixelY)
+        .times(2)
+        .div(pixelHeight)
+        .minus(1)
+        .times(r)
+        .sd(PRECISION)
     ),
   };
 }
 
 self.addEventListener("message", (event) => {
   const {
-    row,
-    col,
+    pixelHeight,
+    pixelWidth,
     cx: cxStr,
     cy: cyStr,
     r: rStr,
@@ -120,8 +130,8 @@ self.addEventListener("message", (event) => {
       cx,
       cy,
       r,
-      col,
-      row
+      pixelWidth,
+      pixelHeight
     );
     // Δc
     const dcr = cr.minus(cx).toNumber();
@@ -161,10 +171,18 @@ self.addEventListener("message", (event) => {
   }
 
   // FIXME: （仮）中央をReference PointとしてZnを計算
-  const refY = 400;
-  const refX = 400;
+  const refPixelY = 400;
+  const refPixelX = 400;
 
-  const center = pixelToComplexCoordinate(refX, refY, cx, cy, r, col, row);
+  const center = pixelToComplexCoordinate(
+    refPixelX,
+    refPixelY,
+    cx,
+    cy,
+    r,
+    pixelWidth,
+    pixelHeight
+  );
   const context = calcReferencePoint(center, N);
 
   for (let y = startY; y < endY; y++) {
