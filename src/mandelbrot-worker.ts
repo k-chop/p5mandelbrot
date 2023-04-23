@@ -10,7 +10,6 @@ self.addEventListener("message", (event) => {
     cx: cxStr,
     cy: cyStr,
     r: rStr,
-    R2,
     N,
     startX,
     endX,
@@ -23,6 +22,7 @@ self.addEventListener("message", (event) => {
   const cx = parseFloat(cxStr);
   const cy = parseFloat(cyStr);
   const r = parseFloat(rStr);
+  const R2 = 4;
 
   for (let y = startY; y < endY; y++) {
     for (let x = startX; x < endX; x++) {

@@ -11,7 +11,6 @@ self.addEventListener("message", (event) => {
     cx: cxStr,
     cy: cyStr,
     r: rStr,
-    R2: R2Number,
     N,
     startX,
     endX,
@@ -24,7 +23,7 @@ self.addEventListener("message", (event) => {
   const cx = new Double(cxStr);
   const cy = new Double(cyStr);
   const r = new Double(rStr);
-  const R2 = new Double(R2Number);
+  const R2 = new Double("4.0");
 
   for (let y = startY; y < endY; y++) {
     for (let x = startX; x < endX; x++) {

@@ -28,7 +28,6 @@ let lastCalc: MandelbrotParams = {
   y: new BigNumber(0),
   r: new BigNumber(0),
   N: 0,
-  R: 0,
   mode: "normal",
 };
 
@@ -47,7 +46,6 @@ let currentParams: MandelbrotParams = {
   y: new BigNumber("0.13573367440664611574869923114776611328125"),
   r: new BigNumber("0.00000363797880709171295166015625"),
   N: DEFAULT_N,
-  R: 2,
   mode: "normal",
 };
 
@@ -249,7 +247,6 @@ export const startCalculation = (
       N: currentParams.N,
       row: height,
       col: width,
-      R2: currentParams.R * currentParams.R,
       startY,
       endY,
       startX,
@@ -259,12 +256,7 @@ export const startCalculation = (
 };
 
 const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
-  a.x === b.x &&
-  a.y === b.y &&
-  a.r === b.r &&
-  a.N === b.N &&
-  a.R === b.R &&
-  a.mode === b.mode;
+  a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.mode === b.mode;
 
 const getOffsetRects = (): Rect[] => {
   const offsetX = offsetParams.x;

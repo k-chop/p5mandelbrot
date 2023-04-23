@@ -21,7 +21,6 @@ export interface MandelbrotParams {
   y: BigNumber;
   r: BigNumber;
   N: number;
-  R: number;
   mode: MandelbrotWorkerType;
 }
 
@@ -31,7 +30,6 @@ export interface WorkerParams {
   cx: string;
   cy: string;
   r: string;
-  R2: number;
   N: number;
   startX: number;
   endX: number;
@@ -44,7 +42,7 @@ export const mandelbrotWorkerTypes = [
   "doublejs",
   "simplePerturbation",
 ] as const;
-export type MandelbrotWorkerType = typeof mandelbrotWorkerTypes[number];
+export type MandelbrotWorkerType = (typeof mandelbrotWorkerTypes)[number];
 
 export interface IterationBuffer {
   rect: Rect;
