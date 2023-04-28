@@ -3,28 +3,24 @@ declare const self: DedicatedWorkerGlobalScope;
 
 import BigNumber from "bignumber.js";
 import { WorkerParams } from "../types";
-
-type Complex = {
-  r: number;
-  i: number;
-};
-
-type ComplexArbitrary = {
-  r: BigNumber;
-  i: BigNumber;
-};
+import {
+  Complex,
+  ComplexArbitrary,
+  PRECISION,
+  complexArbitary,
+  dadd,
+  dmul,
+  dreduce,
+  norm,
+  square,
+  toComplex,
+} from "../math";
 
 type CalculationContext = {
   xn: Complex[];
   xn2: Complex[];
   glitchChecker: number[];
 };
-
-function norm(n: Complex): number {
-  return n.r * n.r + n.i * n.i;
-}
-
-const PRECISION = 100;
 
 let lastOutput: unknown;
 let count = 0;
@@ -46,20 +42,14 @@ function calcReferencePoint(
   const xn2: Complex[] = [];
   const glitchChecker: number[] = [];
 
-  // z
-  let zr = new BigNumber(0.0);
-  let zi = new BigNumber(0.0);
+  let z = complexArbitary(0.0, 0.0);
 
   for (let i = 0; i <= maxIteration; i++) {
-    xn.push({ r: zr.toNumber(), i: zi.toNumber() });
-    const zr2Times = zr.times(2);
-    xn2.push({ r: zr2Times.toNumber(), i: zi.times(2).toNumber() });
-    glitchChecker.push(
-      norm({ r: zr.times(e).toNumber(), i: zi.times(e).toNumber() })
-    );
+    xn.push(toComplex(z));
+    xn2.push(toComplex(dmul(z, 2)));
+    glitchChecker.push(norm(toComplex(dmul(z, e))));
 
-    zr = zr.times(zr).minus(zi.times(zi)).plus(center.r).sd(PRECISION);
-    zi = zi.times(zr2Times).plus(center.i).sd(PRECISION);
+    z = dreduce(dadd(square(z), center));
   }
 
   return { xn, xn2, glitchChecker };
