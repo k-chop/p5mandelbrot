@@ -227,8 +227,6 @@ export const startCalculation = (
       const { type, glitchChecker, xn, xn2 } = ev.data;
       if (type !== "result") return;
 
-      console.log(xn, xn2, glitchChecker);
-
       registerWorkerTask(
         calculationRects,
         (worker, rect, idx, _, isCompleted) => {
