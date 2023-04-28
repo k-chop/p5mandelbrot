@@ -45,8 +45,6 @@ function calcReferencePoint(
     n++;
   }
 
-  console.log("reference iteration", n);
-
   return { xn, xn2 };
 }
 
