@@ -60,7 +60,7 @@ export interface ReferencePointCalculationWorkerParams {
 export const mandelbrotWorkerTypes = [
   "normal",
   "doublejs",
-  "simplePerturbation",
+  "perturbation",
 ] as const;
 export type MandelbrotWorkerType = (typeof mandelbrotWorkerTypes)[number];
 

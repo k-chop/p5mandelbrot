@@ -222,7 +222,7 @@ export const startCalculation = async (
   }
 
   const { xn, xn2 } = await new Promise<ReferencePointContext>((resolve) => {
-    if (currentParams.mode !== "simplePerturbation") {
+    if (currentParams.mode !== "perturbation") {
       return resolve({ xn: [], xn2: [] });
     }
 
