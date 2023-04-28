@@ -3,6 +3,7 @@ import { divideRect, Rect } from "./rect";
 import {
   MandelbrotParams,
   OffsetParams,
+  ReferencePointResult,
   WorkerProgress,
   WorkerResult,
 } from "./types";
@@ -13,12 +14,14 @@ import {
   cycleWorkerType,
   getWorkerCount,
   setWorkerType,
+  referencePointWorker,
 } from "./workers";
 import {
   addIterationCache,
   clearIterationCache,
   translateRectInIterationCache,
 } from "./aggregator";
+import { ReferencePointContext } from "./workers/calc-reference-point";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -167,7 +170,7 @@ export const paramsChanged = () => {
   return !isSameParams(lastCalc, currentParams);
 };
 
-export const startCalculation = (
+export const startCalculation = async (
   onBufferChanged: (updatedRect: Rect) => void
 ) => {
   updateCurrentParams();
@@ -218,6 +221,33 @@ export const startCalculation = (
     clearIterationCache();
   }
 
+  const { xn, xn2 } = await new Promise<ReferencePointContext>((resolve) => {
+    if (currentParams.mode !== "perturbation") {
+      return resolve({ xn: [], xn2: [] });
+    }
+
+    const refWorker = referencePointWorker();
+
+    refWorker.addEventListener(
+      "message",
+      (ev: MessageEvent<ReferencePointResult>) => {
+        const { type, xn, xn2 } = ev.data;
+        if (type === "result") {
+          resolve({ xn, xn2 });
+        }
+      }
+    );
+
+    refWorker.postMessage({
+      complexCenterX: currentParams.x.toString(),
+      complexCenterY: currentParams.y.toString(),
+      complexRadius: currentParams.r.toString(),
+      maxIteration: currentParams.N,
+      pixelHeight: height,
+      pixelWidth: width,
+    });
+  });
+
   registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
     const startX = rect.x;
     const endX = rect.x + rect.width;
@@ -261,12 +291,14 @@ export const startCalculation = (
       cy: currentParams.y.toString(),
       r: currentParams.r.toString(),
       N: currentParams.N,
-      row: height,
-      col: width,
+      pixelHeight: height,
+      pixelWidth: width,
       startY,
       endY,
       startX,
       endX,
+      xn,
+      xn2,
     });
   });
 };

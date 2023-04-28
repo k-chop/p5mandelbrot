@@ -1,7 +1,8 @@
 import { MandelbrotWorkerType, mandelbrotWorkerTypes } from "./types";
 import MandelbrotWorker from "./workers/mandelbrot-worker?worker&inline";
 import MandelbrotDoubleJsWorker from "./workers/mandelbrot-doublejs-worker?worker&inline";
-import MandelbrotSimplePerturbationWorker from "./workers/mandelbrot-simple-perturbation-worker?worker&inline";
+import MandelbrotPerturbationWorker from "./workers/mandelbrot-perturbation-worker?worker&inline";
+import CalcReferencePointWorker from "./workers/calc-reference-point?worker&inline";
 import { Rect } from "./rect";
 
 // 処理領域の分割しやすさの関係でワーカーの数は1または偶数に制限しておく
@@ -11,11 +12,12 @@ const _workers: Worker[] = [];
 let _currentWorkerType: MandelbrotWorkerType = "normal";
 let _workerCount = DEFAULT_WORKER_COUNT;
 let _activeWorkerCount = _workers.length;
+let _referencePointWorker: Worker;
 
 export const workerPaths: Record<MandelbrotWorkerType, new () => Worker> = {
   normal: MandelbrotWorker,
   doublejs: MandelbrotDoubleJsWorker,
-  simplePerturbation: MandelbrotSimplePerturbationWorker,
+  perturbation: MandelbrotPerturbationWorker,
 };
 
 export const currentWorkerType = (): MandelbrotWorkerType => _currentWorkerType;
@@ -79,4 +81,13 @@ export const registerWorkerTask = (
       (completed) => completed >= calculationRects.length
     );
   }
+};
+
+export const referencePointWorker = () => {
+  if (_referencePointWorker) {
+    _referencePointWorker.terminate();
+  }
+
+  _referencePointWorker = new CalcReferencePointWorker();
+  return _referencePointWorker;
 };
