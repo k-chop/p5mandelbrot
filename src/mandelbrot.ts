@@ -21,6 +21,7 @@ import {
   clearIterationCache,
   translateRectInIterationCache,
 } from "./aggregator";
+import { ReferencePointContext } from "./workers/calc-reference-point";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -169,7 +170,7 @@ export const paramsChanged = () => {
   return !isSameParams(lastCalc, currentParams);
 };
 
-export const startCalculation = (
+export const startCalculation = async (
   onBufferChanged: (updatedRect: Rect) => void
 ) => {
   updateCurrentParams();
@@ -221,79 +222,83 @@ export const startCalculation = (
   }
 
   const refWorker = referencePointWorker();
-  refWorker.addEventListener(
-    "message",
-    (ev: MessageEvent<ReferencePointResult>) => {
-      const { type, glitchChecker, xn, xn2 } = ev.data;
-      if (type !== "result") return;
 
-      registerWorkerTask(
-        calculationRects,
-        (worker, rect, idx, _, isCompleted) => {
-          const startX = rect.x;
-          const endX = rect.x + rect.width;
-          const startY = rect.y;
-          const endY = rect.y + rect.height;
-
-          const f = (ev: MessageEvent<WorkerResult | WorkerProgress>) => {
-            const data = ev.data;
-            if (data.type == "result") {
-              const { iterations } = data;
-
-              const iterationsResult = new Uint32Array(iterations);
-              addIterationCache(rect, iterationsResult);
-
-              progresses[idx] = 1.0;
-              completed++;
-
-              // TODO: たぶん適度にdebounceしたほうがいい
-              onBufferChanged(rect);
-
-              if (isCompleted(completed)) {
-                running = false;
-                const after = performance.now();
-                lastTime = (after - before).toFixed();
-              }
-
-              worker.removeEventListener("message", f);
-            } else {
-              const { progress } = data;
-              progresses[idx] = progress;
-            }
-          };
-
-          worker.addEventListener("message", f);
-          worker.addEventListener("error", () => {
-            completed++;
-          });
-
-          worker.postMessage({
-            cx: currentParams.x.toString(),
-            cy: currentParams.y.toString(),
-            r: currentParams.r.toString(),
-            N: currentParams.N,
-            pixelHeight: height,
-            pixelWidth: width,
-            startY,
-            endY,
-            startX,
-            endX,
-            xn,
-            xn2,
-            glitchChecker,
-          });
+  const { xn, xn2, glitchChecker } = await new Promise<ReferencePointContext>(
+    (resolve) => {
+      refWorker.addEventListener(
+        "message",
+        (ev: MessageEvent<ReferencePointResult>) => {
+          const { type, glitchChecker, xn, xn2 } = ev.data;
+          if (type === "result") {
+            resolve({ xn, xn2, glitchChecker });
+          }
         }
       );
+
+      refWorker.postMessage({
+        complexCenterX: currentParams.x.toString(),
+        complexCenterY: currentParams.y.toString(),
+        complexRadius: currentParams.r.toString(),
+        maxIteration: currentParams.N,
+        pixelHeight: height,
+        pixelWidth: width,
+      });
     }
   );
 
-  refWorker.postMessage({
-    complexCenterX: currentParams.x.toString(),
-    complexCenterY: currentParams.y.toString(),
-    complexRadius: currentParams.r.toString(),
-    maxIteration: currentParams.N,
-    pixelHeight: height,
-    pixelWidth: width,
+  registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
+    const startX = rect.x;
+    const endX = rect.x + rect.width;
+    const startY = rect.y;
+    const endY = rect.y + rect.height;
+
+    const f = (ev: MessageEvent<WorkerResult | WorkerProgress>) => {
+      const data = ev.data;
+      if (data.type == "result") {
+        const { iterations } = data;
+
+        const iterationsResult = new Uint32Array(iterations);
+        addIterationCache(rect, iterationsResult);
+
+        progresses[idx] = 1.0;
+        completed++;
+
+        // TODO: たぶん適度にdebounceしたほうがいい
+        onBufferChanged(rect);
+
+        if (isCompleted(completed)) {
+          running = false;
+          const after = performance.now();
+          lastTime = (after - before).toFixed();
+        }
+
+        worker.removeEventListener("message", f);
+      } else {
+        const { progress } = data;
+        progresses[idx] = progress;
+      }
+    };
+
+    worker.addEventListener("message", f);
+    worker.addEventListener("error", () => {
+      completed++;
+    });
+
+    worker.postMessage({
+      cx: currentParams.x.toString(),
+      cy: currentParams.y.toString(),
+      r: currentParams.r.toString(),
+      N: currentParams.N,
+      pixelHeight: height,
+      pixelWidth: width,
+      startY,
+      endY,
+      startX,
+      endX,
+      xn,
+      xn2,
+      glitchChecker,
+    });
   });
 };
 
