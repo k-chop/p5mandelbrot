@@ -2,27 +2,23 @@
 declare const self: DedicatedWorkerGlobalScope;
 
 import BigNumber from "bignumber.js";
-import { WorkerParams } from "../types";
 import {
   Complex,
   ComplexArbitrary,
   PRECISION,
-  add,
-  complex,
   complexArbitary,
-  dadd,
-  dmul,
-  dreduce,
-  dsub,
-  norm,
-  dsquare,
-  toComplex,
-  square,
-  mul,
-  mulRe,
+  dAdd,
+  dMul,
+  dReduce,
+  dSquare,
+  dSub,
   mulIm,
+  mulRe,
   nNorm,
+  norm,
+  toComplex,
 } from "../math";
+import { WorkerParams } from "../types";
 
 type CalculationContext = {
   xn: Complex[];
@@ -54,10 +50,10 @@ function calcReferencePoint(
 
   for (let i = 0; i <= maxIteration; i++) {
     xn.push(toComplex(z));
-    xn2.push(toComplex(dmul(z, 2)));
-    glitchChecker.push(norm(toComplex(dmul(z, e))));
+    xn2.push(toComplex(dMul(z, 2)));
+    glitchChecker.push(norm(toComplex(dMul(z, e))));
 
-    z = dreduce(dadd(dsquare(z), center));
+    z = dReduce(dAdd(dSquare(z), center));
   }
 
   return { xn, xn2, glitchChecker };
@@ -72,7 +68,7 @@ function pixelToComplexCoordinate(
   pixelHeight: number
 ): ComplexArbitrary {
   return {
-    r: c.r.plus(
+    re: c.re.plus(
       new BigNumber(pixelX)
         .times(2)
         .div(pixelWidth)
@@ -80,7 +76,7 @@ function pixelToComplexCoordinate(
         .times(r)
         .sd(PRECISION)
     ),
-    i: c.i.minus(
+    im: c.im.minus(
       new BigNumber(pixelY)
         .times(2)
         .div(pixelHeight)
@@ -129,7 +125,7 @@ self.addEventListener("message", (event) => {
       pixelHeight
     );
     // Δ0
-    const deltaC = toComplex(dsub(current, c));
+    const deltaC = toComplex(dSub(current, c));
 
     let n = 0;
     // |Xn + Δn|
@@ -144,18 +140,18 @@ self.addEventListener("message", (event) => {
       const _deltaNIm = deltaNIm;
 
       // (2 * Xn + Δn) * Δn に展開して計算
-      const dzrT = xn2[n].r + _deltaNRe;
-      const dziT = xn2[n].i + _deltaNIm;
+      const dzrT = xn2[n].re + _deltaNRe;
+      const dziT = xn2[n].im + _deltaNIm;
 
-      deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.r;
-      deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.i;
+      deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.re;
+      deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.im;
 
       n++;
 
       // |Xn + Δn| << |Xn|
       // glitchChecker[n]にはXnのnormのε倍が入っているので、
       // それより小さければsignificantly smallerとみなせる
-      calcPointNorm = nNorm(xn[n].r + deltaNRe, xn[n].i + deltaNIm);
+      calcPointNorm = nNorm(xn[n].re + deltaNRe, xn[n].im + deltaNIm);
       if (calcPointNorm < glitchChecker[n]) {
         // glitched
         // TODO: ちゃんと再計算する

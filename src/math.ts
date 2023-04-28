@@ -3,13 +3,13 @@ import BigNumber from "bignumber.js";
 export const PRECISION = 100;
 
 export type Complex = {
-  r: number;
-  i: number;
+  re: number;
+  im: number;
 };
 
 export type ComplexArbitrary = {
-  r: BigNumber;
-  i: BigNumber;
+  re: BigNumber;
+  im: BigNumber;
 };
 
 export function complexArbitary(
@@ -17,20 +17,20 @@ export function complexArbitary(
   imaginary: BigNumber.Value
 ): ComplexArbitrary {
   return {
-    r: new BigNumber(real),
-    i: new BigNumber(imaginary),
+    re: new BigNumber(real),
+    im: new BigNumber(imaginary),
   };
 }
 
 export function complex(real: number, imaginary: number): Complex {
   return {
-    r: real,
-    i: imaginary,
+    re: real,
+    im: imaginary,
   };
 }
 
 export function norm(n: Complex): number {
-  return n.r * n.r + n.i * n.i;
+  return n.re * n.re + n.im * n.im;
 }
 
 export function nNorm(re: number, im: number): number {
@@ -38,30 +38,30 @@ export function nNorm(re: number, im: number): number {
 }
 
 export function add(a: Complex, b: Complex): Complex {
-  return { r: a.r + b.r, i: a.i + b.i };
+  return { re: a.re + b.re, im: a.im + b.im };
 }
 
-export function dmul(
+export function dMul(
   a: ComplexArbitrary,
   b: ComplexArbitrary | number
 ): ComplexArbitrary {
   if (typeof b === "number") {
     return {
-      r: a.r.times(b),
-      i: a.i.times(b),
+      re: a.re.times(b),
+      im: a.im.times(b),
     };
   } else {
     return {
-      r: a.r.times(b.r).minus(a.i.times(b.i)),
-      i: a.r.times(b.i).plus(a.i.times(b.r)),
+      re: a.re.times(b.re).minus(a.im.times(b.im)),
+      im: a.re.times(b.im).plus(a.im.times(b.re)),
     };
   }
 }
 
 export function mul(a: Complex, b: Complex): Complex {
   return {
-    r: a.r * b.r - a.i * b.i,
-    i: a.r * b.i + a.i * b.r,
+    re: a.re * b.re - a.im * b.im,
+    im: a.re * b.im + a.im * b.re,
   };
 }
 
@@ -83,47 +83,47 @@ export function mulIm(
   return aRe * bIm + aIm * bRe;
 }
 
-export function dsquare(n: ComplexArbitrary): ComplexArbitrary {
+export function dSquare(n: ComplexArbitrary): ComplexArbitrary {
   return {
-    r: n.r.times(n.r).minus(n.i.times(n.i)),
-    i: n.r.times(n.i).times(2),
+    re: n.re.times(n.re).minus(n.im.times(n.im)),
+    im: n.re.times(n.im).times(2),
   };
 }
 
 export function square(n: Complex): Complex {
   return {
-    r: n.r * n.r - n.i * n.i,
-    i: n.r * n.i * 2,
+    re: n.re * n.re - n.im * n.im,
+    im: n.re * n.im * 2,
   };
 }
 
-export function dadd(
+export function dAdd(
   a: ComplexArbitrary,
   b: ComplexArbitrary | Complex
 ): ComplexArbitrary {
   return {
-    r: a.r.plus(b.r),
-    i: a.i.plus(b.i),
+    re: a.re.plus(b.re),
+    im: a.im.plus(b.im),
   };
 }
 
-export function dsub(
+export function dSub(
   a: ComplexArbitrary,
   b: ComplexArbitrary | Complex
 ): ComplexArbitrary {
   return {
-    r: a.r.minus(b.r),
-    i: a.i.minus(b.i),
+    re: a.re.minus(b.re),
+    im: a.im.minus(b.im),
   };
 }
 
-export function dreduce(a: ComplexArbitrary): ComplexArbitrary {
+export function dReduce(a: ComplexArbitrary): ComplexArbitrary {
   return {
-    r: a.r.sd(PRECISION),
-    i: a.i.sd(PRECISION),
+    re: a.re.sd(PRECISION),
+    im: a.im.sd(PRECISION),
   };
 }
 
 export function toComplex(n: ComplexArbitrary): Complex {
-  return { r: n.r.toNumber(), i: n.i.toNumber() };
+  return { re: n.re.toNumber(), im: n.im.toNumber() };
 }
