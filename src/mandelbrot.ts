@@ -3,6 +3,7 @@ import { divideRect, Rect } from "./rect";
 import {
   MandelbrotParams,
   OffsetParams,
+  ReferencePointResult,
   WorkerProgress,
   WorkerResult,
 } from "./types";
@@ -13,6 +14,7 @@ import {
   cycleWorkerType,
   getWorkerCount,
   setWorkerType,
+  referencePointWorker,
 } from "./workers";
 import {
   addIterationCache,
@@ -218,56 +220,82 @@ export const startCalculation = (
     clearIterationCache();
   }
 
-  registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
-    const startX = rect.x;
-    const endX = rect.x + rect.width;
-    const startY = rect.y;
-    const endY = rect.y + rect.height;
+  const refWorker = referencePointWorker();
+  refWorker.addEventListener(
+    "message",
+    (ev: MessageEvent<ReferencePointResult>) => {
+      const { type, glitchChecker, xn, xn2 } = ev.data;
+      if (type !== "result") return;
 
-    const f = (ev: MessageEvent<WorkerResult | WorkerProgress>) => {
-      const data = ev.data;
-      if (data.type == "result") {
-        const { iterations } = data;
+      console.log(xn, xn2, glitchChecker);
 
-        const iterationsResult = new Uint32Array(iterations);
-        addIterationCache(rect, iterationsResult);
+      registerWorkerTask(
+        calculationRects,
+        (worker, rect, idx, _, isCompleted) => {
+          const startX = rect.x;
+          const endX = rect.x + rect.width;
+          const startY = rect.y;
+          const endY = rect.y + rect.height;
 
-        progresses[idx] = 1.0;
-        completed++;
+          const f = (ev: MessageEvent<WorkerResult | WorkerProgress>) => {
+            const data = ev.data;
+            if (data.type == "result") {
+              const { iterations } = data;
 
-        // TODO: たぶん適度にdebounceしたほうがいい
-        onBufferChanged(rect);
+              const iterationsResult = new Uint32Array(iterations);
+              addIterationCache(rect, iterationsResult);
 
-        if (isCompleted(completed)) {
-          running = false;
-          const after = performance.now();
-          lastTime = (after - before).toFixed();
+              progresses[idx] = 1.0;
+              completed++;
+
+              // TODO: たぶん適度にdebounceしたほうがいい
+              onBufferChanged(rect);
+
+              if (isCompleted(completed)) {
+                running = false;
+                const after = performance.now();
+                lastTime = (after - before).toFixed();
+              }
+
+              worker.removeEventListener("message", f);
+            } else {
+              const { progress } = data;
+              progresses[idx] = progress;
+            }
+          };
+
+          worker.addEventListener("message", f);
+          worker.addEventListener("error", () => {
+            completed++;
+          });
+
+          worker.postMessage({
+            cx: currentParams.x.toString(),
+            cy: currentParams.y.toString(),
+            r: currentParams.r.toString(),
+            N: currentParams.N,
+            pixelHeight: height,
+            pixelWidth: width,
+            startY,
+            endY,
+            startX,
+            endX,
+            xn,
+            xn2,
+            glitchChecker,
+          });
         }
+      );
+    }
+  );
 
-        worker.removeEventListener("message", f);
-      } else {
-        const { progress } = data;
-        progresses[idx] = progress;
-      }
-    };
-
-    worker.addEventListener("message", f);
-    worker.addEventListener("error", () => {
-      completed++;
-    });
-
-    worker.postMessage({
-      cx: currentParams.x.toString(),
-      cy: currentParams.y.toString(),
-      r: currentParams.r.toString(),
-      N: currentParams.N,
-      pixelHeight: height,
-      pixelWidth: width,
-      startY,
-      endY,
-      startX,
-      endX,
-    });
+  refWorker.postMessage({
+    complexCenterX: currentParams.x.toString(),
+    complexCenterY: currentParams.y.toString(),
+    complexRadius: currentParams.r.toString(),
+    maxIteration: currentParams.N,
+    pixelHeight: height,
+    pixelWidth: width,
   });
 };
 

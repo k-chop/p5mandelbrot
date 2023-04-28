@@ -1,91 +1,10 @@
 /// <reference lib="webworker" />
-declare const self: DedicatedWorkerGlobalScope;
 
 import BigNumber from "bignumber.js";
-import {
-  Complex,
-  ComplexArbitrary,
-  PRECISION,
-  complexArbitary,
-  dAdd,
-  dMul,
-  dReduce,
-  dSquare,
-  dSub,
-  mulIm,
-  mulRe,
-  nNorm,
-  norm,
-  toComplex,
-} from "../math";
-import { WorkerParams } from "../types";
-
-type CalculationContext = {
-  xn: Complex[];
-  xn2: Complex[];
-  glitchChecker: number[];
-};
-
-let lastOutput: unknown;
-let count = 0;
-function logDebounce(a: unknown) {
-  if (a !== lastOutput && count < 200) {
-    console.log(a);
-    lastOutput = a;
-    count++;
-  }
-}
-
-function calcReferencePoint(
-  center: ComplexArbitrary,
-  maxIteration: number
-): CalculationContext {
-  const e = 1.0e-6;
-
-  const xn: Complex[] = [];
-  const xn2: Complex[] = [];
-  const glitchChecker: number[] = [];
-
-  let z = complexArbitary(0.0, 0.0);
-
-  for (let i = 0; i <= maxIteration; i++) {
-    xn.push(toComplex(z));
-    xn2.push(toComplex(dMul(z, 2)));
-    glitchChecker.push(norm(toComplex(dMul(z, e))));
-
-    z = dReduce(dAdd(dSquare(z), center));
-  }
-
-  return { xn, xn2, glitchChecker };
-}
-
-function pixelToComplexCoordinate(
-  pixelX: number,
-  pixelY: number,
-  c: ComplexArbitrary,
-  r: BigNumber,
-  pixelWidth: number,
-  pixelHeight: number
-): ComplexArbitrary {
-  return {
-    re: c.re.plus(
-      new BigNumber(pixelX)
-        .times(2)
-        .div(pixelWidth)
-        .minus(1)
-        .times(r)
-        .sd(PRECISION)
-    ),
-    im: c.im.minus(
-      new BigNumber(pixelY)
-        .times(2)
-        .div(pixelHeight)
-        .minus(1)
-        .times(r)
-        .sd(PRECISION)
-    ),
-  };
-}
+import { complexArbitary, dSub, mulIm, mulRe, nNorm, toComplex } from "../math";
+import { pixelToComplexCoordinate } from "../math/complex-plane";
+import { MandelbrotCalculationWorkerParams } from "../types";
+import { ReferencePointContext } from "./calc-reference-point";
 
 self.addEventListener("message", (event) => {
   const {
@@ -99,7 +18,10 @@ self.addEventListener("message", (event) => {
     endX,
     startY,
     endY,
-  } = event.data as WorkerParams;
+    xn,
+    xn2,
+    glitchChecker,
+  } = event.data as MandelbrotCalculationWorkerParams;
 
   const iterations = new Uint32Array((endY - startY) * (endX - startX));
 
@@ -109,7 +31,7 @@ self.addEventListener("message", (event) => {
   function calcIterationAt(
     pixelX: number,
     pixelY: number,
-    context: CalculationContext
+    context: ReferencePointContext
   ): number {
     const { xn, xn2, glitchChecker } = context;
     // Δn
@@ -162,19 +84,7 @@ self.addEventListener("message", (event) => {
     return n;
   }
 
-  // FIXME: （仮）中央をReference PointとしてZnを計算
-  const refPixelY = 400;
-  const refPixelX = 400;
-
-  const center = pixelToComplexCoordinate(
-    refPixelX,
-    refPixelY,
-    c,
-    r,
-    pixelWidth,
-    pixelHeight
-  );
-  const context = calcReferencePoint(center, N);
+  const context = { xn, xn2, glitchChecker };
 
   for (let y = startY; y < endY; y++) {
     for (let x = startX; x < endX; x++) {

@@ -1,5 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import { Rect } from "./rect";
+import { Complex } from "./math";
 
 export interface WorkerResult {
   type: "result";
@@ -9,6 +10,13 @@ export interface WorkerResult {
 export interface WorkerProgress {
   type: "progress";
   progress: number;
+}
+
+export interface ReferencePointResult {
+  type: "result";
+  xn: Complex[];
+  xn2: Complex[];
+  glitchChecker: number[];
 }
 
 export interface OffsetParams {
@@ -24,7 +32,7 @@ export interface MandelbrotParams {
   mode: MandelbrotWorkerType;
 }
 
-export interface WorkerParams {
+export interface MandelbrotCalculationWorkerParams {
   pixelHeight: number;
   pixelWidth: number;
   cx: string;
@@ -35,6 +43,18 @@ export interface WorkerParams {
   endX: number;
   startY: number;
   endY: number;
+  xn: Complex[];
+  xn2: Complex[];
+  glitchChecker: number[];
+}
+
+export interface ReferencePointCalculationWorkerParams {
+  complexCenterX: string;
+  complexCenterY: string;
+  pixelWidth: number;
+  pixelHeight: number;
+  complexRadius: string;
+  maxIteration: number;
 }
 
 export const mandelbrotWorkerTypes = [

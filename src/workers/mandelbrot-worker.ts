@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 declare const self: DedicatedWorkerGlobalScope;
 
-import { WorkerParams } from "../types";
+import { MandelbrotCalculationWorkerParams } from "../types";
 
 self.addEventListener("message", (event) => {
   const {
@@ -15,7 +15,7 @@ self.addEventListener("message", (event) => {
     endX,
     startY,
     endY,
-  } = event.data as WorkerParams;
+  } = event.data as MandelbrotCalculationWorkerParams;
 
   const iterations = new Uint32Array((endY - startY) * (endX - startX));
 
