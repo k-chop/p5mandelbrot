@@ -223,28 +223,26 @@ export const startCalculation = async (
 
   const refWorker = referencePointWorker();
 
-  const { xn, xn2, glitchChecker } = await new Promise<ReferencePointContext>(
-    (resolve) => {
-      refWorker.addEventListener(
-        "message",
-        (ev: MessageEvent<ReferencePointResult>) => {
-          const { type, glitchChecker, xn, xn2 } = ev.data;
-          if (type === "result") {
-            resolve({ xn, xn2, glitchChecker });
-          }
+  const { xn, xn2 } = await new Promise<ReferencePointContext>((resolve) => {
+    refWorker.addEventListener(
+      "message",
+      (ev: MessageEvent<ReferencePointResult>) => {
+        const { type, xn, xn2 } = ev.data;
+        if (type === "result") {
+          resolve({ xn, xn2 });
         }
-      );
+      }
+    );
 
-      refWorker.postMessage({
-        complexCenterX: currentParams.x.toString(),
-        complexCenterY: currentParams.y.toString(),
-        complexRadius: currentParams.r.toString(),
-        maxIteration: currentParams.N,
-        pixelHeight: height,
-        pixelWidth: width,
-      });
-    }
-  );
+    refWorker.postMessage({
+      complexCenterX: currentParams.x.toString(),
+      complexCenterY: currentParams.y.toString(),
+      complexRadius: currentParams.r.toString(),
+      maxIteration: currentParams.N,
+      pixelHeight: height,
+      pixelWidth: width,
+    });
+  });
 
   registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
     const startX = rect.x;
@@ -297,7 +295,6 @@ export const startCalculation = async (
       endX,
       xn,
       xn2,
-      glitchChecker,
     });
   });
 };

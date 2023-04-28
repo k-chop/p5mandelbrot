@@ -7,9 +7,9 @@ import {
   complexArbitary,
   dAdd,
   dMul,
+  dNorm,
   dReduce,
   dSquare,
-  norm,
   toComplex,
 } from "../math";
 import { ReferencePointCalculationWorkerParams } from "../types";
@@ -23,30 +23,31 @@ import { pixelToComplexCoordinate } from "../math/complex-plane";
 export type ReferencePointContext = {
   xn: Complex[];
   xn2: Complex[];
-  glitchChecker: number[];
 };
 
 function calcReferencePoint(
   center: ComplexArbitrary,
   maxIteration: number
 ): ReferencePointContext {
-  const e = 1.0e-6;
-
   const xn: Complex[] = [];
   const xn2: Complex[] = [];
-  const glitchChecker: number[] = [];
 
   let z = complexArbitary(0.0, 0.0);
 
-  for (let i = 0; i <= maxIteration; i++) {
+  let n = 0;
+
+  while (n <= maxIteration && dNorm(z).lt(4.0)) {
     xn.push(toComplex(z));
     xn2.push(toComplex(dMul(z, 2)));
-    glitchChecker.push(norm(toComplex(dMul(z, e))));
 
     z = dReduce(dAdd(dSquare(z), center));
+
+    n++;
   }
 
-  return { xn, xn2, glitchChecker };
+  console.log("reference iteration", n);
+
+  return { xn, xn2 };
 }
 
 self.addEventListener("message", (event) => {
@@ -75,10 +76,7 @@ self.addEventListener("message", (event) => {
     pixelHeight
   );
 
-  const { xn, xn2, glitchChecker } = calcReferencePoint(
-    referencePoint,
-    maxIteration
-  );
+  const { xn, xn2 } = calcReferencePoint(referencePoint, maxIteration);
 
-  self.postMessage({ type: "result", xn, xn2, glitchChecker });
+  self.postMessage({ type: "result", xn, xn2 });
 });

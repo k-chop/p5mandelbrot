@@ -37,6 +37,10 @@ export function nNorm(re: number, im: number): number {
   return re * re + im * im;
 }
 
+export function dNorm(n: ComplexArbitrary): BigNumber {
+  return n.re.times(n.re).plus(n.im.times(n.im));
+}
+
 export function add(a: Complex, b: Complex): Complex {
   return { re: a.re + b.re, im: a.im + b.im };
 }

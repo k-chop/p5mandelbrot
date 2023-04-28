@@ -13,14 +13,13 @@ self.addEventListener("message", (event) => {
     cx: cxStr,
     cy: cyStr,
     r: rStr,
-    N,
+    N: maxIteration,
     startX,
     endX,
     startY,
     endY,
     xn,
     xn2,
-    glitchChecker,
   } = event.data as MandelbrotCalculationWorkerParams;
 
   const iterations = new Uint32Array((endY - startY) * (endX - startX));
@@ -33,7 +32,9 @@ self.addEventListener("message", (event) => {
     pixelY: number,
     context: ReferencePointContext
   ): number {
-    const { xn, xn2, glitchChecker } = context;
+    const { xn, xn2 } = context;
+    const maxRefIteration = xn.length - 1;
+
     // Δn
     let deltaNRe = 0.0;
     let deltaNIm = 0.0;
@@ -49,42 +50,48 @@ self.addEventListener("message", (event) => {
     // Δ0
     const deltaC = toComplex(dSub(current, c));
 
-    let n = 0;
+    let iteration = 0;
+    let refIteration = 0;
     // |Xn + Δn|
     let calcPointNorm = 0.0;
     // |Xn|が4以上なら発散することは証明されているので、たぶん|Xn+Δn|も4以上なら発散する（ほんとか？）
     // 4より大きい値にしてもいい
-    const bailout = 4.0;
+    const bailoutRadius = 4.0;
 
-    while (calcPointNorm < bailout && n < N) {
+    while (iteration < maxIteration) {
       // Δn+1 = 2 * Xn * Δn + Δn^2 + Δ0 を計算していく
       const _deltaNRe = deltaNRe;
       const _deltaNIm = deltaNIm;
 
       // (2 * Xn + Δn) * Δn に展開して計算
-      const dzrT = xn2[n].re + _deltaNRe;
-      const dziT = xn2[n].im + _deltaNIm;
+      const dzrT = xn2[refIteration].re + _deltaNRe;
+      const dziT = xn2[refIteration].im + _deltaNIm;
 
       deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.re;
       deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.im;
 
-      n++;
+      refIteration++;
 
-      // |Xn + Δn| << |Xn|
-      // glitchChecker[n]にはXnのnormのε倍が入っているので、
-      // それより小さければsignificantly smallerとみなせる
-      calcPointNorm = nNorm(xn[n].re + deltaNRe, xn[n].im + deltaNIm);
-      if (calcPointNorm < glitchChecker[n]) {
-        // glitched
-        // TODO: ちゃんと再計算する
-        return -1;
+      // https://fractalforums.org/fractal-mathematics-and-new-theories/28/another-solution-to-perturbation-glitches/4360
+      const zRe = xn[refIteration].re + deltaNRe;
+      const zIm = xn[refIteration].im + deltaNIm;
+      calcPointNorm = nNorm(zRe, zIm);
+      const dzNorm = nNorm(deltaNRe, deltaNIm);
+
+      if (calcPointNorm > bailoutRadius) break;
+      if (calcPointNorm < dzNorm || refIteration === maxRefIteration) {
+        deltaNRe = zRe;
+        deltaNIm = zIm;
+        refIteration = 0;
       }
+
+      iteration++;
     }
 
-    return n;
+    return iteration;
   }
 
-  const context = { xn, xn2, glitchChecker };
+  const context = { xn, xn2 };
 
   for (let y = startY; y < endY; y++) {
     for (let x = startX; x < endX; x++) {
