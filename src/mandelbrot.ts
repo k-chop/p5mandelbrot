@@ -221,9 +221,13 @@ export const startCalculation = async (
     clearIterationCache();
   }
 
-  const refWorker = referencePointWorker();
-
   const { xn, xn2 } = await new Promise<ReferencePointContext>((resolve) => {
+    if (currentParams.mode !== "simplePerturbation") {
+      return resolve({ xn: [], xn2: [] });
+    }
+
+    const refWorker = referencePointWorker();
+
     refWorker.addEventListener(
       "message",
       (ev: MessageEvent<ReferencePointResult>) => {
