@@ -12,6 +12,7 @@ const _workers: Worker[] = [];
 let _currentWorkerType: MandelbrotWorkerType = "normal";
 let _workerCount = DEFAULT_WORKER_COUNT;
 let _activeWorkerCount = _workers.length;
+let _referencePointWorker: Worker;
 
 export const workerPaths: Record<MandelbrotWorkerType, new () => Worker> = {
   normal: MandelbrotWorker,
@@ -82,4 +83,11 @@ export const registerWorkerTask = (
   }
 };
 
-export const referencePointWorker = () => new CalcReferencePointWorker();
+export const referencePointWorker = () => {
+  if (_referencePointWorker) {
+    _referencePointWorker.terminate();
+  }
+
+  _referencePointWorker = new CalcReferencePointWorker();
+  return _referencePointWorker;
+};
