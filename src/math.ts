@@ -13,8 +13,8 @@ export type ComplexArbitrary = {
 };
 
 export function complexArbitary(
-  real: number,
-  imaginary: number
+  real: BigNumber.Value,
+  imaginary: BigNumber.Value
 ): ComplexArbitrary {
   return {
     r: new BigNumber(real),
@@ -22,8 +22,19 @@ export function complexArbitary(
   };
 }
 
+export function complex(real: number, imaginary: number): Complex {
+  return {
+    r: real,
+    i: imaginary,
+  };
+}
+
 export function norm(n: Complex): number {
   return n.r * n.r + n.i * n.i;
+}
+
+export function nNorm(re: number, im: number): number {
+  return re * re + im * im;
 }
 
 export function add(a: Complex, b: Complex): Complex {
@@ -47,10 +58,42 @@ export function dmul(
   }
 }
 
-export function square(n: ComplexArbitrary): ComplexArbitrary {
+export function mul(a: Complex, b: Complex): Complex {
+  return {
+    r: a.r * b.r - a.i * b.i,
+    i: a.r * b.i + a.i * b.r,
+  };
+}
+
+export function mulRe(
+  aRe: number,
+  aIm: number,
+  bRe: number,
+  bIm: number
+): number {
+  return aRe * bRe - aIm * bIm;
+}
+
+export function mulIm(
+  aRe: number,
+  aIm: number,
+  bRe: number,
+  bIm: number
+): number {
+  return aRe * bIm + aIm * bRe;
+}
+
+export function dsquare(n: ComplexArbitrary): ComplexArbitrary {
   return {
     r: n.r.times(n.r).minus(n.i.times(n.i)),
     i: n.r.times(n.i).times(2),
+  };
+}
+
+export function square(n: Complex): Complex {
+  return {
+    r: n.r * n.r - n.i * n.i,
+    i: n.r * n.i * 2,
   };
 }
 
@@ -61,6 +104,16 @@ export function dadd(
   return {
     r: a.r.plus(b.r),
     i: a.i.plus(b.i),
+  };
+}
+
+export function dsub(
+  a: ComplexArbitrary,
+  b: ComplexArbitrary | Complex
+): ComplexArbitrary {
+  return {
+    r: a.r.minus(b.r),
+    i: a.i.minus(b.i),
   };
 }
 

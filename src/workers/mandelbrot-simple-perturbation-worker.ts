@@ -7,13 +7,21 @@ import {
   Complex,
   ComplexArbitrary,
   PRECISION,
+  add,
+  complex,
   complexArbitary,
   dadd,
   dmul,
   dreduce,
+  dsub,
   norm,
-  square,
+  dsquare,
   toComplex,
+  square,
+  mul,
+  mulRe,
+  mulIm,
+  nNorm,
 } from "../math";
 
 type CalculationContext = {
@@ -49,7 +57,7 @@ function calcReferencePoint(
     xn2.push(toComplex(dmul(z, 2)));
     glitchChecker.push(norm(toComplex(dmul(z, e))));
 
-    z = dreduce(dadd(square(z), center));
+    z = dreduce(dadd(dsquare(z), center));
   }
 
   return { xn, xn2, glitchChecker };
@@ -58,14 +66,13 @@ function calcReferencePoint(
 function pixelToComplexCoordinate(
   pixelX: number,
   pixelY: number,
-  cx: BigNumber,
-  cy: BigNumber,
+  c: ComplexArbitrary,
   r: BigNumber,
   pixelWidth: number,
   pixelHeight: number
 ): ComplexArbitrary {
   return {
-    r: cx.plus(
+    r: c.r.plus(
       new BigNumber(pixelX)
         .times(2)
         .div(pixelWidth)
@@ -73,7 +80,7 @@ function pixelToComplexCoordinate(
         .times(r)
         .sd(PRECISION)
     ),
-    i: cy.minus(
+    i: c.i.minus(
       new BigNumber(pixelY)
         .times(2)
         .div(pixelHeight)
@@ -100,8 +107,7 @@ self.addEventListener("message", (event) => {
 
   const iterations = new Uint32Array((endY - startY) * (endX - startX));
 
-  const cx = new BigNumber(cxStr);
-  const cy = new BigNumber(cyStr);
+  const c = complexArbitary(cxStr, cyStr);
   const r = new BigNumber(rStr);
 
   function calcIterationAt(
@@ -110,47 +116,47 @@ self.addEventListener("message", (event) => {
     context: CalculationContext
   ): number {
     const { xn, xn2, glitchChecker } = context;
-    // Δz
-    let dzr = 0.0;
-    let dzi = 0.0;
+    // Δn
+    let deltaNRe = 0.0;
+    let deltaNIm = 0.0;
 
-    const { r: cr, i: ci } = pixelToComplexCoordinate(
+    const current = pixelToComplexCoordinate(
       pixelX,
       pixelY,
-      cx,
-      cy,
+      c,
       r,
       pixelWidth,
       pixelHeight
     );
-    // Δc
-    const dcr = cr.minus(cx).toNumber();
-    const dci = ci.minus(cy).toNumber();
+    // Δ0
+    const deltaC = toComplex(dsub(current, c));
 
     let n = 0;
-    let gcrNorm = 0.0;
-    // Xnのnormが4以上なら発散することは証明されているので、たぶんXn+Δnのnormも4以上なら発散する
+    // |Xn + Δn|
+    let calcPointNorm = 0.0;
+    // |Xn|が4以上なら発散することは証明されているので、たぶん|Xn+Δn|も4以上なら発散する（ほんとか？）
     // 4より大きい値にしてもいい
     const bailout = 4.0;
 
-    while (gcrNorm < bailout && n < N) {
-      let dzrT: number;
-      let dziT: number;
+    while (calcPointNorm < bailout && n < N) {
+      // Δn+1 = 2 * Xn * Δn + Δn^2 + Δ0 を計算していく
+      const _deltaNRe = deltaNRe;
+      const _deltaNIm = deltaNIm;
 
-      dzrT = xn2[n].r + dzr;
-      dziT = xn2[n].i + dzi;
+      // (2 * Xn + Δn) * Δn に展開して計算
+      const dzrT = xn2[n].r + _deltaNRe;
+      const dziT = xn2[n].i + _deltaNIm;
 
-      const dzrT2 = dzrT * dzr - dziT * dzi + dcr;
-      const dziT2 = dzrT * dzi + dziT * dzr + dci;
-      dzr = dzrT2;
-      dzi = dziT2;
+      deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.r;
+      deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.i;
 
       n++;
 
-      const gcr = xn[n].r + dzr;
-      const gci = xn[n].i + dzi;
-      gcrNorm = gcr * gcr + gci * gci;
-      if (gcrNorm < glitchChecker[n]) {
+      // |Xn + Δn| << |Xn|
+      // glitchChecker[n]にはXnのnormのε倍が入っているので、
+      // それより小さければsignificantly smallerとみなせる
+      calcPointNorm = nNorm(xn[n].r + deltaNRe, xn[n].i + deltaNIm);
+      if (calcPointNorm < glitchChecker[n]) {
         // glitched
         // TODO: ちゃんと再計算する
         return -1;
@@ -167,8 +173,7 @@ self.addEventListener("message", (event) => {
   const center = pixelToComplexCoordinate(
     refPixelX,
     refPixelY,
-    cx,
-    cy,
+    c,
     r,
     pixelWidth,
     pixelHeight
