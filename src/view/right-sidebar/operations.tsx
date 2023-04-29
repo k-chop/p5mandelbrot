@@ -1,5 +1,6 @@
 import { Tabs } from "@mantine/core";
 import { POI } from "./poi";
+import { Settings } from "./settings";
 
 export const Operations = () => {
   return (
@@ -9,12 +10,13 @@ export const Operations = () => {
         <Tabs.Tab value="palette" disabled>
           Palette
         </Tabs.Tab>
-        <Tabs.Tab value="other" disabled>
-          Other
-        </Tabs.Tab>
+        <Tabs.Tab value="settings">Settings</Tabs.Tab>
       </Tabs.List>
       <Tabs.Panel value="poi" pt="xs">
         <POI />
+      </Tabs.Panel>
+      <Tabs.Panel value="settings" pt="xs">
+        <Settings />
       </Tabs.Panel>
     </Tabs>
   );

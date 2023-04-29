@@ -54,8 +54,7 @@ self.addEventListener("message", (event) => {
     let refIteration = 0;
     // |Xn + Δn|
     let calcPointNorm = 0.0;
-    // |Xn|が4以上なら発散することは証明されているので、たぶん|Xn+Δn|も4以上なら発散する（ほんとか？）
-    // 4より大きい値にしてもいい
+
     const bailoutRadius = 4.0;
 
     while (iteration < maxIteration) {

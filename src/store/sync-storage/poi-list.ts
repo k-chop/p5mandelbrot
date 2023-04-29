@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import { MandelbrotParams } from "../types";
+import { MandelbrotParams } from "../../types";
 
 export const writePOIListToStorage = (poiList: MandelbrotParams[]) => {
   const serialized = JSON.stringify(poiList.map(serializedMandelbrotParams));

@@ -1,7 +1,17 @@
-import "./style.css";
+import { MantineProvider } from "@mantine/core";
+import BigNumber from "bignumber.js";
 import p5 from "p5";
+import React from "react";
+import ReactDOMClient from "react-dom/client";
+import { getIterationTimeAt } from "./aggregator";
+import {
+  nextBuffer,
+  renderToMainBuffer,
+  setColorIndex,
+  setColorsArray,
+  setupCamera,
+} from "./camera";
 import { buildColors } from "./color";
-import { currentWorkerType, resetWorkers } from "./workers";
 import {
   calcVars,
   cycleMode,
@@ -11,35 +21,30 @@ import {
   getPreviousRenderTime,
   getProgressString,
   importParamsFromClipboard,
+  paramsChanged,
   resetIterationCount,
   resetRadius,
   setCurrentParams,
   setDeepIterationCount,
   setOffsetParams,
-  paramsChanged,
-  zoom,
   startCalculation,
+  zoom,
 } from "./mandelbrot";
-import {
-  nextBuffer,
-  renderToMainBuffer,
-  setColorIndex,
-  setColorsArray,
-  setupCamera,
-} from "./camera";
 import { Rect } from "./rect";
-import React from "react";
-import ReactDOMClient from "react-dom/client";
-import { AppRoot } from "./view/app-root";
 import { createStore, getStore, updateStore } from "./store/store";
-import { getIterationTimeAt } from "./aggregator";
-import { MantineProvider } from "@mantine/core";
-import BigNumber from "bignumber.js";
-import { readPOIListFromStorage } from "./store/sync-storage";
+import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
+import {
+  isSettingField,
+  readSettingsFromStorage,
+} from "./store/sync-storage/settings";
+import "./style.css";
+import { AppRoot } from "./view/app-root";
+import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
 
 resetWorkers();
 
 createStore({
+  // mandelbrot params
   centerX: new BigNumber(0),
   centerY: new BigNumber(0),
   mouseX: new BigNumber(0),
@@ -48,13 +53,29 @@ createStore({
   N: 0,
   iteration: 0,
   mode: "normal",
+  // POI List
   poi: [],
-  modalOpened: false,
+  // Settings
+  zoomRate: 2.0,
+  workerCount: 2,
+  // UI state
+  canvasLocked: false,
 });
 
 // localStorageから復帰
 const hydratedPOIList = readPOIListFromStorage();
 updateStore("poi", hydratedPOIList);
+
+const hydratedSettings = readSettingsFromStorage();
+Object.keys(hydratedSettings).forEach((key) => {
+  if (isSettingField(key)) {
+    updateStore(key, hydratedSettings[key]);
+  }
+});
+updateStore("zoomRate", hydratedSettings.zoomRate);
+
+// hydrateしたworkerCountの値でworkerを初期化する
+setWorkerCount();
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
@@ -93,6 +114,8 @@ const isInside = (p: p5) =>
   0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
 
 const sketch = (p: p5) => {
+  let mouseClickStartedInside = false;
+
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
@@ -105,22 +128,38 @@ const sketch = (p: p5) => {
     setColorsArray(buildColors(p));
   };
 
-  p.mouseClicked = () => {
-    if (!isInside(p)) return;
-    if (getStore("modalOpened")) return;
+  p.mousePressed = () => {
+    if (isInside(p)) mouseClickStartedInside = true;
+  };
 
-    const { mouseX, mouseY } = calcVars(p.mouseX, p.mouseY, p.width, p.height);
+  p.mouseReleased = () => {
+    // canvas内でクリックして、canvas内で離した場合のみクリック時の処理を行う
+    // これで外からcanvas内に流れてきた場合の誤クリックを防げる
 
-    const pixelDiffX = Math.floor(p.mouseX - p.width / 2);
-    const pixelDiffY = Math.floor(p.mouseY - p.height / 2);
+    // FIXME: ドラッグできるようになったとき、ドラッグ中に外に出るのは許容する必要がある
+    if (isInside(p) && mouseClickStartedInside) {
+      if (!isInside(p)) return;
+      if (getStore("canvasLocked")) return;
 
-    setOffsetParams({ x: pixelDiffX, y: pixelDiffY });
-    setCurrentParams({ x: mouseX, y: mouseY });
+      const { mouseX, mouseY } = calcVars(
+        p.mouseX,
+        p.mouseY,
+        p.width,
+        p.height
+      );
+
+      const pixelDiffX = Math.floor(p.mouseX - p.width / 2);
+      const pixelDiffY = Math.floor(p.mouseY - p.height / 2);
+
+      setOffsetParams({ x: pixelDiffX, y: pixelDiffY });
+      setCurrentParams({ x: mouseX, y: mouseY });
+    }
+    mouseClickStartedInside = false;
   };
 
   p.mouseWheel = (event: WheelEvent) => {
     if (!isInside(p)) return;
-    if (getStore("modalOpened")) return;
+    if (getStore("canvasLocked")) return;
 
     // canvas内ではスクロールしないようにする
     event.preventDefault();
@@ -132,16 +171,17 @@ const sketch = (p: p5) => {
     }
 
     if (event) {
+      const rate = getStore("zoomRate");
       if (event.deltaY > 0) {
-        zoom(2);
+        zoom(rate);
       } else {
-        zoom(0.5);
+        zoom(1.0 / rate);
       }
     }
   };
 
   p.keyPressed = (event: KeyboardEvent | undefined) => {
-    if (getStore("modalOpened")) return;
+    if (getStore("canvasLocked")) return;
 
     if (event) {
       let diff = 100;
