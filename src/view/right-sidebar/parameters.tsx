@@ -1,4 +1,4 @@
-import { Container, Group, Text } from "@mantine/core";
+import { Container, Group, Text, Tooltip } from "@mantine/core";
 import { GLITCHED_POINT_ITERATION } from "../../mandelbrot";
 import { useStoreValue } from "../../store/store";
 
@@ -17,17 +17,16 @@ export const Parameters = () => {
       ? "<<glitched>>"
       : iteration?.toString();
 
-  // TODO: たぶんrの値見て表示の精度を決めるべき
   return (
     <>
       <Container w="100%">
         <Group position="apart">
           <Text>CenterX</Text>
-          <Text>{centerX.toPrecision(20)}</Text>
+          <Text>{centerX.toPrecision(10)}</Text>
         </Group>
         <Group position="apart">
           <Text>CenterY</Text>
-          <Text>{centerY.toPrecision(20)}</Text>
+          <Text>{centerY.toPrecision(10)}</Text>
         </Group>
         <Group position="apart">
           <Text>MouseX</Text>

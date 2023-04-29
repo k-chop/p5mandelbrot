@@ -17,11 +17,11 @@ export const POICard = ({ poi, onDelete, onApply }: POICardProps) => {
     <Card shadow="sm" radius="md">
       <Group position="apart">
         <Text>centerX</Text>
-        <Text>{x.toPrecision(20)}</Text>
+        <Text>{x.toPrecision(10)}</Text>
       </Group>
       <Group position="apart">
         <Text>centerY</Text>
-        <Text>{y.toPrecision(20)}</Text>
+        <Text>{y.toPrecision(10)}</Text>
       </Group>
       <Group position="apart">
         <Text>r</Text>
