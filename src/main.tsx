@@ -35,7 +35,7 @@ import { createStore, getStore, updateStore } from "./store/store";
 import { getIterationTimeAt } from "./aggregator";
 import { MantineProvider } from "@mantine/core";
 import BigNumber from "bignumber.js";
-import { readPOIListFromStorage } from "./store/sync-storage";
+import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
 
 resetWorkers();
 
