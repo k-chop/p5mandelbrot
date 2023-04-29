@@ -114,6 +114,8 @@ const isInside = (p: p5) =>
   0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
 
 const sketch = (p: p5) => {
+  let mouseClickStartedInside = false;
+
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
@@ -126,19 +128,33 @@ const sketch = (p: p5) => {
     setColorsArray(buildColors(p));
   };
 
-  p.mouseClicked = () => {
-    if (!isInside(p)) return;
-    // FIXME: マウスボタンを離したときには既にcanvasLockedがfalseになっている
-    // モーダルをcanvas上のクリックで閉じると動いてしまいよくない
-    if (getStore("canvasLocked")) return;
+  p.mousePressed = () => {
+    if (isInside(p)) mouseClickStartedInside = true;
+  };
 
-    const { mouseX, mouseY } = calcVars(p.mouseX, p.mouseY, p.width, p.height);
+  p.mouseReleased = () => {
+    // canvas内でクリックして、canvas内で離した場合のみクリック時の処理を行う
+    // これで外からcanvas内に流れてきた場合の誤クリックを防げる
 
-    const pixelDiffX = Math.floor(p.mouseX - p.width / 2);
-    const pixelDiffY = Math.floor(p.mouseY - p.height / 2);
+    // FIXME: ドラッグできるようになったとき、ドラッグ中に外に出るのは許容する必要がある
+    if (isInside(p) && mouseClickStartedInside) {
+      if (!isInside(p)) return;
+      if (getStore("canvasLocked")) return;
 
-    setOffsetParams({ x: pixelDiffX, y: pixelDiffY });
-    setCurrentParams({ x: mouseX, y: mouseY });
+      const { mouseX, mouseY } = calcVars(
+        p.mouseX,
+        p.mouseY,
+        p.width,
+        p.height
+      );
+
+      const pixelDiffX = Math.floor(p.mouseX - p.width / 2);
+      const pixelDiffY = Math.floor(p.mouseY - p.height / 2);
+
+      setOffsetParams({ x: pixelDiffX, y: pixelDiffY });
+      setCurrentParams({ x: mouseX, y: mouseY });
+    }
+    mouseClickStartedInside = false;
   };
 
   p.mouseWheel = (event: WheelEvent) => {
