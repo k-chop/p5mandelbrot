@@ -14,7 +14,7 @@ export const POICard = ({ poi, onDelete, onApply }: POICardProps) => {
   // TODO: できればbackgroundImageで画像のプレビューを表示したい
 
   return (
-    <Card shadow="sm" radius="md">
+    <Card shadow="sm" radius="md" padding="xs">
       <Group position="apart">
         <Text>centerX</Text>
         <Text>{x.toPrecision(10)}</Text>
