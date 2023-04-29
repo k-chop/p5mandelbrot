@@ -4,6 +4,7 @@ import MandelbrotDoubleJsWorker from "./workers/mandelbrot-doublejs-worker?worke
 import MandelbrotPerturbationWorker from "./workers/mandelbrot-perturbation-worker?worker&inline";
 import CalcReferencePointWorker from "./workers/calc-reference-point?worker&inline";
 import { Rect } from "./rect";
+import { getStore } from "./store/store";
 
 // 処理領域の分割しやすさの関係でワーカーの数は1または偶数に制限しておく
 const DEFAULT_WORKER_COUNT = 16;
@@ -36,6 +37,12 @@ export const cycleWorkerType = (): MandelbrotWorkerType => {
 export const setWorkerType = (type: MandelbrotWorkerType): void => {
   _currentWorkerType = type;
   resetWorkers();
+};
+
+export const setWorkerCount = (
+  count: number = getStore("workerCount")
+): void => {
+  _workerCount = count;
 };
 
 export const getWorkerCount = (): number => _workerCount;

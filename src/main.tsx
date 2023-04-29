@@ -1,7 +1,17 @@
-import "./style.css";
+import { MantineProvider } from "@mantine/core";
+import BigNumber from "bignumber.js";
 import p5 from "p5";
+import React from "react";
+import ReactDOMClient from "react-dom/client";
+import { getIterationTimeAt } from "./aggregator";
+import {
+  nextBuffer,
+  renderToMainBuffer,
+  setColorIndex,
+  setColorsArray,
+  setupCamera,
+} from "./camera";
 import { buildColors } from "./color";
-import { currentWorkerType, resetWorkers } from "./workers";
 import {
   calcVars,
   cycleMode,
@@ -11,36 +21,25 @@ import {
   getPreviousRenderTime,
   getProgressString,
   importParamsFromClipboard,
+  paramsChanged,
   resetIterationCount,
   resetRadius,
   setCurrentParams,
   setDeepIterationCount,
   setOffsetParams,
-  paramsChanged,
-  zoom,
   startCalculation,
+  zoom,
 } from "./mandelbrot";
-import {
-  nextBuffer,
-  renderToMainBuffer,
-  setColorIndex,
-  setColorsArray,
-  setupCamera,
-} from "./camera";
 import { Rect } from "./rect";
-import React from "react";
-import ReactDOMClient from "react-dom/client";
-import { AppRoot } from "./view/app-root";
 import { createStore, getStore, updateStore } from "./store/store";
-import { getIterationTimeAt } from "./aggregator";
-import { MantineProvider } from "@mantine/core";
-import BigNumber from "bignumber.js";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
 import {
-  Settings,
   isSettingField,
   readSettingsFromStorage,
 } from "./store/sync-storage/settings";
+import "./style.css";
+import { AppRoot } from "./view/app-root";
+import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
 
 resetWorkers();
 
@@ -58,6 +57,7 @@ createStore({
   poi: [],
   // Settings
   zoomRate: 2.0,
+  workerCount: 2,
   // UI state
   canvasLocked: false,
 });
@@ -73,6 +73,9 @@ Object.keys(hydratedSettings).forEach((key) => {
   }
 });
 updateStore("zoomRate", hydratedSettings.zoomRate);
+
+// hydrateしたworkerCountの値でworkerを初期化する
+setWorkerCount();
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
