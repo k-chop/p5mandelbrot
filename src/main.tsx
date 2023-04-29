@@ -59,7 +59,7 @@ createStore({
   // Settings
   zoomRate: 2.0,
   // UI state
-  modalOpened: false,
+  canvasLocked: false,
 });
 
 // localStorageから復帰
@@ -125,7 +125,7 @@ const sketch = (p: p5) => {
 
   p.mouseClicked = () => {
     if (!isInside(p)) return;
-    if (getStore("modalOpened")) return;
+    if (getStore("canvasLocked")) return;
 
     const { mouseX, mouseY } = calcVars(p.mouseX, p.mouseY, p.width, p.height);
 
@@ -138,7 +138,7 @@ const sketch = (p: p5) => {
 
   p.mouseWheel = (event: WheelEvent) => {
     if (!isInside(p)) return;
-    if (getStore("modalOpened")) return;
+    if (getStore("canvasLocked")) return;
 
     // canvas内ではスクロールしないようにする
     event.preventDefault();
@@ -160,7 +160,7 @@ const sketch = (p: p5) => {
   };
 
   p.keyPressed = (event: KeyboardEvent | undefined) => {
-    if (getStore("modalOpened")) return;
+    if (getStore("canvasLocked")) return;
 
     if (event) {
       let diff = 100;
