@@ -9,23 +9,19 @@ type POICardProps = {
 };
 
 export const POICard = ({ poi, onDelete, onApply }: POICardProps) => {
-  const { x, y, r } = poi;
+  const { r, N } = poi;
 
   // TODO: できればbackgroundImageで画像のプレビューを表示したい
 
   return (
     <Card shadow="sm" radius="md" padding="xs">
       <Group position="apart">
-        <Text>centerX</Text>
-        <Text>{x.toPrecision(10)}</Text>
-      </Group>
-      <Group position="apart">
-        <Text>centerY</Text>
-        <Text>{y.toPrecision(10)}</Text>
-      </Group>
-      <Group position="apart">
         <Text>r</Text>
         <Text>{r.toPrecision(10)}</Text>
+      </Group>
+      <Group position="apart">
+        <Text>N</Text>
+        <Text>{N.toFixed(0)}</Text>
       </Group>
       <Group position="apart" mt="xs">
         <ActionIcon size="md" radius="md" variant="filled" onClick={onApply}>
