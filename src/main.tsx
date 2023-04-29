@@ -125,6 +125,8 @@ const sketch = (p: p5) => {
 
   p.mouseClicked = () => {
     if (!isInside(p)) return;
+    // FIXME: マウスボタンを離したときには既にcanvasLockedがfalseになっている
+    // モーダルをcanvas上のクリックで閉じると動いてしまいよくない
     if (getStore("canvasLocked")) return;
 
     const { mouseX, mouseY } = calcVars(p.mouseX, p.mouseY, p.width, p.height);
