@@ -48,6 +48,8 @@ createStore({
   N: 0,
   iteration: 0,
   mode: "normal",
+  // UI
+  zoomRate: 2.0,
   poi: [],
   modalOpened: false,
 });
@@ -132,10 +134,11 @@ const sketch = (p: p5) => {
     }
 
     if (event) {
+      const rate = getStore("zoomRate");
       if (event.deltaY > 0) {
-        zoom(2);
+        zoom(rate);
       } else {
-        zoom(0.5);
+        zoom(1.0 / rate);
       }
     }
   };
