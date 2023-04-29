@@ -1,5 +1,9 @@
 import { eventmit } from "eventmit";
 import { useEffect, useState } from "react";
+import {
+  isSettingField,
+  writeSettingsToStorage,
+} from "./sync-storage/settings";
 
 let store: any = {};
 
@@ -18,6 +22,12 @@ export const updateStore = (key: string, value: any) => {
   if (store[key] === value) return;
 
   store[key] = value;
+
+  // FIXME: 無関係の更新時もここでチェックが入るのはどうなのかという気もする
+  if (isSettingField(key)) {
+    writeSettingsToStorage();
+  }
+
   event.emit(key);
 };
 

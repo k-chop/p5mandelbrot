@@ -36,10 +36,16 @@ import { getIterationTimeAt } from "./aggregator";
 import { MantineProvider } from "@mantine/core";
 import BigNumber from "bignumber.js";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
+import {
+  Settings,
+  isSettingField,
+  readSettingsFromStorage,
+} from "./store/sync-storage/settings";
 
 resetWorkers();
 
 createStore({
+  // mandelbrot params
   centerX: new BigNumber(0),
   centerY: new BigNumber(0),
   mouseX: new BigNumber(0),
@@ -48,15 +54,25 @@ createStore({
   N: 0,
   iteration: 0,
   mode: "normal",
-  // UI
-  zoomRate: 2.0,
+  // POI List
   poi: [],
+  // Settings
+  zoomRate: 2.0,
+  // UI state
   modalOpened: false,
 });
 
 // localStorageから復帰
 const hydratedPOIList = readPOIListFromStorage();
 updateStore("poi", hydratedPOIList);
+
+const hydratedSettings = readSettingsFromStorage();
+Object.keys(hydratedSettings).forEach((key) => {
+  if (isSettingField(key)) {
+    updateStore(key, hydratedSettings[key]);
+  }
+});
+updateStore("zoomRate", hydratedSettings.zoomRate);
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
