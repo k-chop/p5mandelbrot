@@ -1,8 +1,19 @@
-import { Container, Group, Text, Tooltip } from "@mantine/core";
-import { GLITCHED_POINT_ITERATION } from "../../mandelbrot";
-import { useStoreValue } from "../../store/store";
+import {
+  Container,
+  Group,
+  Modal,
+  Text,
+  TextInput,
+  Textarea,
+  Tooltip,
+} from "@mantine/core";
+import { GLITCHED_POINT_ITERATION, setCurrentParams } from "../../mandelbrot";
+import { updateStore, useStoreValue } from "../../store/store";
+import { useModalState } from "../modal/use-modal-state";
 
 export const Parameters = () => {
+  const [opened, { open, close }] = useModalState();
+
   const centerX = useStoreValue("centerX");
   const centerY = useStoreValue("centerY");
   const mouseX = useStoreValue("mouseX");
@@ -19,6 +30,30 @@ export const Parameters = () => {
 
   return (
     <>
+      <Modal
+        opened={opened}
+        onClose={close}
+        withCloseButton={false}
+        size="xs"
+        centered
+      >
+        <TextInput
+          data-autofocus
+          label="Change MAX Iteration"
+          defaultValue={N.toString()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const newN = parseInt(e.currentTarget.value);
+              if (newN > 0) {
+                setCurrentParams({
+                  N: newN,
+                });
+                close();
+              }
+            }
+          }}
+        />
+      </Modal>
       <Container w="100%">
         <Group position="apart">
           <Text>CenterX</Text>
@@ -42,7 +77,7 @@ export const Parameters = () => {
         </Group>
         <Group position="apart">
           <Text>MAX Iteration</Text>
-          <Text>{N}</Text>
+          <Text onClick={open}>{N}</Text>
         </Group>
         <Group position="apart">
           <Text>Iteration at cursor</Text>
