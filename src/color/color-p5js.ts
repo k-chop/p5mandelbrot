@@ -78,6 +78,8 @@ const extractRGB = (p: p5, color: p5.Color): RGB => {
 
 class P5JsPalette implements Palette {
   private p5Instance: p5;
+  private cache: Uint8ClampedArray;
+  private cacheInitialized: boolean[] = [];
 
   private offsetIndex = 0;
   private mirrored = true;
@@ -89,6 +91,9 @@ class P5JsPalette implements Palette {
     this.p5Instance = p;
     this.colorLength = colorLength;
     this.f = f;
+
+    this.cache = new Uint8ClampedArray(this.colorLength * 3);
+    this.cacheInitialized = new Array(this.colorLength).fill(false);
   }
 
   rgb(index: number): RGB {
@@ -104,14 +109,21 @@ class P5JsPalette implements Palette {
           ? offsettedIndex
           : length - offsettedIndex - 1;
 
+      if (this.hasCache(idx)) return this.readCache(idx);
+
       const color = this.p5Instance.color(this.f(idx));
       const rgb = extractRGB(p, color);
+      this.writeCache(idx, rgb);
       return rgb;
     } else {
       // そのまま
       const offsettedIndex = (index + this.offsetIndex) % this.colorLength;
+
+      if (this.hasCache(offsettedIndex)) return this.readCache(offsettedIndex);
+
       const color = this.p5Instance.color(this.f(offsettedIndex));
       const rgb = extractRGB(p, color);
+      this.writeCache(offsettedIndex, rgb);
       return rgb;
     }
   }
@@ -123,9 +135,27 @@ class P5JsPalette implements Palette {
   }
   setLength(length: number): void {
     this.colorLength = length;
+
+    this.cache = new Uint8ClampedArray(this.colorLength * 3);
+    this.cacheInitialized = new Array(this.colorLength).fill(false);
   }
   setMirrored(mirrored: boolean): void {
     this.mirrored = mirrored;
+  }
+  hasCache(index: number): boolean {
+    return this.cacheInitialized[index];
+  }
+  readCache(index: number): RGB {
+    const idx = index * 3;
+    return [this.cache[idx + 0], this.cache[idx + 1], this.cache[idx + 2]];
+  }
+  writeCache(index: number, rgb: RGB): void {
+    const idx = index * 3;
+    const [r, g, b] = rgb;
+    this.cache[idx + 0] = r;
+    this.cache[idx + 1] = g;
+    this.cache[idx + 2] = b;
+    this.cacheInitialized[index] = true;
   }
 }
 
