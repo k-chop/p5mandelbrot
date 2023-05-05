@@ -114,5 +114,8 @@ class ChromaJsPalette implements Palette {
 }
 
 export const chromaJsPalettes = [
-  new ChromaJsPalette(["black", "red", "yellow", "white"], 128),
+  new ChromaJsPalette(["black", "red", "yellow", "white"], 128), // prominence
+  new ChromaJsPalette(["lightblue", "navy", "white"], 128), // icy
+  new ChromaJsPalette(["lightgreen", "green", "#d3b480", "green"], 128), // forest
 ] satisfies Palette[];
+6;
