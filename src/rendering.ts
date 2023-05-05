@@ -3,13 +3,14 @@ import { getCanvasWidth } from "./camera";
 import { GLITCHED_POINT_ITERATION } from "./mandelbrot";
 import { Rect } from "./rect";
 import { IterationBuffer } from "./types";
+import { Palette } from "./color";
 
 export const fillColor = (
   x: number,
   y: number,
   canvasWidth: number,
   pixels: Uint8ClampedArray,
-  palette: Uint8ClampedArray,
+  palette: Palette,
   iteration: number,
   maxIteration: number,
   density: number
@@ -26,11 +27,12 @@ export const fillColor = (
         pixels[pixelIndex + 2] = 255;
         pixels[pixelIndex + 3] = 255;
       } else if (iteration !== maxIteration) {
-        const paletteIdx = (iteration % (palette.length / 4)) * 4;
-        pixels[pixelIndex + 0] = palette[paletteIdx + 0];
-        pixels[pixelIndex + 1] = palette[paletteIdx + 1];
-        pixels[pixelIndex + 2] = palette[paletteIdx + 2];
-        pixels[pixelIndex + 3] = palette[paletteIdx + 3];
+        const paletteIdx = iteration % palette.size();
+        const [r, g, b] = palette.rgb(paletteIdx);
+        pixels[pixelIndex + 0] = r;
+        pixels[pixelIndex + 1] = g;
+        pixels[pixelIndex + 2] = b;
+        pixels[pixelIndex + 3] = 255;
       } else {
         pixels[pixelIndex + 0] = 0;
         pixels[pixelIndex + 1] = 0;
@@ -52,7 +54,7 @@ export const renderIterationsToPixel = (
   graphics: p5.Graphics,
   maxIteration: number,
   iterationsResult: IterationBuffer[],
-  palette: Uint8ClampedArray
+  palette: Palette
 ) => {
   const canvasWidth = getCanvasWidth();
 

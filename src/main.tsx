@@ -8,10 +8,9 @@ import {
   nextBuffer,
   renderToMainBuffer,
   setColorIndex,
-  setColorsArray,
+  setPalettes,
   setupCamera,
 } from "./camera";
-import { buildColors } from "./color";
 import {
   calcVars,
   cycleMode,
@@ -40,6 +39,7 @@ import {
 import "./style.css";
 import { AppRoot } from "./view/app-root";
 import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
+import { chromaJsPalettes } from "./color/color-chromajs";
 
 resetWorkers();
 
@@ -119,13 +119,13 @@ const sketch = (p: p5) => {
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
+    setPalettes(chromaJsPalettes);
+
     p.createCanvas(width, height);
     setupCamera(p, width, height);
 
     p.noStroke();
     p.colorMode(p.HSB, 360, 100, 100, 100);
-
-    setColorsArray(buildColors(p));
   };
 
   p.mousePressed = () => {

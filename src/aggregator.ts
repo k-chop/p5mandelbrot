@@ -1,4 +1,4 @@
-import { bufferLocalLogicalIndex } from "./color";
+import { bufferLocalLogicalIndex } from "./rendering";
 import { Rect } from "./rect";
 import { IterationBuffer } from "./types";
 

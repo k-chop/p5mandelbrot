@@ -1,4 +1,5 @@
 import p5 from "p5";
+import { ColorBuilder } from ".";
 
 type ColorMapper = {
   size: number;
@@ -50,7 +51,7 @@ const colors: ColorMapper[] = [
   },
 ];
 
-export const buildColors = (p: p5) => {
+export const buildColors: ColorBuilder = (p: p5) => {
   const result: Uint8ClampedArray[] = [];
 
   colors.forEach((colorMapper) => {

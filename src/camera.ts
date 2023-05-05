@@ -3,6 +3,7 @@ import { getCurrentParams } from "./mandelbrot";
 import { Rect } from "./rect";
 import { getIterationCache } from "./aggregator";
 import { renderIterationsToPixel } from "./rendering";
+import { Palette } from "./color";
 
 let mainBuffer: p5.Graphics;
 
@@ -12,7 +13,7 @@ let height: number;
 let bufferRect: Rect;
 let lastColorIdx = 0;
 let currentColorIdx = 0;
-let colorsArray: Uint8ClampedArray[];
+let palettes: Palette[];
 
 const colorChanged = () => {
   return lastColorIdx !== currentColorIdx;
@@ -22,19 +23,19 @@ const updateColor = () => {
   lastColorIdx = currentColorIdx;
 };
 
-export const setColorsArray = (colors: Uint8ClampedArray[]) => {
-  colorsArray = colors;
+export const setPalettes = (plts: Palette[]) => {
+  palettes = plts;
 };
 
 export const setColorIndex = (index: number) => {
-  if (colorsArray[index]) {
+  if (palettes[index]) {
     currentColorIdx = index;
   } else {
     currentColorIdx = 0;
   }
 };
 
-export const getPalette = () => colorsArray[currentColorIdx];
+export const getPalette = () => palettes[currentColorIdx];
 
 export const getCanvasWidth = () => width;
 
