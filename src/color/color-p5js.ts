@@ -25,7 +25,7 @@ const extractRGB = (p: p5, color: p5.Color): RGB => {
 class P5JsPalette implements Palette {
   private p5Instance: p5;
   private cache: Uint8ClampedArray;
-  private cacheInitialized: boolean[] = [];
+  private cacheInitialized: boolean[];
 
   private offsetIndex = 0;
   private mirrored = true;

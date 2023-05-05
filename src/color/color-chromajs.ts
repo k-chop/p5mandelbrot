@@ -2,6 +2,9 @@ import chroma from "chroma-js";
 import { Palette, RGB } from ".";
 
 class ChromaJsPalette implements Palette {
+  private cache: Uint8ClampedArray;
+  private cacheInitialized: boolean[];
+
   private offsetIndex = 0;
   private mirrored = true;
   private colorLength = 256;
@@ -17,6 +20,9 @@ class ChromaJsPalette implements Palette {
     this.colorLength = length;
     this.colorConstructor = colorConstructor;
 
+    this.cache = new Uint8ClampedArray(this.colorLength * 3);
+    this.cacheInitialized = new Array(this.colorLength).fill(false);
+
     this.buildColors();
   }
 
@@ -28,22 +34,33 @@ class ChromaJsPalette implements Palette {
 
   public rgb(index: number): RGB {
     const colorIndex = this.getColorIndex(index);
-    return this.colors[colorIndex].rgb();
+
+    if (this.hasCache(colorIndex)) return this.readCache(colorIndex);
+
+    const rgb = this.colors[colorIndex].rgb();
+    this.writeCache(colorIndex, rgb);
+    return rgb;
   }
 
   public r(index: number): number {
     const colorIndex = this.getColorIndex(index);
-    return this.colors[colorIndex].rgb()[0];
+    if (this.hasCache(colorIndex)) return this.cache[colorIndex * 3 + 0];
+
+    return this.rgb(colorIndex)[0];
   }
 
   public g(index: number): number {
     const colorIndex = this.getColorIndex(index);
-    return this.colors[colorIndex].rgb()[1];
+    if (this.hasCache(colorIndex)) return this.cache[colorIndex * 3 + 1];
+
+    return this.rgb(colorIndex)[1];
   }
 
   public b(index: number): number {
     const colorIndex = this.getColorIndex(index);
-    return this.colors[colorIndex].rgb()[2];
+    if (this.hasCache(colorIndex)) return this.cache[colorIndex * 3 + 2];
+
+    return this.rgb(colorIndex)[2];
   }
 
   public size(): number {
@@ -72,11 +89,30 @@ class ChromaJsPalette implements Palette {
 
   public setLength(length: number): void {
     this.colorLength = length;
+
+    this.cache = new Uint8ClampedArray(this.colorLength * 3);
+    this.cacheInitialized = new Array(this.colorLength).fill(false);
+
     this.buildColors();
   }
 
   public setMirrored(mirrored: boolean): void {
     this.mirrored = mirrored;
+  }
+  private hasCache(index: number): boolean {
+    return this.cacheInitialized[index];
+  }
+  private readCache(index: number): RGB {
+    const idx = index * 3;
+    return [this.cache[idx + 0], this.cache[idx + 1], this.cache[idx + 2]];
+  }
+  private writeCache(index: number, rgb: RGB): void {
+    const idx = index * 3;
+    const [r, g, b] = rgb;
+    this.cache[idx + 0] = r;
+    this.cache[idx + 1] = g;
+    this.cache[idx + 2] = b;
+    this.cacheInitialized[index] = true;
   }
 }
 
