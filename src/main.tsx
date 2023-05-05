@@ -206,6 +206,9 @@ const sketch = (p: p5) => {
       if (event.key === "3") setColorIndex(2);
       if (event.key === "4") setColorIndex(3);
       if (event.key === "5") setColorIndex(4);
+      if (event.key === "6") setColorIndex(5);
+      if (event.key === "7") setColorIndex(6);
+      if (event.key === "8") setColorIndex(7);
       if (event.key === "0") resetIterationCount();
       if (event.key === "9") setDeepIterationCount();
       if (event.key === "r") resetRadius();
