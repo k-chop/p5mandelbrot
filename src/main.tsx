@@ -40,6 +40,7 @@ import "./style.css";
 import { AppRoot } from "./view/app-root";
 import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
 import { chromaJsPalettes } from "./color/color-chromajs";
+import { p5jsPalettes } from "./color/color-p5js";
 
 resetWorkers();
 
@@ -119,7 +120,8 @@ const sketch = (p: p5) => {
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
-    setPalettes(chromaJsPalettes);
+    // setPalettes(chromaJsPalettes);
+    setPalettes(p5jsPalettes(p));
 
     p.createCanvas(width, height);
     setupCamera(p, width, height);
