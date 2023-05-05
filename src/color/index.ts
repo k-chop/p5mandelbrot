@@ -1,5 +1,3 @@
-export type ColorType = Uint8ClampedArray;
-export type ColorBuilder<T = any> = (...args: T[]) => ColorType[];
 export type RGB = [number, number, number];
 
 export type Palette = {
