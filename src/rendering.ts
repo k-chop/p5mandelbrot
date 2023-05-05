@@ -27,7 +27,10 @@ export const fillColor = (
         pixels[pixelIndex + 2] = 255;
         pixels[pixelIndex + 3] = 255;
       } else if (iteration !== maxIteration) {
-        const [r, g, b] = palette.rgb(iteration);
+        const r = palette.r(iteration);
+        const g = palette.g(iteration);
+        const b = palette.b(iteration);
+
         pixels[pixelIndex + 0] = r;
         pixels[pixelIndex + 1] = g;
         pixels[pixelIndex + 2] = b;

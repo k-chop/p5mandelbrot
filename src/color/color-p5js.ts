@@ -45,36 +45,56 @@ class P5JsPalette implements Palette {
   rgb(index: number): RGB {
     const p = this.p5Instance;
 
+    const colorIndex = this.getColorIndex(index);
+
+    if (this.hasCache(colorIndex)) return this.readCache(colorIndex);
+
+    const color = this.p5Instance.color(this.f(colorIndex));
+    const rgb = extractRGB(p, color);
+    this.writeCache(colorIndex, rgb);
+    return rgb;
+  }
+
+  r(index: number): number {
+    const colorIndex = this.getColorIndex(index);
+    if (this.hasCache(colorIndex)) return this.cache[colorIndex * 3 + 0];
+
+    const [r] = this.rgb(index);
+    return r;
+  }
+
+  g(index: number): number {
+    const colorIndex = this.getColorIndex(index);
+    if (this.hasCache(colorIndex)) return this.cache[colorIndex * 3 + 1];
+
+    const [, g] = this.rgb(index);
+    return g;
+  }
+
+  b(index: number): number {
+    const colorIndex = this.getColorIndex(index);
+    if (this.hasCache(colorIndex)) return this.cache[colorIndex * 3 + 2];
+
+    const [, , b] = this.rgb(index);
+    return b;
+  }
+
+  size(): number {
+    return this.mirrored ? this.colorLength * 2 : this.colorLength;
+  }
+  getColorIndex(index: number): number {
     if (this.mirrored) {
       // 折り返す
       const length = this.colorLength * 2;
       const offsettedIndex = (index + this.offsetIndex) % length;
 
-      const idx =
-        offsettedIndex < this.colorLength
-          ? offsettedIndex
-          : length - offsettedIndex - 1;
-
-      if (this.hasCache(idx)) return this.readCache(idx);
-
-      const color = this.p5Instance.color(this.f(idx));
-      const rgb = extractRGB(p, color);
-      this.writeCache(idx, rgb);
-      return rgb;
+      return offsettedIndex < this.colorLength
+        ? offsettedIndex
+        : length - offsettedIndex - 1;
     } else {
       // そのまま
-      const offsettedIndex = (index + this.offsetIndex) % this.colorLength;
-
-      if (this.hasCache(offsettedIndex)) return this.readCache(offsettedIndex);
-
-      const color = this.p5Instance.color(this.f(offsettedIndex));
-      const rgb = extractRGB(p, color);
-      this.writeCache(offsettedIndex, rgb);
-      return rgb;
+      return (index + this.offsetIndex) % this.colorLength;
     }
-  }
-  size(): number {
-    return this.mirrored ? this.colorLength * 2 : this.colorLength;
   }
   setOffset(offsetIndex: number): void {
     this.offsetIndex = offsetIndex;
