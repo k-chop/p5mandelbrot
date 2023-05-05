@@ -28,9 +28,10 @@ export const Instructions = () => {
         <Text>Zoom</Text>
 
         <Text>
-          <Kbd>1</Kbd>, <Kbd>2</Kbd>, <Kbd>3</Kbd>
+          <Kbd>1</Kbd>, <Kbd>2</Kbd>, <Kbd>3</Kbd>, <Kbd>4</Kbd>, <Kbd>5</Kbd>,{" "}
+          <Kbd>6</Kbd>, <Kbd>7</Kbd>, <Kbd>8</Kbd>
         </Text>
-        <Text>Change color scheme</Text>
+        <Text>Change Palette</Text>
 
         <Text>
           <Kbd>m</Kbd>

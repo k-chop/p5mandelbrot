@@ -5,13 +5,12 @@ import React from "react";
 import ReactDOMClient from "react-dom/client";
 import { getIterationTimeAt } from "./aggregator";
 import {
+  addPalettes,
   nextBuffer,
   renderToMainBuffer,
   setColorIndex,
-  setColorsArray,
   setupCamera,
 } from "./camera";
-import { buildColors } from "./color";
 import {
   calcVars,
   cycleMode,
@@ -40,6 +39,8 @@ import {
 import "./style.css";
 import { AppRoot } from "./view/app-root";
 import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
+import { chromaJsPalettes } from "./color/color-chromajs";
+import { p5jsPalettes } from "./color/color-p5js";
 
 resetWorkers();
 
@@ -119,13 +120,14 @@ const sketch = (p: p5) => {
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
+    addPalettes(...p5jsPalettes(p));
+    addPalettes(...chromaJsPalettes);
+
     p.createCanvas(width, height);
     setupCamera(p, width, height);
 
     p.noStroke();
     p.colorMode(p.HSB, 360, 100, 100, 100);
-
-    setColorsArray(buildColors(p));
   };
 
   p.mousePressed = () => {
@@ -204,6 +206,9 @@ const sketch = (p: p5) => {
       if (event.key === "3") setColorIndex(2);
       if (event.key === "4") setColorIndex(3);
       if (event.key === "5") setColorIndex(4);
+      if (event.key === "6") setColorIndex(5);
+      if (event.key === "7") setColorIndex(6);
+      if (event.key === "8") setColorIndex(7);
       if (event.key === "0") resetIterationCount();
       if (event.key === "9") setDeepIterationCount();
       if (event.key === "r") resetRadius();

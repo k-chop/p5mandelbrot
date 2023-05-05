@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/chroma-js": "^2.4.0",
     "@types/p5": "^1.6.1",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.1",
@@ -23,6 +24,7 @@
     "@mantine/hooks": "^6.0.9",
     "@tabler/icons-react": "^2.17.0",
     "bignumber.js": "^9.1.1",
+    "chroma-js": "^2.4.2",
     "double.js": "^1.1.0",
     "eventmit": "^2.0.4",
     "p5": "^1.6.0",
