@@ -120,8 +120,8 @@ const sketch = (p: p5) => {
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
-    // setPalettes(chromaJsPalettes);
-    setPalettes(p5jsPalettes(p));
+    setPalettes(chromaJsPalettes);
+    // setPalettes(p5jsPalettes(p));
 
     p.createCanvas(width, height);
     setupCamera(p, width, height);
