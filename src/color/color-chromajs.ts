@@ -13,10 +13,7 @@ class ChromaJsPalette implements Palette {
 
   private colors: chroma.Color[] = [];
 
-  constructor(
-    colorConstructor: (string | chroma.Color)[],
-    length: number = 256
-  ) {
+  constructor(colorConstructor: (string | chroma.Color)[], length: number) {
     this.colorLength = length;
     this.colorConstructor = colorConstructor;
 
@@ -117,5 +114,5 @@ class ChromaJsPalette implements Palette {
 }
 
 export const chromaJsPalettes = [
-  new ChromaJsPalette(["black", "red", "yellow", "white"]),
-];
+  new ChromaJsPalette(["black", "red", "yellow", "white"], 128),
+] satisfies Palette[];

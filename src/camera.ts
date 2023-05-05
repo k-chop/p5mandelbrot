@@ -13,7 +13,7 @@ let height: number;
 let bufferRect: Rect;
 let lastColorIdx = 0;
 let currentColorIdx = 0;
-let palettes: Palette[];
+let palettes: Palette[] = [];
 
 const colorChanged = () => {
   return lastColorIdx !== currentColorIdx;
@@ -23,8 +23,8 @@ const updateColor = () => {
   lastColorIdx = currentColorIdx;
 };
 
-export const setPalettes = (plts: Palette[]) => {
-  palettes = plts;
+export const addPalettes = (...plts: Palette[]) => {
+  palettes.push(...plts);
 };
 
 export const setColorIndex = (index: number) => {

@@ -5,10 +5,10 @@ import React from "react";
 import ReactDOMClient from "react-dom/client";
 import { getIterationTimeAt } from "./aggregator";
 import {
+  addPalettes,
   nextBuffer,
   renderToMainBuffer,
   setColorIndex,
-  setPalettes,
   setupCamera,
 } from "./camera";
 import {
@@ -120,8 +120,8 @@ const sketch = (p: p5) => {
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
-    setPalettes(chromaJsPalettes);
-    // setPalettes(p5jsPalettes(p));
+    addPalettes(...p5jsPalettes(p));
+    addPalettes(...chromaJsPalettes);
 
     p.createCanvas(width, height);
     setupCamera(p, width, height);

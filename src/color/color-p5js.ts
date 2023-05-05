@@ -31,9 +31,13 @@ class P5JsPalette implements Palette {
   private mirrored = true;
   private colorLength: number;
 
-  private f: (index: number) => p5.Color;
+  private f: (index: number, colorLength: number) => p5.Color;
 
-  constructor(p: p5, colorLength: number, f: (index: number) => p5.Color) {
+  constructor(
+    p: p5,
+    colorLength: number,
+    f: (index: number, colorLength: number) => p5.Color
+  ) {
     this.p5Instance = p;
     this.colorLength = colorLength;
     this.f = f;
@@ -49,7 +53,7 @@ class P5JsPalette implements Palette {
 
     if (this.hasCache(colorIndex)) return this.readCache(colorIndex);
 
-    const color = this.p5Instance.color(this.f(colorIndex));
+    const color = this.p5Instance.color(this.f(colorIndex, this.colorLength));
     const rgb = extractRGB(p, color);
     this.writeCache(colorIndex, rgb);
     return rgb;
@@ -125,21 +129,22 @@ class P5JsPalette implements Palette {
   }
 }
 
-export const p5jsPalettes = (p: p5) => [
-  new P5JsPalette(p, 128, (i) => {
-    // hue 0~360
-    const hue = posterize(p, i, 128, 0, 360);
-    return p.color(hue, 75, 100);
-  }),
-  new P5JsPalette(p, 128, (i) => {
-    // monochrome
-    const brightness = posterize(p, i, 128, 20, 100);
-    return p.color(0, 0, brightness);
-  }),
-  new P5JsPalette(p, 128, (i) => {
-    // fire
-    const brightness = posterize(p, i, 128, 30, 100);
-    const hue = posterize(p, i, 128, -30, 60);
-    return p.color(hue, 90, brightness);
-  }),
-];
+export const p5jsPalettes = (p: p5) =>
+  [
+    new P5JsPalette(p, 128, (idx, length) => {
+      // hue 0~360
+      const hue = posterize(p, idx, length, 0, 360);
+      return p.color(hue, 75, 100);
+    }),
+    new P5JsPalette(p, 128, (idx, length) => {
+      // monochrome
+      const brightness = posterize(p, idx, length, 20, 100);
+      return p.color(0, 0, brightness);
+    }),
+    new P5JsPalette(p, 128, (idx, length) => {
+      // fire
+      const brightness = posterize(p, idx, length, 30, 100);
+      const hue = posterize(p, idx, length, -30, 60);
+      return p.color(hue, 90, brightness);
+    }),
+  ] satisfies Palette[];
