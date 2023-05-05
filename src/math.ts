@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 
-export const PRECISION = 100;
+export const PRECISION = 310;
 
 export type Complex = {
   re: number;
