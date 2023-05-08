@@ -128,6 +128,8 @@ const sketch = (p: p5) => {
 
     p.noStroke();
     p.colorMode(p.HSB, 360, 100, 100, 100);
+
+    p.cursor(p.CROSS);
   };
 
   p.mousePressed = () => {
