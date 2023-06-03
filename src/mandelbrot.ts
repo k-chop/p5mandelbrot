@@ -220,6 +220,8 @@ export const startCalculation = async (
     // 新しく計算しない部分を先に描画しておく
     onBufferChanged(iterationBufferTransferedRect, false);
 
+    // TODO: perturbation時はreference pointsの値を取っておけば移動がかなり高速化できる気がする
+
     calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
   } else {
     // 移動していない場合は再利用するCacheがないので消す
