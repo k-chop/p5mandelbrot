@@ -4,6 +4,7 @@ import {
   MandelbrotParams,
   OffsetParams,
   ReferencePointResult,
+  WorkerIntermediateResult,
   WorkerProgress,
   WorkerResult,
 } from "./types";
@@ -17,7 +18,7 @@ import {
   referencePointWorker,
 } from "./workers";
 import {
-  addIterationCache,
+  upsertIterationCache,
   clearIterationCache,
   translateRectInIterationCache,
 } from "./aggregator";
@@ -261,13 +262,18 @@ export const startCalculation = async (
     const startY = rect.y;
     const endY = rect.y + rect.height;
 
-    const f = (ev: MessageEvent<WorkerResult | WorkerProgress>) => {
+    const f = (
+      ev: MessageEvent<WorkerResult | WorkerIntermediateResult | WorkerProgress>
+    ) => {
       const data = ev.data;
       if (data.type == "result") {
         const { iterations } = data;
 
         const iterationsResult = new Uint32Array(iterations);
-        addIterationCache(rect, iterationsResult);
+        upsertIterationCache(rect, iterationsResult, {
+          width: rect.width,
+          height: rect.height,
+        });
 
         progresses[idx] = 1.0;
         completed++;
@@ -284,6 +290,11 @@ export const startCalculation = async (
         }
 
         worker.removeEventListener("message", f);
+      } else if (data.type === "intermediateResult") {
+        const { iterations, resolution } = data;
+        upsertIterationCache(rect, new Uint32Array(iterations), resolution);
+
+        onBufferChanged(rect, false);
       } else {
         const { progress } = data;
         progresses[idx] = progress;

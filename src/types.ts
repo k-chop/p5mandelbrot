@@ -2,9 +2,20 @@ import { BigNumber } from "bignumber.js";
 import { Rect } from "./rect";
 import { Complex } from "./math";
 
+export interface Resolution {
+  width: number;
+  height: number;
+}
+
 export interface WorkerResult {
   type: "result";
   iterations: ArrayBuffer;
+}
+
+export interface WorkerIntermediateResult {
+  type: "intermediateResult";
+  iterations: ArrayBuffer;
+  resolution: Resolution;
 }
 
 export interface WorkerProgress {
@@ -67,4 +78,5 @@ export type MandelbrotWorkerType = (typeof mandelbrotWorkerTypes)[number];
 export interface IterationBuffer {
   rect: Rect;
   buffer: Uint32Array;
+  resolution: Resolution;
 }

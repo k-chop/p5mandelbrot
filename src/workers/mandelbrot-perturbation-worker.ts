@@ -31,7 +31,10 @@ self.addEventListener("message", (event) => {
     xn2,
   } = event.data as MandelbrotCalculationWorkerParams;
 
-  const pixelNum = (endY - startY) * (endX - startX);
+  const areaWidth = endX - startX;
+  const areaHeight = endY - startY;
+
+  const pixelNum = areaHeight * areaWidth;
   const iterations = new Uint32Array(pixelNum);
 
   const c = complexArbitary(cxStr, cyStr);
@@ -102,12 +105,10 @@ self.addEventListener("message", (event) => {
 
   const context = { xn, xn2 };
 
-  const xDiffMax = endX - startX;
-  const yDiffMax = endY - startY;
-  const resolutionCount = 4;
+  const resolutionCount = 6;
 
-  let xDiffSeq = thin(dividerSequence(xDiffMax), resolutionCount);
-  let yDiffSeq = thin(dividerSequence(yDiffMax), resolutionCount);
+  let xDiffSeq = thin(dividerSequence(areaWidth), resolutionCount);
+  let yDiffSeq = thin(dividerSequence(areaHeight), resolutionCount);
 
   if (xDiffSeq.length !== yDiffSeq.length) {
     const minLen = Math.min(xDiffSeq.length, yDiffSeq.length);
@@ -121,11 +122,22 @@ self.addEventListener("message", (event) => {
     const xDiff = xDiffSeq[i];
     const yDiff = yDiffSeq[i];
 
-    for (let y = startY; y < endY; y = y + yDiff) {
-      for (let x = startX; x < endX; x = x + xDiff) {
-        const index = x - startX + (y - startY) * (endX - startX);
+    const lowResAreaWidth = Math.floor(areaWidth / xDiff);
+    const lowResAreaHeight = Math.floor(areaHeight / yDiff);
+    const lowResIterations = new Uint32Array(
+      lowResAreaWidth * lowResAreaHeight
+    );
+
+    let roughY = 0;
+    for (let y = startY; y < endY; y = y + yDiff, roughY++) {
+      let roughX = 0;
+
+      for (let x = startX; x < endX; x = x + xDiff, roughX++) {
+        const index = x - startX + (y - startY) * areaWidth;
+        const indexRough = roughX + roughY * lowResAreaWidth;
 
         if (iterations[index] !== 0) {
+          lowResIterations[indexRough] = iterations[index];
           continue;
         }
 
@@ -133,12 +145,21 @@ self.addEventListener("message", (event) => {
 
         calculatedCount++;
         iterations[index] = n;
+        lowResIterations[indexRough] = n;
       }
       self.postMessage({
         type: "progress",
         progress: calculatedCount / pixelNum,
       });
     }
+    self.postMessage(
+      {
+        type: "intermediateResult",
+        iterations: lowResIterations,
+        resolution: { width: lowResAreaWidth, height: lowResAreaHeight },
+      },
+      [lowResIterations.buffer]
+    );
   }
 
   self.postMessage({ type: "result", iterations }, [iterations.buffer]);
