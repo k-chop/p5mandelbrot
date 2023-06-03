@@ -14,6 +14,9 @@ export const Instructions = () => {
         <Text>Change center & Zoom</Text>
 
         <Text>Click</Text>
+        <Text>Zoom clicked point</Text>
+
+        <Text>Drag</Text>
         <Text>Change center</Text>
       </SimpleGrid>
 
