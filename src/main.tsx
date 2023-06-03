@@ -113,6 +113,7 @@ const drawInfo = (p: p5) => {
 
 let currentCursor: "cross" | "grab" = "cross";
 let mouseDragged = false;
+let mouseClickedOn = { mouseX: 0, mouseY: 0 };
 
 const isInside = (p: p5) =>
   0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
@@ -145,6 +146,7 @@ const sketch = (p: p5) => {
   p.mousePressed = () => {
     if (isInside(p)) mouseClickStartedInside = true;
     mouseDragged = false;
+    mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
   };
 
   p.mouseDragged = () => {
@@ -165,23 +167,34 @@ const sketch = (p: p5) => {
       if (!isInside(p)) return;
       if (getStore("canvasLocked")) return;
 
-      const { mouseX, mouseY } = calcVars(
-        p.mouseX,
-        p.mouseY,
-        p.width,
-        p.height
-      );
-
       if (mouseDragged) {
         // ドラッグ終了時
-        // FIXME: 移動時の処理をそのまま残しているだけなので適切に直して
-        const pixelDiffX = Math.floor(p.mouseX - p.width / 2);
-        const pixelDiffY = Math.floor(p.mouseY - p.height / 2);
+        const { mouseX: clickedMouseX, mouseY: clickedMouseY } = mouseClickedOn;
+        const centerX = p.width / 2;
+        const centerY = p.height / 2;
+
+        const pixelDiffX = -Math.floor(p.mouseX - clickedMouseX);
+        const pixelDiffY = -Math.floor(p.mouseY - clickedMouseY);
 
         setOffsetParams({ x: pixelDiffX, y: pixelDiffY });
+
+        const { mouseX, mouseY } = calcVars(
+          centerX + pixelDiffX,
+          centerY + pixelDiffY,
+          p.width,
+          p.height
+        );
+
         setCurrentParams({ x: mouseX, y: mouseY });
       } else {
         // クリック時
+        const { mouseX, mouseY } = calcVars(
+          p.mouseX,
+          p.mouseY,
+          p.width,
+          p.height
+        );
+
         setCurrentParams({ x: mouseX, y: mouseY });
 
         const rate = getStore("zoomRate");
