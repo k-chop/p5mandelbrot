@@ -86,3 +86,20 @@ export const renderIterationsToPixel = (
 
   graphics.updatePixels();
 };
+
+export const drawCrossHair = (p: p5) => {
+  const length = 10;
+
+  const centerX = Math.floor(p.width / 2);
+  const centerY = Math.floor(p.height / 2);
+
+  // FIXME: たぶんカラーパレットを見て目立つ色を選ぶべき
+
+  p.stroke(p.color(0, 0, 100));
+  p.line(centerX - length, centerY, centerX + length, centerY);
+  p.line(centerX, centerY - length, centerX, centerY + length);
+
+  p.stroke(p.color(0, 0, 0));
+  p.line(centerX - length / 2, centerY, centerX + length / 2, centerY);
+  p.line(centerX, centerY - length / 2, centerX, centerY + length / 2);
+};

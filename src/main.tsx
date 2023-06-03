@@ -6,8 +6,11 @@ import ReactDOMClient from "react-dom/client";
 import { getIterationTimeAt } from "./aggregator";
 import {
   addPalettes,
+  clearResultBuffer,
+  mergeToMainBuffer,
   nextBuffer,
-  renderToMainBuffer,
+  nextResultBuffer,
+  renderToResultBuffer,
   setColorIndex,
   setupCamera,
 } from "./camera";
@@ -41,6 +44,7 @@ import { AppRoot } from "./view/app-root";
 import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
 import { chromaJsPalettes } from "./color/color-chromajs";
 import { p5jsPalettes } from "./color/color-p5js";
+import { drawCrossHair } from "./rendering";
 
 resetWorkers();
 
@@ -111,8 +115,30 @@ const drawInfo = (p: p5) => {
   updateStore("millis", millis);
 };
 
+let currentCursor: "cross" | "grab" = "cross";
+let mouseDragged = false;
+let mouseClickedOn = { mouseX: 0, mouseY: 0 };
+let mouseReleasedOn = { mouseX: 0, mouseY: 0 };
+let mouseDraggedComplete = false;
+
 const isInside = (p: p5) =>
   0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
+
+const changeCursor = (p: p5, cursor: string) => {
+  if (currentCursor === cursor) return;
+  if (isInside(p)) {
+    p.cursor(cursor);
+  }
+};
+
+const getDraggingPixelDiff = (p: p5) => {
+  const { mouseX: clickedMouseX, mouseY: clickedMouseY } = mouseClickedOn;
+
+  const pixelDiffX = Math.floor(p.mouseX - clickedMouseX);
+  const pixelDiffY = Math.floor(p.mouseY - clickedMouseY);
+
+  return { pixelDiffX, pixelDiffY };
+};
 
 const sketch = (p: p5) => {
   let mouseClickStartedInside = false;
@@ -126,15 +152,31 @@ const sketch = (p: p5) => {
     p.createCanvas(width, height);
     setupCamera(p, width, height);
 
-    p.noStroke();
     p.colorMode(p.HSB, 360, 100, 100, 100);
+
+    p.cursor(p.CROSS);
   };
 
   p.mousePressed = () => {
-    if (isInside(p)) mouseClickStartedInside = true;
+    if (isInside(p)) {
+      mouseClickStartedInside = true;
+      mouseDragged = false;
+      mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
+    }
   };
 
-  p.mouseReleased = () => {
+  p.mouseDragged = () => {
+    if (mouseClickStartedInside) {
+      changeCursor(p, "grabbing");
+      mouseDragged = true;
+      clearResultBuffer();
+    }
+  };
+
+  p.mouseReleased = (ev: MouseEvent) => {
+    if (!ev) return;
+    if (ev.button !== 0) return;
+
     // canvas内でクリックして、canvas内で離した場合のみクリック時の処理を行う
     // これで外からcanvas内に流れてきた場合の誤クリックを防げる
 
@@ -143,20 +185,49 @@ const sketch = (p: p5) => {
       if (!isInside(p)) return;
       if (getStore("canvasLocked")) return;
 
-      const { mouseX, mouseY } = calcVars(
-        p.mouseX,
-        p.mouseY,
-        p.width,
-        p.height
-      );
+      if (mouseDragged) {
+        // ドラッグ終了時
+        const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
+        setOffsetParams({ x: -pixelDiffX, y: -pixelDiffY });
+        mouseReleasedOn = { mouseX: pixelDiffX, mouseY: pixelDiffY };
 
-      const pixelDiffX = Math.floor(p.mouseX - p.width / 2);
-      const pixelDiffY = Math.floor(p.mouseY - p.height / 2);
+        const centerX = p.width / 2;
+        const centerY = p.height / 2;
 
-      setOffsetParams({ x: pixelDiffX, y: pixelDiffY });
-      setCurrentParams({ x: mouseX, y: mouseY });
+        const { mouseX, mouseY } = calcVars(
+          centerX - pixelDiffX,
+          centerY - pixelDiffY,
+          p.width,
+          p.height
+        );
+
+        setCurrentParams({ x: mouseX, y: mouseY });
+
+        mouseDraggedComplete = true;
+      } else {
+        // クリック時
+        const { mouseX, mouseY } = calcVars(
+          p.mouseX,
+          p.mouseY,
+          p.width,
+          p.height
+        );
+
+        setCurrentParams({ x: mouseX, y: mouseY });
+
+        const rate = getStore("zoomRate");
+        // shiftキーを押しながらクリックすると縮小
+        if (ev.shiftKey) {
+          zoom(rate);
+        } else {
+          zoom(1.0 / rate);
+        }
+      }
     }
+
+    changeCursor(p, p.CROSS);
     mouseClickStartedInside = false;
+    mouseDragged = false;
   };
 
   p.mouseWheel = (event: WheelEvent) => {
@@ -188,6 +259,7 @@ const sketch = (p: p5) => {
     if (event) {
       let diff = 100;
       const params = getCurrentParams();
+      const rate = getStore("zoomRate");
 
       if (event.shiftKey) {
         const N = params.N;
@@ -215,8 +287,10 @@ const sketch = (p: p5) => {
       if (event.key === "m") cycleMode();
       if (event.key === "o") exportParamsToClipboard();
       if (event.key === "i") importParamsFromClipboard();
-      if (event.key === "ArrowDown") zoom(2);
-      if (event.key === "ArrowUp") zoom(0.5);
+      if (event.key === "ArrowDown") zoom(rate);
+      if (event.key === "s") zoom(rate);
+      if (event.key === "ArrowUp") zoom(1.0 / rate);
+      if (event.key === "w") zoom(1.0 / rate);
       if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
       if (event.key === "ArrowLeft") setCurrentParams({ N: params.N - diff });
 
@@ -225,14 +299,34 @@ const sketch = (p: p5) => {
   };
 
   p.draw = () => {
-    const result = nextBuffer(p);
+    const mainBuffer = nextBuffer(p);
+    const resultBuffer = nextResultBuffer(p);
+
     p.background(0);
-    p.image(result, 0, 0);
+
+    if (mouseDragged) {
+      const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
+      p.image(mainBuffer, pixelDiffX, pixelDiffY);
+      drawCrossHair(p);
+    } else if (mouseDraggedComplete) {
+      const { mouseX, mouseY } = mouseReleasedOn;
+      p.image(mainBuffer, mouseX, mouseY);
+    } else {
+      p.image(mainBuffer, 0, 0);
+    }
+
+    p.image(resultBuffer, 0, 0);
+
     drawInfo(p);
 
     if (paramsChanged()) {
-      startCalculation((updatedRect: Rect) => {
-        renderToMainBuffer(updatedRect);
+      startCalculation((updatedRect: Rect, isCompleted: boolean) => {
+        renderToResultBuffer(updatedRect);
+
+        if (isCompleted) {
+          mouseDraggedComplete = false;
+          mergeToMainBuffer();
+        }
       });
     }
   };

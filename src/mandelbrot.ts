@@ -107,11 +107,16 @@ export const updateCurrentParams = () => {
 };
 
 export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
-  const needModeChange = currentParams.mode !== params.mode;
+  const needModeChange =
+    params.mode != null && currentParams.mode !== params.mode;
+  const needResetOffset = params.r != null && !currentParams.r.eq(params.r);
 
   currentParams = { ...currentParams, ...params };
   if (needModeChange) {
     setWorkerType(currentParams.mode);
+    setOffsetParams({ x: 0, y: 0 });
+  }
+  if (needResetOffset) {
     setOffsetParams({ x: 0, y: 0 });
   }
 };
@@ -171,7 +176,7 @@ export const paramsChanged = () => {
 };
 
 export const startCalculation = async (
-  onBufferChanged: (updatedRect: Rect) => void
+  onBufferChanged: (updatedRect: Rect, isCompleted: boolean) => void
 ) => {
   updateCurrentParams();
 
@@ -213,7 +218,9 @@ export const startCalculation = async (
     translateRectInIterationCache(offsetX, offsetY);
 
     // 新しく計算しない部分を先に描画しておく
-    onBufferChanged(iterationBufferTransferedRect);
+    onBufferChanged(iterationBufferTransferedRect, false);
+
+    // TODO: perturbation時はreference pointsの値を取っておけば移動がかなり高速化できる気がする
 
     calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
   } else {
@@ -265,10 +272,12 @@ export const startCalculation = async (
         progresses[idx] = 1.0;
         completed++;
 
-        // TODO: たぶん適度にdebounceしたほうがいい
-        onBufferChanged(rect);
+        const comp = isCompleted(completed);
 
-        if (isCompleted(completed)) {
+        // TODO: たぶん適度にdebounceしたほうがいい
+        onBufferChanged(rect, comp);
+
+        if (comp) {
           running = false;
           const after = performance.now();
           lastTime = (after - before).toFixed();
