@@ -169,7 +169,7 @@ const sketch = (p: p5) => {
     if (mouseClickStartedInside) {
       changeCursor(p, "grabbing");
       mouseDragged = true;
-      clearResultBuffer(p);
+      clearResultBuffer();
     }
   };
 

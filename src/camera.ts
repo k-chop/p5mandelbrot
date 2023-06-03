@@ -62,7 +62,7 @@ export const nextResultBuffer = (p: p5): p5.Graphics => {
   return resultBuffer;
 };
 
-export const clearResultBuffer = (p: p5) => {
+export const clearResultBuffer = () => {
   // @ts-ignore
   resultBuffer.clear();
 };
@@ -93,4 +93,5 @@ export const renderToResultBuffer = (rect: Rect) => {
 
 export const mergeToMainBuffer = () => {
   mainBuffer.image(resultBuffer, 0, 0);
+  clearResultBuffer();
 };
