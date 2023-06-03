@@ -125,6 +125,15 @@ const changeCursor = (p: p5, cursor: string) => {
   }
 };
 
+const getDraggingPixelDiff = (p: p5) => {
+  const { mouseX: clickedMouseX, mouseY: clickedMouseY } = mouseClickedOn;
+
+  const pixelDiffX = -Math.floor(p.mouseX - clickedMouseX);
+  const pixelDiffY = -Math.floor(p.mouseY - clickedMouseY);
+
+  return { pixelDiffX, pixelDiffY };
+};
+
 const sketch = (p: p5) => {
   let mouseClickStartedInside = false;
 
@@ -169,14 +178,11 @@ const sketch = (p: p5) => {
 
       if (mouseDragged) {
         // ドラッグ終了時
-        const { mouseX: clickedMouseX, mouseY: clickedMouseY } = mouseClickedOn;
+        const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
+        setOffsetParams({ x: pixelDiffX, y: pixelDiffY });
+
         const centerX = p.width / 2;
         const centerY = p.height / 2;
-
-        const pixelDiffX = -Math.floor(p.mouseX - clickedMouseX);
-        const pixelDiffY = -Math.floor(p.mouseY - clickedMouseY);
-
-        setOffsetParams({ x: pixelDiffX, y: pixelDiffY });
 
         const { mouseX, mouseY } = calcVars(
           centerX + pixelDiffX,
@@ -283,6 +289,15 @@ const sketch = (p: p5) => {
   p.draw = () => {
     const result = nextBuffer(p);
     p.background(0);
+
+    if (mouseDragged) {
+      const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
+      p.image(result, -pixelDiffX, -pixelDiffY);
+      drawInfo(p);
+
+      return;
+    }
+
     p.image(result, 0, 0);
     drawInfo(p);
 
