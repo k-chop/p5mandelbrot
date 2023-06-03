@@ -111,8 +111,18 @@ const drawInfo = (p: p5) => {
   updateStore("millis", millis);
 };
 
+let currentCursor: "cross" | "grab" = "cross";
+let mouseDragged = false;
+
 const isInside = (p: p5) =>
   0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
+
+const changeCursor = (p: p5, cursor: string) => {
+  if (currentCursor === cursor) return;
+  if (isInside(p)) {
+    p.cursor(cursor);
+  }
+};
 
 const sketch = (p: p5) => {
   let mouseClickStartedInside = false;
@@ -134,9 +144,19 @@ const sketch = (p: p5) => {
 
   p.mousePressed = () => {
     if (isInside(p)) mouseClickStartedInside = true;
+    mouseDragged = false;
   };
 
-  p.mouseReleased = () => {
+  p.mouseDragged = () => {
+    changeCursor(p, "grabbing");
+    mouseDragged = true;
+    // TODO: 何者かによってドラッグ時の処理がここに書かれる
+  };
+
+  p.mouseReleased = (ev: MouseEvent) => {
+    if (!ev) return;
+    if (ev.button !== 0) return;
+
     // canvas内でクリックして、canvas内で離した場合のみクリック時の処理を行う
     // これで外からcanvas内に流れてきた場合の誤クリックを防げる
 
@@ -152,12 +172,29 @@ const sketch = (p: p5) => {
         p.height
       );
 
-      const pixelDiffX = Math.floor(p.mouseX - p.width / 2);
-      const pixelDiffY = Math.floor(p.mouseY - p.height / 2);
+      if (mouseDragged) {
+        // ドラッグ終了時
+        // FIXME: 移動時の処理をそのまま残しているだけなので適切に直して
+        const pixelDiffX = Math.floor(p.mouseX - p.width / 2);
+        const pixelDiffY = Math.floor(p.mouseY - p.height / 2);
 
-      setOffsetParams({ x: pixelDiffX, y: pixelDiffY });
-      setCurrentParams({ x: mouseX, y: mouseY });
+        setOffsetParams({ x: pixelDiffX, y: pixelDiffY });
+        setCurrentParams({ x: mouseX, y: mouseY });
+      } else {
+        // クリック時
+        setCurrentParams({ x: mouseX, y: mouseY });
+
+        const rate = getStore("zoomRate");
+        // shiftキーを押しながらクリックすると縮小
+        if (!ev.shiftKey) {
+          zoom(1.0 / rate);
+        } else {
+          zoom(rate);
+        }
+      }
     }
+
+    changeCursor(p, p.CROSS);
     mouseClickStartedInside = false;
   };
 
