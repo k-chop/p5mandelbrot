@@ -131,3 +131,41 @@ export function dReduce(a: ComplexArbitrary): ComplexArbitrary {
 export function toComplex(n: ComplexArbitrary): Complex {
   return { re: n.re.toNumber(), im: n.im.toNumber() };
 }
+
+export function* seqGenerator(n: number) {
+  let i = n;
+  while (i > 1) {
+    yield i;
+    i = Math.floor(i / 2);
+  }
+  yield 1;
+}
+
+export function dividerSequence(n: number) {
+  const result = [];
+  for (const i of seqGenerator(n)) {
+    result.push(i);
+  }
+  // 最初の2要素は荒すぎるので落とす
+  return result.slice(2);
+}
+
+/**
+ * できるだけ等間隔に要素を取りつつ指定した長さに縮める
+ */
+export function thin<T>(arr: T[], length: number): T[] {
+  if (length >= arr.length || length < 3) {
+    return arr;
+  }
+
+  const result = [arr[0]];
+  const interval = (arr.length - 1) / (length - 1);
+
+  for (let i = 1; i < length - 1; i++) {
+    result.push(arr[Math.round(i * interval)]);
+  }
+
+  result.push(arr[arr.length - 1]);
+
+  return result;
+}

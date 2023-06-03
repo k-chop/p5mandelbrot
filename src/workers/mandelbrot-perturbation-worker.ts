@@ -1,7 +1,16 @@
 /// <reference lib="webworker" />
 
 import BigNumber from "bignumber.js";
-import { complexArbitary, dSub, mulIm, mulRe, nNorm, toComplex } from "../math";
+import {
+  complexArbitary,
+  dSub,
+  dividerSequence,
+  mulIm,
+  mulRe,
+  nNorm,
+  thin,
+  toComplex,
+} from "../math";
 import { pixelToComplexCoordinate } from "../math/complex-plane";
 import { MandelbrotCalculationWorkerParams } from "../types";
 import { ReferencePointContext } from "./calc-reference-point";
@@ -22,7 +31,8 @@ self.addEventListener("message", (event) => {
     xn2,
   } = event.data as MandelbrotCalculationWorkerParams;
 
-  const iterations = new Uint32Array((endY - startY) * (endX - startX));
+  const pixelNum = (endY - startY) * (endX - startX);
+  const iterations = new Uint32Array(pixelNum);
 
   const c = complexArbitary(cxStr, cyStr);
   const r = new BigNumber(rStr);
@@ -92,17 +102,43 @@ self.addEventListener("message", (event) => {
 
   const context = { xn, xn2 };
 
-  for (let y = startY; y < endY; y++) {
-    for (let x = startX; x < endX; x++) {
-      const n = calcIterationAt(x, y, context);
+  const xDiffMax = endX - startX;
+  const yDiffMax = endY - startY;
+  const resolutionCount = 4;
 
-      const index = x - startX + (y - startY) * (endX - startX);
-      iterations[index] = n;
+  let xDiffSeq = thin(dividerSequence(xDiffMax), resolutionCount);
+  let yDiffSeq = thin(dividerSequence(yDiffMax), resolutionCount);
+
+  if (xDiffSeq.length !== yDiffSeq.length) {
+    const minLen = Math.min(xDiffSeq.length, yDiffSeq.length);
+    xDiffSeq = thin(xDiffSeq, minLen);
+    yDiffSeq = thin(yDiffSeq, minLen);
+  }
+
+  let calculatedCount = 0;
+
+  for (let i = 0; i < xDiffSeq.length; i++) {
+    const xDiff = xDiffSeq[i];
+    const yDiff = yDiffSeq[i];
+
+    for (let y = startY; y < endY; y = y + yDiff) {
+      for (let x = startX; x < endX; x = x + xDiff) {
+        const index = x - startX + (y - startY) * (endX - startX);
+
+        if (iterations[index] !== 0) {
+          continue;
+        }
+
+        const n = calcIterationAt(x, y, context);
+
+        calculatedCount++;
+        iterations[index] = n;
+      }
+      self.postMessage({
+        type: "progress",
+        progress: calculatedCount / pixelNum,
+      });
     }
-    self.postMessage({
-      type: "progress",
-      progress: (y - startY) / (endY - startY),
-    });
   }
 
   self.postMessage({ type: "result", iterations }, [iterations.buffer]);
