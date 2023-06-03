@@ -256,7 +256,9 @@ const sketch = (p: p5) => {
       if (event.key === "o") exportParamsToClipboard();
       if (event.key === "i") importParamsFromClipboard();
       if (event.key === "ArrowDown") zoom(rate);
+      if (event.key === "s") zoom(rate);
       if (event.key === "ArrowUp") zoom(1.0 / rate);
+      if (event.key === "w") zoom(1.0 / rate);
       if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
       if (event.key === "ArrowLeft") setCurrentParams({ N: params.N - diff });
 
