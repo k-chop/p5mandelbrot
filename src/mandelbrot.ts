@@ -171,7 +171,7 @@ export const paramsChanged = () => {
 };
 
 export const startCalculation = async (
-  onBufferChanged: (updatedRect: Rect) => void
+  onBufferChanged: (updatedRect: Rect, isCompleted: boolean) => void
 ) => {
   updateCurrentParams();
 
@@ -213,7 +213,7 @@ export const startCalculation = async (
     translateRectInIterationCache(offsetX, offsetY);
 
     // 新しく計算しない部分を先に描画しておく
-    onBufferChanged(iterationBufferTransferedRect);
+    onBufferChanged(iterationBufferTransferedRect, false);
 
     calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
   } else {
@@ -265,10 +265,12 @@ export const startCalculation = async (
         progresses[idx] = 1.0;
         completed++;
 
-        // TODO: たぶん適度にdebounceしたほうがいい
-        onBufferChanged(rect);
+        const comp = isCompleted(completed);
 
-        if (isCompleted(completed)) {
+        // TODO: たぶん適度にdebounceしたほうがいい
+        onBufferChanged(rect, comp);
+
+        if (comp) {
           running = false;
           const after = performance.now();
           lastTime = (after - before).toFixed();

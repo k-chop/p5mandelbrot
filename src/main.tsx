@@ -6,8 +6,11 @@ import ReactDOMClient from "react-dom/client";
 import { getIterationTimeAt } from "./aggregator";
 import {
   addPalettes,
+  clearResultBuffer,
+  mergeToMainBuffer,
   nextBuffer,
-  renderToMainBuffer,
+  nextResultBuffer,
+  renderToResultBuffer,
   setColorIndex,
   setupCamera,
 } from "./camera";
@@ -114,6 +117,8 @@ const drawInfo = (p: p5) => {
 let currentCursor: "cross" | "grab" = "cross";
 let mouseDragged = false;
 let mouseClickedOn = { mouseX: 0, mouseY: 0 };
+let mouseReleasedOn = { mouseX: 0, mouseY: 0 };
+let mouseDraggedComplete = false;
 
 const isInside = (p: p5) =>
   0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
@@ -128,8 +133,8 @@ const changeCursor = (p: p5, cursor: string) => {
 const getDraggingPixelDiff = (p: p5) => {
   const { mouseX: clickedMouseX, mouseY: clickedMouseY } = mouseClickedOn;
 
-  const pixelDiffX = -Math.floor(p.mouseX - clickedMouseX);
-  const pixelDiffY = -Math.floor(p.mouseY - clickedMouseY);
+  const pixelDiffX = Math.floor(p.mouseX - clickedMouseX);
+  const pixelDiffY = Math.floor(p.mouseY - clickedMouseY);
 
   return { pixelDiffX, pixelDiffY };
 };
@@ -153,15 +158,19 @@ const sketch = (p: p5) => {
   };
 
   p.mousePressed = () => {
-    if (isInside(p)) mouseClickStartedInside = true;
-    mouseDragged = false;
-    mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
+    if (isInside(p)) {
+      mouseClickStartedInside = true;
+      mouseDragged = false;
+      mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
+    }
   };
 
   p.mouseDragged = () => {
-    changeCursor(p, "grabbing");
-    mouseDragged = true;
-    // TODO: 何者かによってドラッグ時の処理がここに書かれる
+    if (mouseClickStartedInside) {
+      changeCursor(p, "grabbing");
+      mouseDragged = true;
+      clearResultBuffer(p);
+    }
   };
 
   p.mouseReleased = (ev: MouseEvent) => {
@@ -179,19 +188,22 @@ const sketch = (p: p5) => {
       if (mouseDragged) {
         // ドラッグ終了時
         const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
-        setOffsetParams({ x: pixelDiffX, y: pixelDiffY });
+        setOffsetParams({ x: -pixelDiffX, y: -pixelDiffY });
+        mouseReleasedOn = { mouseX: pixelDiffX, mouseY: pixelDiffY };
 
         const centerX = p.width / 2;
         const centerY = p.height / 2;
 
         const { mouseX, mouseY } = calcVars(
-          centerX + pixelDiffX,
-          centerY + pixelDiffY,
+          centerX - pixelDiffX,
+          centerY - pixelDiffY,
           p.width,
           p.height
         );
 
         setCurrentParams({ x: mouseX, y: mouseY });
+
+        mouseDraggedComplete = true;
       } else {
         // クリック時
         const { mouseX, mouseY } = calcVars(
@@ -287,23 +299,33 @@ const sketch = (p: p5) => {
   };
 
   p.draw = () => {
-    const result = nextBuffer(p);
+    const mainBuffer = nextBuffer(p);
+    const resultBuffer = nextResultBuffer(p);
+
     p.background(0);
 
     if (mouseDragged) {
       const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
-      p.image(result, -pixelDiffX, -pixelDiffY);
-      drawInfo(p);
-
-      return;
+      p.image(mainBuffer, pixelDiffX, pixelDiffY);
+    } else if (mouseDraggedComplete) {
+      const { mouseX, mouseY } = mouseReleasedOn;
+      p.image(mainBuffer, mouseX, mouseY);
+    } else {
+      p.image(mainBuffer, 0, 0);
     }
 
-    p.image(result, 0, 0);
+    p.image(resultBuffer, 0, 0);
+
     drawInfo(p);
 
     if (paramsChanged()) {
-      startCalculation((updatedRect: Rect) => {
-        renderToMainBuffer(updatedRect);
+      startCalculation((updatedRect: Rect, isCompleted: boolean) => {
+        renderToResultBuffer(updatedRect);
+
+        if (isCompleted) {
+          mouseDraggedComplete = false;
+          mergeToMainBuffer();
+        }
       });
     }
   };
