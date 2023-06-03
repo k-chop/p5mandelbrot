@@ -159,6 +159,8 @@ const sketch = (p: p5) => {
 
   p.mousePressed = () => {
     if (isInside(p)) {
+      mergeToMainBuffer();
+
       mouseClickStartedInside = true;
       mouseDragged = false;
       mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
