@@ -223,6 +223,10 @@ export const startCalculation = async (
 
     // TODO: perturbation時はreference pointsの値を取っておけば移動がかなり高速化できる気がする
 
+    // FIXME:
+    // 描画領域分割数＝worker数のせいでworker=1のとき移動すると落ちる
+    // これらは別に設定できるようにするべき
+
     calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
   } else {
     // 移動していない場合は再利用するCacheがないので消す
