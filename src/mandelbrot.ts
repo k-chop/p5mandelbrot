@@ -107,11 +107,16 @@ export const updateCurrentParams = () => {
 };
 
 export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
-  const needModeChange = currentParams.mode !== params.mode;
+  const needModeChange =
+    params.mode != null && currentParams.mode !== params.mode;
+  const needResetOffset = params.r != null && !currentParams.r.eq(params.r);
 
   currentParams = { ...currentParams, ...params };
   if (needModeChange) {
     setWorkerType(currentParams.mode);
+    setOffsetParams({ x: 0, y: 0 });
+  }
+  if (needResetOffset) {
     setOffsetParams({ x: 0, y: 0 });
   }
 };
