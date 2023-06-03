@@ -323,6 +323,8 @@ export const startCalculation = async (
       endX,
       xn,
       xn2,
+      refX: currentParams.x.toString(),
+      refY: currentParams.y.toString(),
     });
   });
 };

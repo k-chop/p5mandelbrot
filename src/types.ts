@@ -56,7 +56,8 @@ export interface MandelbrotCalculationWorkerParams {
   endY: number;
   xn: Complex[];
   xn2: Complex[];
-  glitchChecker: number[];
+  refX: string;
+  refY: string;
 }
 
 export interface ReferencePointCalculationWorkerParams {

@@ -29,6 +29,8 @@ self.addEventListener("message", (event) => {
     endY,
     xn,
     xn2,
+    refX,
+    refY,
   } = event.data as MandelbrotCalculationWorkerParams;
 
   const areaWidth = endX - startX;
@@ -38,6 +40,7 @@ self.addEventListener("message", (event) => {
   const iterations = new Uint32Array(pixelNum);
 
   const c = complexArbitary(cxStr, cyStr);
+  const ref = complexArbitary(refX, refY);
   const r = new BigNumber(rStr);
 
   function calcIterationAt(
@@ -61,7 +64,7 @@ self.addEventListener("message", (event) => {
       pixelHeight
     );
     // Δ0
-    const deltaC = toComplex(dSub(current, c));
+    const deltaC = toComplex(dSub(current, ref));
 
     let iteration = 0;
     let refIteration = 0;
