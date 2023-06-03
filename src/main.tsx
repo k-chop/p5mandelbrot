@@ -209,6 +209,7 @@ const sketch = (p: p5) => {
 
     changeCursor(p, p.CROSS);
     mouseClickStartedInside = false;
+    mouseDragged = false;
   };
 
   p.mouseWheel = (event: WheelEvent) => {
