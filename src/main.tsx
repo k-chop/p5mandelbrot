@@ -186,10 +186,10 @@ const sketch = (p: p5) => {
 
         const rate = getStore("zoomRate");
         // shiftキーを押しながらクリックすると縮小
-        if (!ev.shiftKey) {
-          zoom(1.0 / rate);
-        } else {
+        if (ev.shiftKey) {
           zoom(rate);
+        } else {
+          zoom(1.0 / rate);
         }
       }
     }
@@ -227,6 +227,7 @@ const sketch = (p: p5) => {
     if (event) {
       let diff = 100;
       const params = getCurrentParams();
+      const rate = getStore("zoomRate");
 
       if (event.shiftKey) {
         const N = params.N;
@@ -254,8 +255,8 @@ const sketch = (p: p5) => {
       if (event.key === "m") cycleMode();
       if (event.key === "o") exportParamsToClipboard();
       if (event.key === "i") importParamsFromClipboard();
-      if (event.key === "ArrowDown") zoom(2);
-      if (event.key === "ArrowUp") zoom(0.5);
+      if (event.key === "ArrowDown") zoom(rate);
+      if (event.key === "ArrowUp") zoom(1.0 / rate);
       if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
       if (event.key === "ArrowLeft") setCurrentParams({ N: params.N - diff });
 
