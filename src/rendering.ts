@@ -57,10 +57,10 @@ export const bufferLocalLogicalIndex = (
   const ratioX = resolution.width / rect.width;
   const ratioY = resolution.height / rect.height;
 
-  const adaptedX = Math.floor(localX * ratioX);
-  const adaptedY = Math.floor(localY * ratioY);
+  const scaledX = Math.floor(localX * ratioX);
+  const scaledY = Math.floor(localY * ratioY);
 
-  return adaptedX + adaptedY * resolution.width;
+  return scaledX + scaledY * resolution.width;
 };
 
 export const renderIterationsToPixel = (
