@@ -44,6 +44,7 @@ import { AppRoot } from "./view/app-root";
 import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
 import { chromaJsPalettes } from "./color/color-chromajs";
 import { p5jsPalettes } from "./color/color-p5js";
+import { drawCrossHair } from "./rendering";
 
 resetWorkers();
 
@@ -151,7 +152,6 @@ const sketch = (p: p5) => {
     p.createCanvas(width, height);
     setupCamera(p, width, height);
 
-    p.noStroke();
     p.colorMode(p.HSB, 360, 100, 100, 100);
 
     p.cursor(p.CROSS);
@@ -307,6 +307,7 @@ const sketch = (p: p5) => {
     if (mouseDragged) {
       const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
       p.image(mainBuffer, pixelDiffX, pixelDiffY);
+      drawCrossHair(p);
     } else if (mouseDraggedComplete) {
       const { mouseX, mouseY } = mouseReleasedOn;
       p.image(mainBuffer, mouseX, mouseY);
