@@ -286,7 +286,6 @@ export const startCalculation = async (
 
         const comp = isCompleted(completed);
 
-        // TODO: たぶん適度にdebounceしたほうがいい
         onBufferChanged(rect, comp);
 
         if (comp) {
