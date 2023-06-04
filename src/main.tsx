@@ -169,8 +169,10 @@ const sketch = (p: p5) => {
     }
   };
 
-  p.mouseDragged = () => {
+  p.mouseDragged = (ev: MouseEvent) => {
     if (mouseClickStartedInside) {
+      ev.preventDefault();
+
       changeCursor(p, "grabbing");
       mouseDragged = true;
       clearResultBuffer();
@@ -184,9 +186,10 @@ const sketch = (p: p5) => {
     // canvas内でクリックして、canvas内で離した場合のみクリック時の処理を行う
     // これで外からcanvas内に流れてきた場合の誤クリックを防げる
 
-    // FIXME: ドラッグできるようになったとき、ドラッグ中に外に出るのは許容する必要がある
-    if (isInside(p) && mouseClickStartedInside) {
+    if (mouseClickStartedInside) {
       if (getStore("canvasLocked")) return;
+
+      ev.preventDefault();
 
       if (mouseDragged) {
         // ドラッグ終了時
