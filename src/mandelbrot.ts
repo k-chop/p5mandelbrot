@@ -4,6 +4,7 @@ import {
   MandelbrotParams,
   OffsetParams,
   ReferencePointResult,
+  WorkerIntermediateResult,
   WorkerProgress,
   WorkerResult,
 } from "./types";
@@ -17,7 +18,7 @@ import {
   referencePointWorker,
 } from "./workers";
 import {
-  addIterationCache,
+  upsertIterationCache,
   clearIterationCache,
   translateRectInIterationCache,
 } from "./aggregator";
@@ -220,7 +221,13 @@ export const startCalculation = async (
     // 新しく計算しない部分を先に描画しておく
     onBufferChanged(iterationBufferTransferedRect, false);
 
-    // TODO: perturbation時はreference pointsの値を取っておけば移動がかなり高速化できる気がする
+    // TODO:
+    // perturbation時はreference pointsの値を取っておけば移動がかなり高速化できる気がする
+    // ただしどのくらいの距離まで有効なのか、有効でなくなったことをどう検知したらいいのかわからん
+
+    // FIXME:
+    // 描画領域分割数＝worker数のせいでworker=1のとき移動すると落ちる
+    // これらは別に設定できるようにするべき
 
     calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
   } else {
@@ -261,20 +268,24 @@ export const startCalculation = async (
     const startY = rect.y;
     const endY = rect.y + rect.height;
 
-    const f = (ev: MessageEvent<WorkerResult | WorkerProgress>) => {
+    const f = (
+      ev: MessageEvent<WorkerResult | WorkerIntermediateResult | WorkerProgress>
+    ) => {
       const data = ev.data;
       if (data.type == "result") {
         const { iterations } = data;
 
         const iterationsResult = new Uint32Array(iterations);
-        addIterationCache(rect, iterationsResult);
+        upsertIterationCache(rect, iterationsResult, {
+          width: rect.width,
+          height: rect.height,
+        });
 
         progresses[idx] = 1.0;
         completed++;
 
         const comp = isCompleted(completed);
 
-        // TODO: たぶん適度にdebounceしたほうがいい
         onBufferChanged(rect, comp);
 
         if (comp) {
@@ -284,6 +295,11 @@ export const startCalculation = async (
         }
 
         worker.removeEventListener("message", f);
+      } else if (data.type === "intermediateResult") {
+        const { iterations, resolution } = data;
+        upsertIterationCache(rect, new Uint32Array(iterations), resolution);
+
+        onBufferChanged(rect, false);
       } else {
         const { progress } = data;
         progresses[idx] = progress;
@@ -308,6 +324,8 @@ export const startCalculation = async (
       endX,
       xn,
       xn2,
+      refX: currentParams.x.toString(),
+      refY: currentParams.y.toString(),
     });
   });
 };

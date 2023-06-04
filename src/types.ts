@@ -2,9 +2,20 @@ import { BigNumber } from "bignumber.js";
 import { Rect } from "./rect";
 import { Complex } from "./math";
 
+export interface Resolution {
+  width: number;
+  height: number;
+}
+
 export interface WorkerResult {
   type: "result";
   iterations: ArrayBuffer;
+}
+
+export interface WorkerIntermediateResult {
+  type: "intermediateResult";
+  iterations: ArrayBuffer;
+  resolution: Resolution;
 }
 
 export interface WorkerProgress {
@@ -45,7 +56,8 @@ export interface MandelbrotCalculationWorkerParams {
   endY: number;
   xn: Complex[];
   xn2: Complex[];
-  glitchChecker: number[];
+  refX: string;
+  refY: string;
 }
 
 export interface ReferencePointCalculationWorkerParams {
@@ -59,12 +71,13 @@ export interface ReferencePointCalculationWorkerParams {
 
 export const mandelbrotWorkerTypes = [
   "normal",
-  "doublejs",
   "perturbation",
+  "doublejs",
 ] as const;
 export type MandelbrotWorkerType = (typeof mandelbrotWorkerTypes)[number];
 
 export interface IterationBuffer {
   rect: Rect;
   buffer: Uint32Array;
+  resolution: Resolution;
 }

@@ -1,6 +1,6 @@
 import { bufferLocalLogicalIndex } from "./rendering";
 import { Rect } from "./rect";
-import { IterationBuffer } from "./types";
+import { IterationBuffer, Resolution } from "./types";
 
 // FIXME: たぶんIterationBufferは複素数平面座標に対するキャッシュを持つべき
 // それならrがどうであれ使い回せるはず
@@ -10,8 +10,27 @@ import { IterationBuffer } from "./types";
 // FIXME: もっと賢くデータを持つ
 let iterationCache: IterationBuffer[] = [];
 
-export const addIterationCache = (rect: Rect, buffer: Uint32Array): void => {
-  iterationCache.push({ rect, buffer });
+export const upsertIterationCache = (
+  rect: Rect,
+  buffer: Uint32Array,
+  resolution: Resolution
+): void => {
+  const idx = iterationCache.findIndex(
+    (i) => i.rect.x === rect.x && i.rect.y === rect.y
+  );
+
+  if (idx !== -1) {
+    const old = iterationCache[idx];
+    if (
+      old.resolution.width * old.resolution.height <
+      resolution.width * resolution.height
+    ) {
+      // 解像度が大きい方を採用
+      iterationCache[idx] = { rect, buffer, resolution };
+    }
+  } else {
+    iterationCache.push({ rect, buffer, resolution });
+  }
 };
 
 export const getIterationCache = (): IterationBuffer[] => {
@@ -25,16 +44,23 @@ export const clearIterationCache = (): void => {
 /**
  * マウスXY座標の位置のiteration回数を取得する
  */
-export const getIterationTimeAt = (x: number, y: number) => {
+export const getIterationTimeAt = (worldX: number, worldY: number) => {
   for (const iteration of iterationCache) {
-    if (x < iteration.rect.x || iteration.rect.x + iteration.rect.width < x)
+    if (
+      worldX < iteration.rect.x ||
+      iteration.rect.x + iteration.rect.width < worldX
+    )
       continue;
-    if (y < iteration.rect.y || iteration.rect.y + iteration.rect.height < y)
+    if (
+      worldY < iteration.rect.y ||
+      iteration.rect.y + iteration.rect.height < worldY
+    )
       continue;
     const idx = bufferLocalLogicalIndex(
-      Math.floor(x),
-      Math.floor(y),
-      iteration.rect
+      Math.floor(worldX),
+      Math.floor(worldY),
+      iteration.rect,
+      iteration.resolution
     );
 
     return iteration.buffer[idx];
@@ -55,6 +81,7 @@ export const translateRectInIterationCache = (
         height: iteration.rect.height,
       },
       buffer: iteration.buffer,
+      resolution: iteration.resolution,
     };
   });
 };

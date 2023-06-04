@@ -2,7 +2,7 @@ import p5 from "p5";
 import { getCanvasWidth } from "./camera";
 import { GLITCHED_POINT_ITERATION } from "./mandelbrot";
 import { Rect } from "./rect";
-import { IterationBuffer } from "./types";
+import { IterationBuffer, Resolution } from "./types";
 import { Palette } from "./color";
 
 export const fillColor = (
@@ -46,10 +46,22 @@ export const fillColor = (
 };
 
 export const bufferLocalLogicalIndex = (
-  x: number,
-  y: number,
-  rect: Rect
-): number => x - rect.x + (y - rect.y) * rect.width;
+  worldX: number,
+  worldY: number,
+  rect: Rect,
+  resolution: Resolution
+): number => {
+  const localX = worldX - rect.x;
+  const localY = worldY - rect.y;
+
+  const ratioX = resolution.width / rect.width;
+  const ratioY = resolution.height / rect.height;
+
+  const scaledX = Math.floor(localX * ratioX);
+  const scaledY = Math.floor(localY * ratioY);
+
+  return scaledX + scaledY * resolution.width;
+};
 
 export const renderIterationsToPixel = (
   worldRect: Rect,
@@ -64,7 +76,7 @@ export const renderIterationsToPixel = (
   const density = graphics.pixelDensity();
 
   for (const iteration of iterationsResult) {
-    const { rect, buffer } = iteration;
+    const { rect, buffer, resolution } = iteration;
 
     // worldRectとiterationのrectが一致する箇所だけ描画する
     const startY = Math.max(rect.y, worldRect.y);
@@ -72,14 +84,24 @@ export const renderIterationsToPixel = (
     const endY = Math.min(rect.y + rect.height, worldRect.y + worldRect.height);
     const endX = Math.min(rect.x + rect.width, worldRect.x + worldRect.width);
 
-    for (let y = startY; y < endY; y++) {
-      for (let x = startX; x < endX; x++) {
+    for (let worldY = startY; worldY < endY; worldY++) {
+      for (let worldX = startX; worldX < endX; worldX++) {
         // バッファ内で対応する点のiterationを取得
-        const idx = bufferLocalLogicalIndex(x, y, rect);
+
+        const idx = bufferLocalLogicalIndex(worldX, worldY, rect, resolution);
         const n = buffer[idx];
 
         const pixels = graphics.pixels as unknown as Uint8ClampedArray;
-        fillColor(x, y, canvasWidth, pixels, palette, n, maxIteration, density);
+        fillColor(
+          worldX,
+          worldY,
+          canvasWidth,
+          pixels,
+          palette,
+          n,
+          maxIteration,
+          density
+        );
       }
     }
   }

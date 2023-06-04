@@ -1,7 +1,17 @@
 /// <reference lib="webworker" />
 
 import BigNumber from "bignumber.js";
-import { complexArbitary, dSub, mulIm, mulRe, nNorm, toComplex } from "../math";
+import {
+  complexArbitary,
+  dSub,
+  dividerSequence,
+  generateLowResDiffSequence,
+  mulIm,
+  mulRe,
+  nNorm,
+  thin,
+  toComplex,
+} from "../math";
 import { pixelToComplexCoordinate } from "../math/complex-plane";
 import { MandelbrotCalculationWorkerParams } from "../types";
 import { ReferencePointContext } from "./calc-reference-point";
@@ -20,11 +30,17 @@ self.addEventListener("message", (event) => {
     endY,
     xn,
     xn2,
+    refX,
+    refY,
   } = event.data as MandelbrotCalculationWorkerParams;
 
-  const iterations = new Uint32Array((endY - startY) * (endX - startX));
+  const areaWidth = endX - startX;
+  const areaHeight = endY - startY;
+  const pixelNum = areaHeight * areaWidth;
+  const iterations = new Uint32Array(pixelNum);
 
   const c = complexArbitary(cxStr, cyStr);
+  const ref = complexArbitary(refX, refY);
   const r = new BigNumber(rStr);
 
   function calcIterationAt(
@@ -48,7 +64,7 @@ self.addEventListener("message", (event) => {
       pixelHeight
     );
     // Δ0
-    const deltaC = toComplex(dSub(current, c));
+    const deltaC = toComplex(dSub(current, ref));
 
     let iteration = 0;
     let refIteration = 0;
@@ -92,17 +108,56 @@ self.addEventListener("message", (event) => {
 
   const context = { xn, xn2 };
 
-  for (let y = startY; y < endY; y++) {
-    for (let x = startX; x < endX; x++) {
-      const n = calcIterationAt(x, y, context);
+  const { xDiffs, yDiffs } = generateLowResDiffSequence(
+    6,
+    areaWidth,
+    areaHeight
+  );
 
-      const index = x - startX + (y - startY) * (endX - startX);
-      iterations[index] = n;
+  let calculatedCount = 0;
+
+  for (let i = 0; i < xDiffs.length; i++) {
+    const xDiff = xDiffs[i];
+    const yDiff = yDiffs[i];
+
+    const lowResAreaWidth = Math.floor(areaWidth / xDiff);
+    const lowResAreaHeight = Math.floor(areaHeight / yDiff);
+    const lowResIterations = new Uint32Array(
+      lowResAreaWidth * lowResAreaHeight
+    );
+
+    let roughY = 0;
+    for (let y = startY; y < endY; y = y + yDiff, roughY++) {
+      let roughX = 0;
+
+      for (let x = startX; x < endX; x = x + xDiff, roughX++) {
+        const index = x - startX + (y - startY) * areaWidth;
+        const indexRough = roughX + roughY * lowResAreaWidth;
+
+        if (iterations[index] !== 0) {
+          lowResIterations[indexRough] = iterations[index];
+          continue;
+        }
+
+        const n = calcIterationAt(x, y, context);
+
+        calculatedCount++;
+        iterations[index] = n;
+        lowResIterations[indexRough] = n;
+      }
+      self.postMessage({
+        type: "progress",
+        progress: calculatedCount / pixelNum,
+      });
     }
-    self.postMessage({
-      type: "progress",
-      progress: (y - startY) / (endY - startY),
-    });
+    self.postMessage(
+      {
+        type: "intermediateResult",
+        iterations: lowResIterations,
+        resolution: { width: lowResAreaWidth, height: lowResAreaHeight },
+      },
+      [lowResIterations.buffer]
+    );
   }
 
   self.postMessage({ type: "result", iterations }, [iterations.buffer]);
