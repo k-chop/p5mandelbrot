@@ -169,3 +169,20 @@ export function thin<T>(arr: T[], length: number): T[] {
 
   return result;
 }
+
+export function generateLowResDiffSequence(
+  resolutionCount: number,
+  areaWidth: number,
+  areaHeight: number
+) {
+  let xDiffs = thin(dividerSequence(areaWidth), resolutionCount);
+  let yDiffs = thin(dividerSequence(areaHeight), resolutionCount);
+
+  if (xDiffs.length !== yDiffs.length) {
+    const minLen = Math.min(xDiffs.length, yDiffs.length);
+    xDiffs = thin(xDiffs, minLen);
+    yDiffs = thin(yDiffs, minLen);
+  }
+
+  return { xDiffs, yDiffs };
+}

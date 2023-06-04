@@ -5,6 +5,7 @@ import {
   complexArbitary,
   dSub,
   dividerSequence,
+  generateLowResDiffSequence,
   mulIm,
   mulRe,
   nNorm,
@@ -35,7 +36,6 @@ self.addEventListener("message", (event) => {
 
   const areaWidth = endX - startX;
   const areaHeight = endY - startY;
-
   const pixelNum = areaHeight * areaWidth;
   const iterations = new Uint32Array(pixelNum);
 
@@ -108,22 +108,17 @@ self.addEventListener("message", (event) => {
 
   const context = { xn, xn2 };
 
-  const resolutionCount = 6;
-
-  let xDiffSeq = thin(dividerSequence(areaWidth), resolutionCount);
-  let yDiffSeq = thin(dividerSequence(areaHeight), resolutionCount);
-
-  if (xDiffSeq.length !== yDiffSeq.length) {
-    const minLen = Math.min(xDiffSeq.length, yDiffSeq.length);
-    xDiffSeq = thin(xDiffSeq, minLen);
-    yDiffSeq = thin(yDiffSeq, minLen);
-  }
+  const { xDiffs, yDiffs } = generateLowResDiffSequence(
+    6,
+    areaWidth,
+    areaHeight
+  );
 
   let calculatedCount = 0;
 
-  for (let i = 0; i < xDiffSeq.length; i++) {
-    const xDiff = xDiffSeq[i];
-    const yDiff = yDiffSeq[i];
+  for (let i = 0; i < xDiffs.length; i++) {
+    const xDiff = xDiffs[i];
+    const yDiff = yDiffs[i];
 
     const lowResAreaWidth = Math.floor(areaWidth / xDiff);
     const lowResAreaHeight = Math.floor(areaHeight / yDiff);
