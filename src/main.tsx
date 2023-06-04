@@ -159,6 +159,8 @@ const sketch = (p: p5) => {
 
   p.mousePressed = () => {
     if (isInside(p)) {
+      if (getStore("canvasLocked")) return;
+
       mergeToMainBuffer();
 
       mouseClickStartedInside = true;
@@ -184,7 +186,6 @@ const sketch = (p: p5) => {
 
     // FIXME: ドラッグできるようになったとき、ドラッグ中に外に出るのは許容する必要がある
     if (isInside(p) && mouseClickStartedInside) {
-      if (!isInside(p)) return;
       if (getStore("canvasLocked")) return;
 
       if (mouseDragged) {
