@@ -221,7 +221,9 @@ export const startCalculation = async (
     // 新しく計算しない部分を先に描画しておく
     onBufferChanged(iterationBufferTransferedRect, false);
 
-    // TODO: perturbation時はreference pointsの値を取っておけば移動がかなり高速化できる気がする
+    // TODO:
+    // perturbation時はreference pointsの値を取っておけば移動がかなり高速化できる気がする
+    // ただしどのくらいの距離まで有効なのか、有効でなくなったことをどう検知したらいいのかわからん
 
     // FIXME:
     // 描画領域分割数＝worker数のせいでworker=1のとき移動すると落ちる
