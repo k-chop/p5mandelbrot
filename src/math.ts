@@ -14,7 +14,7 @@ export type ComplexArbitrary = {
 
 export function complexArbitary(
   real: BigNumber.Value,
-  imaginary: BigNumber.Value
+  imaginary: BigNumber.Value,
 ): ComplexArbitrary {
   return {
     re: new BigNumber(real),
@@ -47,7 +47,7 @@ export function add(a: Complex, b: Complex): Complex {
 
 export function dMul(
   a: ComplexArbitrary,
-  b: ComplexArbitrary | number
+  b: ComplexArbitrary | number,
 ): ComplexArbitrary {
   if (typeof b === "number") {
     return {
@@ -73,7 +73,7 @@ export function mulRe(
   aRe: number,
   aIm: number,
   bRe: number,
-  bIm: number
+  bIm: number,
 ): number {
   return aRe * bRe - aIm * bIm;
 }
@@ -82,7 +82,7 @@ export function mulIm(
   aRe: number,
   aIm: number,
   bRe: number,
-  bIm: number
+  bIm: number,
 ): number {
   return aRe * bIm + aIm * bRe;
 }
@@ -103,7 +103,7 @@ export function square(n: Complex): Complex {
 
 export function dAdd(
   a: ComplexArbitrary,
-  b: ComplexArbitrary | Complex
+  b: ComplexArbitrary | Complex,
 ): ComplexArbitrary {
   return {
     re: a.re.plus(b.re),
@@ -113,7 +113,7 @@ export function dAdd(
 
 export function dSub(
   a: ComplexArbitrary,
-  b: ComplexArbitrary | Complex
+  b: ComplexArbitrary | Complex,
 ): ComplexArbitrary {
   return {
     re: a.re.minus(b.re),
@@ -173,7 +173,7 @@ export function thin<T>(arr: T[], length: number): T[] {
 export function generateLowResDiffSequence(
   resolutionCount: number,
   areaWidth: number,
-  areaHeight: number
+  areaHeight: number,
 ) {
   let xDiffs = thin(dividerSequence(areaWidth), resolutionCount);
   let yDiffs = thin(dividerSequence(areaHeight), resolutionCount);

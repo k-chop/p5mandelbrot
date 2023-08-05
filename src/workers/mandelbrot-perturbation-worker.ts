@@ -46,7 +46,7 @@ self.addEventListener("message", (event) => {
   function calcIterationAt(
     pixelX: number,
     pixelY: number,
-    context: ReferencePointContext
+    context: ReferencePointContext,
   ): number {
     const { xn, xn2 } = context;
     const maxRefIteration = xn.length - 1;
@@ -61,7 +61,7 @@ self.addEventListener("message", (event) => {
       c,
       r,
       pixelWidth,
-      pixelHeight
+      pixelHeight,
     );
     // Δ0
     const deltaC = toComplex(dSub(current, ref));
@@ -111,7 +111,7 @@ self.addEventListener("message", (event) => {
   const { xDiffs, yDiffs } = generateLowResDiffSequence(
     6,
     areaWidth,
-    areaHeight
+    areaHeight,
   );
 
   let calculatedCount = 0;
@@ -123,7 +123,7 @@ self.addEventListener("message", (event) => {
     const lowResAreaWidth = Math.floor(areaWidth / xDiff);
     const lowResAreaHeight = Math.floor(areaHeight / yDiff);
     const lowResIterations = new Uint32Array(
-      lowResAreaWidth * lowResAreaHeight
+      lowResAreaWidth * lowResAreaHeight,
     );
 
     let roughY = 0;
@@ -156,7 +156,7 @@ self.addEventListener("message", (event) => {
         iterations: lowResIterations,
         resolution: { width: lowResAreaWidth, height: lowResAreaHeight },
       },
-      [lowResIterations.buffer]
+      [lowResIterations.buffer],
     );
   }
 

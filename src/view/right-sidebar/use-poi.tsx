@@ -13,7 +13,7 @@ export const usePOI = () => {
       writePOIListToStorage(newPOIList);
       updateStore("poi", newPOIList);
     },
-    [poiList]
+    [poiList],
   );
 
   const deletePOIAt = useCallback(
@@ -22,7 +22,7 @@ export const usePOI = () => {
       writePOIListToStorage(newPOIList);
       updateStore("poi", newPOIList);
     },
-    [poiList]
+    [poiList],
   );
 
   const applyPOI = useCallback((poi: MandelbrotParams) => {

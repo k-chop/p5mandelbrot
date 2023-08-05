@@ -65,15 +65,15 @@ export const calcVars = (
   mouseX: number,
   mouseY: number,
   width: number,
-  height: number
+  height: number,
 ) => {
   const normalizedMouseX = new BigNumber(2 * mouseX).div(width).minus(1);
   const normalizedMouseY = new BigNumber(2 * mouseY).div(height).minus(1);
   const currentMouseX = currentParams.x.plus(
-    normalizedMouseX.times(currentParams.r)
+    normalizedMouseX.times(currentParams.r),
   );
   const currentMouseY = currentParams.y.minus(
-    normalizedMouseY.times(currentParams.r)
+    normalizedMouseY.times(currentParams.r),
   );
 
   const r = currentParams.r;
@@ -177,7 +177,7 @@ export const paramsChanged = () => {
 };
 
 export const startCalculation = async (
-  onBufferChanged: (updatedRect: Rect, isCompleted: boolean) => void
+  onBufferChanged: (updatedRect: Rect, isCompleted: boolean) => void,
 ) => {
   updateCurrentParams();
 
@@ -196,7 +196,7 @@ export const startCalculation = async (
   let calculationRects = divideRect(
     [{ x: 0, y: 0, width, height }],
     getWorkerCount(),
-    minSide
+    minSide,
   );
 
   if (offsetParams.x !== 0 || offsetParams.y !== 0) {
@@ -249,7 +249,7 @@ export const startCalculation = async (
         if (type === "result") {
           resolve({ xn, xn2 });
         }
-      }
+      },
     );
 
     refWorker.postMessage({
@@ -269,7 +269,9 @@ export const startCalculation = async (
     const endY = rect.y + rect.height;
 
     const f = (
-      ev: MessageEvent<WorkerResult | WorkerIntermediateResult | WorkerProgress>
+      ev: MessageEvent<
+        WorkerResult | WorkerIntermediateResult | WorkerProgress
+      >,
     ) => {
       const data = ev.data;
       if (data.type == "result") {

@@ -13,7 +13,7 @@ export const fillColor = (
   palette: Palette,
   iteration: number,
   maxIteration: number,
-  density: number
+  density: number,
 ) => {
   for (let i = 0; i < density; i++) {
     for (let j = 0; j < density; j++) {
@@ -49,7 +49,7 @@ export const bufferLocalLogicalIndex = (
   worldX: number,
   worldY: number,
   rect: Rect,
-  resolution: Resolution
+  resolution: Resolution,
 ): number => {
   const localX = worldX - rect.x;
   const localY = worldY - rect.y;
@@ -68,7 +68,7 @@ export const renderIterationsToPixel = (
   graphics: p5.Graphics,
   maxIteration: number,
   iterationsResult: IterationBuffer[],
-  palette: Palette
+  palette: Palette,
 ) => {
   const canvasWidth = getCanvasWidth();
 
@@ -100,7 +100,7 @@ export const renderIterationsToPixel = (
           palette,
           n,
           maxIteration,
-          density
+          density,
         );
       }
     }

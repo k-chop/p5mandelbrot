@@ -87,7 +87,7 @@ const drawInfo = (p: p5) => {
     p.mouseX,
     p.mouseY,
     p.width,
-    p.height
+    p.height,
   );
 
   const iteration = getIterationTimeAt(p.mouseX, p.mouseY);
@@ -204,7 +204,7 @@ const sketch = (p: p5) => {
           centerX - pixelDiffX,
           centerY - pixelDiffY,
           p.width,
-          p.height
+          p.height,
         );
 
         setCurrentParams({ x: mouseX, y: mouseY });
@@ -216,7 +216,7 @@ const sketch = (p: p5) => {
           p.mouseX,
           p.mouseY,
           p.width,
-          p.height
+          p.height,
         );
 
         setCurrentParams({ x: mouseX, y: mouseY });
@@ -348,5 +348,5 @@ ReactDOMClient.createRoot(container).render(
     <MantineProvider theme={{ colorScheme: "dark" }} withNormalizeCSS>
       <AppRoot />
     </MantineProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

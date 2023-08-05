@@ -27,7 +27,7 @@ export type ReferencePointContext = {
 
 function calcReferencePoint(
   center: ComplexArbitrary,
-  maxIteration: number
+  maxIteration: number,
 ): ReferencePointContext {
   const xn: Complex[] = [];
   const xn2: Complex[] = [];
@@ -71,7 +71,7 @@ self.addEventListener("message", (event) => {
     center,
     radius,
     pixelWidth,
-    pixelHeight
+    pixelHeight,
   );
 
   const { xn, xn2 } = calcReferencePoint(referencePoint, maxIteration);

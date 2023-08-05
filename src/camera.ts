@@ -75,7 +75,7 @@ export const renderToMainBuffer = (rect: Rect) => {
     mainBuffer,
     params.N,
     getIterationCache(),
-    getPalette()
+    getPalette(),
   );
 };
 
@@ -87,7 +87,7 @@ export const renderToResultBuffer = (rect: Rect) => {
     resultBuffer,
     params.N,
     getIterationCache(),
-    getPalette()
+    getPalette(),
   );
 };
 

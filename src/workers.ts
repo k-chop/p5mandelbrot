@@ -25,7 +25,7 @@ export const currentWorkerType = (): MandelbrotWorkerType => _currentWorkerType;
 
 export const cycleWorkerType = (): MandelbrotWorkerType => {
   const currentIndex = mandelbrotWorkerTypes.findIndex(
-    (v) => v === _currentWorkerType
+    (v) => v === _currentWorkerType,
   );
   _currentWorkerType =
     mandelbrotWorkerTypes[(currentIndex + 1) % mandelbrotWorkerTypes.length];
@@ -40,7 +40,7 @@ export const setWorkerType = (type: MandelbrotWorkerType): void => {
 };
 
 export const setWorkerCount = (
-  count: number = getStore("workerCount")
+  count: number = getStore("workerCount"),
 ): void => {
   _workerCount = count;
 };
@@ -71,8 +71,8 @@ export const registerWorkerTask = (
     rect: Rect,
     idx: number,
     workers: Worker[],
-    isCompleted: (completed: number) => boolean
-  ) => void
+    isCompleted: (completed: number) => boolean,
+  ) => void,
 ): void => {
   _activeWorkerCount = calculationRects.length;
 
@@ -85,7 +85,7 @@ export const registerWorkerTask = (
       rect,
       i,
       _workers,
-      (completed) => completed >= calculationRects.length
+      (completed) => completed >= calculationRects.length,
     );
   }
 };

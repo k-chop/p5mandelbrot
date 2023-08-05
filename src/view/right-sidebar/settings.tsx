@@ -83,7 +83,7 @@ export const Settings = () => {
           marks={workerCountMarks}
           defaultValue={
             workerCountMarks.find(
-              (mark) => parseInt(mark.label) === workerCount
+              (mark) => parseInt(mark.label) === workerCount,
             )?.value!
           }
           label={(value) => workerCountMarks[value].label}
