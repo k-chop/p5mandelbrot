@@ -72,7 +72,45 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+}
+
+:root {
+  font-family: "Figtree", sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+
+  color-scheme: light dark;
+  background-color: #1a1b1e;
+  color: #c1c2c5;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+#main {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+#header {
+  width: 95%;
+
+  padding: 4px 0 4px 8px;
+}
+
+#footer {
+  width: 95%;
+
+  padding: 4px 0 4px 8px;
+}
+
+#sidebar-right {
+  max-width: 22%;
+  width: 30%;
 }
