@@ -13,10 +13,10 @@ let iterationCache: IterationBuffer[] = [];
 export const upsertIterationCache = (
   rect: Rect,
   buffer: Uint32Array,
-  resolution: Resolution
+  resolution: Resolution,
 ): void => {
   const idx = iterationCache.findIndex(
-    (i) => i.rect.x === rect.x && i.rect.y === rect.y
+    (i) => i.rect.x === rect.x && i.rect.y === rect.y,
   );
 
   if (idx !== -1) {
@@ -60,7 +60,7 @@ export const getIterationTimeAt = (worldX: number, worldY: number) => {
       Math.floor(worldX),
       Math.floor(worldY),
       iteration.rect,
-      iteration.resolution
+      iteration.resolution,
     );
 
     return iteration.buffer[idx];
@@ -70,7 +70,7 @@ export const getIterationTimeAt = (worldX: number, worldY: number) => {
 
 export const translateRectInIterationCache = (
   offsetX: number,
-  offsetY: number
+  offsetY: number,
 ): void => {
   iterationCache = iterationCache.map((iteration) => {
     return {

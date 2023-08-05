@@ -9,7 +9,7 @@ export const AppRoot = () => {
       {ReactDOM.createPortal(<Header />, document.getElementById("header")!)}
       {ReactDOM.createPortal(
         <RightSidebar />,
-        document.getElementById("sidebar-right")!
+        document.getElementById("sidebar-right")!,
       )}
       {ReactDOM.createPortal(<Footer />, document.getElementById("footer")!)}
     </>

@@ -6,7 +6,7 @@ const posterize = (
   value: number,
   numberOfTones: number,
   lower: number,
-  upper: number
+  upper: number,
 ) => {
   const paletteLength = numberOfTones * 2;
   const v = value % paletteLength;
@@ -36,7 +36,7 @@ class P5JsPalette implements Palette {
   constructor(
     p: p5,
     colorLength: number,
-    f: (index: number, colorLength: number) => p5.Color
+    f: (index: number, colorLength: number) => p5.Color,
   ) {
     this.p5Instance = p;
     this.colorLength = colorLength;

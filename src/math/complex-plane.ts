@@ -7,7 +7,7 @@ export function pixelToComplexCoordinate(
   c: ComplexArbitrary,
   r: BigNumber,
   pixelWidth: number,
-  pixelHeight: number
+  pixelHeight: number,
 ): ComplexArbitrary {
   return {
     re: c.re.plus(
@@ -16,7 +16,7 @@ export function pixelToComplexCoordinate(
         .div(pixelWidth)
         .minus(1)
         .times(r)
-        .sd(PRECISION)
+        .sd(PRECISION),
     ),
     im: c.im.minus(
       new BigNumber(pixelY)
@@ -24,7 +24,7 @@ export function pixelToComplexCoordinate(
         .div(pixelHeight)
         .minus(1)
         .times(r)
-        .sd(PRECISION)
+        .sd(PRECISION),
     ),
   };
 }

@@ -22,7 +22,7 @@ export const calculateRealRect = (
   rect: Rect,
   canvasWidth: number,
   canvasHeight: number,
-  r: BigNumber
+  r: BigNumber,
 ): RealRect => {
   const topLeftX = cx.plus((rect.x * 2) / canvasWidth - 1.0).times(r);
   const topLeftY = cy.minus((rect.y * 2) / canvasHeight - 1.0).times(r);
@@ -42,7 +42,7 @@ export const calculateRealRect = (
 };
 
 export const calculateDivideArea = (
-  divideCount: number
+  divideCount: number,
 ): { longSideCount: number; shortSideCount: number } => {
   let longSideCount = 1;
   let shortSideCount = 1;
@@ -74,7 +74,7 @@ export const calculateDivideArea = (
 export const divideRect = (
   rects: Rect[],
   expectedDivideCount: number,
-  minSide = 100
+  minSide = 100,
 ): Rect[] => {
   if (rects.length > expectedDivideCount) {
     throw new Error("rects.length > expectedDivideCount");
@@ -87,7 +87,7 @@ export const divideRect = (
   const divideCounts = areas.map((area) => {
     const count = Math.max(
       Math.floor((expectedDivideCount * area) / areaSum),
-      1
+      1,
     );
     // 各エリアの分割数は1もしくは偶数にする
     return count % 2 === 0 || count === 1 ? count : count + 1;
