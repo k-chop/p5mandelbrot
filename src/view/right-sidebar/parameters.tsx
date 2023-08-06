@@ -1,4 +1,4 @@
-import { Modal, Text, TextInput } from "@mantine/core";
+import { Modal, TextInput } from "@mantine/core";
 import { GLITCHED_POINT_ITERATION, setCurrentParams } from "../../mandelbrot";
 import { useStoreValue } from "../../store/store";
 import { useModalState } from "../modal/use-modal-state";
@@ -50,36 +50,36 @@ export const Parameters = () => {
       <CardContent className="px-2 py-2">
         <ul>
           <li className="flex justify-between">
-            <Text>CenterX</Text>
-            <Text>{centerX.toPrecision(10)}</Text>
+            <div>CenterX</div>
+            <div>{centerX.toPrecision(10)}</div>
           </li>
           <li className="flex justify-between">
-            <Text>CenterY</Text>
-            <Text>{centerY.toPrecision(10)}</Text>
+            <div>CenterY</div>
+            <div>{centerY.toPrecision(10)}</div>
           </li>
           <li className="flex justify-between">
-            <Text>MouseX</Text>
-            <Text>{mouseX.minus(centerX).toPrecision(10)}</Text>
+            <div>MouseX</div>
+            <div>{mouseX.minus(centerX).toPrecision(10)}</div>
           </li>
           <li className="flex justify-between">
-            <Text>MouseY</Text>
-            <Text>{centerY.minus(mouseY).toPrecision(10)}</Text>
+            <div>MouseY</div>
+            <div>{centerY.minus(mouseY).toPrecision(10)}</div>
           </li>
           <li className="flex justify-between">
-            <Text>r</Text>
-            <Text>{r.toPrecision(10)}</Text>
+            <div>r</div>
+            <div>{r.toPrecision(10)}</div>
           </li>
           <li className="flex justify-between">
-            <Text>MAX Iteration</Text>
-            <Text onClick={open}>{N}</Text>
+            <div>MAX Iteration</div>
+            <div onClick={open}>{N}</div>
           </li>
           <li className="flex justify-between">
-            <Text>Iteration at cursor</Text>
-            <Text>{iterationString}</Text>
+            <div>Iteration at cursor</div>
+            <div>{iterationString}</div>
           </li>
           <li className="flex justify-between">
-            <Text>Mode</Text>
-            <Text>{mode}</Text>
+            <div>Mode</div>
+            <div>{mode}</div>
           </li>
         </ul>
       </CardContent>
