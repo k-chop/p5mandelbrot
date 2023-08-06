@@ -34,6 +34,7 @@
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-scroll-area": "^1.0.4",
     "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-tabs": "^1.0.4",
     "@tabler/icons-react": "^2.30.0",
     "bignumber.js": "^9.1.1",
     "chroma-js": "^2.4.2",
