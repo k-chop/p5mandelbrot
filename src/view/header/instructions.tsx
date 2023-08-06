@@ -1,73 +1,69 @@
-import { Kbd, SimpleGrid, Text, Title } from "@mantine/core";
+import { Kbd } from "@mantine/core";
 
 export const Instructions = () => {
   return (
     <div>
-      <Title order={3} my="xs">
-        Mouse
-      </Title>
-      <SimpleGrid cols={2} ml="xs" verticalSpacing="xs">
-        <Text>Wheel</Text>
-        <Text>Zoom</Text>
+      <div className="mb-2 border-b text-lg font-bold">Mouse</div>
+      <div className="mb-4 grid grid-cols-2 gap-2">
+        <div>Wheel</div>
+        <div>Zoom</div>
 
-        <Text>Shift + Wheel</Text>
-        <Text>Change center & Zoom</Text>
+        <div>Shift + Wheel</div>
+        <div>Change center & Zoom</div>
 
-        <Text>Click</Text>
-        <Text>Zoom clicked point</Text>
+        <div>Click</div>
+        <div>Zoom clicked point</div>
 
-        <Text>Drag</Text>
-        <Text>Change center</Text>
-      </SimpleGrid>
+        <div>Drag</div>
+        <div>Change center</div>
+      </div>
 
-      <Title order={3} my="xs">
-        Keys
-      </Title>
-      <SimpleGrid cols={2} ml="xs" verticalSpacing="xs">
-        <Text>
+      <div className="mb-2 border-b text-lg font-bold">Keys</div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
           <Kbd>↑</Kbd>
           <Kbd>↓</Kbd>
-        </Text>
-        <Text>Zoom</Text>
+        </div>
+        <div>Zoom</div>
 
-        <Text>
+        <div>
           <Kbd>1</Kbd>, <Kbd>2</Kbd>, <Kbd>3</Kbd>, <Kbd>4</Kbd>, <Kbd>5</Kbd>,{" "}
           <Kbd>6</Kbd>, <Kbd>7</Kbd>, <Kbd>8</Kbd>
-        </Text>
-        <Text>Change Palette</Text>
+        </div>
+        <div>Change Palette</div>
 
-        <Text>
+        <div>
           <Kbd>m</Kbd>
-        </Text>
-        <Text>Toggle mode</Text>
+        </div>
+        <div>Toggle mode</div>
 
-        <Text>
+        <div>
           <Kbd>r</Kbd>
-        </Text>
-        <Text>Reset r to 2.0</Text>
+        </div>
+        <div>Reset r to 2.0</div>
 
-        <Text>
+        <div>
           <Kbd>←</Kbd>
           <Kbd>→</Kbd>
-        </Text>
-        <Text>Change max iteration (±100)</Text>
+        </div>
+        <div>Change max iteration (±100)</div>
 
-        <Text>
+        <div>
           <Kbd>Shift</Kbd> + <Kbd>←</Kbd>
           <Kbd>→</Kbd>
-        </Text>
-        <Text>Change max iteration wisely (maybe)</Text>
+        </div>
+        <div>Change max iteration wisely (maybe)</div>
 
-        <Text>
+        <div>
           <Kbd>9</Kbd>
-        </Text>
-        <Text>Reset iteration count to 10000</Text>
+        </div>
+        <div>Reset iteration count to 10000</div>
 
-        <Text>
+        <div>
           <Kbd>0</Kbd>
-        </Text>
-        <Text>Reset iteration count to 500</Text>
-      </SimpleGrid>
+        </div>
+        <div>Reset iteration count to 500</div>
+      </div>
     </div>
   );
 };

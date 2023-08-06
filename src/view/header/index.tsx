@@ -17,7 +17,7 @@ export const Header = () => {
       <Dialog open={opened} onOpenChange={toggle}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Instructions</DialogTitle>
+            <DialogTitle className="text-3xl">Instructions</DialogTitle>
           </DialogHeader>
           <Instructions />
         </DialogContent>
