@@ -1,18 +1,25 @@
 import {
-  Container,
-  Group,
-  Modal,
-  Text,
-  TextInput,
-  Textarea,
-  Tooltip,
-} from "@mantine/core";
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+} from "@/components/ui/dialog";
 import { GLITCHED_POINT_ITERATION, setCurrentParams } from "../../mandelbrot";
-import { updateStore, useStoreValue } from "../../store/store";
+import { useStoreValue } from "../../store/store";
 import { useModalState } from "../modal/use-modal-state";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { AlertCircleIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Kbd } from "@/components/kbd";
 
 export const Parameters = () => {
-  const [opened, { open, close }] = useModalState();
+  const [opened, { close, toggle }] = useModalState();
 
   const centerX = useStoreValue("centerX");
   const centerY = useStoreValue("centerY");
@@ -28,66 +35,88 @@ export const Parameters = () => {
       ? "<<glitched>>"
       : iteration?.toString();
 
+  const isNotEnoughPrecision = mode === "normal" && r.isLessThan(1e-13);
+
   return (
-    <>
-      <Modal
-        opened={opened}
-        onClose={close}
-        withCloseButton={false}
-        size="xs"
-        centered
-      >
-        <TextInput
-          data-autofocus
-          label="Change MAX Iteration"
-          defaultValue={N.toString()}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              const newN = parseInt(e.currentTarget.value);
-              if (newN > 0) {
-                setCurrentParams({
-                  N: newN,
-                });
-                close();
-              }
-            }
-          }}
-        />
-      </Modal>
-      <Container w="100%">
-        <Group position="apart">
-          <Text>CenterX</Text>
-          <Text>{centerX.toPrecision(10)}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>CenterY</Text>
-          <Text>{centerY.toPrecision(10)}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>MouseX</Text>
-          <Text>{mouseX.minus(centerX).toPrecision(10)}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>MouseY</Text>
-          <Text>{centerY.minus(mouseY).toPrecision(10)}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>r</Text>
-          <Text>{r.toPrecision(10)}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>MAX Iteration</Text>
-          <Text onClick={open}>{N}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Iteration at cursor</Text>
-          <Text>{iterationString}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Mode</Text>
-          <Text>{mode}</Text>
-        </Group>
-      </Container>
-    </>
+    <Card className="mx-2">
+      <CardContent className="px-2 py-2">
+        <ul>
+          <li className="flex justify-between">
+            <div>CenterX</div>
+            <div>{centerX.toPrecision(10)}</div>
+          </li>
+          <li className="flex justify-between">
+            <div>CenterY</div>
+            <div>{centerY.toPrecision(10)}</div>
+          </li>
+          <li className="flex justify-between">
+            <div>MouseX</div>
+            <div>{mouseX.minus(centerX).toPrecision(10)}</div>
+          </li>
+          <li className="flex justify-between">
+            <div>MouseY</div>
+            <div>{centerY.minus(mouseY).toPrecision(10)}</div>
+          </li>
+          <li className="flex justify-between">
+            <div>r</div>
+            <div>{r.toPrecision(10)}</div>
+          </li>
+          <li className="flex justify-between">
+            <div>MAX Iteration</div>
+            <Dialog open={opened} onOpenChange={toggle}>
+              <DialogTrigger>
+                <div>{N}</div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>Change Max Iteration</DialogHeader>
+                <Input
+                  defaultValue={N.toString()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const newN = parseInt(e.currentTarget.value);
+                      if (newN > 0) {
+                        setCurrentParams({
+                          N: newN,
+                        });
+                        close();
+                      }
+                    }
+                  }}
+                ></Input>
+              </DialogContent>
+            </Dialog>
+          </li>
+          <li className="flex justify-between">
+            <div>Iteration at cursor</div>
+            <div>{iterationString}</div>
+          </li>
+          <li className="flex items-center justify-between">
+            <div>Mode</div>
+            <div className="flex gap-1">
+              {isNotEnoughPrecision ? (
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger>
+                      <div className="flex gap-1 rounded-md bg-destructive p-1 text-destructive-foreground">
+                        <AlertCircleIcon className="fill-destructive text-destructive-foreground" />
+                        {mode}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div>Not enough precision.</div>
+                      <div>
+                        Switch to perturbation mode by <Kbd>m</Kbd> key.
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <>{mode}</>
+              )}
+            </div>
+          </li>
+        </ul>
+      </CardContent>
+    </Card>
   );
 };

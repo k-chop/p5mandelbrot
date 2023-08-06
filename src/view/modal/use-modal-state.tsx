@@ -7,7 +7,7 @@ export const useModalState = (): ReturnType<typeof useDisclosure> => {
       updateStore("canvasLocked", true);
     },
     onClose: () => {
-      updateStore("canvasLocked", false);
+      setTimeout(() => updateStore("canvasLocked", false), 100);
     },
   });
 

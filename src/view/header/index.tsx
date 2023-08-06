@@ -1,36 +1,35 @@
-import { ActionIcon, Flex, Grid, Modal } from "@mantine/core";
 import { IconHelp } from "@tabler/icons-react";
 import { useModalState } from "../modal/use-modal-state";
 import { Instructions } from "./instructions";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Header = () => {
-  const [opened, { open, close }] = useModalState();
+  const [opened, { open, toggle }] = useModalState();
 
   return (
     <>
-      <Modal
-        opened={opened}
-        onClose={close}
-        title="Instructions"
-        centered
-        size="lg"
-      >
-        <Instructions />
-      </Modal>
-      <Grid>
-        <Grid.Col span={10}>
-          <Flex h="100%" align={"center"}>
-            Header
-          </Flex>
-        </Grid.Col>
-        <Grid.Col span={2}>
-          <Flex justify={"flex-end"}>
-            <ActionIcon size="md" radius="md" variant="filled" onClick={open}>
-              <IconHelp size="2.125rem" />
-            </ActionIcon>
-          </Flex>
-        </Grid.Col>
-      </Grid>
+      <Dialog open={opened} onOpenChange={toggle}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-3xl">Instructions</DialogTitle>
+          </DialogHeader>
+          <Instructions />
+        </DialogContent>
+      </Dialog>
+      <div className="mt-2 grid grid-cols-2">
+        <div>Header</div>
+        <div className="col-end-7">
+          <Button variant="outline" size="icon-sm" onClick={open}>
+            <IconHelp />
+          </Button>
+        </div>
+      </div>
     </>
   );
 };

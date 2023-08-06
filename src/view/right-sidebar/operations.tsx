@@ -1,23 +1,23 @@
-import { Tabs } from "@mantine/core";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { POI } from "./poi";
 import { Settings } from "./settings";
 
 export const Operations = () => {
   return (
-    <Tabs mx="md" w="100%" defaultValue="poi">
-      <Tabs.List grow>
-        <Tabs.Tab value="poi">POI</Tabs.Tab>
-        <Tabs.Tab value="palette" disabled>
+    <Tabs className="mx-2" defaultValue="poi">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="poi">POI</TabsTrigger>
+        <TabsTrigger value="palette" disabled>
           Palette
-        </Tabs.Tab>
-        <Tabs.Tab value="settings">Settings</Tabs.Tab>
-      </Tabs.List>
-      <Tabs.Panel value="poi" pt="xs">
+        </TabsTrigger>
+        <TabsTrigger value="settings">Settings</TabsTrigger>
+      </TabsList>
+      <TabsContent value="poi">
         <POI />
-      </Tabs.Panel>
-      <Tabs.Panel value="settings" pt="xs">
+      </TabsContent>
+      <TabsContent value="settings">
         <Settings />
-      </Tabs.Panel>
+      </TabsContent>
     </Tabs>
   );
 };
