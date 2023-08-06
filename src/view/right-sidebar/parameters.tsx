@@ -9,6 +9,14 @@ import { useStoreValue } from "../../store/store";
 import { useModalState } from "../modal/use-modal-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { AlertCircleIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Kbd } from "@/components/kbd";
 
 export const Parameters = () => {
   const [opened, { close, toggle }] = useModalState();
@@ -26,6 +34,8 @@ export const Parameters = () => {
     iteration === GLITCHED_POINT_ITERATION.toString()
       ? "<<glitched>>"
       : iteration?.toString();
+
+  const isNotEnoughPrecision = mode === "normal" && r.isLessThan(1e-13);
 
   return (
     <Card className="mx-2">
@@ -82,7 +92,24 @@ export const Parameters = () => {
           </li>
           <li className="flex justify-between">
             <div>Mode</div>
-            <div>{mode}</div>
+            <div className="flex gap-1">
+              {isNotEnoughPrecision && (
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger>
+                      <AlertCircleIcon className="fill-destructive text-background" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div>Not enough precision.</div>
+                      <div>
+                        Switch to perturbation mode by <Kbd>m</Kbd> key.
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {mode}
+            </div>
           </li>
         </ul>
       </CardContent>
