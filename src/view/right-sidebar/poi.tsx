@@ -1,24 +1,25 @@
-import { Button, Container, Group, ScrollArea, Stack } from "@mantine/core";
+import { Container, Group, ScrollArea, Stack } from "@mantine/core";
 import { POICard } from "./poi-card";
 import { IconCirclePlus } from "@tabler/icons-react";
 import { usePOI } from "./use-poi";
 import { cloneParams, getCurrentParams } from "../../mandelbrot";
+import { Button } from "@/components/ui/button";
 
 export const POI = () => {
   const { poiList, addPOI, deletePOIAt, applyPOI } = usePOI();
 
   return (
     <ScrollArea h={500} offsetScrollbars>
-      <Container pl="0">
-        <Group position="right" mb="xs">
+      <div>
+        <div className="mb-2 flex justify-end">
           <Button
             variant="default"
-            leftIcon={<IconCirclePlus />}
             onClick={() => addPOI(cloneParams(getCurrentParams()))}
           >
+            <IconCirclePlus className="mr-2 h-6 w-6" />
             Save POI
           </Button>
-        </Group>
+        </div>
         <Stack>
           {poiList.map((poi, index) => (
             <POICard
@@ -29,7 +30,7 @@ export const POI = () => {
             />
           ))}
         </Stack>
-      </Container>
+      </div>
     </ScrollArea>
   );
 };
