@@ -1,7 +1,8 @@
-import { Slider } from "@mantine/core";
 import { updateStore, useStoreValue } from "../../store/store";
 import { setWorkerCount } from "../../workers";
 import { DEFAULT_WORKER_COUNT } from "../../store/sync-storage/settings";
+import { Slider } from "@/components/ui/slider";
+import { useState } from "react";
 
 const createWorkerCountMarks = () => {
   const base = DEFAULT_WORKER_COUNT;
@@ -45,42 +46,48 @@ export const Settings = () => {
 
   const workerCountMarks = createWorkerCountMarks();
 
+  const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
+
+  const [workerCountPreview, setWorkerCountPreview] = useState(workerCount);
+
   return (
     <div className="flex flex-col gap-6">
       <div>
-        Zoom Rate
+        <div className="mb-1 ml-2">Zoom Rate: x{zoomRatePreview}</div>
         <Slider
-          mt="xs"
           min={0}
           max={7}
           step={1}
-          marks={zoomRateMarks}
-          defaultValue={
+          defaultValue={[
             zoomRateMarks.find((mark) => parseFloat(mark.label) === zoomRate)
-              ?.value!
-          }
-          label={(value) => zoomRateMarks[value].label}
-          onChangeEnd={(value) => {
+              ?.value!,
+          ]}
+          onValueChange={([value]) => {
+            const v = parseFloat(zoomRateMarks[value].label);
+            setZoomRatePreview(v);
+          }}
+          onValueCommit={([value]) => {
             const v = parseFloat(zoomRateMarks[value].label);
             updateStore("zoomRate", v);
           }}
         />
       </div>
       <div>
-        Worker Count
+        <div className="mb-1 ml-2">Worker Count: {workerCountPreview}</div>
         <Slider
-          mt="xs"
           min={0}
           max={workerCountMarks.length - 1}
           step={1}
-          marks={workerCountMarks}
-          defaultValue={
+          defaultValue={[
             workerCountMarks.find(
               (mark) => parseInt(mark.label) === workerCount,
-            )?.value!
-          }
-          label={(value) => workerCountMarks[value].label}
-          onChangeEnd={(value) => {
+            )?.value!,
+          ]}
+          onValueChange={([value]) => {
+            const v = parseInt(workerCountMarks[value].label);
+            setWorkerCountPreview(v);
+          }}
+          onValueCommit={([value]) => {
             const v = parseInt(workerCountMarks[value].label);
             updateStore("workerCount", v);
             setWorkerCount();
