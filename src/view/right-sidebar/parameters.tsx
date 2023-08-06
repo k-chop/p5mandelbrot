@@ -1,11 +1,17 @@
-import { Modal, TextInput } from "@mantine/core";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+} from "@/components/ui/dialog";
 import { GLITCHED_POINT_ITERATION, setCurrentParams } from "../../mandelbrot";
 import { useStoreValue } from "../../store/store";
 import { useModalState } from "../modal/use-modal-state";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export const Parameters = () => {
-  const [opened, { open, close }] = useModalState();
+  const [opened, { close, toggle }] = useModalState();
 
   const centerX = useStoreValue("centerX");
   const centerY = useStoreValue("centerY");
@@ -23,30 +29,6 @@ export const Parameters = () => {
 
   return (
     <Card className="mx-2">
-      <Modal
-        opened={opened}
-        onClose={close}
-        withCloseButton={false}
-        size="xs"
-        centered
-      >
-        <TextInput
-          data-autofocus
-          label="Change MAX Iteration"
-          defaultValue={N.toString()}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              const newN = parseInt(e.currentTarget.value);
-              if (newN > 0) {
-                setCurrentParams({
-                  N: newN,
-                });
-                close();
-              }
-            }
-          }}
-        />
-      </Modal>
       <CardContent className="px-2 py-2">
         <ul>
           <li className="flex justify-between">
@@ -71,7 +53,28 @@ export const Parameters = () => {
           </li>
           <li className="flex justify-between">
             <div>MAX Iteration</div>
-            <div onClick={open}>{N}</div>
+            <Dialog open={opened} onOpenChange={toggle}>
+              <DialogTrigger>
+                <div>{N}</div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>Change Max Iteration</DialogHeader>
+                <Input
+                  defaultValue={N.toString()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const newN = parseInt(e.currentTarget.value);
+                      if (newN > 0) {
+                        setCurrentParams({
+                          N: newN,
+                        });
+                        close();
+                      }
+                    }
+                  }}
+                ></Input>
+              </DialogContent>
+            </Dialog>
           </li>
           <li className="flex justify-between">
             <div>Iteration at cursor</div>
