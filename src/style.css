@@ -5,16 +5,16 @@
 @layer base {
   :root {
     --background: var(--sage1);
-    --foreground: var(--sage12);
+    --foreground: var(--sage11);
 
     --muted: var(--sage3);
     --muted-foreground: var(--sage11);
 
     --popover: var(--sage2);
-    --popover-foreground: var(--sage12);
+    --popover-foreground: var(--sage11);
 
     --card: var(--sage2);
-    --card-foreground: var(--sage12);
+    --card-foreground: var(--sage11);
 
     --border: var(--sage7);
     --input: var(--sage7);
