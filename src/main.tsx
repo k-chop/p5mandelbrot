@@ -1,4 +1,3 @@
-import { MantineProvider } from "@mantine/core";
 import BigNumber from "bignumber.js";
 import p5 from "p5";
 import React from "react";
@@ -345,8 +344,6 @@ new p5(sketch, p5root!);
 const container = document.getElementById("app-root")!;
 ReactDOMClient.createRoot(container).render(
   <React.StrictMode>
-    <MantineProvider theme={{ colorScheme: "dark" }} withNormalizeCSS>
-      <AppRoot />
-    </MantineProvider>
+    <AppRoot />
   </React.StrictMode>,
 );
