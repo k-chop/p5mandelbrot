@@ -1,13 +1,7 @@
-import { Slider, Stack, createStyles } from "@mantine/core";
+import { Slider } from "@mantine/core";
 import { updateStore, useStoreValue } from "../../store/store";
 import { setWorkerCount } from "../../workers";
 import { DEFAULT_WORKER_COUNT } from "../../store/sync-storage/settings";
-
-const useStyles = createStyles((theme) => ({
-  afterSlider: {
-    marginTop: theme.spacing.md,
-  },
-}));
 
 const createWorkerCountMarks = () => {
   const base = DEFAULT_WORKER_COUNT;
@@ -35,7 +29,6 @@ const createWorkerCountMarks = () => {
 };
 
 export const Settings = () => {
-  const { classes } = useStyles();
   const zoomRate = useStoreValue("zoomRate");
   const workerCount = useStoreValue("workerCount");
 
@@ -53,7 +46,7 @@ export const Settings = () => {
   const workerCountMarks = createWorkerCountMarks();
 
   return (
-    <Stack>
+    <div className="flex flex-col gap-6">
       <div>
         Zoom Rate
         <Slider
@@ -73,7 +66,7 @@ export const Settings = () => {
           }}
         />
       </div>
-      <div className={classes.afterSlider}>
+      <div>
         Worker Count
         <Slider
           mt="xs"
@@ -94,6 +87,6 @@ export const Settings = () => {
           }}
         />
       </div>
-    </Stack>
+    </div>
   );
 };
