@@ -90,14 +90,17 @@ export const Parameters = () => {
             <div>Iteration at cursor</div>
             <div>{iterationString}</div>
           </li>
-          <li className="flex justify-between">
+          <li className="flex items-center justify-between">
             <div>Mode</div>
             <div className="flex gap-1">
-              {isNotEnoughPrecision && (
+              {isNotEnoughPrecision ? (
                 <TooltipProvider>
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger>
-                      <AlertCircleIcon className="fill-destructive text-background" />
+                      <div className="flex gap-1 rounded-md bg-destructive p-1 text-destructive-foreground">
+                        <AlertCircleIcon className="fill-destructive text-destructive-foreground" />
+                        {mode}
+                      </div>
                     </TooltipTrigger>
                     <TooltipContent>
                       <div>Not enough precision.</div>
@@ -107,8 +110,9 @@ export const Parameters = () => {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+              ) : (
+                <>{mode}</>
               )}
-              {mode}
             </div>
           </li>
         </ul>
