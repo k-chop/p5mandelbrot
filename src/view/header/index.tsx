@@ -22,7 +22,7 @@ export const Header = () => {
           <Instructions />
         </DialogContent>
       </Dialog>
-      <div className="grid grid-cols-2">
+      <div className="mt-2 grid grid-cols-2">
         <div>Header</div>
         <div className="col-end-7">
           <Button variant="outline" size="icon-sm" onClick={open}>
