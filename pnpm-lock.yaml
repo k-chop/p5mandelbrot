@@ -55,6 +55,9 @@ dependencies:
     version: 1.0.6(tailwindcss@3.3.3)
 
 devDependencies:
+  '@radix-ui/colors':
+    specifier: ^1.0.1
+    version: 1.0.1
   '@types/chroma-js':
     specifier: ^2.4.0
     version: 2.4.0
@@ -97,6 +100,9 @@ devDependencies:
   vitest:
     specifier: ^0.34.1
     version: 0.34.1
+  windy-radix-palette:
+    specifier: ^0.6.1
+    version: 0.6.1(@radix-ui/colors@1.0.1)(tailwindcss@3.3.3)
 
 packages:
 
@@ -769,6 +775,10 @@ packages:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.15.0
+
+  /@radix-ui/colors@1.0.1:
+    resolution: {integrity: sha512-xySw8f0ZVsAEP+e7iLl3EvcBXX7gsIlC1Zso/sPBW9gIWerBTgz6axrjU+MZ39wD+WFi5h5zdWpsg3+hwt2Qsg==}
+    dev: true
 
   /@radix-ui/number@1.0.0:
     resolution: {integrity: sha512-Ofwh/1HX69ZfJRiRBMTy7rgjAzHmwe4kW9C9Y99HTRUcYLUuVT0KESFj15rPjRgKJs20GPq8Bm5aEDJ8DuA3vA==}
@@ -2342,6 +2352,16 @@ packages:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
+    dev: true
+
+  /windy-radix-palette@0.6.1(@radix-ui/colors@1.0.1)(tailwindcss@3.3.3):
+    resolution: {integrity: sha512-n8hy1IWNuieGpQ5NS9gCGoUbtzdQ/j4zPk63ok84NgaCWkyP6kBsno/iHpb4ukt3LCQPqNPo+iok2wUgxw8PBQ==}
+    peerDependencies:
+      '@radix-ui/colors': '>=0.1.0'
+      tailwindcss: '>=3.0.0'
+    dependencies:
+      '@radix-ui/colors': 1.0.1
+      tailwindcss: 3.3.3
     dev: true
 
   /wrappy@1.0.2:

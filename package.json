@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@radix-ui/colors": "^1.0.1",
     "@types/chroma-js": "^2.4.0",
     "@types/node": "^20.4.7",
     "@types/p5": "^1.6.2",
@@ -22,7 +23,8 @@
     "tailwindcss": "^3.3.3",
     "typescript": "^5.1.6",
     "vite": "^4.4.8",
-    "vitest": "^0.34.1"
+    "vitest": "^0.34.1",
+    "windy-radix-palette": "^0.6.1"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",

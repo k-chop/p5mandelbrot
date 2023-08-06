@@ -4,67 +4,36 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: var(--sage1);
+    --foreground: var(--sage12);
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: var(--sage3);
+    --muted-foreground: var(--sage11);
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: var(--sage2);
+    --popover-foreground: var(--sage12);
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: var(--sage2);
+    --card-foreground: var(--sage12);
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: var(--sage7);
+    --input: var(--sage7);
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: var(--teal8);
+    --primary-foreground: var(--teal12);
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: var(--tomato9);
+    --secondary-foreground: var(--sage12);
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: var(--lime8);
+    --accent-foreground: var(--sage12);
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: var(--red8);
+    --destructive-foreground: var(--red12);
 
-    --ring: 215 20.2% 65.1%;
+    --ring: var(--sage8);
 
     --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
-
-    --ring: 217.2 32.6% 17.5%;
   }
 }
 
@@ -72,45 +41,43 @@
   * {
     @apply border-border;
   }
-}
 
-:root {
-  font-family: "Figtree", sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 500;
+  :root {
+    @apply bg-background text-foreground;
 
-  color-scheme: light dark;
-  background-color: #1a1b1e;
-  color: #c1c2c5;
+    font-family: "Figtree", sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 500;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+  }
 
-#main {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-}
+  #main {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 
-#header {
-  width: 95%;
+  #header {
+    width: 95%;
 
-  padding: 4px 0 4px 8px;
-}
+    padding: 4px 0 4px 8px;
+  }
 
-#footer {
-  width: 95%;
+  #footer {
+    width: 95%;
 
-  padding: 4px 0 4px 8px;
-}
+    padding: 4px 0 4px 8px;
+  }
 
-#sidebar-right {
-  max-width: 22%;
-  width: 30%;
+  #sidebar-right {
+    max-width: 22%;
+    width: 30%;
+  }
 }
