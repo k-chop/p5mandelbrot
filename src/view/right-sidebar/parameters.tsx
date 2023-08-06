@@ -1,15 +1,8 @@
-import {
-  Container,
-  Group,
-  Modal,
-  Text,
-  TextInput,
-  Textarea,
-  Tooltip,
-} from "@mantine/core";
+import { Modal, Text, TextInput } from "@mantine/core";
 import { GLITCHED_POINT_ITERATION, setCurrentParams } from "../../mandelbrot";
-import { updateStore, useStoreValue } from "../../store/store";
+import { useStoreValue } from "../../store/store";
 import { useModalState } from "../modal/use-modal-state";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const Parameters = () => {
   const [opened, { open, close }] = useModalState();
@@ -29,7 +22,7 @@ export const Parameters = () => {
       : iteration?.toString();
 
   return (
-    <>
+    <Card className="mx-2">
       <Modal
         opened={opened}
         onClose={close}
@@ -54,40 +47,42 @@ export const Parameters = () => {
           }}
         />
       </Modal>
-      <Container w="100%">
-        <Group position="apart">
-          <Text>CenterX</Text>
-          <Text>{centerX.toPrecision(10)}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>CenterY</Text>
-          <Text>{centerY.toPrecision(10)}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>MouseX</Text>
-          <Text>{mouseX.minus(centerX).toPrecision(10)}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>MouseY</Text>
-          <Text>{centerY.minus(mouseY).toPrecision(10)}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>r</Text>
-          <Text>{r.toPrecision(10)}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>MAX Iteration</Text>
-          <Text onClick={open}>{N}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Iteration at cursor</Text>
-          <Text>{iterationString}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Mode</Text>
-          <Text>{mode}</Text>
-        </Group>
-      </Container>
-    </>
+      <CardContent className="px-2 py-2">
+        <ul>
+          <li className="flex justify-between">
+            <Text>CenterX</Text>
+            <Text>{centerX.toPrecision(10)}</Text>
+          </li>
+          <li className="flex justify-between">
+            <Text>CenterY</Text>
+            <Text>{centerY.toPrecision(10)}</Text>
+          </li>
+          <li className="flex justify-between">
+            <Text>MouseX</Text>
+            <Text>{mouseX.minus(centerX).toPrecision(10)}</Text>
+          </li>
+          <li className="flex justify-between">
+            <Text>MouseY</Text>
+            <Text>{centerY.minus(mouseY).toPrecision(10)}</Text>
+          </li>
+          <li className="flex justify-between">
+            <Text>r</Text>
+            <Text>{r.toPrecision(10)}</Text>
+          </li>
+          <li className="flex justify-between">
+            <Text>MAX Iteration</Text>
+            <Text onClick={open}>{N}</Text>
+          </li>
+          <li className="flex justify-between">
+            <Text>Iteration at cursor</Text>
+            <Text>{iterationString}</Text>
+          </li>
+          <li className="flex justify-between">
+            <Text>Mode</Text>
+            <Text>{mode}</Text>
+          </li>
+        </ul>
+      </CardContent>
+    </Card>
   );
 };
