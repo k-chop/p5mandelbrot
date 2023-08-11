@@ -45,6 +45,7 @@ import {
 import "./style.css";
 import { AppRoot } from "./view/app-root";
 import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
+import { extractMandelbrotParams } from "./lib/params";
 
 resetWorkers();
 
@@ -81,6 +82,8 @@ updateStore("zoomRate", hydratedSettings.zoomRate);
 
 // hydrateしたworkerCountの値でworkerを初期化する
 setWorkerCount();
+
+// ----------------------------------------
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
@@ -157,6 +160,12 @@ const sketch = (p: p5) => {
     p.cursor(p.CROSS);
 
     setP5(p);
+
+    const initialParams = extractMandelbrotParams();
+
+    if (initialParams) {
+      setCurrentParams(initialParams);
+    }
   };
 
   p.mousePressed = () => {
