@@ -23,7 +23,7 @@ export const POI = () => {
             size="sm"
             onClick={() =>
               toast({
-                title: (
+                description: (
                   <div className="flex items-center justify-center gap-2">
                     <IconCircleCheck />
                     Current location URL copied to clipboard!
