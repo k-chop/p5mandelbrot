@@ -1,11 +1,11 @@
 import { useCallback } from "react";
-import { MandelbrotParams } from "../../types";
+import { MandelbrotParams, POIData } from "../../types";
 import { updateStore, useStoreValue } from "../../store/store";
 import { cloneParams, setCurrentParams } from "../../mandelbrot";
 import { writePOIListToStorage } from "../../store/sync-storage/poi-list";
 
 export const usePOI = () => {
-  const poiList: MandelbrotParams[] = useStoreValue("poi");
+  const poiList: POIData[] = useStoreValue("poi");
 
   const addPOI = useCallback(
     (newPOI: MandelbrotParams) => {
