@@ -2,14 +2,13 @@
 
 import BigNumber from "bignumber.js";
 import {
+  BLATableItem,
   complexArbitary,
   dSub,
-  dividerSequence,
   generateLowResDiffSequence,
   mulIm,
   mulRe,
   nNorm,
-  thin,
   toComplex,
 } from "../math";
 import { pixelToComplexCoordinate } from "../math/complex-plane";
@@ -30,6 +29,7 @@ self.addEventListener("message", (event) => {
     endY,
     xn,
     xn2,
+    blaTable,
     refX,
     refY,
   } = event.data as MandelbrotCalculationWorkerParams;
@@ -48,7 +48,7 @@ self.addEventListener("message", (event) => {
     pixelY: number,
     context: ReferencePointContext,
   ): number {
-    const { xn, xn2 } = context;
+    const { xn, xn2, blaTable } = context;
     const maxRefIteration = xn.length - 1;
 
     // Δn
@@ -68,45 +68,86 @@ self.addEventListener("message", (event) => {
 
     let iteration = 0;
     let refIteration = 0;
-    // |Xn + Δn|
-    let calcPointNorm = 0.0;
 
     const bailoutRadius = 4.0;
 
     while (iteration < maxIteration) {
-      // Δn+1 = 2 * Xn * Δn + Δn^2 + Δ0 を計算していく
-      const _deltaNRe = deltaNRe;
-      const _deltaNIm = deltaNIm;
-
-      // (2 * Xn + Δn) * Δn に展開して計算
-      const dzrT = xn2[refIteration].re + _deltaNRe;
-      const dziT = xn2[refIteration].im + _deltaNIm;
-
-      deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.re;
-      deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.im;
-
-      refIteration++;
-
-      // https://fractalforums.org/fractal-mathematics-and-new-theories/28/another-solution-to-perturbation-glitches/4360
       const zRe = xn[refIteration].re + deltaNRe;
       const zIm = xn[refIteration].im + deltaNIm;
-      calcPointNorm = nNorm(zRe, zIm);
-      const dzNorm = nNorm(deltaNRe, deltaNIm);
+      const zNorm = nNorm(zRe, zIm);
+      if (zNorm > bailoutRadius) break;
 
-      if (calcPointNorm > bailoutRadius) break;
-      if (calcPointNorm < dzNorm || refIteration === maxRefIteration) {
+      // rebase
+      // https://fractalforums.org/fractal-mathematics-and-new-theories/28/another-solution-to-perturbation-glitches/4360
+      const dzNorm = nNorm(deltaNRe, deltaNIm);
+      if (zNorm < dzNorm || refIteration === maxRefIteration) {
         deltaNRe = zRe;
         deltaNIm = zIm;
         refIteration = 0;
       }
 
-      iteration++;
+      const absDz = Math.sqrt(dzNorm);
+
+      // BLA
+      let bla: BLATableItem | null = null;
+
+      // refIteration === (jIdx << d) + 1と|dz| < rを満たす、最大のlを持つデータをblaTableから探す
+      if (0 < refIteration) {
+        for (let d = 0; d < blaTable.length; d++) {
+          // この辺まだよく分かっていない
+          const jIdx = Math.floor((refIteration - 1) / 2 ** d);
+          const checkM = jIdx * 2 ** d + 1;
+
+          const isValid = absDz < blaTable[d][jIdx].r;
+
+          if (refIteration === checkM && isValid) {
+            bla = blaTable[d][jIdx];
+          } else {
+            break;
+          }
+        }
+      }
+
+      const skipped = bla?.l ?? 0;
+      const n = refIteration + skipped;
+
+      if (bla && n < maxRefIteration) {
+        const { re: aRe, im: aIm } = bla.a;
+        const { re: bRe, im: bIm } = bla.b;
+
+        const dzRe =
+          mulRe(aRe, aIm, deltaNRe, deltaNIm) +
+          mulRe(bRe, bIm, deltaC.re, deltaC.im);
+        const dzIm =
+          mulIm(aRe, aIm, deltaNRe, deltaNIm) +
+          mulIm(bRe, bIm, deltaC.re, deltaC.im);
+
+        deltaNRe = dzRe;
+        deltaNIm = dzIm;
+
+        refIteration += skipped;
+        iteration += skipped;
+      } else {
+        // Δn+1 = 2 * Xn * Δn + Δn^2 + Δ0 を計算していく
+        const _deltaNRe = deltaNRe;
+        const _deltaNIm = deltaNIm;
+
+        // (2 * Xn + Δn) * Δn に展開して計算
+        const dzrT = xn2[refIteration].re + _deltaNRe;
+        const dziT = xn2[refIteration].im + _deltaNIm;
+
+        deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.re;
+        deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.im;
+
+        refIteration++;
+        iteration++;
+      }
     }
 
-    return iteration;
+    return Math.min(iteration, maxIteration);
   }
 
-  const context = { xn, xn2 };
+  const context = { xn, xn2, blaTable };
 
   const { xDiffs, yDiffs } = generateLowResDiffSequence(
     6,
