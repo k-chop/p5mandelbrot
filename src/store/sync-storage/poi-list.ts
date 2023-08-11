@@ -1,9 +1,12 @@
 import BigNumber from "bignumber.js";
 import { MandelbrotParams, POIData } from "../../types";
 
-export const writePOIListToStorage = (
-  poiList: (MandelbrotParams | POIData)[],
-) => {
+export const createNewPOIData = (params: MandelbrotParams): POIData => ({
+  id: crypto.randomUUID(),
+  ...params,
+});
+
+export const writePOIListToStorage = (poiList: POIData[]) => {
   const serialized = JSON.stringify(poiList.map(serializedMandelbrotParams));
   localStorage.setItem("poiList", serialized);
 };
@@ -16,11 +19,9 @@ export const readPOIListFromStorage = (): POIData[] => {
   return rawList.map(deserializedMandelbrotParams);
 };
 
-const serializedMandelbrotParams = (params: any) => {
-  const id = params.id == null ? crypto.randomUUID() : params.id;
-
+const serializedMandelbrotParams = (params: POIData) => {
   return {
-    id,
+    id: params.id,
     x: params.x.toString(),
     y: params.y.toString(),
     r: params.r.toString(),

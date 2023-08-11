@@ -26,7 +26,7 @@ export const POI = () => {
           <div className="flex flex-col gap-2">
             {poiList.map((poi, index) => (
               <POICard
-                key={index}
+                key={poi.id}
                 poi={poi}
                 onDelete={() => deletePOIAt(index)}
                 onApply={() => applyPOI(poi)}
