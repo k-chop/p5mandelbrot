@@ -43,6 +43,10 @@ export interface MandelbrotParams {
   mode: MandelbrotWorkerType;
 }
 
+export interface POIData extends MandelbrotParams {
+  id: string; // UUID
+}
+
 export interface MandelbrotCalculationWorkerParams {
   pixelHeight: number;
   pixelWidth: number;

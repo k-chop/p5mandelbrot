@@ -13,6 +13,9 @@ import {
   setColorIndex,
   setupCamera,
 } from "./camera";
+import { setP5 } from "./canvas-reference";
+import { chromaJsPalettes } from "./color/color-chromajs";
+import { p5jsPalettes } from "./color/color-p5js";
 import {
   calcVars,
   cycleMode,
@@ -32,6 +35,7 @@ import {
   zoom,
 } from "./mandelbrot";
 import { Rect } from "./rect";
+import { drawCrossHair } from "./rendering";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
 import {
@@ -41,9 +45,6 @@ import {
 import "./style.css";
 import { AppRoot } from "./view/app-root";
 import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
-import { chromaJsPalettes } from "./color/color-chromajs";
-import { p5jsPalettes } from "./color/color-p5js";
-import { drawCrossHair } from "./rendering";
 
 resetWorkers();
 
@@ -154,6 +155,8 @@ const sketch = (p: p5) => {
     p.colorMode(p.HSB, 360, 100, 100, 100);
 
     p.cursor(p.CROSS);
+
+    setP5(p);
   };
 
   p.mousePressed = () => {

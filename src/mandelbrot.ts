@@ -92,10 +92,11 @@ export const getCanvasSize = () => ({ width, height });
 export const getCurrentParams = () => currentParams;
 
 export const cloneParams = (params: MandelbrotParams): MandelbrotParams => ({
-  ...params,
   x: BigNumber(params.x),
   y: BigNumber(params.y),
   r: BigNumber(params.r),
+  N: params.N,
+  mode: params.mode,
 });
 
 export const getProgressString = () =>

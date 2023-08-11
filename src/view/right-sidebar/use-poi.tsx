@@ -1,16 +1,26 @@
 import { useCallback } from "react";
-import { MandelbrotParams } from "../../types";
+import { MandelbrotParams, POIData } from "../../types";
 import { updateStore, useStoreValue } from "../../store/store";
 import { cloneParams, setCurrentParams } from "../../mandelbrot";
-import { writePOIListToStorage } from "../../store/sync-storage/poi-list";
+import {
+  createNewPOIData,
+  writePOIListToStorage,
+} from "../../store/sync-storage/poi-list";
+import { getResizedCanvasImageDataURL } from "@/canvas-reference";
+import { deletePreview, savePreview } from "@/store/preview-store";
 
 export const usePOI = () => {
-  const poiList: MandelbrotParams[] = useStoreValue("poi");
+  const poiList: POIData[] = useStoreValue("poi");
 
   const addPOI = useCallback(
-    (newPOI: MandelbrotParams) => {
+    (newParams: MandelbrotParams) => {
+      const newPOI = createNewPOIData(newParams);
       const newPOIList = [newPOI, ...poiList];
       writePOIListToStorage(newPOIList);
+
+      const imageDataURL = getResizedCanvasImageDataURL();
+      savePreview(newPOI.id, imageDataURL);
+
       updateStore("poi", newPOIList);
     },
     [poiList],
@@ -18,9 +28,13 @@ export const usePOI = () => {
 
   const deletePOIAt = useCallback(
     (index: number) => {
+      const del = poiList[index];
       const newPOIList = poiList.filter((_, i) => i !== index);
       writePOIListToStorage(newPOIList);
+
       updateStore("poi", newPOIList);
+
+      deletePreview(del.id);
     },
     [poiList],
   );

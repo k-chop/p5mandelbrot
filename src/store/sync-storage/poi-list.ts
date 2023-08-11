@@ -1,12 +1,17 @@
 import BigNumber from "bignumber.js";
-import { MandelbrotParams } from "../../types";
+import { MandelbrotParams, POIData } from "../../types";
 
-export const writePOIListToStorage = (poiList: MandelbrotParams[]) => {
+export const createNewPOIData = (params: MandelbrotParams): POIData => ({
+  id: crypto.randomUUID(),
+  ...params,
+});
+
+export const writePOIListToStorage = (poiList: POIData[]) => {
   const serialized = JSON.stringify(poiList.map(serializedMandelbrotParams));
   localStorage.setItem("poiList", serialized);
 };
 
-export const readPOIListFromStorage = (): MandelbrotParams[] => {
+export const readPOIListFromStorage = (): POIData[] => {
   const serialized = localStorage.getItem("poiList");
   if (!serialized) return [];
 
@@ -14,8 +19,9 @@ export const readPOIListFromStorage = (): MandelbrotParams[] => {
   return rawList.map(deserializedMandelbrotParams);
 };
 
-const serializedMandelbrotParams = (params: MandelbrotParams) => {
+const serializedMandelbrotParams = (params: POIData) => {
   return {
+    id: params.id,
     x: params.x.toString(),
     y: params.y.toString(),
     r: params.r.toString(),
@@ -24,8 +30,11 @@ const serializedMandelbrotParams = (params: MandelbrotParams) => {
   };
 };
 
-const deserializedMandelbrotParams = (params: any): MandelbrotParams => {
+const deserializedMandelbrotParams = (params: any): POIData => {
+  const id = params.id == null ? crypto.randomUUID() : params.id;
+
   return {
+    id,
     x: new BigNumber(params.x),
     y: new BigNumber(params.y),
     r: new BigNumber(params.r),

@@ -43,10 +43,12 @@
     "clsx": "^2.0.0",
     "double.js": "^1.1.0",
     "eventmit": "^2.0.4",
+    "idb-keyval": "^6.2.1",
     "lucide-react": "^0.263.1",
     "p5": "^1.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-promise-suspense": "^0.3.4",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.6"
   }
