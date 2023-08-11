@@ -1,3 +1,4 @@
+import { getCurrentParams } from "@/mandelbrot";
 import { MandelbrotWorkerType, mandelbrotWorkerTypes } from "@/types";
 import BigNumber from "bignumber.js";
 
@@ -36,4 +37,20 @@ export const extractMandelbrotParams = () => {
 
     return null;
   }
+};
+
+export const copyCurrentParamsToClipboard = () => {
+  const { x, y, r, N, mode } = getCurrentParams();
+
+  const params = new URLSearchParams({
+    x: x.toString(),
+    y: y.toString(),
+    r: r.toString(),
+    N: N.toString(),
+    mode,
+  });
+
+  navigator.clipboard.writeText(
+    `${location.origin}${location.pathname}?${params.toString()}`,
+  );
 };

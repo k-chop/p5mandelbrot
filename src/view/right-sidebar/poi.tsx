@@ -9,6 +9,7 @@ import { cloneParams, getCurrentParams } from "../../mandelbrot";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
+import { copyCurrentParamsToClipboard } from "@/lib/params";
 
 export const POI = () => {
   const { poiList, addPOI, deletePOIAt, applyPOI } = usePOI();
@@ -21,7 +22,9 @@ export const POI = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() =>
+            onClick={() => {
+              copyCurrentParamsToClipboard();
+
               toast({
                 description: (
                   <div className="flex items-center justify-center gap-2">
@@ -30,8 +33,9 @@ export const POI = () => {
                   </div>
                 ),
                 variant: "primary",
-              })
-            }
+                duration: 2000,
+              });
+            }}
           >
             <IconShare className="mr-1 h-6 w-6" />
             Share
