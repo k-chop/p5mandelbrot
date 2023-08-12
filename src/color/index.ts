@@ -1,5 +1,17 @@
 export type RGB = [number, number, number];
 
+export const buildRGB = ({
+  r,
+  g,
+  b,
+}: {
+  r: number;
+  g: number;
+  b: number;
+}): RGB => {
+  return [r, g, b];
+};
+
 export type Palette = {
   rgb(index: number): RGB;
 
