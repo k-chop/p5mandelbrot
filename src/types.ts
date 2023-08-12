@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import { Rect } from "./rect";
-import { Complex } from "./math";
+import { BLATableItem, Complex } from "./math";
 
 export interface Resolution {
   width: number;
@@ -27,7 +27,7 @@ export interface ReferencePointResult {
   type: "result";
   xn: Complex[];
   xn2: Complex[];
-  glitchChecker: number[];
+  blaTable: BLATableItem[][];
 }
 
 export interface OffsetParams {
@@ -60,6 +60,7 @@ export interface MandelbrotCalculationWorkerParams {
   endY: number;
   xn: Complex[];
   xn2: Complex[];
+  blaTable: BLATableItem[][];
   refX: string;
   refY: string;
 }

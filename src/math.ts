@@ -12,6 +12,13 @@ export type ComplexArbitrary = {
   im: BigNumber;
 };
 
+export type BLATableItem = {
+  a: Complex;
+  b: Complex;
+  r: number;
+  l: number;
+};
+
 export function complexArbitary(
   real: BigNumber.Value,
   imaginary: BigNumber.Value,
@@ -62,10 +69,17 @@ export function dMul(
   }
 }
 
-export function mul(a: Complex, b: Complex): Complex {
+export function mul(a: Complex, b: Complex, coef = 1.0): Complex {
   return {
-    re: a.re * b.re - a.im * b.im,
-    im: a.re * b.im + a.im * b.re,
+    re: coef * (a.re * b.re - a.im * b.im),
+    im: coef * (a.re * b.im + a.im * b.re),
+  };
+}
+
+export function mulN(a: Complex, b: number): Complex {
+  return {
+    re: a.re * b,
+    im: a.im * b,
   };
 }
 
