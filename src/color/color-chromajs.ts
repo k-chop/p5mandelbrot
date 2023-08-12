@@ -3,7 +3,6 @@ import { BasePalette, Palette, RGB } from ".";
 
 class ChromaJsPalette extends BasePalette {
   colorConstructor: (string | chroma.Color)[];
-
   colors: chroma.Color[] = [];
 
   constructor(colorConstructor: (string | chroma.Color)[], length: number) {
