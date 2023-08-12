@@ -63,6 +63,7 @@ class ChromaJsPalette implements Palette {
   public size(): number {
     return this.mirrored ? this.colorLength * 2 : this.colorLength;
   }
+
   getColorIndex(index: number) {
     if (this.mirrored) {
       // 折り返す
@@ -114,8 +115,7 @@ class ChromaJsPalette implements Palette {
 }
 
 export const chromaJsPalettes = [
-  new ChromaJsPalette(["black", "red", "yellow", "white"], 128), // prominence
+  // new ChromaJsPalette(["black", "red", "yellow", "white"], 128), // prominence
   new ChromaJsPalette(["lightblue", "navy", "white"], 128), // icy
   new ChromaJsPalette(["lightgreen", "green", "#d3b480", "green"], 128), // forest
 ] satisfies Palette[];
-6;
