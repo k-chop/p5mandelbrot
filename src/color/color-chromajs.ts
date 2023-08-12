@@ -1,8 +1,10 @@
 import chroma from "chroma-js";
 import { BasePalette, Palette, RGB } from ".";
 
-class ChromaJsPalette extends BasePalette<chroma.Color> {
+class ChromaJsPalette extends BasePalette {
   colorConstructor: (string | chroma.Color)[];
+
+  colors: chroma.Color[] = [];
 
   constructor(colorConstructor: (string | chroma.Color)[], length: number) {
     super(length);
@@ -12,8 +14,8 @@ class ChromaJsPalette extends BasePalette<chroma.Color> {
     this.buildColors();
   }
 
-  colorToRGB(color: chroma.Color): RGB {
-    return color.rgb();
+  getRGBFromColorIndex(index: number): RGB {
+    return this.colors[index].rgb();
   }
 
   buildColors(): void {

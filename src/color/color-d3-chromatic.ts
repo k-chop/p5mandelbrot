@@ -11,8 +11,9 @@ import { color } from "d3-color";
 type D3Interpolator = (t: number) => string;
 type D3Color = ReturnType<typeof color>;
 
-class D3ChromaticPalette extends BasePalette<D3Color> {
+class D3ChromaticPalette extends BasePalette {
   interpolator: D3Interpolator;
+  colors: D3Color[] = [];
 
   constructor(interpolator: D3Interpolator, length: number) {
     super(length);
@@ -22,8 +23,8 @@ class D3ChromaticPalette extends BasePalette<D3Color> {
     this.buildColors();
   }
 
-  colorToRGB(color: D3Color): RGB {
-    return buildRGB(color.rgb());
+  getRGBFromColorIndex(index: number): RGB {
+    return buildRGB(this.colors[index].rgb());
   }
 
   buildColors(): void {

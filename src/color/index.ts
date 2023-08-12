@@ -26,15 +26,13 @@ export type Palette = {
   setMirrored(mirrored: boolean): void;
 };
 
-export class BasePalette<T> implements Palette {
+export class BasePalette implements Palette {
   cache: Uint8ClampedArray;
   cacheInitialized: boolean[];
 
   offsetIndex = 0;
   mirrored = true;
   colorLength;
-
-  colors: T[] = [];
 
   constructor(length: number) {
     this.colorLength = length;
@@ -43,7 +41,7 @@ export class BasePalette<T> implements Palette {
     this.cacheInitialized = new Array(this.colorLength).fill(false);
   }
 
-  colorToRGB(color: T): RGB {
+  getRGBFromColorIndex(index: number): RGB {
     throw new Error("Not implemented");
   }
 
@@ -56,7 +54,7 @@ export class BasePalette<T> implements Palette {
 
     if (this.hasCache(colorIndex)) return this.readCache(colorIndex);
 
-    const rgb = this.colorToRGB(this.colors[colorIndex]);
+    const rgb = this.getRGBFromColorIndex(colorIndex);
     this.writeCache(colorIndex, rgb);
     return rgb;
   }
