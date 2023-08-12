@@ -86,6 +86,7 @@ class P5JsPalette implements Palette {
   size(): number {
     return this.mirrored ? this.colorLength * 2 : this.colorLength;
   }
+
   getColorIndex(index: number): number {
     if (this.mirrored) {
       // 折り返す
