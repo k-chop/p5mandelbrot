@@ -106,7 +106,7 @@ function calcBLACoefficient(ref: Complex[], pixelSpacing: number) {
     if (blaTable[d + 1].length === 1) break;
   }
 
-  console.log(blaTable);
+  console.debug("blaTable", blaTable);
 
   return blaTable;
 }
