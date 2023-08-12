@@ -38,5 +38,4 @@ export const d3ChromaticPalettes = [
   new D3ChromaticPalette(interpolateRdYlBu, 128),
   new D3ChromaticPalette(interpolateTurbo, 128),
   new D3ChromaticPalette(interpolateInferno, 128),
-  new D3ChromaticPalette(interpolateSinebow, 128),
 ] satisfies Palette[];
