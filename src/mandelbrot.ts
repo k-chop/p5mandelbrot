@@ -23,6 +23,8 @@ import {
   translateRectInIterationCache,
 } from "./aggregator";
 import { ReferencePointContext } from "./workers/calc-reference-point";
+import { BLATableItem, Complex } from "./math";
+import { updateStore } from "./store/store";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -45,6 +47,37 @@ let lastTime = "0";
 
 let width = DEFAULT_WIDTH;
 let height = DEFAULT_HEIGHT;
+
+// 最後のReference Orbitの計算結果
+const lastReferenceCache: {
+  x: BigNumber;
+  y: BigNumber;
+  xn: Complex[];
+  xn2: Complex[];
+  blaTable: BLATableItem[][];
+} = {
+  x: new BigNumber(0),
+  y: new BigNumber(0),
+  xn: [],
+  xn2: [],
+  blaTable: [],
+};
+
+let isReferencePinned = false;
+
+export const togglePinReference = () => {
+  if (getCurrentParams().mode !== "perturbation") return;
+
+  isReferencePinned = !isReferencePinned;
+  updateStore("isReferencePinned", isReferencePinned);
+
+  console.debug(`Reference point has pinned: ${isReferencePinned}`);
+
+  const { x: refX, y: refY } = lastReferenceCache;
+  const { x, y } = currentParams;
+
+  console.debug("params: ", { refX, refY, x, y });
+};
 
 const progresses = Array.from({ length: getWorkerCount() }, () => 0);
 
@@ -246,6 +279,14 @@ export const startCalculation = async (
         return resolve({ xn: [], xn2: [], blaTable: [] });
       }
 
+      if (isReferencePinned) {
+        return resolve({
+          xn: lastReferenceCache.xn,
+          xn2: lastReferenceCache.xn2,
+          blaTable: lastReferenceCache.blaTable,
+        });
+      }
+
       const refWorker = referencePointWorker();
 
       refWorker.addEventListener(
@@ -268,6 +309,14 @@ export const startCalculation = async (
       });
     },
   );
+
+  if (!isReferencePinned) {
+    lastReferenceCache.x = currentParams.x;
+    lastReferenceCache.y = currentParams.y;
+    lastReferenceCache.xn = xn;
+    lastReferenceCache.xn2 = xn2;
+    lastReferenceCache.blaTable = blaTable;
+  }
 
   registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
     const startX = rect.x;
@@ -320,6 +369,14 @@ export const startCalculation = async (
       completed++;
     });
 
+    let refX = currentParams.x.toString();
+    let refY = currentParams.y.toString();
+
+    if (isReferencePinned) {
+      refX = lastReferenceCache.x.toString();
+      refY = lastReferenceCache.y.toString();
+    }
+
     worker.postMessage({
       cx: currentParams.x.toString(),
       cy: currentParams.y.toString(),
@@ -334,8 +391,8 @@ export const startCalculation = async (
       xn,
       xn2,
       blaTable,
-      refX: currentParams.x.toString(),
-      refY: currentParams.y.toString(),
+      refX,
+      refY,
     });
   });
 };

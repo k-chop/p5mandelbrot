@@ -1,4 +1,4 @@
-import { IconHelp } from "@tabler/icons-react";
+import { IconHelp, IconPin } from "@tabler/icons-react";
 import { useModalState } from "../modal/use-modal-state";
 import { Instructions } from "./instructions";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useStoreValue } from "@/store/store";
+import { Kbd } from "@/components/kbd";
 
 export const Header = () => {
   const [opened, { open, toggle }] = useModalState();
+  const isReferencePinned = useStoreValue("isReferencePinned");
 
   return (
     <>
@@ -23,7 +26,13 @@ export const Header = () => {
         </DialogContent>
       </Dialog>
       <div className="mt-2 grid grid-cols-2">
-        <div>Header</div>
+        <div>
+          {isReferencePinned && (
+            <div className="flex gap-1 border-b-2 border-destructive">
+              <IconPin /> Reference Point Pinned (Press <Kbd>p</Kbd> to unpin)
+            </div>
+          )}
+        </div>
         <div className="col-end-7">
           <Button variant="outline" size="icon-sm" onClick={open}>
             <IconHelp />

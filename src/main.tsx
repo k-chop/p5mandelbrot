@@ -31,6 +31,7 @@ import {
   setCurrentParams,
   setDeepIterationCount,
   setOffsetParams,
+  togglePinReference,
   startCalculation,
   zoom,
 } from "./mandelbrot";
@@ -67,6 +68,8 @@ createStore({
   workerCount: 2,
   // UI state
   canvasLocked: false,
+  // mandelbrot state
+  isReferencePinned: false,
 });
 
 // localStorageから復帰
@@ -308,6 +311,7 @@ const sketch = (p: p5) => {
       if (event.key === "i") importParamsFromClipboard();
       if (event.key === "ArrowDown") zoom(rate);
       if (event.key === "s") zoom(rate);
+      if (event.key === "p") togglePinReference();
       if (event.key === "ArrowUp") zoom(1.0 / rate);
       if (event.key === "w") zoom(1.0 / rate);
       if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
