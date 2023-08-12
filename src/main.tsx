@@ -46,6 +46,7 @@ import "./style.css";
 import { AppRoot } from "./view/app-root";
 import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
 import { extractMandelbrotParams } from "./lib/params";
+import { d3ChromaticPalettes } from "./color/color-d3-chromatic";
 
 resetWorkers();
 
@@ -149,6 +150,7 @@ const sketch = (p: p5) => {
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
+    addPalettes(...d3ChromaticPalettes);
     addPalettes(...p5jsPalettes(p));
     addPalettes(...chromaJsPalettes);
 
