@@ -20,6 +20,7 @@ import {
 } from "../math";
 import { ReferencePointCalculationWorkerParams } from "../types";
 import { pixelToComplexCoordinate } from "../math/complex-plane";
+import wasmInit, { calc_reference_point } from "../../wasm/pkg/wasm";
 
 export type ReferencePointContext = {
   xn: Complex[];
@@ -104,9 +105,14 @@ function calcBLACoefficient(ref: Complex[], pixelSpacing: number) {
 }
 
 async function setup() {
-  // init here in future
+  const wasm = await wasmInit();
 
   self.postMessage({ type: "init" });
+
+  const ptr = wasm.calc_reference_point(100);
+
+  const ret = new Float64Array(wasm.memory.buffer, ptr, 100);
+  console.log(ret);
 
   self.addEventListener("message", (event) => {
     const {
