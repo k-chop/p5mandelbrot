@@ -134,15 +134,21 @@ async function setup() {
       pixelHeight,
     );
 
-    const ptr = calc_reference_point(
+    const referenceOrbit = calc_reference_point(
       referencePoint.re.toString(),
       referencePoint.im.toString(),
       maxIteration,
     );
-    const ret = new Float64Array(wasm.memory.buffer, ptr, maxIteration * 2);
+
+    const ret = new Float64Array(
+      wasm.memory.buffer,
+      referenceOrbit.ptr(),
+      referenceOrbit.len(),
+    );
     console.log("wasm result: ", ret);
 
     const { xn } = calcReferencePoint(referencePoint, maxIteration);
+    console.log("js result: ", xn);
 
     const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
     const blaTable = calcBLACoefficient(xn, pixelSpacing);

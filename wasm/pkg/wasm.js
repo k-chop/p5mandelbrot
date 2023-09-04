@@ -37,8 +37,6 @@ const encodeString = (typeof cachedTextEncoder.encodeInto === 'function'
 
 function passStringToWasm0(arg, malloc, realloc) {
 
-    if (typeof(arg) !== 'string') throw new Error('expected a string argument');
-
     if (realloc === undefined) {
         const buf = cachedTextEncoder.encode(arg);
         const ptr = malloc(buf.length, 1) >>> 0;
@@ -67,31 +65,85 @@ function passStringToWasm0(arg, malloc, realloc) {
         ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
         const view = getUint8Memory0().subarray(ptr + offset, ptr + len);
         const ret = encodeString(arg, view);
-        if (ret.read !== arg.length) throw new Error('failed to pass whole string');
+
         offset += ret.written;
     }
 
     WASM_VECTOR_LEN = offset;
     return ptr;
 }
-
-function _assertNum(n) {
-    if (typeof(n) !== 'number') throw new Error('expected a number argument');
-}
 /**
 * @param {string} center_re_str
 * @param {string} center_im_str
 * @param {number} max_iteration
-* @returns {number}
+* @returns {ReferenceOrbit}
 */
 export function calc_reference_point(center_re_str, center_im_str, max_iteration) {
     const ptr0 = passStringToWasm0(center_re_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ptr1 = passStringToWasm0(center_im_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
-    _assertNum(max_iteration);
     const ret = wasm.calc_reference_point(ptr0, len0, ptr1, len1, max_iteration);
-    return ret;
+    return ReferenceOrbit.__wrap(ret);
+}
+
+/**
+*/
+export class ReferenceOrbit {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(ReferenceOrbit.prototype);
+        obj.__wbg_ptr = ptr;
+
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_referenceorbit_free(ptr);
+    }
+    /**
+    * @param {number} size
+    */
+    constructor(size) {
+        const ret = wasm.referenceorbit_new(size);
+        return ReferenceOrbit.__wrap(ret);
+    }
+    /**
+    * @param {number} re
+    * @param {number} im
+    */
+    push(re, im) {
+        wasm.referenceorbit_push(this.__wbg_ptr, re, im);
+    }
+    /**
+    * @param {number} size
+    */
+    shrink(size) {
+        wasm.referenceorbit_shrink(this.__wbg_ptr, size);
+    }
+    /**
+    * @returns {number}
+    */
+    ptr() {
+        const ret = wasm.referenceorbit_ptr(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+    * @returns {number}
+    */
+    len() {
+        const ret = wasm.referenceorbit_len(this.__wbg_ptr);
+        return ret >>> 0;
+    }
 }
 
 async function __wbg_load(module, imports) {

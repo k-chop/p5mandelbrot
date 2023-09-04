@@ -4,14 +4,46 @@
 * @param {string} center_re_str
 * @param {string} center_im_str
 * @param {number} max_iteration
+* @returns {ReferenceOrbit}
+*/
+export function calc_reference_point(center_re_str: string, center_im_str: string, max_iteration: number): ReferenceOrbit;
+/**
+*/
+export class ReferenceOrbit {
+  free(): void;
+/**
+* @param {number} size
+*/
+  constructor(size: number);
+/**
+* @param {number} re
+* @param {number} im
+*/
+  push(re: number, im: number): void;
+/**
+* @param {number} size
+*/
+  shrink(size: number): void;
+/**
 * @returns {number}
 */
-export function calc_reference_point(center_re_str: string, center_im_str: string, max_iteration: number): number;
+  ptr(): number;
+/**
+* @returns {number}
+*/
+  len(): number;
+}
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
+  readonly __wbg_referenceorbit_free: (a: number) => void;
+  readonly referenceorbit_new: (a: number) => number;
+  readonly referenceorbit_push: (a: number, b: number, c: number) => void;
+  readonly referenceorbit_shrink: (a: number, b: number) => void;
+  readonly referenceorbit_ptr: (a: number) => number;
+  readonly referenceorbit_len: (a: number) => number;
   readonly calc_reference_point: (a: number, b: number, c: number, d: number, e: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
