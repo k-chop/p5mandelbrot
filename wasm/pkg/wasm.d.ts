@@ -1,16 +1,20 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
-* @param {number} max_iter
+* @param {string} center_re_str
+* @param {string} center_im_str
+* @param {number} max_iteration
 * @returns {number}
 */
-export function calc_reference_point(max_iter: number): number;
+export function calc_reference_point(center_re_str: string, center_im_str: string, max_iteration: number): number;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
-  readonly calc_reference_point: (a: number) => number;
+  readonly calc_reference_point: (a: number, b: number, c: number, d: number, e: number) => number;
+  readonly __wbindgen_malloc: (a: number, b: number) => number;
+  readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;

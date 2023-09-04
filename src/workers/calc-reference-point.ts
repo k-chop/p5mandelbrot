@@ -9,7 +9,6 @@ import {
   complex,
   complexArbitary,
   dAdd,
-  dMul,
   dNorm,
   dReduce,
   dSquare,
@@ -109,11 +108,6 @@ async function setup() {
 
   self.postMessage({ type: "init" });
 
-  const ptr = wasm.calc_reference_point(100);
-
-  const ret = new Float64Array(wasm.memory.buffer, ptr, 100);
-  console.log(ret);
-
   self.addEventListener("message", (event) => {
     const {
       complexCenterX,
@@ -139,6 +133,14 @@ async function setup() {
       pixelWidth,
       pixelHeight,
     );
+
+    const ptr = calc_reference_point(
+      referencePoint.re.toString(),
+      referencePoint.im.toString(),
+      maxIteration,
+    );
+    const ret = new Float64Array(wasm.memory.buffer, ptr, maxIteration * 2);
+    console.log("wasm result: ", ret);
 
     const { xn } = calcReferencePoint(referencePoint, maxIteration);
 
