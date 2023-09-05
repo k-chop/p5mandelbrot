@@ -257,12 +257,6 @@ const sketch = (p: p5) => {
     // canvas内ではスクロールしないようにする
     event.preventDefault();
 
-    const { mouseX, mouseY } = calcVars(p.mouseX, p.mouseY, p.width, p.height);
-
-    if (p.keyIsDown(p.SHIFT)) {
-      setCurrentParams({ x: mouseX, y: mouseY });
-    }
-
     if (event) {
       const rate = getStore("zoomRate");
       if (event.deltaY > 0) {
