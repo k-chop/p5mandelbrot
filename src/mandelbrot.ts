@@ -1,31 +1,28 @@
 import BigNumber from "bignumber.js";
+import {
+  clearIterationCache,
+  translateRectInIterationCache,
+  upsertIterationCache,
+} from "./aggregator";
+import { BLATableItem, Complex } from "./math";
 import { divideRect, Rect } from "./rect";
+import { updateStore } from "./store/store";
 import {
   MandelbrotParams,
   OffsetParams,
-  ReferencePointResult,
   WorkerIntermediateResult,
   WorkerProgress,
   WorkerResult,
 } from "./types";
 import {
   activeWorkerCount,
-  registerWorkerTask,
-  terminateWorkers,
+  calcReferencePointWithWorker,
   cycleWorkerType,
   getWorkerCount,
+  registerWorkerTask,
   setWorkerType,
-  referencePointWorker,
-  calcReferencePointWithWorker,
+  terminateWorkers,
 } from "./workers";
-import {
-  upsertIterationCache,
-  clearIterationCache,
-  translateRectInIterationCache,
-} from "./aggregator";
-import { ReferencePointContext } from "./workers/calc-reference-point";
-import { BLATableItem, Complex } from "./math";
-import { updateStore } from "./store/store";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;

@@ -9,7 +9,6 @@ import {
   complex,
   complexArbitary,
   dAdd,
-  dMul,
   dNorm,
   dReduce,
   dSquare,
@@ -18,8 +17,8 @@ import {
   norm,
   toComplex,
 } from "../math";
-import { ReferencePointCalculationWorkerParams } from "../types";
 import { pixelToComplexCoordinate } from "../math/complex-plane";
+import { ReferencePointCalculationWorkerParams } from "../types";
 
 export type ReferencePointContext = {
   xn: Complex[];
