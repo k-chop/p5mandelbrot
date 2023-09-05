@@ -117,9 +117,9 @@ async function setup() {
       maxIteration,
     } = event.data as ReferencePointCalculationWorkerParams;
 
-    // FIXME: 適当な座標
-    const refPixelX = 400;
-    const refPixelY = 400;
+    // 適当に中央のピクセルを参照点とする
+    const refPixelX = Math.floor(pixelWidth / 2);
+    const refPixelY = Math.floor(pixelHeight / 2);
 
     const center = complexArbitary(complexCenterX, complexCenterY);
     const radius = new BigNumber(radiusStr);
