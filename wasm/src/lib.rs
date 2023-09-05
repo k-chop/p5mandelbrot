@@ -1,12 +1,11 @@
 mod utils;
 
-use astro_float::ctx::Context;
-use astro_float::Consts;
+use std::ops::{Add, Sub};
+
 use wasm_bindgen::prelude::*;
 
-use astro_float::expr;
-use astro_float::BigFloat;
-use astro_float::RoundingMode;
+use dashu_float::DBig;
+use dashu_float::{round::mode::HalfAway, Context};
 
 #[wasm_bindgen]
 extern "C" {
@@ -73,45 +72,45 @@ pub fn calc_reference_point(
 
 fn calc(center_re_str: &str, center_im_str: &str, max_iteration: usize) -> ReferenceOrbit {
     let mut xn: ReferenceOrbit = ReferenceOrbit::new(max_iteration * 2);
-    let p = 310;
-    let rm = RoundingMode::FromZero;
-    let mut ctx = Context::new(
-        p,
-        rm,
-        Consts::new().expect("Failed to allocate constants cache"),
-    );
+    let ctx = Context::<HalfAway>::new(310);
 
-    let mut z_re: BigFloat = BigFloat::from_f64(0.0, p);
-    let mut z_im: BigFloat = BigFloat::from_f64(0.0, p);
-
-    log(center_re_str);
-    log(center_im_str);
+    let mut z_re = DBig::from_str_native("0.0").unwrap();
+    let mut z_im = DBig::from_str_native("0.0").unwrap();
 
     let mut n: usize = 0;
 
     // Radix::DecのBigFloat::parseがぶっ壊れているのでhexにしている
-    let center_re = BigFloat::parse(center_re_str, astro_float::Radix::Hex, p, rm);
-    let center_im = BigFloat::parse(center_im_str, astro_float::Radix::Hex, p, rm);
+    let center_re = DBig::from_str_native(center_re_str).unwrap();
+    let center_im = DBig::from_str_native(center_im_str).unwrap();
 
-    let bailout = BigFloat::from_f64(4.0, p);
+    let two = DBig::from_str_native("2.0").unwrap();
+    let bailout = DBig::from_str_native("4.0").unwrap();
 
     while n <= max_iteration {
-        xn.push(
-            z_re.to_string().parse::<f64>().unwrap(),
-            z_im.to_string().parse::<f64>().unwrap(),
-        );
+        xn.push(z_re.to_f64().value(), z_im.to_f64().value());
 
-        let z_re2 = expr!(((z_re * z_re) - (z_im * z_im)) + center_re, &mut ctx);
-        let z_im2 = expr!(((z_re * z_im) * 2.0) + center_im, &mut ctx);
+        let z_re2 = z_re
+            .square()
+            .sub(z_im.square())
+            .add(&center_re)
+            .with_precision(310)
+            .value();
+        let z_im2 = ctx
+            .mul(
+                &ctx.mul(&z_re.repr(), &z_im.repr()).value().repr(),
+                &two.repr(),
+            )
+            .value()
+            .add(&center_im);
 
         n += 1;
 
         z_re = z_re2;
         z_im = z_im2;
 
-        let check = expr!(z_re * z_re + z_im * z_im, &mut ctx);
+        let check = z_re.square().add(z_im.square());
 
-        if check.cmp(&bailout).unwrap() > 0 {
+        if check.gt(&bailout) {
             break;
         }
     }

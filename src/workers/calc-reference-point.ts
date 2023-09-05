@@ -136,8 +136,8 @@ async function setup() {
 
     const before = performance.now();
     const referenceOrbit = calc_reference_point(
-      referencePoint.re.toString(16),
-      referencePoint.im.toString(16),
+      referencePoint.re.toString(),
+      referencePoint.im.toString(),
       maxIteration,
     );
     console.log("calc_reference_point wasm", performance.now() - before);
