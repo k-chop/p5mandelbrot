@@ -17,7 +17,7 @@ import {
   norm,
   toComplex,
 } from "../math";
-import { pixelToComplexCoordinate } from "../math/complex-plane";
+import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
 import { ReferencePointCalculationWorkerParams } from "../types";
 
 export type ReferencePointContext = {
@@ -124,7 +124,7 @@ async function setup() {
     const center = complexArbitary(complexCenterX, complexCenterY);
     const radius = new BigNumber(radiusStr);
 
-    const referencePoint = pixelToComplexCoordinate(
+    const referencePoint = pixelToComplexCoordinateComplexArbitrary(
       refPixelX,
       refPixelY,
       center,

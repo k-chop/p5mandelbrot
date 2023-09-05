@@ -24,12 +24,15 @@ self.addEventListener("message", (event) => {
   const r = parseFloat(rStr);
   const R2 = 4;
 
+  const scaleX = pixelWidth / Math.min(pixelWidth, pixelHeight);
+  const scaleY = pixelHeight / Math.min(pixelWidth, pixelHeight);
+
   for (let y = startY; y < endY; y++) {
     for (let x = startX; x < endX; x++) {
       let zr = 0.0;
       let zi = 0.0;
-      const cr = cx + ((x * 2) / pixelWidth - 1.0) * r;
-      const ci = cy - ((y * 2) / pixelHeight - 1.0) * r;
+      const cr = cx + ((x * 2) / pixelWidth - 1.0) * r * scaleX;
+      const ci = cy - ((y * 2) / pixelHeight - 1.0) * r * scaleY;
 
       let n = 0;
       let zr2 = 0.0;

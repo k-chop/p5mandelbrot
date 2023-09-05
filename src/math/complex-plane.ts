@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { ComplexArbitrary, PRECISION } from "../math";
 
-export function pixelToComplexCoordinate(
+export function pixelToComplexCoordinateComplexArbitrary(
   pixelX: number,
   pixelY: number,
   c: ComplexArbitrary,

@@ -25,12 +25,19 @@ self.addEventListener("message", (event) => {
   const r = new Double(rStr);
   const R2 = new Double("4.0");
 
+  const scaleX = pixelWidth / Math.min(pixelWidth, pixelHeight);
+  const scaleY = pixelHeight / Math.min(pixelWidth, pixelHeight);
+
   for (let y = startY; y < endY; y++) {
     for (let x = startX; x < endX; x++) {
       let zr = new Double(0.0);
       let zi = new Double(0.0);
-      const cr = cx.add(new Double(x).mul(2).div(pixelWidth).sub(1).mul(r));
-      const ci = cy.sub(new Double(y).mul(2).div(pixelHeight).sub(1).mul(r));
+      const cr = cx.add(
+        new Double(x).mul(2).div(pixelWidth).sub(1).mul(r).mul(scaleX),
+      );
+      const ci = cy.sub(
+        new Double(y).mul(2).div(pixelHeight).sub(1).mul(r).mul(scaleY),
+      );
 
       let n = 0;
       let zr2 = new Double(0.0);
