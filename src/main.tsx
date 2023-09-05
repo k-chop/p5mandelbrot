@@ -19,12 +19,10 @@ import { p5jsPalettes } from "./color/color-p5js";
 import {
   calcVars,
   cycleMode,
-  exportParamsToClipboard,
   getCanvasSize,
   getCurrentParams,
   getPreviousRenderTime,
   getProgressString,
-  importParamsFromClipboard,
   paramsChanged,
   resetIterationCount,
   resetRadius,
@@ -307,8 +305,6 @@ const sketch = (p: p5) => {
       if (event.key === "9") setDeepIterationCount();
       if (event.key === "r") resetRadius();
       if (event.key === "m") cycleMode();
-      if (event.key === "o") exportParamsToClipboard();
-      if (event.key === "i") importParamsFromClipboard();
       if (event.key === "ArrowDown") zoom(rate);
       if (event.key === "s") zoom(rate);
       if (event.key === "p") togglePinReference();

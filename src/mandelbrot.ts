@@ -176,31 +176,6 @@ export const cycleMode = () => {
   setOffsetParams({ x: 0, y: 0 });
 };
 
-export const exportParamsToClipboard = () => {
-  const { x, y, r } = currentParams;
-
-  const str = JSON.stringify({
-    x: x.toString(),
-    y: y.toString(),
-    r: r.toString(),
-  });
-  navigator.clipboard.writeText(str);
-};
-
-export const importParamsFromClipboard = () => {
-  navigator.clipboard
-    .readText()
-    .then((s) => {
-      const p = JSON.parse(s);
-      if (p.x) currentParams.x = new BigNumber(p.x);
-      if (p.y) currentParams.y = new BigNumber(p.y);
-      if (p.r) currentParams.r = new BigNumber(p.r);
-    })
-    .catch(() => {
-      console.log("Clipboard import failed.");
-    });
-};
-
 export const zoom = (times: number) => {
   if (1 < times && currentParams.r.times(times).gte(5)) {
     return;
