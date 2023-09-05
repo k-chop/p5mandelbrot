@@ -102,11 +102,15 @@ export const calcVars = (
 ) => {
   const normalizedMouseX = new BigNumber(2 * mouseX).div(width).minus(1);
   const normalizedMouseY = new BigNumber(2 * mouseY).div(height).minus(1);
+
+  const scaleX = width / Math.min(width, height);
+  const scaleY = height / Math.min(width, height);
+
   const currentMouseX = currentParams.x.plus(
-    normalizedMouseX.times(currentParams.r),
+    normalizedMouseX.times(currentParams.r).times(scaleX),
   );
   const currentMouseY = currentParams.y.minus(
-    normalizedMouseY.times(currentParams.r),
+    normalizedMouseY.times(currentParams.r).times(scaleY),
   );
 
   const r = currentParams.r;
@@ -281,6 +285,8 @@ export const startCalculation = async (
       };
     }
 
+    console.log({ width, height });
+
     return calcReferencePointWithWorker({
       complexCenterX: currentParams.x.toString(),
       complexCenterY: currentParams.y.toString(),
@@ -299,6 +305,8 @@ export const startCalculation = async (
     lastReferenceCache.xn = xn;
     lastReferenceCache.blaTable = blaTable;
   }
+
+  console.log(calculationRects);
 
   registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
     const startX = rect.x;
