@@ -21,14 +21,8 @@ import {
 import { ReferencePointCalculationWorkerParams } from "../types";
 import { pixelToComplexCoordinate } from "../math/complex-plane";
 
-/**
- * Reference Pointを選んで
- * 計算したXn, Xn2, |Xn * ε|を返す
- */
-
 export type ReferencePointContext = {
   xn: Complex[];
-  xn2: Complex[];
   blaTable: BLATableItem[][];
 };
 
@@ -37,7 +31,6 @@ function calcReferencePoint(
   maxIteration: number,
 ): Omit<ReferencePointContext, "blaTable"> {
   const xn: Complex[] = [];
-  const xn2: Complex[] = [];
 
   let z = complexArbitary(0.0, 0.0);
 
@@ -45,14 +38,13 @@ function calcReferencePoint(
 
   while (n <= maxIteration && dNorm(z).lt(4.0)) {
     xn.push(toComplex(z));
-    xn2.push(toComplex(dMul(z, 2)));
 
     z = dReduce(dAdd(dSquare(z), center));
 
     n++;
   }
 
-  return { xn, xn2 };
+  return { xn };
 }
 
 /**
@@ -111,36 +103,44 @@ function calcBLACoefficient(ref: Complex[], pixelSpacing: number) {
   return blaTable;
 }
 
-self.addEventListener("message", (event) => {
-  const {
-    complexCenterX,
-    complexCenterY,
-    pixelHeight,
-    pixelWidth,
-    complexRadius: radiusStr,
-    maxIteration,
-  } = event.data as ReferencePointCalculationWorkerParams;
+async function setup() {
+  // init here in future
 
-  // FIXME: 適当な座標
-  const refPixelX = 400;
-  const refPixelY = 400;
+  self.postMessage({ type: "init" });
 
-  const center = complexArbitary(complexCenterX, complexCenterY);
-  const radius = new BigNumber(radiusStr);
+  self.addEventListener("message", (event) => {
+    const {
+      complexCenterX,
+      complexCenterY,
+      pixelHeight,
+      pixelWidth,
+      complexRadius: radiusStr,
+      maxIteration,
+    } = event.data as ReferencePointCalculationWorkerParams;
 
-  const referencePoint = pixelToComplexCoordinate(
-    refPixelX,
-    refPixelY,
-    center,
-    radius,
-    pixelWidth,
-    pixelHeight,
-  );
+    // FIXME: 適当な座標
+    const refPixelX = 400;
+    const refPixelY = 400;
 
-  const { xn, xn2 } = calcReferencePoint(referencePoint, maxIteration);
+    const center = complexArbitary(complexCenterX, complexCenterY);
+    const radius = new BigNumber(radiusStr);
 
-  const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
-  const blaTable = calcBLACoefficient(xn, pixelSpacing);
+    const referencePoint = pixelToComplexCoordinate(
+      refPixelX,
+      refPixelY,
+      center,
+      radius,
+      pixelWidth,
+      pixelHeight,
+    );
 
-  self.postMessage({ type: "result", xn, xn2, blaTable });
-});
+    const { xn } = calcReferencePoint(referencePoint, maxIteration);
+
+    const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
+    const blaTable = calcBLACoefficient(xn, pixelSpacing);
+
+    self.postMessage({ type: "result", xn, blaTable });
+  });
+}
+
+setup();

@@ -16,6 +16,7 @@ import {
   getWorkerCount,
   setWorkerType,
   referencePointWorker,
+  calcReferencePointWithWorker,
 } from "./workers";
 import {
   upsertIterationCache,
@@ -53,13 +54,11 @@ const lastReferenceCache: {
   x: BigNumber;
   y: BigNumber;
   xn: Complex[];
-  xn2: Complex[];
   blaTable: BLATableItem[][];
 } = {
   x: new BigNumber(0),
   y: new BigNumber(0),
   xn: [],
-  xn2: [],
   blaTable: [],
 };
 
@@ -273,48 +272,34 @@ export const startCalculation = async (
     clearIterationCache();
   }
 
-  const { xn, xn2, blaTable } = await new Promise<ReferencePointContext>(
-    (resolve) => {
-      if (currentParams.mode !== "perturbation") {
-        return resolve({ xn: [], xn2: [], blaTable: [] });
-      }
+  const calcReferencePoint = async () => {
+    if (currentParams.mode !== "perturbation") {
+      return { xn: [], blaTable: [] };
+    }
 
-      if (isReferencePinned) {
-        return resolve({
-          xn: lastReferenceCache.xn,
-          xn2: lastReferenceCache.xn2,
-          blaTable: lastReferenceCache.blaTable,
-        });
-      }
+    if (isReferencePinned) {
+      return {
+        xn: lastReferenceCache.xn,
+        blaTable: lastReferenceCache.blaTable,
+      };
+    }
 
-      const refWorker = referencePointWorker();
+    return calcReferencePointWithWorker({
+      complexCenterX: currentParams.x.toString(),
+      complexCenterY: currentParams.y.toString(),
+      complexRadius: currentParams.r.toString(),
+      maxIteration: currentParams.N,
+      pixelHeight: height,
+      pixelWidth: width,
+    });
+  };
 
-      refWorker.addEventListener(
-        "message",
-        (ev: MessageEvent<ReferencePointResult>) => {
-          const { type, xn, xn2, blaTable } = ev.data;
-          if (type === "result") {
-            resolve({ xn, xn2, blaTable });
-          }
-        },
-      );
-
-      refWorker.postMessage({
-        complexCenterX: currentParams.x.toString(),
-        complexCenterY: currentParams.y.toString(),
-        complexRadius: currentParams.r.toString(),
-        maxIteration: currentParams.N,
-        pixelHeight: height,
-        pixelWidth: width,
-      });
-    },
-  );
+  const { xn, blaTable } = await calcReferencePoint();
 
   if (!isReferencePinned) {
     lastReferenceCache.x = currentParams.x;
     lastReferenceCache.y = currentParams.y;
     lastReferenceCache.xn = xn;
-    lastReferenceCache.xn2 = xn2;
     lastReferenceCache.blaTable = blaTable;
   }
 
@@ -389,7 +374,6 @@ export const startCalculation = async (
       startX,
       endX,
       xn,
-      xn2,
       blaTable,
       refX,
       refY,
