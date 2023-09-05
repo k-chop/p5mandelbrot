@@ -26,7 +26,6 @@ export interface WorkerProgress {
 export interface ReferencePointResult {
   type: "result";
   xn: Complex[];
-  xn2: Complex[];
   blaTable: BLATableItem[][];
 }
 
@@ -59,7 +58,6 @@ export interface MandelbrotCalculationWorkerParams {
   startY: number;
   endY: number;
   xn: Complex[];
-  xn2: Complex[];
   blaTable: BLATableItem[][];
   refX: string;
   refY: string;

@@ -28,7 +28,6 @@ self.addEventListener("message", (event) => {
     startY,
     endY,
     xn,
-    xn2,
     blaTable,
     refX,
     refY,
@@ -48,7 +47,7 @@ self.addEventListener("message", (event) => {
     pixelY: number,
     context: ReferencePointContext,
   ): number {
-    const { xn, xn2, blaTable } = context;
+    const { xn, blaTable } = context;
     const maxRefIteration = xn.length - 1;
 
     // Δn
@@ -133,8 +132,8 @@ self.addEventListener("message", (event) => {
         const _deltaNIm = deltaNIm;
 
         // (2 * Xn + Δn) * Δn に展開して計算
-        const dzrT = xn2[refIteration].re + _deltaNRe;
-        const dziT = xn2[refIteration].im + _deltaNIm;
+        const dzrT = xn[refIteration].re * 2 + _deltaNRe;
+        const dziT = xn[refIteration].im * 2 + _deltaNIm;
 
         deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.re;
         deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.im;
@@ -147,7 +146,7 @@ self.addEventListener("message", (event) => {
     return Math.min(iteration, maxIteration);
   }
 
-  const context = { xn, xn2, blaTable };
+  const context = { xn, blaTable };
 
   const { xDiffs, yDiffs } = generateLowResDiffSequence(
     6,

@@ -1,10 +1,16 @@
-import { MandelbrotWorkerType, mandelbrotWorkerTypes } from "./types";
+import {
+  MandelbrotWorkerType,
+  ReferencePointCalculationWorkerParams,
+  ReferencePointResult,
+  mandelbrotWorkerTypes,
+} from "./types";
 import MandelbrotWorker from "./workers/mandelbrot-worker?worker&inline";
 import MandelbrotDoubleJsWorker from "./workers/mandelbrot-doublejs-worker?worker&inline";
 import MandelbrotPerturbationWorker from "./workers/mandelbrot-perturbation-worker?worker&inline";
 import CalcReferencePointWorker from "./workers/calc-reference-point?worker&inline";
 import { Rect } from "./rect";
 import { getStore } from "./store/store";
+import { ReferencePointContext } from "./workers/calc-reference-point";
 
 // 処理領域の分割しやすさの関係でワーカーの数は1または偶数に制限しておく
 const DEFAULT_WORKER_COUNT = 16;
@@ -90,11 +96,58 @@ export const registerWorkerTask = (
   }
 };
 
-export const referencePointWorker = () => {
+export async function referencePointWorker() {
   if (_referencePointWorker) {
-    _referencePointWorker.terminate();
+    return _referencePointWorker;
   }
 
-  _referencePointWorker = new CalcReferencePointWorker();
+  _referencePointWorker = await initReferencePointWorker();
   return _referencePointWorker;
-};
+}
+
+export async function initReferencePointWorker(): Promise<Worker> {
+  const refWorker = new CalcReferencePointWorker();
+
+  await new Promise<void>((resolve) => {
+    const initializeHandler = (event: MessageEvent) => {
+      if (event?.data?.type === "init") {
+        resolve();
+        refWorker.removeEventListener("message", initializeHandler);
+      } else {
+        console.error("Receive message before init", event.data);
+      }
+    };
+
+    refWorker.addEventListener("message", initializeHandler);
+  });
+
+  return refWorker;
+}
+
+export async function calcReferencePointWithWorker(
+  params: ReferencePointCalculationWorkerParams,
+): Promise<ReferencePointContext> {
+  const refWorker = await referencePointWorker();
+
+  const promise = new Promise<ReferencePointContext>((resolve) => {
+    const handler = (ev: MessageEvent<ReferencePointResult>) => {
+      const { type, xn, blaTable } = ev.data;
+      if (type === "result") {
+        resolve({ xn, blaTable });
+        refWorker.removeEventListener("message", handler);
+      }
+    };
+
+    refWorker.addEventListener("message", handler);
+    refWorker.postMessage({
+      complexCenterX: params.complexCenterX,
+      complexCenterY: params.complexCenterY,
+      pixelWidth: params.pixelWidth,
+      pixelHeight: params.pixelHeight,
+      complexRadius: params.complexRadius,
+      maxIteration: params.maxIteration,
+    });
+  });
+
+  return promise;
+}
