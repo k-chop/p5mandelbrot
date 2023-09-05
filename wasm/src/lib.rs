@@ -73,18 +73,25 @@ pub fn calc_reference_point(
 
 fn calc(center_re_str: &str, center_im_str: &str, max_iteration: usize) -> ReferenceOrbit {
     let mut xn: ReferenceOrbit = ReferenceOrbit::new(max_iteration * 2);
-    let p = 300;
-    let rm = RoundingMode::ToEven;
-    let cc = Consts::new().expect("Failed to allocate constants cache");
-    let mut ctx = Context::new(p, rm, cc);
+    let p = 310;
+    let rm = RoundingMode::FromZero;
+    let mut ctx = Context::new(
+        p,
+        rm,
+        Consts::new().expect("Failed to allocate constants cache"),
+    );
 
-    let mut z_re: BigFloat = BigFloat::from_f64(0.0, 1);
-    let mut z_im: BigFloat = BigFloat::from_f64(0.0, 1);
+    let mut z_re: BigFloat = BigFloat::from_f64(0.0, p);
+    let mut z_im: BigFloat = BigFloat::from_f64(0.0, p);
+
+    log(center_re_str);
+    log(center_im_str);
 
     let mut n: usize = 0;
 
-    let center_re = BigFloat::from_f64(center_re_str.parse::<f64>().unwrap(), p);
-    let center_im = BigFloat::from_f64(center_im_str.parse::<f64>().unwrap(), p);
+    // Radix::DecのBigFloat::parseがぶっ壊れているのでhexにしている
+    let center_re = BigFloat::parse(center_re_str, astro_float::Radix::Hex, p, rm);
+    let center_im = BigFloat::parse(center_im_str, astro_float::Radix::Hex, p, rm);
 
     let bailout = BigFloat::from_f64(4.0, p);
 
@@ -94,8 +101,8 @@ fn calc(center_re_str: &str, center_im_str: &str, max_iteration: usize) -> Refer
             z_im.to_string().parse::<f64>().unwrap(),
         );
 
-        let z_re2 = expr!(z_re * z_re - z_im * z_im + center_re, &mut ctx);
-        let z_im2 = expr!(z_re * z_im * 2.0 + center_im, &mut ctx);
+        let z_re2 = expr!(((z_re * z_re) - (z_im * z_im)) + center_re, &mut ctx);
+        let z_im2 = expr!(((z_re * z_im) * 2.0) + center_im, &mut ctx);
 
         n += 1;
 

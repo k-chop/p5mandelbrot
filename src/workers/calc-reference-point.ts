@@ -134,11 +134,13 @@ async function setup() {
       pixelHeight,
     );
 
+    const before = performance.now();
     const referenceOrbit = calc_reference_point(
-      referencePoint.re.toString(),
-      referencePoint.im.toString(),
+      referencePoint.re.toString(16),
+      referencePoint.im.toString(16),
       maxIteration,
     );
+    console.log("calc_reference_point wasm", performance.now() - before);
 
     const ret = new Float64Array(
       wasm.memory.buffer,
@@ -147,13 +149,40 @@ async function setup() {
     );
     console.log("wasm result: ", ret);
 
+    const xnn: Complex[] = [];
+    for (let i = 0; i < ret.length; i++) {
+      const re = ret[i * 2];
+      const im = ret[i * 2 + 1];
+
+      xnn.push({ re, im });
+    }
+
+    referenceOrbit.free();
+
+    const before2 = performance.now();
     const { xn } = calcReferencePoint(referencePoint, maxIteration);
     console.log("js result: ", xn);
+    console.log("calcReferencePoint js", performance.now() - before2);
+
+    // for (let i = 0; i < xn.length; i++) {
+    //   const re1 = ret[i * 2];
+    //   const re2 = xn[i].re;
+
+    //   const im1 = ret[i * 2 + 1];
+    //   const im2 = xn[i].im;
+
+    //   if (Math.abs(re1 - re2) > 1e-5) {
+    //     console.error("re Mismatch at", i, re1, re2, Math.abs(re1 - re2));
+    //   }
+    //   if (Math.abs(im1 - im2) > 1e-5) {
+    //     console.error("im Mismatch at", i, im1, im2, Math.abs(im1 - im2));
+    //   }
+    // }
 
     const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
-    const blaTable = calcBLACoefficient(xn, pixelSpacing);
+    const blaTable = calcBLACoefficient(xnn, pixelSpacing);
 
-    self.postMessage({ type: "result", xn, blaTable });
+    self.postMessage({ type: "result", xn: xnn, blaTable });
   });
 }
 
