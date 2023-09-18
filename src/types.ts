@@ -72,11 +72,7 @@ export interface ReferencePointCalculationWorkerParams {
   maxIteration: number;
 }
 
-export const mandelbrotWorkerTypes = [
-  "normal",
-  "perturbation",
-  "doublejs",
-] as const;
+export const mandelbrotWorkerTypes = ["normal", "perturbation"] as const;
 export type MandelbrotWorkerType = (typeof mandelbrotWorkerTypes)[number];
 
 export interface IterationBuffer {
