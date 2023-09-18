@@ -1,31 +1,28 @@
 import BigNumber from "bignumber.js";
+import {
+  clearIterationCache,
+  translateRectInIterationCache,
+  upsertIterationCache,
+} from "./aggregator";
+import { BLATableItem, Complex } from "./math";
 import { divideRect, Rect } from "./rect";
+import { updateStore } from "./store/store";
 import {
   MandelbrotParams,
   OffsetParams,
-  ReferencePointResult,
   WorkerIntermediateResult,
   WorkerProgress,
   WorkerResult,
 } from "./types";
 import {
   activeWorkerCount,
-  registerWorkerTask,
-  terminateWorkers,
+  calcReferencePointWithWorker,
   cycleWorkerType,
   getWorkerCount,
+  registerWorkerTask,
   setWorkerType,
-  referencePointWorker,
-  calcReferencePointWithWorker,
+  terminateWorkers,
 } from "./workers";
-import {
-  upsertIterationCache,
-  clearIterationCache,
-  translateRectInIterationCache,
-} from "./aggregator";
-import { ReferencePointContext } from "./workers/calc-reference-point";
-import { BLATableItem, Complex } from "./math";
-import { updateStore } from "./store/store";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -105,11 +102,15 @@ export const calcVars = (
 ) => {
   const normalizedMouseX = new BigNumber(2 * mouseX).div(width).minus(1);
   const normalizedMouseY = new BigNumber(2 * mouseY).div(height).minus(1);
+
+  const scaleX = width / Math.min(width, height);
+  const scaleY = height / Math.min(width, height);
+
   const currentMouseX = currentParams.x.plus(
-    normalizedMouseX.times(currentParams.r),
+    normalizedMouseX.times(currentParams.r).times(scaleX),
   );
   const currentMouseY = currentParams.y.minus(
-    normalizedMouseY.times(currentParams.r),
+    normalizedMouseY.times(currentParams.r).times(scaleY),
   );
 
   const r = currentParams.r;
@@ -173,31 +174,6 @@ export const cycleMode = () => {
   const mode = cycleWorkerType();
   setCurrentParams({ mode });
   setOffsetParams({ x: 0, y: 0 });
-};
-
-export const exportParamsToClipboard = () => {
-  const { x, y, r } = currentParams;
-
-  const str = JSON.stringify({
-    x: x.toString(),
-    y: y.toString(),
-    r: r.toString(),
-  });
-  navigator.clipboard.writeText(str);
-};
-
-export const importParamsFromClipboard = () => {
-  navigator.clipboard
-    .readText()
-    .then((s) => {
-      const p = JSON.parse(s);
-      if (p.x) currentParams.x = new BigNumber(p.x);
-      if (p.y) currentParams.y = new BigNumber(p.y);
-      if (p.r) currentParams.r = new BigNumber(p.r);
-    })
-    .catch(() => {
-      console.log("Clipboard import failed.");
-    });
 };
 
 export const zoom = (times: number) => {

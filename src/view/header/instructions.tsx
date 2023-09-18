@@ -8,11 +8,8 @@ export const Instructions = () => {
         <div>Wheel</div>
         <div>Zoom</div>
 
-        <div>Shift + Wheel</div>
-        <div>Change center & Zoom</div>
-
         <div>Click</div>
-        <div>Zoom clicked point</div>
+        <div>Zoom at clicked point</div>
 
         <div>Drag</div>
         <div>Change center</div>

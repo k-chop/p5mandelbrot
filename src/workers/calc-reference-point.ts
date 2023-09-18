@@ -9,7 +9,6 @@ import {
   complex,
   complexArbitary,
   dAdd,
-  dMul,
   dNorm,
   dReduce,
   dSquare,
@@ -18,8 +17,8 @@ import {
   norm,
   toComplex,
 } from "../math";
+import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
 import { ReferencePointCalculationWorkerParams } from "../types";
-import { pixelToComplexCoordinate } from "../math/complex-plane";
 
 export type ReferencePointContext = {
   xn: Complex[];
@@ -30,18 +29,27 @@ function calcReferencePoint(
   center: ComplexArbitrary,
   maxIteration: number,
 ): Omit<ReferencePointContext, "blaTable"> {
-  const xn: Complex[] = [];
+  // [re_0, im_0, re_1, im_1, ...]
+  const xnn = new Float64Array(maxIteration * 2);
 
   let z = complexArbitary(0.0, 0.0);
-
   let n = 0;
 
   while (n <= maxIteration && dNorm(z).lt(4.0)) {
-    xn.push(toComplex(z));
+    const { re, im } = toComplex(z);
+    xnn[n * 2] = re;
+    xnn[n * 2 + 1] = im;
 
     z = dReduce(dAdd(dSquare(z), center));
 
     n++;
+  }
+
+  const xn: Complex[] = [];
+
+  // FIXME: 後ほどFloat64Arrayのまま返すように変更する
+  for (let i = 0; i < n; i++) {
+    xn.push({ re: xnn[i * 2], im: xnn[i * 2 + 1] });
   }
 
   return { xn };
@@ -118,14 +126,14 @@ async function setup() {
       maxIteration,
     } = event.data as ReferencePointCalculationWorkerParams;
 
-    // FIXME: 適当な座標
-    const refPixelX = 400;
-    const refPixelY = 400;
+    // 適当に中央のピクセルを参照点とする
+    const refPixelX = Math.floor(pixelWidth / 2);
+    const refPixelY = Math.floor(pixelHeight / 2);
 
     const center = complexArbitary(complexCenterX, complexCenterY);
     const radius = new BigNumber(radiusStr);
 
-    const referencePoint = pixelToComplexCoordinate(
+    const referencePoint = pixelToComplexCoordinateComplexArbitrary(
       refPixelX,
       refPixelY,
       center,

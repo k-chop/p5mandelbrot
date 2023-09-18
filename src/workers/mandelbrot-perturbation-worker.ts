@@ -11,7 +11,7 @@ import {
   nNorm,
   toComplex,
 } from "../math";
-import { pixelToComplexCoordinate } from "../math/complex-plane";
+import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
 import { MandelbrotCalculationWorkerParams } from "../types";
 import { ReferencePointContext } from "./calc-reference-point";
 
@@ -54,7 +54,7 @@ self.addEventListener("message", (event) => {
     let deltaNRe = 0.0;
     let deltaNIm = 0.0;
 
-    const current = pixelToComplexCoordinate(
+    const current = pixelToComplexCoordinateComplexArbitrary(
       pixelX,
       pixelY,
       c,

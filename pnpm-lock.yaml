@@ -59,9 +59,6 @@ dependencies:
   d3-scale-chromatic:
     specifier: ^3.0.0
     version: 3.0.0
-  double.js:
-    specifier: ^1.1.0
-    version: 1.1.0
   eventmit:
     specifier: ^2.0.4
     version: 2.0.4
@@ -1818,10 +1815,6 @@ packages:
 
   /dlv@1.1.3:
     resolution: {integrity: sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==}
-
-  /double.js@1.1.0:
-    resolution: {integrity: sha512-Ji5j8HuAJNOHYddMvW+Y7RrGRdQwIZuWBDh7MkE9EKi43gR6l6nYvlUThNpvCxBHJnBZkGFx293N9rsYqXX/Cw==}
-    dev: false
 
   /electron-to-chromium@1.4.485:
     resolution: {integrity: sha512-1ndQ5IBNEnFirPwvyud69GHL+31FkE09gH/CJ6m3KCbkx3i0EVOrjwz4UNxRmN9H8OVHbC6vMRZGN1yCvjSs9w==}
