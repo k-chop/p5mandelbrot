@@ -260,8 +260,6 @@ export const startCalculation = async (
       };
     }
 
-    console.log({ width, height });
-
     return calcReferencePointWithWorker({
       complexCenterX: currentParams.x.toString(),
       complexCenterY: currentParams.y.toString(),
@@ -280,8 +278,6 @@ export const startCalculation = async (
     lastReferenceCache.xn = xn;
     lastReferenceCache.blaTable = blaTable;
   }
-
-  console.log(calculationRects);
 
   registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
     const startX = rect.x;
