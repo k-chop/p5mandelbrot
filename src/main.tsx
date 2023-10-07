@@ -306,11 +306,6 @@ const sketch = (p: p5) => {
 };
 
 const entrypoint = () => {
-  if (location.origin === "https://k-chop.github.io") {
-    location.assign("https://p5mandelbrot.pages.dev");
-    return;
-  }
-
   resetWorkers();
 
   createStore({
