@@ -43,10 +43,16 @@ export const usePOI = () => {
     setCurrentParams(cloneParams(poi));
   }, []);
 
+  const copyPOIListToClipboard = useCallback(() => {
+    const poiListString = JSON.stringify(poiList);
+    navigator.clipboard.writeText(poiListString);
+  }, [poiList]);
+
   return {
     poiList,
     addPOI,
     deletePOIAt,
     applyPOI,
+    copyPOIListToClipboard,
   };
 };

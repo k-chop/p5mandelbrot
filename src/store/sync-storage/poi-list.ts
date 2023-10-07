@@ -1,5 +1,7 @@
 import BigNumber from "bignumber.js";
 import { MandelbrotParams, POIData } from "../../types";
+import { Result, err, ok } from "neverthrow";
+import { updateStore } from "../store";
 
 export const createNewPOIData = (params: MandelbrotParams): POIData => ({
   id: crypto.randomUUID(),
@@ -41,4 +43,58 @@ const deserializedMandelbrotParams = (params: any): POIData => {
     N: params.N,
     mode: params.mode,
   };
+};
+
+const mergePOIList = (
+  baseList: POIData[],
+  importedList: POIData[],
+): { result: POIData[]; imported: number; conflicted: number } => {
+  const result = [...baseList];
+  let conflicted = 0;
+  let imported = 0;
+  const baseIds = new Set(baseList.map((poi) => poi.id));
+
+  for (const poi of importedList) {
+    if (!baseIds.has(poi.id)) {
+      result.push(poi);
+      imported++;
+    } else {
+      conflicted++;
+    }
+  }
+
+  return { result, imported, conflicted };
+};
+
+export const readPOIListFromClipboard = async (): Promise<
+  Result<string, string>
+> => {
+  try {
+    const serialized = await navigator.clipboard.readText();
+    if (!serialized) return err("Clipboard is empty");
+
+    const rawList = JSON.parse(serialized);
+
+    const importedPOIList = rawList.map(deserializedMandelbrotParams);
+
+    const existsPOIList = readPOIListFromStorage();
+    const { result, imported, conflicted } = mergePOIList(
+      existsPOIList,
+      importedPOIList,
+    );
+
+    console.log(`Imported: ${imported}, Conflicted: ${conflicted}`);
+
+    writePOIListToStorage(result);
+    updateStore("poi", result);
+
+    return ok(`Imported: ${imported}, Conflicted: ${conflicted}`);
+  } catch (e) {
+    console.error(e);
+
+    if (e instanceof Error) {
+      return err(e.message);
+    }
+    return err("Unknown error");
+  }
 };
