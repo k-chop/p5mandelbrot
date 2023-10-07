@@ -1,7 +1,7 @@
 import { IconHelp, IconPin } from "@tabler/icons-react";
 import { useModalState } from "../modal/use-modal-state";
 import { Instructions } from "./instructions";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +33,12 @@ export const Header = () => {
             </div>
           )}
         </div>
-        <div className="col-end-7">
+        <div className="col-end-7 flex items-center gap-1">
+          <Button variant="outline" size="icon-sm" asChild>
+            <a href="https://github.com/k-chop/p5mandelbrot" target="_blank">
+              <img src="public/github-mark-white.svg" />
+            </a>
+          </Button>
           <Button variant="outline" size="icon-sm" onClick={open}>
             <IconHelp />
           </Button>
