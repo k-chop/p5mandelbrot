@@ -3,7 +3,9 @@ import { POI } from "./poi";
 import { Settings } from "./settings";
 import { isGithubPages } from "@/lib/location";
 import { Button } from "@/components/ui/button";
-import { IconCopy } from "@tabler/icons-react";
+import { IconCircleCheck, IconCopy } from "@tabler/icons-react";
+import { usePOI } from "./use-poi";
+import { useToast } from "@/components/ui/use-toast";
 
 export const Operations = () => {
   if (isGithubPages()) {
@@ -30,6 +32,9 @@ export const Operations = () => {
 };
 
 const SuggestRedirect = () => {
+  const { copyPOIListToClipboard } = usePOI();
+  const { toast } = useToast();
+
   return (
     <div className="px-3">
       <div className="text-lg font-bold">This is outdated app.</div>
@@ -47,7 +52,24 @@ const SuggestRedirect = () => {
         If you wish to export/import the POI list, use this button.
       </div>
       <div className="py-2">
-        <Button variant="default" size="sm">
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() => {
+            copyPOIListToClipboard();
+
+            toast({
+              description: (
+                <div className="flex items-center justify-center gap-2">
+                  <IconCircleCheck />
+                  POI List JSON copied to clipboard!
+                </div>
+              ),
+              variant: "primary",
+              duration: 2000,
+            });
+          }}
+        >
           <IconCopy className="mr-2" />
           Copy POI List to clipboard
         </Button>
