@@ -3,6 +3,10 @@ import { setWorkerCount } from "../../workers";
 import { DEFAULT_WORKER_COUNT } from "../../store/sync-storage/settings";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { readPOIListFromClipboard } from "@/store/sync-storage/poi-list";
+import { useToast } from "@/components/ui/use-toast";
+import { IconCircleCheck } from "@tabler/icons-react";
 
 const createWorkerCountMarks = () => {
   const base = DEFAULT_WORKER_COUNT;
@@ -30,6 +34,8 @@ const createWorkerCountMarks = () => {
 };
 
 export const Settings = () => {
+  const { toast } = useToast();
+
   const zoomRate = useStoreValue("zoomRate");
   const workerCount = useStoreValue("workerCount");
 
@@ -93,6 +99,45 @@ export const Settings = () => {
             setWorkerCount();
           }}
         />
+      </div>
+      <div>
+        <div className="mb-1 ml-2">Import POI List</div>
+        <Button
+          variant="default"
+          onClick={() => {
+            readPOIListFromClipboard().then((result) => {
+              if (result.isErr()) {
+                toast({
+                  description: (
+                    <div className="flex items-center justify-center gap-2">
+                      <IconCircleCheck />
+                      Failed to import POI List from clipboard!
+                      <br />
+                      {result.error}
+                    </div>
+                  ),
+                  variant: "destructive",
+                  duration: 5000,
+                });
+                return;
+              } else {
+                toast({
+                  description: (
+                    <div className="flex items-center justify-center gap-2">
+                      <IconCircleCheck />
+                      POI List imported from clipboard! <br />
+                      {result.value}
+                    </div>
+                  ),
+                  variant: "primary",
+                  duration: 5000,
+                });
+              }
+            });
+          }}
+        >
+          Import from clipboard
+        </Button>
       </div>
     </div>
   );
