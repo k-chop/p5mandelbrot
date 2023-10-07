@@ -2,27 +2,19 @@ import BigNumber from "bignumber.js";
 import {
   clearIterationCache,
   translateRectInIterationCache,
-  upsertIterationCache,
 } from "./aggregator";
 import { BLATableItem, Complex } from "./math";
 import { divideRect, Rect } from "./rect";
-import { updateStore } from "./store/store";
+import { updateStore, getStore } from "./store/store";
+import { MandelbrotParams, OffsetParams } from "./types";
+import { calcReferencePointWithWorker } from "./workers";
 import {
-  MandelbrotParams,
-  OffsetParams,
-  WorkerIntermediateResult,
-  WorkerProgress,
-  WorkerResult,
-} from "./types";
-import {
-  activeWorkerCount,
-  calcReferencePointWithWorker,
   cycleWorkerType,
   getWorkerCount,
-  registerWorkerTask,
-  setWorkerType,
-  terminateWorkers,
-} from "./workers";
+  prepareWorkerPool,
+  registerBatch,
+} from "./worker-pool/worker-pool";
+import { renderToResultBuffer } from "./camera";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -75,7 +67,7 @@ export const togglePinReference = () => {
   console.debug("params: ", { refX, refY, x, y });
 };
 
-const progresses = Array.from({ length: getWorkerCount() }, () => 0);
+// const progresses = Array.from({ length: getWorkerCount() }, () => 0);
 
 let currentParams: MandelbrotParams = {
   x: new BigNumber(
@@ -136,8 +128,8 @@ export const cloneParams = (params: MandelbrotParams): MandelbrotParams => ({
   mode: params.mode,
 });
 
-export const getProgressString = () =>
-  ((progresses.reduce((p, c) => p + c) * 100) / activeWorkerCount()).toFixed();
+// export const getProgressString = () =>
+//   ((progresses.reduce((p, c) => p + c) * 100) / activeWorkerCount()).toFixed();
 
 export const getPreviousRenderTime = () => lastTime;
 
@@ -151,8 +143,10 @@ export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
   const needResetOffset = params.r != null && !currentParams.r.eq(params.r);
 
   currentParams = { ...currentParams, ...params };
+
   if (needModeChange) {
-    setWorkerType(currentParams.mode);
+    const workerCount = getStore("workerCount");
+    prepareWorkerPool(workerCount, currentParams.mode);
     setOffsetParams({ x: 0, y: 0 });
   }
   if (needResetOffset) {
@@ -189,18 +183,16 @@ export const paramsChanged = () => {
   return !isSameParams(lastCalc, currentParams);
 };
 
-export const startCalculation = async (
-  onBufferChanged: (updatedRect: Rect, isCompleted: boolean) => void,
-) => {
+export const startCalculation = async (onComplete: () => void) => {
   updateCurrentParams();
 
   if (running) {
-    terminateWorkers();
+    // terminateWorkers();
   }
 
   running = true;
   completed = 0;
-  progresses.fill(0);
+  // progresses.fill(0);
 
   const before = performance.now();
 
@@ -232,17 +224,18 @@ export const startCalculation = async (
     translateRectInIterationCache(offsetX, offsetY);
 
     // 新しく計算しない部分を先に描画しておく
-    onBufferChanged(iterationBufferTransferedRect, false);
+    renderToResultBuffer(iterationBufferTransferedRect);
 
     // TODO:
     // perturbation時はreference pointsの値を取っておけば移動がかなり高速化できる気がする
     // ただしどのくらいの距離まで有効なのか、有効でなくなったことをどう検知したらいいのかわからん
 
-    // FIXME:
-    // 描画領域分割数＝worker数のせいでworker=1のとき移動すると落ちる
-    // これらは別に設定できるようにするべき
-
-    calculationRects = divideRect(getOffsetRects(), getWorkerCount(), minSide);
+    const expectedDivideCount = Math.max(getWorkerCount(), 2);
+    calculationRects = divideRect(
+      getOffsetRects(),
+      expectedDivideCount,
+      minSide,
+    );
   } else {
     // 移動していない場合は再利用するCacheがないので消す
     clearIterationCache();
@@ -279,82 +272,95 @@ export const startCalculation = async (
     lastReferenceCache.blaTable = blaTable;
   }
 
-  registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
-    const startX = rect.x;
-    const endX = rect.x + rect.width;
-    const startY = rect.y;
-    const endY = rect.y + rect.height;
+  // registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
+  //   const startX = rect.x;
+  //   const endX = rect.x + rect.width;
+  //   const startY = rect.y;
+  //   const endY = rect.y + rect.height;
 
-    const f = (
-      ev: MessageEvent<
-        WorkerResult | WorkerIntermediateResult | WorkerProgress
-      >,
-    ) => {
-      const data = ev.data;
-      if (data.type == "result") {
-        const { iterations } = data;
+  //   const f = (
+  //     ev: MessageEvent<
+  //       WorkerResult | WorkerIntermediateResult | WorkerProgress
+  //     >,
+  //   ) => {
+  //     const data = ev.data;
+  //     if (data.type == "result") {
+  //       const { iterations } = data;
 
-        const iterationsResult = new Uint32Array(iterations);
-        upsertIterationCache(rect, iterationsResult, {
-          width: rect.width,
-          height: rect.height,
-        });
+  //       const iterationsResult = new Uint32Array(iterations);
+  //       upsertIterationCache(rect, iterationsResult, {
+  //         width: rect.width,
+  //         height: rect.height,
+  //       });
 
-        progresses[idx] = 1.0;
-        completed++;
+  //       // progresses[idx] = 1.0;
+  //       completed++;
 
-        const comp = isCompleted(completed);
+  //       const comp = isCompleted(completed);
 
-        onBufferChanged(rect, comp);
+  //       onBufferChanged(rect, comp);
 
-        if (comp) {
-          running = false;
-          const after = performance.now();
-          lastTime = (after - before).toFixed();
-        }
+  //       if (comp) {
+  //         running = false;
+  //         const after = performance.now();
+  //         lastTime = (after - before).toFixed();
+  //       }
 
-        worker.removeEventListener("message", f);
-      } else if (data.type === "intermediateResult") {
-        const { iterations, resolution } = data;
-        upsertIterationCache(rect, new Uint32Array(iterations), resolution);
+  //       worker.removeEventListener("message", f);
+  //     } else if (data.type === "intermediateResult") {
+  //       const { iterations, resolution } = data;
+  //       upsertIterationCache(rect, new Uint32Array(iterations), resolution);
 
-        onBufferChanged(rect, false);
-      } else {
-        const { progress } = data;
-        progresses[idx] = progress;
-      }
-    };
+  //       onBufferChanged(rect, false);
+  //     } else {
+  //       const { progress } = data;
+  //       // progresses[idx] = progress;
+  //     }
+  //   };
 
-    worker.addEventListener("message", f);
-    worker.addEventListener("error", () => {
-      completed++;
-    });
+  //   worker.addEventListener("message", f);
+  //   worker.addEventListener("error", () => {
+  //     completed++;
+  //   });
 
-    let refX = currentParams.x.toString();
-    let refY = currentParams.y.toString();
+  let refX = currentParams.x.toString();
+  let refY = currentParams.y.toString();
 
-    if (isReferencePinned) {
-      refX = lastReferenceCache.x.toString();
-      refY = lastReferenceCache.y.toString();
-    }
+  if (isReferencePinned) {
+    refX = lastReferenceCache.x.toString();
+    refY = lastReferenceCache.y.toString();
+  }
 
-    worker.postMessage({
-      cx: currentParams.x.toString(),
-      cy: currentParams.y.toString(),
-      r: currentParams.r.toString(),
-      N: currentParams.N,
-      pixelHeight: height,
-      pixelWidth: width,
-      startY,
-      endY,
-      startX,
-      endX,
-      xn,
-      blaTable,
-      refX,
-      refY,
-    });
+  const units = calculationRects.map((rect) => ({
+    rect,
+    mandelbrotParams: currentParams,
+  }));
+  registerBatch(units, {
+    onComplete,
+    refX,
+    refY,
+    pixelWidth: width,
+    pixelHeight: height,
+    xn,
+    blaTable,
   });
+
+  // worker.postMessage({
+  //   cx: currentParams.x.toString(),
+  //   cy: currentParams.y.toString(),
+  //   r: currentParams.r.toString(),
+  //   N: currentParams.N,
+  //   pixelHeight: height,
+  //   pixelWidth: width,
+  //   startY,
+  //   endY,
+  //   startX,
+  //   endX,
+  //   xn,
+  //   blaTable,
+  //   refX,
+  //   refY,
+  // });
 };
 
 const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>

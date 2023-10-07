@@ -25,35 +25,36 @@ export const workerPaths: Record<MandelbrotWorkerType, new () => Worker> = {
   perturbation: MandelbrotPerturbationWorker,
 };
 
-export const currentWorkerType = (): MandelbrotWorkerType => _currentWorkerType;
+export const deprecated_currentWorkerType = (): MandelbrotWorkerType =>
+  _currentWorkerType;
 
-export const cycleWorkerType = (): MandelbrotWorkerType => {
+export const deprecated_cycleWorkerType = (): MandelbrotWorkerType => {
   const currentIndex = mandelbrotWorkerTypes.findIndex(
     (v) => v === _currentWorkerType,
   );
   _currentWorkerType =
     mandelbrotWorkerTypes[(currentIndex + 1) % mandelbrotWorkerTypes.length];
 
-  resetWorkers();
+  deprecated_resetWorkers();
   return _currentWorkerType;
 };
 
-export const setWorkerType = (type: MandelbrotWorkerType): void => {
+export const deprecated_setWorkerType = (type: MandelbrotWorkerType): void => {
   _currentWorkerType = type;
-  resetWorkers();
+  deprecated_resetWorkers();
 };
 
-export const setWorkerCount = (
+export const deprecated_setWorkerCount = (
   count: number = getStore("workerCount"),
 ): void => {
   _workerCount = count;
 };
 
-export const getWorkerCount = (): number => _workerCount;
+export const deprecated_getWorkerCount = (): number => _workerCount;
 
 export const activeWorkerCount = (): number => _activeWorkerCount;
 
-export const resetWorkers = (): void => {
+export const deprecated_resetWorkers = (): void => {
   _workers.forEach((worker) => worker.terminate());
   _workers.splice(0);
 
@@ -63,9 +64,9 @@ export const resetWorkers = (): void => {
   }
 };
 
-export const terminateWorkers = (): void => {
+export const deprecated_terminateWorkers = (): void => {
   _workers.forEach((worker) => worker.terminate());
-  resetWorkers();
+  deprecated_resetWorkers();
 };
 
 export const registerWorkerTask = (

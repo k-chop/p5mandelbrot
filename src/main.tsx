@@ -9,7 +9,6 @@ import {
   mergeToMainBuffer,
   nextBuffer,
   nextResultBuffer,
-  renderToResultBuffer,
   setColorIndex,
   setupCamera,
 } from "./camera";
@@ -22,7 +21,6 @@ import {
   getCanvasSize,
   getCurrentParams,
   getPreviousRenderTime,
-  getProgressString,
   paramsChanged,
   resetIterationCount,
   resetRadius,
@@ -43,9 +41,9 @@ import {
 } from "./store/sync-storage/settings";
 import "./style.css";
 import { AppRoot } from "./view/app-root";
-import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
 import { extractMandelbrotParams } from "./lib/params";
 import { d3ChromaticPalettes } from "./color/color-d3-chromatic";
+import { prepareWorkerPool } from "./worker-pool/worker-pool";
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
@@ -62,7 +60,7 @@ const drawInfo = (p: p5) => {
   };
 
   const params = getCurrentParams();
-  const progress = getProgressString();
+  const progress = 0; // getProgressString();
   const millis = getPreviousRenderTime();
 
   updateStore("centerX", params.x);
@@ -74,7 +72,6 @@ const drawInfo = (p: p5) => {
   if (iteration !== -1) {
     updateStore("iteration", ifInside(iteration));
   }
-  updateStore("mode", currentWorkerType());
 
   updateStore("progress", progress);
   updateStore("millis", millis);
@@ -293,21 +290,15 @@ const sketch = (p: p5) => {
     drawInfo(p);
 
     if (paramsChanged()) {
-      startCalculation((updatedRect: Rect, isCompleted: boolean) => {
-        renderToResultBuffer(updatedRect);
-
-        if (isCompleted) {
-          mouseDraggedComplete = false;
-          mergeToMainBuffer();
-        }
+      startCalculation(() => {
+        mouseDraggedComplete = false;
+        mergeToMainBuffer();
       });
     }
   };
 };
 
 const entrypoint = () => {
-  resetWorkers();
-
   createStore({
     // mandelbrot params
     centerX: new BigNumber(0),
@@ -342,7 +333,7 @@ const entrypoint = () => {
   updateStore("zoomRate", hydratedSettings.zoomRate);
 
   // hydrateしたworkerCountの値でworkerを初期化する
-  setWorkerCount();
+  prepareWorkerPool(getStore("workerCount"), getStore("mode"));
 
   const p5root = document.getElementById("p5root");
   new p5(sketch, p5root!);

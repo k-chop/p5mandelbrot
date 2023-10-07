@@ -1,5 +1,4 @@
 import { updateStore, useStoreValue } from "../../store/store";
-import { setWorkerCount } from "../../workers";
 import { DEFAULT_WORKER_COUNT } from "../../store/sync-storage/settings";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
@@ -7,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { readPOIListFromClipboard } from "@/store/sync-storage/poi-list";
 import { useToast } from "@/components/ui/use-toast";
 import { IconCircleCheck } from "@tabler/icons-react";
+import { prepareWorkerPool } from "@/worker-pool/worker-pool";
 
 const createWorkerCountMarks = () => {
   const base = DEFAULT_WORKER_COUNT;
@@ -96,7 +96,7 @@ export const Settings = () => {
           onValueCommit={([value]) => {
             const v = parseInt(workerCountMarks[value].label);
             updateStore("workerCount", v);
-            setWorkerCount();
+            prepareWorkerPool();
           }}
         />
       </div>
