@@ -47,46 +47,6 @@ import { currentWorkerType, resetWorkers, setWorkerCount } from "./workers";
 import { extractMandelbrotParams } from "./lib/params";
 import { d3ChromaticPalettes } from "./color/color-d3-chromatic";
 
-resetWorkers();
-
-createStore({
-  // mandelbrot params
-  centerX: new BigNumber(0),
-  centerY: new BigNumber(0),
-  mouseX: new BigNumber(0),
-  mouseY: new BigNumber(0),
-  r: new BigNumber(0),
-  N: 0,
-  iteration: 0,
-  mode: "normal",
-  // POI List
-  poi: [],
-  // Settings
-  zoomRate: 2.0,
-  workerCount: 2,
-  // UI state
-  canvasLocked: false,
-  // mandelbrot state
-  isReferencePinned: false,
-});
-
-// localStorageから復帰
-const hydratedPOIList = readPOIListFromStorage();
-updateStore("poi", hydratedPOIList);
-
-const hydratedSettings = readSettingsFromStorage();
-Object.keys(hydratedSettings).forEach((key) => {
-  if (isSettingField(key)) {
-    updateStore(key, hydratedSettings[key]);
-  }
-});
-updateStore("zoomRate", hydratedSettings.zoomRate);
-
-// hydrateしたworkerCountの値でworkerを初期化する
-setWorkerCount();
-
-// ----------------------------------------
-
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
     p.mouseX,
@@ -345,13 +305,55 @@ const sketch = (p: p5) => {
   };
 };
 
-const p5root = document.getElementById("p5root");
-new p5(sketch, p5root!);
+const entrypoint = () => {
+  resetWorkers();
 
-// Canvas以外の要素
-const container = document.getElementById("app-root")!;
-ReactDOMClient.createRoot(container).render(
-  <React.StrictMode>
-    <AppRoot />
-  </React.StrictMode>,
-);
+  createStore({
+    // mandelbrot params
+    centerX: new BigNumber(0),
+    centerY: new BigNumber(0),
+    mouseX: new BigNumber(0),
+    mouseY: new BigNumber(0),
+    r: new BigNumber(0),
+    N: 0,
+    iteration: 0,
+    mode: "normal",
+    // POI List
+    poi: [],
+    // Settings
+    zoomRate: 2.0,
+    workerCount: 2,
+    // UI state
+    canvasLocked: false,
+    // mandelbrot state
+    isReferencePinned: false,
+  });
+
+  // localStorageから復帰
+  const hydratedPOIList = readPOIListFromStorage();
+  updateStore("poi", hydratedPOIList);
+
+  const hydratedSettings = readSettingsFromStorage();
+  Object.keys(hydratedSettings).forEach((key) => {
+    if (isSettingField(key)) {
+      updateStore(key, hydratedSettings[key]);
+    }
+  });
+  updateStore("zoomRate", hydratedSettings.zoomRate);
+
+  // hydrateしたworkerCountの値でworkerを初期化する
+  setWorkerCount();
+
+  const p5root = document.getElementById("p5root");
+  new p5(sketch, p5root!);
+
+  // Canvas以外の要素
+  const container = document.getElementById("app-root")!;
+  ReactDOMClient.createRoot(container).render(
+    <React.StrictMode>
+      <AppRoot />
+    </React.StrictMode>,
+  );
+};
+
+entrypoint();
