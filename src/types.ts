@@ -1,6 +1,10 @@
 import { BigNumber } from "bignumber.js";
 import { Rect } from "./rect";
 import { BLATableItem, Complex } from "./math";
+import {
+  BatchCompleteCallback,
+  BatchProgressChangedCallback,
+} from "./worker-pool/worker-facade";
 
 export interface Resolution {
   width: number;
@@ -79,4 +83,30 @@ export interface IterationBuffer {
   rect: Rect;
   buffer: Uint32Array;
   resolution: Resolution;
+}
+
+export interface MandelbrotRenderingUnit {
+  mandelbrotParams: MandelbrotParams;
+  rect: Rect;
+}
+
+export interface MandelbrotJob extends MandelbrotRenderingUnit {
+  id: string;
+  batchId: string;
+}
+
+export interface BatchContext {
+  onComplete: BatchCompleteCallback;
+  onChangeProgress: BatchProgressChangedCallback;
+
+  refX: string;
+  refY: string;
+  pixelWidth: number;
+  pixelHeight: number;
+  xn: Complex[];
+  blaTable: BLATableItem[][];
+
+  progressMap: Map<string, number>;
+  startedAt: number;
+  finishedAt?: number;
 }
