@@ -77,10 +77,11 @@ const onWorkerResult: WorkerResultCallback = (result, job) => {
   renderToResultBuffer(rect);
 
   // バッチが完了していたらcallbackを呼び、BatchContextを削除する
-  const waitingListInSameBatch = waitingList.find(
-    (j) => j.batchId !== job.batchId,
+  const waitingJobInSameBatch = waitingList.find(
+    (j) => j.batchId === job.batchId,
   );
-  if (runningList.length === 0 && waitingListInSameBatch == null) {
+
+  if (runningList.length === 0 && waitingJobInSameBatch == null) {
     const elapsed = performance.now() - batchContext.startedAt;
     batchContext.onComplete(elapsed);
     batchContextMap.delete(job.batchId);
