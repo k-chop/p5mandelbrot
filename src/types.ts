@@ -108,4 +108,5 @@ export interface BatchContext {
 
   progressMap: Map<string, number>;
   startedAt: number;
+  finishedAt?: number;
 }

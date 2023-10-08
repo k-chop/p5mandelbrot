@@ -32,7 +32,6 @@ let lastCalc: MandelbrotParams = {
   mode: "normal",
 };
 
-let lastTime = "0";
 let prevBatchId = "";
 
 let width = DEFAULT_WIDTH;
@@ -128,11 +127,6 @@ export const cloneParams = (params: MandelbrotParams): MandelbrotParams => ({
   mode: params.mode,
 });
 
-// export const getProgressString = () =>
-//   ((progresses.reduce((p, c) => p + c) * 100) / activeWorkerCount()).toFixed();
-
-export const getPreviousRenderTime = () => lastTime;
-
 export const updateCurrentParams = () => {
   lastCalc = { ...currentParams };
 };
@@ -190,10 +184,7 @@ export const startCalculation = async (onComplete: () => void) => {
   startBatch(currentBatchId);
   cancelBatch(prevBatchId);
   prevBatchId = currentBatchId;
-  // completed = 0;
-  // progresses.fill(0);
 
-  const before = performance.now();
   const divideRectCount = getWorkerCount();
 
   const minSide = Math.floor(Math.sqrt((width * height) / divideRectCount));

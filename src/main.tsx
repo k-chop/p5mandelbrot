@@ -20,7 +20,6 @@ import {
   cycleMode,
   getCanvasSize,
   getCurrentParams,
-  getPreviousRenderTime,
   paramsChanged,
   resetIterationCount,
   resetRadius,
@@ -31,7 +30,6 @@ import {
   startCalculation,
   zoom,
 } from "./mandelbrot";
-import { Rect } from "./rect";
 import { drawCrossHair } from "./rendering";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
@@ -43,7 +41,10 @@ import "./style.css";
 import { AppRoot } from "./view/app-root";
 import { extractMandelbrotParams } from "./lib/params";
 import { d3ChromaticPalettes } from "./color/color-d3-chromatic";
-import { prepareWorkerPool } from "./worker-pool/worker-pool";
+import {
+  getProgressString,
+  prepareWorkerPool,
+} from "./worker-pool/worker-pool";
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
@@ -60,8 +61,7 @@ const drawInfo = (p: p5) => {
   };
 
   const params = getCurrentParams();
-  const progress = 0; // getProgressString();
-  const millis = getPreviousRenderTime();
+  const progress = getProgressString();
 
   updateStore("centerX", params.x);
   updateStore("centerY", params.y);
@@ -74,7 +74,6 @@ const drawInfo = (p: p5) => {
   }
 
   updateStore("progress", progress);
-  updateStore("millis", millis);
 };
 
 let currentCursor: "cross" | "grab" = "cross";

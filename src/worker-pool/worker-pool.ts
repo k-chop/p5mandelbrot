@@ -27,17 +27,39 @@ const runningWorkerFacadeMap = new Map<JobId, MandelbrotFacadeLike>();
 const batchContextMap = new Map<BatchId, BatchContext>();
 const acceptingBatchIds = new Set<BatchId>();
 
-export const getProgressString = (batchId: BatchId) => {
-  const batchContext = batchContextMap.get(batchId);
+const getLatestBatchContext = () => {
+  if (batchContextMap.size === 0) return null;
+
+  const batchIds = Array.from(batchContextMap.keys());
+  let batchContext = batchContextMap.get(batchIds[0])!;
+
+  for (const batchId of batchIds) {
+    const next = batchContextMap.get(batchId)!;
+    if (batchContext.startedAt < next.startedAt) {
+      batchContext = next;
+    }
+  }
+
+  return batchContext;
+};
+
+export const getProgressString = () => {
+  const batchContext = getLatestBatchContext();
 
   if (!batchContext) return "";
+
+  if (batchContext.finishedAt) {
+    return `Done! (${Math.floor(
+      batchContext.finishedAt - batchContext.startedAt,
+    )}ms)`;
+  }
 
   const { progressMap } = batchContext;
   const progressList = Array.from(progressMap.values());
   const progress =
     progressList.reduce((a, b) => a + b, 0) / progressList.length;
 
-  return `${Math.floor(progress * 100)}%`;
+  return `Generating... ${Math.floor(progress * 100)}%`;
 };
 
 const onWorkerProgress: WorkerProgressCallback = (result, job) => {
@@ -82,9 +104,11 @@ const onWorkerResult: WorkerResultCallback = (result, job) => {
   );
 
   if (runningList.length === 0 && waitingJobInSameBatch == null) {
-    const elapsed = performance.now() - batchContext.startedAt;
+    const finishedAt = performance.now();
+    batchContext.finishedAt = finishedAt;
+    const elapsed = finishedAt - batchContext.startedAt;
+
     batchContext.onComplete(elapsed);
-    batchContextMap.delete(job.batchId);
   }
 
   tick();
