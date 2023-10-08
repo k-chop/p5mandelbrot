@@ -27,6 +27,19 @@ const runningWorkerFacadeMap = new Map<JobId, MandelbrotFacadeLike>();
 const batchContextMap = new Map<BatchId, BatchContext>();
 const acceptingBatchIds = new Set<BatchId>();
 
+export const getProgressString = (batchId: BatchId) => {
+  const batchContext = batchContextMap.get(batchId);
+
+  if (!batchContext) return "";
+
+  const { progressMap } = batchContext;
+  const progressList = Array.from(progressMap.values());
+  const progress =
+    progressList.reduce((a, b) => a + b, 0) / progressList.length;
+
+  return `${Math.floor(progress * 100)}%`;
+};
+
 const onWorkerProgress: WorkerProgressCallback = (result, job) => {
   const { progress } = result;
   const batchContext = batchContextMap.get(job.batchId);
@@ -64,8 +77,10 @@ const onWorkerResult: WorkerResultCallback = (result, job) => {
   renderToResultBuffer(rect);
 
   // バッチが完了していたらcallbackを呼び、BatchContextを削除する
-  // FIXME: waitingListのbatchIdも見る必要がある？
-  if (runningList.length === 0 && waitingList.length === 0) {
+  const waitingListInSameBatch = waitingList.find(
+    (j) => j.batchId !== job.batchId,
+  );
+  if (runningList.length === 0 && waitingListInSameBatch == null) {
     const elapsed = performance.now() - batchContext.startedAt;
     batchContext.onComplete(elapsed);
     batchContextMap.delete(job.batchId);
