@@ -46,7 +46,13 @@ const getLatestBatchContext = () => {
 export const getProgressString = () => {
   const batchContext = getLatestBatchContext();
 
-  if (!batchContext) return "";
+  if (!batchContext) {
+    if (acceptingBatchIds.size > 0) {
+      // FIXME: 超手抜き、Reference Orbitの計算もbatchの中に入れるべき
+      return "Calculating Reference Orbit...";
+    }
+    return "";
+  }
 
   if (batchContext.finishedAt) {
     return `Done! (${Math.floor(
