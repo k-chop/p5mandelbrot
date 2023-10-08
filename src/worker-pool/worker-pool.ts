@@ -221,9 +221,6 @@ export function registerBatch(
     console.log("Denied: already cancelled. batchId =", batchId);
     return;
   }
-  // FIXME: ここじゃないけどprogressを表示できるようにする
-
-  // FIXME: ここじゃないけどworker数と分割数を別にできるようにする
 
   const progressMap = new Map<string, number>();
 
