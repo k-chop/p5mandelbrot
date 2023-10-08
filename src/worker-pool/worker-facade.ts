@@ -21,6 +21,7 @@ export type WorkerProgressCallback = (
   job: MandelbrotJob,
 ) => void;
 export type BatchCompleteCallback = (elapsed: number) => void;
+export type BatchProgressChangedCallback = (progressStr: string) => void;
 
 export interface MandelbrotFacadeLike {
   startCalculate(job: MandelbrotJob, batchContext: BatchContext): void;

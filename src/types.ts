@@ -1,7 +1,10 @@
 import { BigNumber } from "bignumber.js";
 import { Rect } from "./rect";
 import { BLATableItem, Complex } from "./math";
-import { BatchCompleteCallback } from "./worker-pool/worker-facade";
+import {
+  BatchCompleteCallback,
+  BatchProgressChangedCallback,
+} from "./worker-pool/worker-facade";
 
 export interface Resolution {
   width: number;
@@ -94,6 +97,7 @@ export interface MandelbrotJob extends MandelbrotRenderingUnit {
 
 export interface BatchContext {
   onComplete: BatchCompleteCallback;
+  onChangeProgress: BatchProgressChangedCallback;
 
   refX: string;
   refY: string;

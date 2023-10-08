@@ -9,10 +9,12 @@ import { updateStore, getStore } from "./store/store";
 import { MandelbrotParams, OffsetParams } from "./types";
 import { calcReferencePointWithWorker } from "./workers";
 import {
+  cancelBatch,
   cycleWorkerType,
   getWorkerCount,
   prepareWorkerPool,
   registerBatch,
+  startBatch,
 } from "./worker-pool/worker-pool";
 import { renderToResultBuffer } from "./camera";
 
@@ -30,10 +32,8 @@ let lastCalc: MandelbrotParams = {
   mode: "normal",
 };
 
-let running = false;
-
-let completed = 0;
 let lastTime = "0";
+let prevBatchId = "";
 
 let width = DEFAULT_WIDTH;
 let height = DEFAULT_HEIGHT;
@@ -186,12 +186,11 @@ export const paramsChanged = () => {
 export const startCalculation = async (onComplete: () => void) => {
   updateCurrentParams();
 
-  if (running) {
-    // terminateWorkers();
-  }
-
-  running = true;
-  completed = 0;
+  const currentBatchId = crypto.randomUUID();
+  startBatch(currentBatchId);
+  cancelBatch(prevBatchId);
+  prevBatchId = currentBatchId;
+  // completed = 0;
   // progresses.fill(0);
 
   const before = performance.now();
@@ -263,6 +262,8 @@ export const startCalculation = async (onComplete: () => void) => {
     });
   };
 
+  // FIXME: reference orbitの計算がキャンセルしても止まらないのを直す
+
   const { xn, blaTable } = await calcReferencePoint();
 
   if (!isReferencePinned) {
@@ -271,57 +272,6 @@ export const startCalculation = async (onComplete: () => void) => {
     lastReferenceCache.xn = xn;
     lastReferenceCache.blaTable = blaTable;
   }
-
-  // registerWorkerTask(calculationRects, (worker, rect, idx, _, isCompleted) => {
-  //   const startX = rect.x;
-  //   const endX = rect.x + rect.width;
-  //   const startY = rect.y;
-  //   const endY = rect.y + rect.height;
-
-  //   const f = (
-  //     ev: MessageEvent<
-  //       WorkerResult | WorkerIntermediateResult | WorkerProgress
-  //     >,
-  //   ) => {
-  //     const data = ev.data;
-  //     if (data.type == "result") {
-  //       const { iterations } = data;
-
-  //       const iterationsResult = new Uint32Array(iterations);
-  //       upsertIterationCache(rect, iterationsResult, {
-  //         width: rect.width,
-  //         height: rect.height,
-  //       });
-
-  //       // progresses[idx] = 1.0;
-  //       completed++;
-
-  //       const comp = isCompleted(completed);
-
-  //       onBufferChanged(rect, comp);
-
-  //       if (comp) {
-  //         running = false;
-  //         const after = performance.now();
-  //         lastTime = (after - before).toFixed();
-  //       }
-
-  //       worker.removeEventListener("message", f);
-  //     } else if (data.type === "intermediateResult") {
-  //       const { iterations, resolution } = data;
-  //       upsertIterationCache(rect, new Uint32Array(iterations), resolution);
-
-  //       onBufferChanged(rect, false);
-  //     } else {
-  //       const { progress } = data;
-  //       // progresses[idx] = progress;
-  //     }
-  //   };
-
-  //   worker.addEventListener("message", f);
-  //   worker.addEventListener("error", () => {
-  //     completed++;
-  //   });
 
   let refX = currentParams.x.toString();
   let refY = currentParams.y.toString();
@@ -335,8 +285,10 @@ export const startCalculation = async (onComplete: () => void) => {
     rect,
     mandelbrotParams: currentParams,
   }));
-  registerBatch(units, {
+
+  registerBatch(currentBatchId, units, {
     onComplete,
+    onChangeProgress: () => {},
     refX,
     refY,
     pixelWidth: width,
@@ -344,23 +296,6 @@ export const startCalculation = async (onComplete: () => void) => {
     xn,
     blaTable,
   });
-
-  // worker.postMessage({
-  //   cx: currentParams.x.toString(),
-  //   cy: currentParams.y.toString(),
-  //   r: currentParams.r.toString(),
-  //   N: currentParams.N,
-  //   pixelHeight: height,
-  //   pixelWidth: width,
-  //   startY,
-  //   endY,
-  //   startX,
-  //   endX,
-  //   xn,
-  //   blaTable,
-  //   refX,
-  //   refY,
-  // });
 };
 
 const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
