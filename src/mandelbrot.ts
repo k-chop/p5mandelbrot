@@ -194,12 +194,13 @@ export const startCalculation = async (onComplete: () => void) => {
   // progresses.fill(0);
 
   const before = performance.now();
+  const divideRectCount = getWorkerCount();
 
-  const minSide = Math.floor(Math.sqrt((width * height) / getWorkerCount()));
+  const minSide = Math.floor(Math.sqrt((width * height) / divideRectCount));
 
   let calculationRects = divideRect(
     [{ x: 0, y: 0, width, height }],
-    getWorkerCount(),
+    divideRectCount,
     minSide,
   );
 
@@ -229,7 +230,7 @@ export const startCalculation = async (onComplete: () => void) => {
     // perturbation時はreference pointsの値を取っておけば移動がかなり高速化できる気がする
     // ただしどのくらいの距離まで有効なのか、有効でなくなったことをどう検知したらいいのかわからん
 
-    const expectedDivideCount = Math.max(getWorkerCount(), 2);
+    const expectedDivideCount = Math.max(divideRectCount, 2);
     calculationRects = divideRect(
       getOffsetRects(),
       expectedDivideCount,
