@@ -19,6 +19,11 @@ import {
 } from "../math";
 import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
 import { ReferencePointCalculationWorkerParams } from "../types";
+import { bufferToComplexArray, complexArrayToBuffer } from "@/lib/xn-buffer";
+import {
+  blaTableItemsToBuffer,
+  bufferToBLATableItems,
+} from "@/lib/bla-table-item-buffer";
 
 export type ReferencePointContext = {
   xn: Complex[];
@@ -147,7 +152,16 @@ async function setup() {
     const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
     const blaTable = calcBLACoefficient(xn, pixelSpacing);
 
-    self.postMessage({ type: "result", xn, blaTable });
+    const xnConverted = bufferToComplexArray(complexArrayToBuffer(xn));
+    const blaTableConverted = bufferToBLATableItems(
+      blaTableItemsToBuffer(blaTable),
+    );
+
+    self.postMessage({
+      type: "result",
+      xn: xnConverted,
+      blaTable: blaTableConverted,
+    });
   });
 }
 
