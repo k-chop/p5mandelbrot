@@ -29,8 +29,8 @@ export interface WorkerProgress {
 
 export interface ReferencePointResult {
   type: "result";
-  xn: Complex[];
-  blaTable: BLATableItem[][];
+  xn: XnBuffer;
+  blaTable: BLATableBuffer;
 }
 
 export interface OffsetParams {
@@ -61,11 +61,14 @@ export interface MandelbrotCalculationWorkerParams {
   endX: number;
   startY: number;
   endY: number;
-  xn: Complex[];
-  blaTable: BLATableItem[][];
+  xn: XnBuffer;
+  blaTable: BLATableBuffer;
   refX: string;
   refY: string;
 }
+
+export type XnBuffer = ArrayBuffer;
+export type BLATableBuffer = ArrayBuffer;
 
 export interface ReferencePointCalculationWorkerParams {
   complexCenterX: string;
@@ -103,8 +106,8 @@ export interface BatchContext {
   refY: string;
   pixelWidth: number;
   pixelHeight: number;
-  xn: Complex[];
-  blaTable: BLATableItem[][];
+  xn: XnBuffer;
+  blaTable: BLATableBuffer;
 
   progressMap: Map<string, number>;
   startedAt: number;

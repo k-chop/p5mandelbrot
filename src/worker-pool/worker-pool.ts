@@ -289,6 +289,13 @@ export function isAcceptingBatch(batchId: BatchId) {
   return acceptingBatchIds.has(batchId);
 }
 
+// 範囲分割、reference orbitの計算をバッチではないことにしたため、いびつな対応が必要になった
+// これらをバッチの一部として含めることで、なんとかなる？
+// 各処理の中でawaitしつつ処理を止められたかどうかを確認していく？
+// どっちにしろ時間かかる処理はawaitするしかない
+// あとはJobの依存関係を定義して、積むのは一気にやっちゃう・・・？
+// 一気に積めば、処理途中のことを考えなくていい
+
 /**
  * 指定したバッチIDのジョブをキャンセルする
  */
