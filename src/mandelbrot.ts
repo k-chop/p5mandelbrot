@@ -6,7 +6,12 @@ import {
 import { BLATableItem, Complex } from "./math";
 import { divideRect, Rect } from "./rect";
 import { updateStore, getStore } from "./store/store";
-import { MandelbrotParams, OffsetParams } from "./types";
+import {
+  BLATableBuffer,
+  MandelbrotParams,
+  OffsetParams,
+  XnBuffer,
+} from "./types";
 import { calcReferencePointWithWorker } from "./workers";
 import {
   cancelBatch,
@@ -41,13 +46,13 @@ let height = DEFAULT_HEIGHT;
 const lastReferenceCache: {
   x: BigNumber;
   y: BigNumber;
-  xn: Complex[];
-  blaTable: BLATableItem[][];
+  xn: XnBuffer;
+  blaTable: BLATableBuffer;
 } = {
   x: new BigNumber(0),
   y: new BigNumber(0),
-  xn: [],
-  blaTable: [],
+  xn: new ArrayBuffer(0),
+  blaTable: new ArrayBuffer(0),
 };
 
 let isReferencePinned = false;
@@ -232,7 +237,7 @@ export const startCalculation = async (onComplete: () => void) => {
 
   const calcReferencePoint = async () => {
     if (currentParams.mode !== "perturbation") {
-      return { xn: [], blaTable: [] };
+      return { xn: new ArrayBuffer(0), blaTable: new ArrayBuffer(0) };
     }
 
     if (isReferencePinned) {

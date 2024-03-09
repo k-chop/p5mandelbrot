@@ -18,14 +18,20 @@ import {
   toComplex,
 } from "../math";
 import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
-import { ReferencePointCalculationWorkerParams } from "../types";
-import { bufferToComplexArray, complexArrayToBuffer } from "@/lib/xn-buffer";
 import {
-  blaTableItemsToBuffer,
-  bufferToBLATableItems,
-} from "@/lib/bla-table-item-buffer";
+  ReferencePointCalculationWorkerParams,
+  XnBuffer,
+  BLATableBuffer,
+} from "../types";
+import { complexArrayToBuffer } from "@/lib/xn-buffer";
+import { blaTableItemsToBuffer } from "@/lib/bla-table-item-buffer";
 
 export type ReferencePointContext = {
+  xn: XnBuffer;
+  blaTable: BLATableBuffer;
+};
+
+export type ReferencePointContextPopulated = {
   xn: Complex[];
   blaTable: BLATableItem[][];
 };
@@ -33,7 +39,7 @@ export type ReferencePointContext = {
 function calcReferencePoint(
   center: ComplexArbitrary,
   maxIteration: number,
-): Omit<ReferencePointContext, "blaTable"> {
+): { xn: Complex[] } {
   // [re_0, im_0, re_1, im_1, ...]
   const xnn = new Float64Array(maxIteration * 2);
 
@@ -152,10 +158,8 @@ async function setup() {
     const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
     const blaTable = calcBLACoefficient(xn, pixelSpacing);
 
-    const xnConverted = bufferToComplexArray(complexArrayToBuffer(xn));
-    const blaTableConverted = bufferToBLATableItems(
-      blaTableItemsToBuffer(blaTable),
-    );
+    const xnConverted = complexArrayToBuffer(xn);
+    const blaTableConverted = blaTableItemsToBuffer(blaTable);
 
     self.postMessage({
       type: "result",
