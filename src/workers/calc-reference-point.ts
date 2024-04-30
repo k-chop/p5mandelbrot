@@ -23,8 +23,8 @@ import {
   XnBuffer,
   BLATableBuffer,
 } from "../types";
-import { complexArrayToBuffer } from "@/lib/xn-buffer";
-import { blaTableItemsToBuffer } from "@/lib/bla-table-item-buffer";
+import { encodeComplexArray } from "@/lib/xn-buffer";
+import { encodeBlaTableItems } from "@/lib/bla-table-item-buffer";
 
 export type ReferencePointContext = {
   xn: XnBuffer;
@@ -158,8 +158,8 @@ async function setup() {
     const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
     const blaTable = calcBLACoefficient(xn, pixelSpacing);
 
-    const xnConverted = complexArrayToBuffer(xn);
-    const blaTableConverted = blaTableItemsToBuffer(blaTable);
+    const xnConverted = encodeComplexArray(xn);
+    const blaTableConverted = encodeBlaTableItems(blaTable);
 
     self.postMessage({
       type: "result",

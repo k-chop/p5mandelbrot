@@ -14,8 +14,8 @@ import {
 import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
 import { MandelbrotCalculationWorkerParams } from "../types";
 import { ReferencePointContextPopulated } from "./calc-reference-point";
-import { bufferToComplexArray } from "@/lib/xn-buffer";
-import { bufferToBLATableItems } from "@/lib/bla-table-item-buffer";
+import { decodeComplexArray } from "@/lib/xn-buffer";
+import { decodeBLATableItems } from "@/lib/bla-table-item-buffer";
 
 self.addEventListener("message", (event) => {
   const {
@@ -35,8 +35,8 @@ self.addEventListener("message", (event) => {
     refY,
   } = event.data as MandelbrotCalculationWorkerParams;
 
-  const xn = bufferToComplexArray(xnBuffer);
-  const blaTable = bufferToBLATableItems(blaTableBuffer);
+  const xn = decodeComplexArray(xnBuffer);
+  const blaTable = decodeBLATableItems(blaTableBuffer);
 
   const areaWidth = endX - startX;
   const areaHeight = endY - startY;

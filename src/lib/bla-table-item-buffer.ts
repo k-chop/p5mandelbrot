@@ -4,7 +4,7 @@ const ITEM_BYTE_LENGTH = 44;
 
 // このファイルはほとんどChatGPTくんによって生成されました
 
-export function blaTableItemToBuffer(item: BLATableItem): ArrayBuffer {
+export function encodeBlaTableItem(item: BLATableItem): ArrayBuffer {
   const buffer = new ArrayBuffer(ITEM_BYTE_LENGTH);
   const floatView = new Float64Array(buffer, 0, 5); // 8 bytes * 5
   const intView = new Int32Array(buffer, 40, 1); // 4 bytes
@@ -19,19 +19,26 @@ export function blaTableItemToBuffer(item: BLATableItem): ArrayBuffer {
   return buffer;
 }
 
-export function bufferToBLATableItem(buffer: ArrayBuffer): BLATableItem {
-  const floatView = new Float64Array(buffer, 0, 5);
-  const intView = new Int32Array(buffer, 40, 1);
+export function decodeBLATableItem(
+  view: DataView,
+  offset: number,
+): BLATableItem {
+  const aRe = view.getFloat64(offset, true); // a.re
+  const aIm = view.getFloat64(offset + 8, true); // a.im
+  const bRe = view.getFloat64(offset + 16, true); // b.re
+  const bIm = view.getFloat64(offset + 24, true); // b.im
+  const r = view.getFloat64(offset + 32, true); // r
+  const l = view.getInt32(offset + 40, true); // l
 
   return {
-    a: { re: floatView[0], im: floatView[1] },
-    b: { re: floatView[2], im: floatView[3] },
-    r: floatView[4],
-    l: intView[0],
+    a: { re: aRe, im: aIm },
+    b: { re: bRe, im: bIm },
+    r,
+    l,
   };
 }
 
-export function blaTableItemsToBuffer(items: BLATableItem[][]): ArrayBuffer {
+export function encodeBlaTableItems(items: BLATableItem[][]): ArrayBuffer {
   // 行の数と、それぞれの行の要素数を格納するのに必要なバイト数を加算
   let totalSize = 4; // 最初の4バイトは行の数
   items.forEach((row) => {
@@ -51,7 +58,7 @@ export function blaTableItemsToBuffer(items: BLATableItem[][]): ArrayBuffer {
     offset += 1; // 次の要素数のためにオフセットを1つ進める
 
     row.forEach((item) => {
-      const itemBuffer = blaTableItemToBuffer(item);
+      const itemBuffer = encodeBlaTableItem(item);
       // Int32のエントリではなく、バイトとしてのオフセットを計算する必要がある
       const byteOffset = offset * 4;
       new Uint8Array(buffer, byteOffset, ITEM_BYTE_LENGTH).set(
@@ -64,26 +71,23 @@ export function blaTableItemsToBuffer(items: BLATableItem[][]): ArrayBuffer {
   return buffer;
 }
 
-export function bufferToBLATableItems(buffer: ArrayBuffer): BLATableItem[][] {
-  const view = new Int32Array(buffer);
-  const rows = view[0]; // 最初のエントリは行の数
+export function decodeBLATableItems(buffer: ArrayBuffer): BLATableItem[][] {
+  const view = new DataView(buffer);
+  const rows = view.getInt32(0, true); // 最初のエントリは行の数
   const items: BLATableItem[][] = [];
 
   let offset = 1; // Int32のエントリとしてのオフセット
 
   for (let i = 0; i < rows; i++) {
-    const rowLength = view[offset];
+    const rowLength = view.getInt32(offset * 4, true);
     const rowItems: BLATableItem[] = [];
     offset += 1; // 次の要素数のためにオフセットを1つ進める
 
     for (let j = 0; j < rowLength; j++) {
       // Int32のエントリではなく、バイトとしてのオフセットを計算する
       const byteOffset = offset * 4;
-      const itemBuffer = buffer.slice(
-        byteOffset,
-        byteOffset + ITEM_BYTE_LENGTH,
-      );
-      rowItems.push(bufferToBLATableItem(itemBuffer));
+
+      rowItems.push(decodeBLATableItem(view, byteOffset));
       offset += ITEM_BYTE_LENGTH / 4; // 次のアイテムのためにオフセットをアイテムのバイト長分進める
     }
     items.push(rowItems);
