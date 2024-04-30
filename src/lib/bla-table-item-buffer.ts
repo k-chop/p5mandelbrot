@@ -19,15 +19,22 @@ export function blaTableItemToBuffer(item: BLATableItem): ArrayBuffer {
   return buffer;
 }
 
-export function bufferToBLATableItem(buffer: ArrayBuffer): BLATableItem {
-  const floatView = new Float64Array(buffer, 0, 5);
-  const intView = new Int32Array(buffer, 40, 1);
+export function bufferToBLATableItem(
+  view: DataView,
+  offset: number,
+): BLATableItem {
+  const aRe = view.getFloat64(offset, true); // a.re
+  const aIm = view.getFloat64(offset + 8, true); // a.im
+  const bRe = view.getFloat64(offset + 16, true); // b.re
+  const bIm = view.getFloat64(offset + 24, true); // b.im
+  const r = view.getFloat64(offset + 32, true); // r
+  const l = view.getInt32(offset + 40, true); // l
 
   return {
-    a: { re: floatView[0], im: floatView[1] },
-    b: { re: floatView[2], im: floatView[3] },
-    r: floatView[4],
-    l: intView[0],
+    a: { re: aRe, im: aIm },
+    b: { re: bRe, im: bIm },
+    r,
+    l,
   };
 }
 
@@ -65,25 +72,22 @@ export function blaTableItemsToBuffer(items: BLATableItem[][]): ArrayBuffer {
 }
 
 export function bufferToBLATableItems(buffer: ArrayBuffer): BLATableItem[][] {
-  const view = new Int32Array(buffer);
-  const rows = view[0]; // 最初のエントリは行の数
+  const view = new DataView(buffer);
+  const rows = view.getInt32(0, true); // 最初のエントリは行の数
   const items: BLATableItem[][] = [];
 
   let offset = 1; // Int32のエントリとしてのオフセット
 
   for (let i = 0; i < rows; i++) {
-    const rowLength = view[offset];
+    const rowLength = view.getInt32(offset * 4, true);
     const rowItems: BLATableItem[] = [];
     offset += 1; // 次の要素数のためにオフセットを1つ進める
 
     for (let j = 0; j < rowLength; j++) {
       // Int32のエントリではなく、バイトとしてのオフセットを計算する
       const byteOffset = offset * 4;
-      const itemBuffer = buffer.slice(
-        byteOffset,
-        byteOffset + ITEM_BYTE_LENGTH,
-      );
-      rowItems.push(bufferToBLATableItem(itemBuffer));
+
+      rowItems.push(bufferToBLATableItem(view, byteOffset));
       offset += ITEM_BYTE_LENGTH / 4; // 次のアイテムのためにオフセットをアイテムのバイト長分進める
     }
     items.push(rowItems);
