@@ -4,7 +4,7 @@ const ITEM_BYTE_LENGTH = 44;
 
 // このファイルはほとんどChatGPTくんによって生成されました
 
-export function blaTableItemToBuffer(item: BLATableItem): ArrayBuffer {
+export function encodeBlaTableItem(item: BLATableItem): ArrayBuffer {
   const buffer = new ArrayBuffer(ITEM_BYTE_LENGTH);
   const floatView = new Float64Array(buffer, 0, 5); // 8 bytes * 5
   const intView = new Int32Array(buffer, 40, 1); // 4 bytes
@@ -19,7 +19,7 @@ export function blaTableItemToBuffer(item: BLATableItem): ArrayBuffer {
   return buffer;
 }
 
-export function bufferToBLATableItem(
+export function decodeBLATableItem(
   view: DataView,
   offset: number,
 ): BLATableItem {
@@ -38,7 +38,7 @@ export function bufferToBLATableItem(
   };
 }
 
-export function blaTableItemsToBuffer(items: BLATableItem[][]): ArrayBuffer {
+export function encodeBlaTableItems(items: BLATableItem[][]): ArrayBuffer {
   // 行の数と、それぞれの行の要素数を格納するのに必要なバイト数を加算
   let totalSize = 4; // 最初の4バイトは行の数
   items.forEach((row) => {
@@ -58,7 +58,7 @@ export function blaTableItemsToBuffer(items: BLATableItem[][]): ArrayBuffer {
     offset += 1; // 次の要素数のためにオフセットを1つ進める
 
     row.forEach((item) => {
-      const itemBuffer = blaTableItemToBuffer(item);
+      const itemBuffer = encodeBlaTableItem(item);
       // Int32のエントリではなく、バイトとしてのオフセットを計算する必要がある
       const byteOffset = offset * 4;
       new Uint8Array(buffer, byteOffset, ITEM_BYTE_LENGTH).set(
@@ -71,7 +71,7 @@ export function blaTableItemsToBuffer(items: BLATableItem[][]): ArrayBuffer {
   return buffer;
 }
 
-export function bufferToBLATableItems(buffer: ArrayBuffer): BLATableItem[][] {
+export function decodeBLATableItems(buffer: ArrayBuffer): BLATableItem[][] {
   const view = new DataView(buffer);
   const rows = view.getInt32(0, true); // 最初のエントリは行の数
   const items: BLATableItem[][] = [];
@@ -87,7 +87,7 @@ export function bufferToBLATableItems(buffer: ArrayBuffer): BLATableItem[][] {
       // Int32のエントリではなく、バイトとしてのオフセットを計算する
       const byteOffset = offset * 4;
 
-      rowItems.push(bufferToBLATableItem(view, byteOffset));
+      rowItems.push(decodeBLATableItem(view, byteOffset));
       offset += ITEM_BYTE_LENGTH / 4; // 次のアイテムのためにオフセットをアイテムのバイト長分進める
     }
     items.push(rowItems);
