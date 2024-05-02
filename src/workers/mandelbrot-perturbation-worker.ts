@@ -17,10 +17,6 @@ import { ReferencePointContextPopulated } from "./calc-reference-point";
 import { decodeComplexArray } from "@/lib/xn-buffer";
 import { decodeBLATableItems } from "@/lib/bla-table-item-buffer";
 
-const cancelHandler = (data: { jobId: string }) => {
-  console.debug(`${data.jobId}: cancelled`);
-};
-
 const calcHandler = (data: MandelbrotCalculationWorkerParams) => {
   const {
     pixelHeight,
@@ -234,10 +230,6 @@ self.addEventListener("message", (event) => {
   switch (event.data.type) {
     case "calc": {
       calcHandler(event.data);
-      break;
-    }
-    case "cancel": {
-      cancelHandler(event.data);
       break;
     }
   }
