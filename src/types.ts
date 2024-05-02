@@ -96,11 +96,25 @@ export interface MandelbrotRenderingUnit {
   rect: Rect;
 }
 
-export interface MandelbrotJob extends MandelbrotRenderingUnit {
+export type MandelbrotJob = CalcIterationJob | CalcReferencePointJob;
+
+export interface MandelbrotJobBase {
   id: string;
   batchId: string;
   // jobが実際に走るタイミングで設定される
   workerIdx?: number;
+}
+
+export interface CalcIterationJob
+  extends MandelbrotJobBase,
+    MandelbrotRenderingUnit {
+  type: "calc-iteration";
+  requiredJobIds: string[];
+}
+
+export interface CalcReferencePointJob extends MandelbrotJobBase {
+  type: "calc-reference-point";
+  mandelbrotParams: MandelbrotParams;
 }
 
 export interface BatchContext {

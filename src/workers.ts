@@ -15,6 +15,8 @@ export const workerPaths: Record<MandelbrotWorkerType, new () => Worker> = {
   perturbation: MandelbrotPerturbationWorker,
 };
 
+export const referencePointWorkerPath = CalcReferencePointWorker;
+
 export async function referencePointWorker() {
   if (_referencePointWorker) {
     return _referencePointWorker;
