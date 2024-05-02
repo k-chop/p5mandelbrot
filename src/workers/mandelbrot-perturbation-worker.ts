@@ -17,7 +17,11 @@ import { ReferencePointContextPopulated } from "./calc-reference-point";
 import { decodeComplexArray } from "@/lib/xn-buffer";
 import { decodeBLATableItems } from "@/lib/bla-table-item-buffer";
 
-self.addEventListener("message", (event) => {
+const cancelHandler = (data: { jobId: string }) => {
+  console.debug(`${data.jobId}: cancelled`);
+};
+
+const calcHandler = (data: MandelbrotCalculationWorkerParams) => {
   const {
     pixelHeight,
     pixelWidth,
@@ -34,7 +38,7 @@ self.addEventListener("message", (event) => {
     refX,
     refY,
     jobId,
-  } = event.data as MandelbrotCalculationWorkerParams;
+  } = data;
 
   console.debug(`${jobId}: start`);
 
@@ -211,4 +215,17 @@ self.addEventListener("message", (event) => {
   self.postMessage({ type: "result", iterations }, [iterations.buffer]);
 
   console.debug(`${jobId}: end`);
+};
+
+self.addEventListener("message", (event) => {
+  switch (event.data.type) {
+    case "calc": {
+      calcHandler(event.data);
+      break;
+    }
+    case "cancel": {
+      cancelHandler(event.data);
+      break;
+    }
+  }
 });

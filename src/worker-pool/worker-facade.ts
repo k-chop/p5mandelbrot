@@ -103,6 +103,7 @@ export class WorkerFacade implements MandelbrotFacadeLike {
 
     this.worker.addEventListener("message", f);
     this.worker.postMessage({
+      type: "calc",
       cx: mandelbrotParams.x.toString(),
       cy: mandelbrotParams.y.toString(),
       r: mandelbrotParams.r.toString(),
