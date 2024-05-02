@@ -125,8 +125,8 @@ export interface BatchContext {
   refY: string;
   pixelWidth: number;
   pixelHeight: number;
-  xn: XnBuffer;
-  blaTable: BLATableBuffer;
+  xn?: XnBuffer;
+  blaTable?: BLATableBuffer;
   terminator: SharedArrayBuffer;
 
   progressMap: Map<string, number>;

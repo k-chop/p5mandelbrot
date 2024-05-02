@@ -235,46 +235,8 @@ export const startCalculation = async (onComplete: () => void) => {
     clearIterationCache();
   }
 
-  const calcReferencePoint = async () => {
-    if (currentParams.mode !== "perturbation") {
-      return { xn: new ArrayBuffer(0), blaTable: new ArrayBuffer(0) };
-    }
-
-    if (isReferencePinned) {
-      return {
-        xn: lastReferenceCache.xn,
-        blaTable: lastReferenceCache.blaTable,
-      };
-    }
-
-    return calcReferencePointWithWorker({
-      complexCenterX: currentParams.x.toString(),
-      complexCenterY: currentParams.y.toString(),
-      complexRadius: currentParams.r.toString(),
-      maxIteration: currentParams.N,
-      pixelHeight: height,
-      pixelWidth: width,
-    });
-  };
-
-  // FIXME: reference orbitの計算がキャンセルしても止まらないのを直す
-
-  const { xn, blaTable } = await calcReferencePoint();
-
-  if (!isReferencePinned) {
-    lastReferenceCache.x = currentParams.x;
-    lastReferenceCache.y = currentParams.y;
-    lastReferenceCache.xn = xn;
-    lastReferenceCache.blaTable = blaTable;
-  }
-
   let refX = currentParams.x.toString();
   let refY = currentParams.y.toString();
-
-  if (isReferencePinned) {
-    refX = lastReferenceCache.x.toString();
-    refY = lastReferenceCache.y.toString();
-  }
 
   const units = calculationRects.map((rect) => ({
     rect,
@@ -290,8 +252,6 @@ export const startCalculation = async (onComplete: () => void) => {
     refY,
     pixelWidth: width,
     pixelHeight: height,
-    xn,
-    blaTable,
     terminator,
   });
 };

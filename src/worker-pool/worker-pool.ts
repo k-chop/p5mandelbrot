@@ -10,7 +10,6 @@ import {
   mandelbrotWorkerTypes,
 } from "@/types";
 import {
-  WorkerIntermediateResultCallback,
   WorkerProgressCallback,
   WorkerResultCallback,
   CalcIterationWorker,
