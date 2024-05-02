@@ -243,7 +243,12 @@ function fillCalcIterationWorkerPool(
   }
 }
 
-function fillCalcReferencePointWorkerPool(upTo: number = 1) {
+function fillCalcReferencePointWorkerPool(
+  upTo: number = 1,
+  workerType: MandelbrotWorkerType = getStore("mode"),
+) {
+  if (workerType !== "perturbation") return;
+
   let fillCount = 0;
   const pool = getWorkerPool("calc-reference-point");
 
@@ -281,7 +286,7 @@ export function prepareWorkerPool(
   resetWorkers();
 
   fillCalcIterationWorkerPool(count, workerType);
-  fillCalcReferencePointWorkerPool();
+  fillCalcReferencePointWorkerPool(1 /* 仮 */, workerType);
 }
 
 /**
@@ -375,6 +380,14 @@ function tick(doneJobId: JobId | null = null) {
     if (!refPool[workerIdx]) break;
 
     start(workerIdx, job);
+  }
+
+  // 空のときはperturbationではないのでwaitingListから取り出し、doneJobIdに上書き
+  // FIXME: なんかもうちょっとどうにかしてね
+  if (refPool.length === 0) {
+    const refJob = popWaitingList("calc-reference-point");
+    if (!refJob) return;
+    doneJobId = refJob.id;
   }
 
   // doneJobIdが渡された場合は、それをrequiresとするjobをwaitingListから取り出して処理を開始
