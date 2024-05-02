@@ -24,7 +24,11 @@ export type BatchCompleteCallback = (elapsed: number) => void;
 export type BatchProgressChangedCallback = (progressStr: string) => void;
 
 export interface MandelbrotFacadeLike {
-  startCalculate(job: MandelbrotJob, batchContext: BatchContext): void;
+  startCalculate(
+    job: MandelbrotJob,
+    batchContext: BatchContext,
+    workerIdx: number,
+  ): void;
 
   terminate(callback?: () => void): void;
   terminateAsync(): Promise<void>;
@@ -55,7 +59,11 @@ export class WorkerFacade implements MandelbrotFacadeLike {
     return this.running;
   };
 
-  startCalculate = (job: MandelbrotJob, batchContext: BatchContext) => {
+  startCalculate = (
+    job: MandelbrotJob,
+    batchContext: BatchContext,
+    workerIdx: number,
+  ) => {
     const f = (
       ev: MessageEvent<
         WorkerResult | WorkerIntermediateResult | WorkerProgress
@@ -99,7 +107,8 @@ export class WorkerFacade implements MandelbrotFacadeLike {
     };
 
     const { rect, mandelbrotParams, id } = job;
-    const { pixelHeight, pixelWidth, xn, blaTable, refX, refY } = batchContext;
+    const { pixelHeight, pixelWidth, xn, blaTable, refX, refY, terminator } =
+      batchContext;
 
     this.worker.addEventListener("message", f);
     this.worker.postMessage({
@@ -119,6 +128,8 @@ export class WorkerFacade implements MandelbrotFacadeLike {
       refX,
       refY,
       jobId: id,
+      terminator,
+      workerIdx,
     });
 
     this.running = true;

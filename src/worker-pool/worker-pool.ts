@@ -250,8 +250,8 @@ export function registerBatch(
   tick();
 }
 
-function findFreeWorkerFacade() {
-  return pool.find((worker) => !worker.isRunning());
+function findFreeWorkerFacadeIndex() {
+  return pool.findIndex((worker) => !worker.isRunning());
 }
 
 function tick() {
@@ -259,11 +259,11 @@ function tick() {
 
   while (runningList.length < pool.length && waitingList.length > 0) {
     const job = waitingList.shift()!;
-    const workerFacade = findFreeWorkerFacade();
+    const workerIdx = findFreeWorkerFacadeIndex();
 
-    if (!workerFacade) break;
+    if (!pool[workerIdx]) break;
 
-    start(workerFacade, job);
+    start(workerIdx, job);
   }
 
   if (hasWaitingJob) {
@@ -273,9 +273,10 @@ function tick() {
   }
 }
 
-function start(workerFacade: MandelbrotFacadeLike, job: MandelbrotJob) {
+function start(workerIdx: number, job: MandelbrotJob) {
   const batchContext = batchContextMap.get(job.batchId)!;
-  workerFacade.startCalculate(job, batchContext);
+  const workerFacade = pool[workerIdx];
+  workerFacade.startCalculate(job, batchContext, workerIdx);
 
   runningList.push(job);
   runningWorkerFacadeMap.set(job.id, workerFacade);

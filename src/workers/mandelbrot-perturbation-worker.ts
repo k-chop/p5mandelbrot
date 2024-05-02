@@ -38,9 +38,13 @@ const calcHandler = (data: MandelbrotCalculationWorkerParams) => {
     refX,
     refY,
     jobId,
+    terminator,
+    workerIdx,
   } = data;
 
   console.debug(`${jobId}: start`);
+
+  const terminateChecker = new Uint8Array(terminator);
 
   const xn = decodeComplexArray(xnBuffer);
   const blaTable = decodeBLATableItems(blaTableBuffer);
@@ -197,11 +201,17 @@ const calcHandler = (data: MandelbrotCalculationWorkerParams) => {
         iterations[index] = n;
         lowResIterations[indexRough] = n;
       }
+
+      if (terminateChecker[workerIdx] !== 0) break;
+
       self.postMessage({
         type: "progress",
         progress: calculatedCount / pixelNum,
       });
     }
+
+    if (terminateChecker[workerIdx] !== 0) break;
+
     self.postMessage(
       {
         type: "intermediateResult",
@@ -211,10 +221,13 @@ const calcHandler = (data: MandelbrotCalculationWorkerParams) => {
       [lowResIterations.buffer],
     );
   }
+  if (terminateChecker[workerIdx] !== 0) {
+    console.debug(`${jobId}: terminated`);
+  } else {
+    console.debug(`${jobId}: completed`);
+  }
 
   self.postMessage({ type: "result", iterations }, [iterations.buffer]);
-
-  console.debug(`${jobId}: end`);
 };
 
 self.addEventListener("message", (event) => {
