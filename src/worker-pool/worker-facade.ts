@@ -1,24 +1,32 @@
 import {
   BatchContext,
+  CalcIterationJob,
+  CalcReferencePointJob,
   MandelbrotJob,
   MandelbrotWorkerType,
+  ReferencePointResult,
   WorkerIntermediateResult,
   WorkerProgress,
   WorkerResult,
 } from "@/types";
-import { workerPaths } from "@/workers";
+import { referencePointWorkerPath, workerPaths } from "@/workers";
+import { ReferencePointContext } from "@/workers/calc-reference-point";
 
+export type RefPointResultCallback = (
+  result: ReferencePointContext,
+  job: CalcReferencePointJob,
+) => void;
 export type WorkerResultCallback = (
   result: WorkerResult,
-  job: MandelbrotJob,
+  job: CalcIterationJob,
 ) => void;
 export type WorkerIntermediateResultCallback = (
   result: WorkerIntermediateResult,
-  job: MandelbrotJob,
+  job: CalcIterationJob,
 ) => void;
 export type WorkerProgressCallback = (
   progress: WorkerProgress,
-  job: MandelbrotJob,
+  job: CalcIterationJob,
 ) => void;
 export type BatchCompleteCallback = (elapsed: number) => void;
 export type BatchProgressChangedCallback = (progressStr: string) => void;
@@ -33,18 +41,15 @@ export interface MandelbrotFacadeLike {
   terminate(callback?: () => void): void;
   terminateAsync(): Promise<void>;
 
+  init(): Promise<void>;
+
   cancel(batchContext: BatchContext, job: MandelbrotJob): void;
 
-  onResult(callback: WorkerResultCallback): void;
-  onIntermediateResult(callback: WorkerIntermediateResultCallback): void;
-  onProgress(callback: WorkerProgressCallback): void;
-
-  clearCallbacks(): void;
-
   isRunning(): boolean;
+  isReady(): boolean;
 }
 
-export class WorkerFacade implements MandelbrotFacadeLike {
+export class CalcIterationWorker implements MandelbrotFacadeLike {
   worker: Worker;
   running = false;
 
@@ -61,11 +66,17 @@ export class WorkerFacade implements MandelbrotFacadeLike {
     return this.running;
   };
 
+  isReady = () => true;
+
+  init = async () => {};
+
   startCalculate = (
-    job: MandelbrotJob,
+    job: CalcIterationJob,
     batchContext: BatchContext,
     workerIdx: number,
   ) => {
+    this.running = true;
+
     const f = (
       ev: MessageEvent<
         WorkerResult | WorkerIntermediateResult | WorkerProgress
@@ -79,13 +90,13 @@ export class WorkerFacade implements MandelbrotFacadeLike {
 
           const iterationsResult = new Uint32Array(iterations);
 
-          this.running = false;
           this.resultCallback?.(
             { type: "result", iterations: iterationsResult },
             job,
           );
 
           this.worker.removeEventListener("message", f);
+          this.running = false;
           break;
         }
         case "intermediateResult": {
@@ -137,8 +148,6 @@ export class WorkerFacade implements MandelbrotFacadeLike {
       terminator,
       workerIdx,
     });
-
-    this.running = true;
   };
 
   terminate = (callback?: () => void) => {
@@ -159,7 +168,6 @@ export class WorkerFacade implements MandelbrotFacadeLike {
       return;
     }
 
-    this.running = false;
     const t = new Uint8Array(terminator);
     Atomics.store(t, workerIdx, 1);
   };
@@ -179,6 +187,133 @@ export class WorkerFacade implements MandelbrotFacadeLike {
   clearCallbacks = () => {
     this.resultCallback = undefined;
     this.intermediateResultCallback = undefined;
+    this.progressCallback = undefined;
+  };
+}
+
+export class CalcReferencePointWorker implements MandelbrotFacadeLike {
+  worker: Worker;
+  running = false;
+  inited = false;
+
+  resultCallback?: RefPointResultCallback;
+  progressCallback?: WorkerProgressCallback;
+  terminatedCallback?: (job: CalcReferencePointJob) => void;
+
+  constructor() {
+    this.worker = new referencePointWorkerPath();
+  }
+
+  isRunning = () => {
+    return this.running;
+  };
+
+  isReady = () => this.inited;
+
+  init = async () => {
+    await new Promise<void>((resolve) => {
+      const initializeHandler = (event: MessageEvent) => {
+        if (event?.data?.type === "init") {
+          this.inited = true;
+          resolve();
+          this.worker.removeEventListener("message", initializeHandler);
+        } else {
+          console.error("Receive message before init", event.data);
+        }
+      };
+
+      this.worker.addEventListener("message", initializeHandler);
+    });
+  };
+
+  startCalculate = (
+    job: CalcReferencePointJob,
+    batchContext: BatchContext,
+    workerIdx: number,
+  ) => {
+    this.running = true;
+
+    const complexCenterX = job.mandelbrotParams.x.toString();
+    const complexCenterY = job.mandelbrotParams.y.toString();
+    const complexRadius = job.mandelbrotParams.r.toString();
+    const maxIteration = job.mandelbrotParams.N;
+    const pixelHeight = batchContext.pixelHeight;
+    const pixelWidth = batchContext.pixelWidth;
+
+    const handler = (ev: MessageEvent<ReferencePointResult>) => {
+      const { type, xn, blaTable } = ev.data;
+      if (type === "terminated") {
+        this.worker.removeEventListener("message", handler);
+        this.running = false;
+
+        this.terminatedCallback?.(job);
+      }
+      if (type === "result") {
+        this.worker.removeEventListener("message", handler);
+        this.running = false;
+
+        this.resultCallback?.({ xn, blaTable }, job);
+      }
+    };
+
+    this.worker.addEventListener("message", handler);
+
+    const { terminator } = batchContext;
+    const { id: jobId } = job;
+
+    const t = new Uint8Array(terminator);
+    Atomics.store(t, workerIdx, 0);
+
+    this.worker.postMessage({
+      complexCenterX,
+      complexCenterY,
+      pixelWidth,
+      pixelHeight,
+      complexRadius,
+      maxIteration,
+      jobId,
+      terminator,
+      workerIdx,
+    });
+  };
+
+  terminate = (callback?: () => void) => {
+    this.worker.terminate();
+    callback?.();
+    this.running = false;
+  };
+
+  terminateAsync = () => {
+    this.worker.terminate();
+
+    this.running = false;
+    return Promise.resolve();
+  };
+
+  cancel = ({ terminator }: BatchContext, { workerIdx }: MandelbrotJob) => {
+    if (workerIdx == null) {
+      return;
+    }
+
+    const t = new Uint8Array(terminator);
+    Atomics.store(t, workerIdx, 1);
+  };
+
+  onResult = (callback: RefPointResultCallback) => {
+    this.resultCallback = callback;
+  };
+
+  onProgress = (callback: WorkerProgressCallback) => {
+    this.progressCallback = callback;
+  };
+
+  onTerminate = (callback: (job: CalcReferencePointJob) => void) => {
+    this.terminatedCallback = callback;
+  };
+
+  clearCallbacks = () => {
+    this.resultCallback = undefined;
+    this.terminatedCallback = undefined;
     this.progressCallback = undefined;
   };
 }

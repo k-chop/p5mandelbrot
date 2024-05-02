@@ -313,6 +313,7 @@ const entrypoint = () => {
     // Settings
     zoomRate: 2.0,
     workerCount: 2,
+    refPointWorkerCount: 1, // 仮
     // UI state
     canvasLocked: false,
     // mandelbrot state

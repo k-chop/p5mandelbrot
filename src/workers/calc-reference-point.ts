@@ -39,6 +39,8 @@ export type ReferencePointContextPopulated = {
 function calcReferencePoint(
   center: ComplexArbitrary,
   maxIteration: number,
+  terminateChecker: Uint8Array,
+  workerIdx: number,
 ): { xn: Complex[] } {
   // [re_0, im_0, re_1, im_1, ...]
   const xnn = new Float64Array(maxIteration * 2);
@@ -54,6 +56,13 @@ function calcReferencePoint(
     z = dReduce(dAdd(dSquare(z), center));
 
     n++;
+
+    if (terminateChecker[workerIdx] !== 0) break;
+  }
+
+  // 中断された
+  if (terminateChecker[workerIdx] !== 0) {
+    return { xn: [] };
   }
 
   const xn: Complex[] = [];
@@ -135,7 +144,14 @@ async function setup() {
       pixelWidth,
       complexRadius: radiusStr,
       maxIteration,
+      jobId,
+      terminator,
+      workerIdx,
     } = event.data as ReferencePointCalculationWorkerParams;
+
+    console.debug(`${jobId}: start (ref)`);
+
+    const terminateChecker = new Uint8Array(terminator);
 
     // 適当に中央のピクセルを参照点とする
     const refPixelX = Math.floor(pixelWidth / 2);
@@ -153,7 +169,20 @@ async function setup() {
       pixelHeight,
     );
 
-    const { xn } = calcReferencePoint(referencePoint, maxIteration);
+    const { xn } = calcReferencePoint(
+      referencePoint,
+      maxIteration,
+      terminateChecker,
+      workerIdx,
+    );
+
+    if (terminateChecker[workerIdx] !== 0) {
+      console.debug(`${jobId}: terminated (ref)`);
+      self.postMessage({
+        type: "terminated",
+      });
+      return;
+    }
 
     const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
     const blaTable = calcBLACoefficient(xn, pixelSpacing);
@@ -166,6 +195,8 @@ async function setup() {
       xn: xnConverted,
       blaTable: blaTableConverted,
     });
+
+    console.debug(`${jobId}: completed (ref)`);
   });
 }
 

@@ -28,7 +28,7 @@ export interface WorkerProgress {
 }
 
 export interface ReferencePointResult {
-  type: "result";
+  type: "result" | "terminated";
   xn: XnBuffer;
   blaTable: BLATableBuffer;
 }
@@ -80,6 +80,9 @@ export interface ReferencePointCalculationWorkerParams {
   pixelHeight: number;
   complexRadius: string;
   maxIteration: number;
+  jobId: string;
+  terminator: SharedArrayBuffer;
+  workerIdx: number;
 }
 
 export const mandelbrotWorkerTypes = ["normal", "perturbation"] as const;
@@ -96,11 +99,25 @@ export interface MandelbrotRenderingUnit {
   rect: Rect;
 }
 
-export interface MandelbrotJob extends MandelbrotRenderingUnit {
+export type MandelbrotJob = CalcIterationJob | CalcReferencePointJob;
+
+export interface MandelbrotJobBase {
   id: string;
   batchId: string;
   // jobが実際に走るタイミングで設定される
   workerIdx?: number;
+}
+
+export interface CalcIterationJob
+  extends MandelbrotJobBase,
+    MandelbrotRenderingUnit {
+  type: "calc-iteration";
+  requiredJobIds: string[];
+}
+
+export interface CalcReferencePointJob extends MandelbrotJobBase {
+  type: "calc-reference-point";
+  mandelbrotParams: MandelbrotParams;
 }
 
 export interface BatchContext {
@@ -111,11 +128,13 @@ export interface BatchContext {
   refY: string;
   pixelWidth: number;
   pixelHeight: number;
-  xn: XnBuffer;
-  blaTable: BLATableBuffer;
+  xn?: XnBuffer;
+  blaTable?: BLATableBuffer;
   terminator: SharedArrayBuffer;
 
   progressMap: Map<string, number>;
   startedAt: number;
   finishedAt?: number;
 }
+
+export type JobType = "calc-iteration" | "calc-reference-point";
