@@ -188,7 +188,7 @@ export const startCalculation = async (onComplete: () => void) => {
   cancelBatch(prevBatchId);
   prevBatchId = currentBatchId;
 
-  const divideRectCount = getWorkerCount();
+  const divideRectCount = getWorkerCount("calc-iteration");
 
   const minSide = Math.floor(Math.sqrt((width * height) / divideRectCount));
 

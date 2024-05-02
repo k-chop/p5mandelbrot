@@ -1,5 +1,6 @@
 import {
   BatchContext,
+  JobType,
   MandelbrotJob,
   MandelbrotRenderingUnit,
   MandelbrotWorkerType,
@@ -15,10 +16,10 @@ import {
 import { upsertIterationCache } from "@/aggregator";
 import { renderToResultBuffer } from "@/camera";
 import { getStore, updateStore } from "@/store/store";
+import { getWorkerPool, resetWorkerPool } from "./pool-instance";
 
 let waitingList: MandelbrotJob[] = [];
 let runningList: MandelbrotJob[] = [];
-let pool: MandelbrotFacadeLike[] = [];
 
 type JobId = string;
 type BatchId = string;
@@ -136,8 +137,8 @@ const onWorkerIntermediateResult: WorkerIntermediateResultCallback = (
   renderToResultBuffer(rect);
 };
 
-export const getWorkerCount = (): number => {
-  return pool.length;
+export const getWorkerCount = (jobType: JobType): number => {
+  return getWorkerPool(jobType).length;
 };
 
 export const cycleWorkerType = (): MandelbrotWorkerType => {
@@ -161,6 +162,7 @@ function fillWorkerFacade(
   workerType: MandelbrotWorkerType = getStore("mode"),
 ) {
   let fillCount = 0;
+  const pool = getWorkerPool("calc-iteration");
 
   for (let i = 0; pool.length < upTo && i < upTo; i++) {
     const workerFacade = new WorkerFacade(workerType);
@@ -202,11 +204,11 @@ export function prepareWorkerPool(
  * WorkerPoolを溜まっていたJobごと全部リセットする
  */
 export function resetWorkers() {
-  pool.forEach((workerFacade) => {
+  getWorkerPool("calc-iteration").forEach((workerFacade) => {
     workerFacade.clearCallbacks();
     workerFacade.terminate();
   });
-  pool = [];
+  resetWorkerPool("calc-iteration");
 
   // queueに溜まってるJobも全部消す
   runningList = [];
@@ -250,16 +252,17 @@ export function registerBatch(
   tick();
 }
 
-function findFreeWorkerFacadeIndex() {
-  return pool.findIndex((worker) => !worker.isRunning());
+function findFreeWorkerFacadeIndex(jobType: JobType) {
+  return getWorkerPool(jobType).findIndex((worker) => !worker.isRunning());
 }
 
 function tick() {
   const hasWaitingJob = waitingList.length > 0;
+  const pool = getWorkerPool("calc-iteration");
 
   while (runningList.length < pool.length && waitingList.length > 0) {
     const job = waitingList.shift()!;
-    const workerIdx = findFreeWorkerFacadeIndex();
+    const workerIdx = findFreeWorkerFacadeIndex("calc-iteration");
 
     if (!pool[workerIdx]) break;
 
@@ -275,7 +278,7 @@ function tick() {
 
 function start(workerIdx: number, job: MandelbrotJob) {
   const batchContext = batchContextMap.get(job.batchId)!;
-  const workerFacade = pool[workerIdx];
+  const workerFacade = getWorkerPool("calc-iteration")[workerIdx];
   workerFacade.startCalculate(job, batchContext, workerIdx);
 
   runningList.push({ ...job, workerIdx });
@@ -285,17 +288,6 @@ function start(workerIdx: number, job: MandelbrotJob) {
 export function startBatch(batchId: BatchId) {
   acceptingBatchIds.add(batchId);
 }
-
-export function isAcceptingBatch(batchId: BatchId) {
-  return acceptingBatchIds.has(batchId);
-}
-
-// 範囲分割、reference orbitの計算をバッチではないことにしたため、いびつな対応が必要になった
-// これらをバッチの一部として含めることで、なんとかなる？
-// 各処理の中でawaitしつつ処理を止められたかどうかを確認していく？
-// どっちにしろ時間かかる処理はawaitするしかない
-// あとはJobの依存関係を定義して、積むのは一気にやっちゃう・・・？
-// 一気に積めば、処理途中のことを考えなくていい
 
 /**
  * 指定したバッチIDのジョブをキャンセルする
@@ -327,24 +319,4 @@ export function cancelBatch(batchId: string) {
   batchContextMap.delete(batchId);
 
   tick();
-}
-
-function removeFromPool(facades: (MandelbrotFacadeLike | undefined)[]) {
-  let removeCount = 0;
-
-  for (const facade of facades) {
-    if (!facade) continue;
-    const index = pool.indexOf(facade);
-
-    if (index !== -1) {
-      pool.splice(index, 1);
-      removeCount++;
-    }
-  }
-
-  if (removeCount > 0) {
-    console.info(
-      `Worker removed: remove count = ${removeCount}, pool size = ${pool.length}`,
-    );
-  }
 }

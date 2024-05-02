@@ -119,3 +119,5 @@ export interface BatchContext {
   startedAt: number;
   finishedAt?: number;
 }
+
+export type JobType = "calc-iteration" | "calc-reference-point";
