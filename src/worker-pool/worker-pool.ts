@@ -112,12 +112,17 @@ const onCalcIterationWorkerProgress: WorkerProgressCallback = (result, job) => {
   const { progress } = result;
   const batchContext = batchContextMap.get(job.batchId);
 
-  // 停止が間に合わなかったケース。何もしない
+  // 停止が間に合わなかったケースや既にcancelされているケース。何もしない
   if (batchContext == null) {
     return;
   }
 
   batchContext.progressMap.set(job.id, progress);
+};
+
+const onCalcReferencePointWorkerTerminated = (job: CalcReferencePointJob) => {
+  // ここで何をする予定だったんだっけ...
+  // terminateされているということは外部からcancelされており、後始末はそっちで行われるはず
 };
 
 const onCalcReferencePointWorkerResult: RefPointResultCallback = (
@@ -127,7 +132,7 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
   const { xn, blaTable } = result;
   const batchContext = batchContextMap.get(job.batchId);
 
-  // 停止が間に合わなかったケース。何もしない
+  // 停止が間に合わなかったケースや既にcancelされているケース。何もしない
   if (batchContext == null) {
     return;
   }
@@ -257,6 +262,7 @@ function fillCalcReferencePointWorkerPool(
 
     worker.init();
     worker.onResult(onCalcReferencePointWorkerResult);
+    worker.onTerminate(onCalcReferencePointWorkerTerminated);
     // workerFacade.onProgress(onWorkerProgress);
 
     pool.push(worker);
@@ -363,7 +369,7 @@ function tick(doneJobId: JobId | null = null) {
   const hasWaitingJob = waitingList.length > 0;
 
   const refPool = getWorkerPool("calc-reference-point");
-  if (refPool.some((worker) => !worker.isReady())) {
+  if (refPool.some((worker) => !worker.isReady() || worker.isRunning())) {
     // まだ準備ができていないworkerがいる場合は待つ
     setTimeout(tick, 100);
     return;
@@ -431,9 +437,11 @@ function start(workerIdx: number, job: MandelbrotJob) {
     }
     case "calc-reference-point": {
       const workerFacade = getWorkerPool(job.type)[workerIdx];
-      workerFacade.startCalculate(job, batchContext, workerIdx);
+      // calc-iterationのworkerIdxと被らないように
+      const refWorkerIdx = getWorkerPool("calc-iteration").length + workerIdx;
+      workerFacade.startCalculate(job, batchContext, refWorkerIdx);
 
-      runningList.push({ ...job, workerIdx });
+      runningList.push({ ...job, workerIdx: refWorkerIdx });
       runningWorkerFacadeMap.set(job.id, workerFacade);
       break;
     }
@@ -455,7 +463,7 @@ export function cancelBatch(batchId: string) {
 
   const runningJobs = runningList.filter((job) => job.batchId === batchId);
 
-  console.log("cancelBatch", batchId, runningJobs.length, runningList);
+  console.log("cancelBatch", { batchId, runningJobs, runningList });
 
   const batchContext = batchContextMap.get(batchId)!;
 

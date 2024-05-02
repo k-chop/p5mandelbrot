@@ -28,7 +28,7 @@ export interface WorkerProgress {
 }
 
 export interface ReferencePointResult {
-  type: "result";
+  type: "result" | "terminated";
   xn: XnBuffer;
   blaTable: BLATableBuffer;
 }
@@ -80,6 +80,9 @@ export interface ReferencePointCalculationWorkerParams {
   pixelHeight: number;
   complexRadius: string;
   maxIteration: number;
+  jobId: string;
+  terminator: SharedArrayBuffer;
+  workerIdx: number;
 }
 
 export const mandelbrotWorkerTypes = ["normal", "perturbation"] as const;

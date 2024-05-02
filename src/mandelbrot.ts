@@ -243,7 +243,9 @@ export const startCalculation = async (onComplete: () => void) => {
     mandelbrotParams: currentParams,
   }));
 
-  const terminator = new SharedArrayBuffer(units.length);
+  const terminator = new SharedArrayBuffer(
+    getWorkerCount("calc-iteration") + getWorkerCount("calc-reference-point"),
+  );
 
   registerBatch(currentBatchId, units, {
     onComplete,
