@@ -111,6 +111,10 @@ export class WorkerFacade implements MandelbrotFacadeLike {
       batchContext;
 
     this.worker.addEventListener("message", f);
+
+    const t = new Uint8Array(terminator);
+    Atomics.store(t, workerIdx, 0);
+
     this.worker.postMessage({
       type: "calc",
       cx: mandelbrotParams.x.toString(),
