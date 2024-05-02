@@ -12,7 +12,6 @@ import {
   OffsetParams,
   XnBuffer,
 } from "./types";
-import { calcReferencePointWithWorker } from "./workers";
 import {
   cancelBatch,
   cycleWorkerType,
