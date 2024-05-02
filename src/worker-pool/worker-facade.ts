@@ -33,6 +33,8 @@ export interface MandelbrotFacadeLike {
   terminate(callback?: () => void): void;
   terminateAsync(): Promise<void>;
 
+  cancel(batchContext: BatchContext, job: MandelbrotJob): void;
+
   onResult(callback: WorkerResultCallback): void;
   onIntermediateResult(callback: WorkerIntermediateResultCallback): void;
   onProgress(callback: WorkerProgressCallback): void;
@@ -150,6 +152,16 @@ export class WorkerFacade implements MandelbrotFacadeLike {
     this.worker.terminate();
 
     return Promise.resolve();
+  };
+
+  cancel = ({ terminator }: BatchContext, { workerIdx }: MandelbrotJob) => {
+    if (workerIdx == null) {
+      return;
+    }
+
+    this.running = false;
+    const t = new Uint8Array(terminator);
+    Atomics.store(t, workerIdx, 1);
   };
 
   onResult = (callback: WorkerResultCallback) => {

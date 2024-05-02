@@ -99,6 +99,8 @@ export interface MandelbrotRenderingUnit {
 export interface MandelbrotJob extends MandelbrotRenderingUnit {
   id: string;
   batchId: string;
+  // jobが実際に走るタイミングで設定される
+  workerIdx?: number;
 }
 
 export interface BatchContext {

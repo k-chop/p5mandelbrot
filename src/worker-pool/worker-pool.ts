@@ -85,7 +85,7 @@ const onWorkerResult: WorkerResultCallback = (result, job) => {
   const { rect } = job;
   const batchContext = batchContextMap.get(job.batchId);
 
-  // 停止が間に合わなかったケース。何もしない
+  // 停止が間に合わなかったケースや既にcancelされているケース。何もしない
   if (batchContext == null) {
     return;
   }
@@ -266,8 +266,8 @@ function tick() {
     start(workerIdx, job);
   }
 
-  if (hasWaitingJob) {
-    console.info(
+  if (hasWaitingJob || runningList.length === 0) {
+    console.debug(
       `running: ${runningList.length}, waiting: ${waitingList.length}`,
     );
   }
@@ -278,7 +278,7 @@ function start(workerIdx: number, job: MandelbrotJob) {
   const workerFacade = pool[workerIdx];
   workerFacade.startCalculate(job, batchContext, workerIdx);
 
-  runningList.push(job);
+  runningList.push({ ...job, workerIdx });
   runningWorkerFacadeMap.set(job.id, workerFacade);
 }
 
@@ -310,22 +310,18 @@ export function cancelBatch(batchId: string) {
 
   console.log("cancelBatch", batchId, runningJobs.length, runningList);
 
-  const facades = runningJobs.map((job) => {
+  const batchContext = batchContextMap.get(batchId)!;
+
+  runningJobs.forEach((job) => {
     const facade = runningWorkerFacadeMap.get(job.id);
     runningWorkerFacadeMap.delete(job.id);
 
-    return facade;
+    if (facade == null) return;
+
+    facade.cancel(batchContext, job);
   });
 
-  for (const facade of facades) {
-    if (!facade) continue;
-
-    facade.clearCallbacks();
-    facade.terminate();
-  }
-  removeFromPool(facades);
-
-  fillWorkerFacade();
+  batchContext?.onComplete(0);
 
   runningList = runningList.filter((job) => job.batchId !== batchId);
   batchContextMap.delete(batchId);
