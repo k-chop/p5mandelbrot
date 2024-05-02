@@ -17,7 +17,7 @@ import { ReferencePointContextPopulated } from "./calc-reference-point";
 import { decodeComplexArray } from "@/lib/xn-buffer";
 import { decodeBLATableItems } from "@/lib/bla-table-item-buffer";
 
-self.addEventListener("message", (event) => {
+const calcHandler = (data: MandelbrotCalculationWorkerParams) => {
   const {
     pixelHeight,
     pixelWidth,
@@ -33,7 +33,14 @@ self.addEventListener("message", (event) => {
     blaTable: blaTableBuffer,
     refX,
     refY,
-  } = event.data as MandelbrotCalculationWorkerParams;
+    jobId,
+    terminator,
+    workerIdx,
+  } = data;
+
+  console.debug(`${jobId}: start`);
+
+  const terminateChecker = new Uint8Array(terminator);
 
   const xn = decodeComplexArray(xnBuffer);
   const blaTable = decodeBLATableItems(blaTableBuffer);
@@ -190,11 +197,17 @@ self.addEventListener("message", (event) => {
         iterations[index] = n;
         lowResIterations[indexRough] = n;
       }
+
+      if (terminateChecker[workerIdx] !== 0) break;
+
       self.postMessage({
         type: "progress",
         progress: calculatedCount / pixelNum,
       });
     }
+
+    if (terminateChecker[workerIdx] !== 0) break;
+
     self.postMessage(
       {
         type: "intermediateResult",
@@ -204,6 +217,20 @@ self.addEventListener("message", (event) => {
       [lowResIterations.buffer],
     );
   }
+  if (terminateChecker[workerIdx] !== 0) {
+    console.debug(`${jobId}: terminated`);
+  } else {
+    console.debug(`${jobId}: completed`);
+  }
 
   self.postMessage({ type: "result", iterations }, [iterations.buffer]);
+};
+
+self.addEventListener("message", (event) => {
+  switch (event.data.type) {
+    case "calc": {
+      calcHandler(event.data);
+      break;
+    }
+  }
 });

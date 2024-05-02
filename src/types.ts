@@ -65,6 +65,9 @@ export interface MandelbrotCalculationWorkerParams {
   blaTable: BLATableBuffer;
   refX: string;
   refY: string;
+  jobId: string;
+  terminator: SharedArrayBuffer;
+  workerIdx: number;
 }
 
 export type XnBuffer = ArrayBuffer;
@@ -96,6 +99,8 @@ export interface MandelbrotRenderingUnit {
 export interface MandelbrotJob extends MandelbrotRenderingUnit {
   id: string;
   batchId: string;
+  // jobが実際に走るタイミングで設定される
+  workerIdx?: number;
 }
 
 export interface BatchContext {
@@ -108,6 +113,7 @@ export interface BatchContext {
   pixelHeight: number;
   xn: XnBuffer;
   blaTable: BLATableBuffer;
+  terminator: SharedArrayBuffer;
 
   progressMap: Map<string, number>;
   startedAt: number;

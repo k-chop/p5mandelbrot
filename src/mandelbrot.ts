@@ -281,6 +281,8 @@ export const startCalculation = async (onComplete: () => void) => {
     mandelbrotParams: currentParams,
   }));
 
+  const terminator = new SharedArrayBuffer(units.length);
+
   registerBatch(currentBatchId, units, {
     onComplete,
     onChangeProgress: () => {},
@@ -290,6 +292,7 @@ export const startCalculation = async (onComplete: () => void) => {
     pixelHeight: height,
     xn,
     blaTable,
+    terminator,
   });
 };
 

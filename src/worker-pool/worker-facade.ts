@@ -24,10 +24,16 @@ export type BatchCompleteCallback = (elapsed: number) => void;
 export type BatchProgressChangedCallback = (progressStr: string) => void;
 
 export interface MandelbrotFacadeLike {
-  startCalculate(job: MandelbrotJob, batchContext: BatchContext): void;
+  startCalculate(
+    job: MandelbrotJob,
+    batchContext: BatchContext,
+    workerIdx: number,
+  ): void;
 
   terminate(callback?: () => void): void;
   terminateAsync(): Promise<void>;
+
+  cancel(batchContext: BatchContext, job: MandelbrotJob): void;
 
   onResult(callback: WorkerResultCallback): void;
   onIntermediateResult(callback: WorkerIntermediateResultCallback): void;
@@ -55,7 +61,11 @@ export class WorkerFacade implements MandelbrotFacadeLike {
     return this.running;
   };
 
-  startCalculate = (job: MandelbrotJob, batchContext: BatchContext) => {
+  startCalculate = (
+    job: MandelbrotJob,
+    batchContext: BatchContext,
+    workerIdx: number,
+  ) => {
     const f = (
       ev: MessageEvent<
         WorkerResult | WorkerIntermediateResult | WorkerProgress
@@ -98,11 +108,17 @@ export class WorkerFacade implements MandelbrotFacadeLike {
       }
     };
 
-    const { rect, mandelbrotParams } = job;
-    const { pixelHeight, pixelWidth, xn, blaTable, refX, refY } = batchContext;
+    const { rect, mandelbrotParams, id } = job;
+    const { pixelHeight, pixelWidth, xn, blaTable, refX, refY, terminator } =
+      batchContext;
 
     this.worker.addEventListener("message", f);
+
+    const t = new Uint8Array(terminator);
+    Atomics.store(t, workerIdx, 0);
+
     this.worker.postMessage({
+      type: "calc",
       cx: mandelbrotParams.x.toString(),
       cy: mandelbrotParams.y.toString(),
       r: mandelbrotParams.r.toString(),
@@ -117,6 +133,9 @@ export class WorkerFacade implements MandelbrotFacadeLike {
       blaTable,
       refX,
       refY,
+      jobId: id,
+      terminator,
+      workerIdx,
     });
 
     this.running = true;
@@ -133,6 +152,16 @@ export class WorkerFacade implements MandelbrotFacadeLike {
     this.worker.terminate();
 
     return Promise.resolve();
+  };
+
+  cancel = ({ terminator }: BatchContext, { workerIdx }: MandelbrotJob) => {
+    if (workerIdx == null) {
+      return;
+    }
+
+    this.running = false;
+    const t = new Uint8Array(terminator);
+    Atomics.store(t, workerIdx, 1);
   };
 
   onResult = (callback: WorkerResultCallback) => {
