@@ -65,6 +65,7 @@ export interface MandelbrotCalculationWorkerParams {
   blaTable: BLATableBuffer;
   refX: string;
   refY: string;
+  jobId: string;
 }
 
 export type XnBuffer = ArrayBuffer;

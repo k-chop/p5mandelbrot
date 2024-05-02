@@ -33,7 +33,10 @@ self.addEventListener("message", (event) => {
     blaTable: blaTableBuffer,
     refX,
     refY,
+    jobId,
   } = event.data as MandelbrotCalculationWorkerParams;
+
+  console.debug(`${jobId}: start`);
 
   const xn = decodeComplexArray(xnBuffer);
   const blaTable = decodeBLATableItems(blaTableBuffer);
@@ -206,4 +209,6 @@ self.addEventListener("message", (event) => {
   }
 
   self.postMessage({ type: "result", iterations }, [iterations.buffer]);
+
+  console.debug(`${jobId}: end`);
 });

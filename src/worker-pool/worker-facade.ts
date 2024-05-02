@@ -98,7 +98,7 @@ export class WorkerFacade implements MandelbrotFacadeLike {
       }
     };
 
-    const { rect, mandelbrotParams } = job;
+    const { rect, mandelbrotParams, id } = job;
     const { pixelHeight, pixelWidth, xn, blaTable, refX, refY } = batchContext;
 
     this.worker.addEventListener("message", f);
@@ -117,6 +117,7 @@ export class WorkerFacade implements MandelbrotFacadeLike {
       blaTable,
       refX,
       refY,
+      jobId: id,
     });
 
     this.running = true;
