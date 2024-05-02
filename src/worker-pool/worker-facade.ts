@@ -313,6 +313,7 @@ export class CalcReferencePointWorker implements MandelbrotFacadeLike {
 
   clearCallbacks = () => {
     this.resultCallback = undefined;
+    this.terminatedCallback = undefined;
     this.progressCallback = undefined;
   };
 }
