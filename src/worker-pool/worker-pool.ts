@@ -98,11 +98,10 @@ export const getProgressString = () => {
     )}ms)`;
   }
 
-  const { progressMap } = batchContext;
+  const { progressMap, mandelbrotParams, refProgress } = batchContext;
 
-  const refProgress = progressMap.get("ref") ?? 0;
-  if (refProgress !== 1 && refProgress !== -1) {
-    return `Calculate reference orbit... ${Math.floor(refProgress)}`;
+  if (refProgress !== mandelbrotParams.N && refProgress !== -1) {
+    return `Calculate reference orbit... ${refProgress} / ${mandelbrotParams.N}`;
   }
 
   const progressList = Array.from(progressMap.values());
@@ -142,7 +141,7 @@ const onCalcReferencePointWorkerProgress: RefPointProgressCallback = (
     return;
   }
 
-  batchContext.progressMap.set("ref", progress);
+  batchContext.refProgress = progress;
 };
 
 const onCalcReferencePointWorkerResult: RefPointResultCallback = (
@@ -157,7 +156,7 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
     return;
   }
 
-  batchContext.progressMap.set("ref", 1.0);
+  batchContext.refProgress = batchContext.mandelbrotParams.N;
 
   batchContext.xn = xn;
   batchContext.blaTable = blaTable;
@@ -345,7 +344,7 @@ export function resetWorkers() {
 export function registerBatch(
   batchId: BatchId,
   units: MandelbrotRenderingUnit[],
-  batchContext: Omit<BatchContext, "progressMap" | "startedAt">,
+  batchContext: Omit<BatchContext, "progressMap" | "startedAt" | "refProgress">,
 ) {
   console.log("registerBatch", batchId, units.length);
 
@@ -363,7 +362,6 @@ export function registerBatch(
     batchId,
     mandelbrotParams: batchContext.mandelbrotParams,
   } satisfies CalcReferencePointJob);
-  progressMap.set("ref", -1);
 
   for (const unit of units) {
     const job = {
@@ -382,6 +380,7 @@ export function registerBatch(
     ...batchContext,
     progressMap,
     startedAt: performance.now(),
+    refProgress: -1,
   });
 
   tick();

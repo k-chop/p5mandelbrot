@@ -138,6 +138,7 @@ export interface BatchContext {
   terminator: SharedArrayBuffer;
 
   progressMap: Map<string, number>;
+  refProgress: number;
   startedAt: number;
   finishedAt?: number;
 }
