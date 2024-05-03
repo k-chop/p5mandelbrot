@@ -33,6 +33,11 @@ export interface ReferencePointResult {
   blaTable: BLATableBuffer;
 }
 
+export interface ReferencePointProgress {
+  type: "progress";
+  progress: number;
+}
+
 export interface OffsetParams {
   x: number;
   y: number;
@@ -95,7 +100,6 @@ export interface IterationBuffer {
 }
 
 export interface MandelbrotRenderingUnit {
-  mandelbrotParams: MandelbrotParams;
   rect: Rect;
 }
 
@@ -124,6 +128,7 @@ export interface BatchContext {
   onComplete: BatchCompleteCallback;
   onChangeProgress: BatchProgressChangedCallback;
 
+  mandelbrotParams: MandelbrotParams;
   refX: string;
   refY: string;
   pixelWidth: number;
@@ -133,6 +138,7 @@ export interface BatchContext {
   terminator: SharedArrayBuffer;
 
   progressMap: Map<string, number>;
+  refProgress: number;
   startedAt: number;
   finishedAt?: number;
 }

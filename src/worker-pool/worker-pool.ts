@@ -16,6 +16,8 @@ import {
   MandelbrotFacadeLike,
   CalcReferencePointWorker,
   RefPointResultCallback,
+  RefPointTerminatedCallback,
+  RefPointProgressCallback,
 } from "./worker-facade";
 import { upsertIterationCache } from "@/aggregator";
 import { renderToResultBuffer } from "@/camera";
@@ -87,10 +89,6 @@ export const getProgressString = () => {
   const batchContext = getLatestBatchContext();
 
   if (!batchContext) {
-    if (acceptingBatchIds.size > 0) {
-      // FIXME: 超手抜き、Reference Orbitの計算もbatchの中に入れるべき
-      return "Calculating Reference Orbit...";
-    }
     return "";
   }
 
@@ -100,7 +98,12 @@ export const getProgressString = () => {
     )}ms)`;
   }
 
-  const { progressMap } = batchContext;
+  const { progressMap, mandelbrotParams, refProgress } = batchContext;
+
+  if (refProgress !== mandelbrotParams.N && refProgress !== -1) {
+    return `Calculate reference orbit... ${refProgress} / ${mandelbrotParams.N}`;
+  }
+
   const progressList = Array.from(progressMap.values());
   const progress =
     progressList.reduce((a, b) => a + b, 0) / progressList.length;
@@ -120,9 +123,25 @@ const onCalcIterationWorkerProgress: WorkerProgressCallback = (result, job) => {
   batchContext.progressMap.set(job.id, progress);
 };
 
-const onCalcReferencePointWorkerTerminated = (job: CalcReferencePointJob) => {
+const onCalcReferencePointWorkerTerminated: RefPointTerminatedCallback = (
+  job,
+) => {
   // ここで何をする予定だったんだっけ...
   // terminateされているということは外部からcancelされており、後始末はそっちで行われるはず
+};
+
+const onCalcReferencePointWorkerProgress: RefPointProgressCallback = (
+  { progress },
+  job,
+) => {
+  const batchContext = batchContextMap.get(job.batchId);
+
+  // 停止が間に合わなかったケースや既にcancelされているケース。何もしない
+  if (batchContext == null) {
+    return;
+  }
+
+  batchContext.refProgress = progress;
 };
 
 const onCalcReferencePointWorkerResult: RefPointResultCallback = (
@@ -136,6 +155,8 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
   if (batchContext == null) {
     return;
   }
+
+  batchContext.refProgress = batchContext.mandelbrotParams.N;
 
   batchContext.xn = xn;
   batchContext.blaTable = blaTable;
@@ -263,7 +284,7 @@ function fillCalcReferencePointWorkerPool(
     worker.init();
     worker.onResult(onCalcReferencePointWorkerResult);
     worker.onTerminate(onCalcReferencePointWorkerTerminated);
-    // workerFacade.onProgress(onWorkerProgress);
+    worker.onProgress(onCalcReferencePointWorkerProgress);
 
     pool.push(worker);
 
@@ -323,7 +344,7 @@ export function resetWorkers() {
 export function registerBatch(
   batchId: BatchId,
   units: MandelbrotRenderingUnit[],
-  batchContext: Omit<BatchContext, "progressMap" | "startedAt">,
+  batchContext: Omit<BatchContext, "progressMap" | "startedAt" | "refProgress">,
 ) {
   console.log("registerBatch", batchId, units.length);
 
@@ -339,8 +360,7 @@ export function registerBatch(
     type: "calc-reference-point",
     id: refPointJobId,
     batchId,
-    // FIXME: どのunitsも同じなので先頭を取っている、これbatchContextが持つべきものなのでは...？
-    mandelbrotParams: units[0].mandelbrotParams,
+    mandelbrotParams: batchContext.mandelbrotParams,
   } satisfies CalcReferencePointJob);
 
   for (const unit of units) {
@@ -360,6 +380,7 @@ export function registerBatch(
     ...batchContext,
     progressMap,
     startedAt: performance.now(),
+    refProgress: -1,
   });
 
   tick();

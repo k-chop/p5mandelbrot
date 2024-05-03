@@ -48,6 +48,8 @@ function calcReferencePoint(
   let z = complexArbitary(0.0, 0.0);
   let n = 0;
 
+  const reportTiming = Math.floor(maxIteration / 100);
+
   while (n <= maxIteration && dNorm(z).lt(4.0)) {
     const { re, im } = toComplex(z);
     xnn[n * 2] = re;
@@ -57,6 +59,12 @@ function calcReferencePoint(
 
     n++;
 
+    if (n % reportTiming === 0) {
+      self.postMessage({
+        type: "progress",
+        progress: n,
+      });
+    }
     if (terminateChecker[workerIdx] !== 0) break;
   }
 
