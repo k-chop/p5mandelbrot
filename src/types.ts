@@ -33,6 +33,11 @@ export interface ReferencePointResult {
   blaTable: BLATableBuffer;
 }
 
+export interface ReferencePointProgress {
+  type: "progress";
+  progress: number;
+}
+
 export interface OffsetParams {
   x: number;
   y: number;

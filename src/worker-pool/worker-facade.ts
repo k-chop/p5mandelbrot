@@ -4,6 +4,7 @@ import {
   CalcReferencePointJob,
   MandelbrotJob,
   MandelbrotWorkerType,
+  ReferencePointProgress,
   ReferencePointResult,
   WorkerIntermediateResult,
   WorkerProgress,
@@ -16,6 +17,11 @@ export type RefPointResultCallback = (
   result: ReferencePointContext,
   job: CalcReferencePointJob,
 ) => void;
+export type RefPointProgressCallback = (
+  result: ReferencePointProgress,
+  job: CalcReferencePointJob,
+) => void;
+export type RefPointTerminatedCallback = (job: CalcReferencePointJob) => void;
 export type WorkerResultCallback = (
   result: WorkerResult,
   job: CalcIterationJob,
@@ -197,8 +203,8 @@ export class CalcReferencePointWorker implements MandelbrotFacadeLike {
   inited = false;
 
   resultCallback?: RefPointResultCallback;
-  progressCallback?: WorkerProgressCallback;
-  terminatedCallback?: (job: CalcReferencePointJob) => void;
+  progressCallback?: RefPointProgressCallback;
+  terminatedCallback?: RefPointTerminatedCallback;
 
   constructor() {
     this.worker = new referencePointWorkerPath();
@@ -240,8 +246,10 @@ export class CalcReferencePointWorker implements MandelbrotFacadeLike {
     const pixelHeight = batchContext.pixelHeight;
     const pixelWidth = batchContext.pixelWidth;
 
-    const handler = (ev: MessageEvent<ReferencePointResult>) => {
-      const { type, xn, blaTable } = ev.data;
+    const handler = (
+      ev: MessageEvent<ReferencePointResult | ReferencePointProgress>,
+    ) => {
+      const { type } = ev.data;
       if (type === "terminated") {
         this.worker.removeEventListener("message", handler);
         this.running = false;
@@ -252,7 +260,12 @@ export class CalcReferencePointWorker implements MandelbrotFacadeLike {
         this.worker.removeEventListener("message", handler);
         this.running = false;
 
+        const { xn, blaTable } = ev.data;
         this.resultCallback?.({ xn, blaTable }, job);
+      }
+      if (type === "progress") {
+        const { progress } = ev.data;
+        this.progressCallback?.({ type: "progress", progress }, job);
       }
     };
 
@@ -303,11 +316,11 @@ export class CalcReferencePointWorker implements MandelbrotFacadeLike {
     this.resultCallback = callback;
   };
 
-  onProgress = (callback: WorkerProgressCallback) => {
+  onProgress = (callback: RefPointProgressCallback) => {
     this.progressCallback = callback;
   };
 
-  onTerminate = (callback: (job: CalcReferencePointJob) => void) => {
+  onTerminate = (callback: RefPointTerminatedCallback) => {
     this.terminatedCallback = callback;
   };
 
