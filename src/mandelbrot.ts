@@ -249,6 +249,7 @@ export const startCalculation = async (onComplete: () => void) => {
   registerBatch(currentBatchId, units, {
     onComplete,
     onChangeProgress: () => {},
+    mandelbrotParams: currentParams,
     refX,
     refY,
     pixelWidth: width,

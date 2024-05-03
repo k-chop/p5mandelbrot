@@ -361,8 +361,7 @@ export function registerBatch(
     type: "calc-reference-point",
     id: refPointJobId,
     batchId,
-    // FIXME: どのunitsも同じなので先頭を取っている、これbatchContextが持つべきものなのでは...？
-    mandelbrotParams: units[0].mandelbrotParams,
+    mandelbrotParams: batchContext.mandelbrotParams,
   } satisfies CalcReferencePointJob);
   progressMap.set("ref", -1);
 

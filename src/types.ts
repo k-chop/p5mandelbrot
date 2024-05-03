@@ -100,7 +100,6 @@ export interface IterationBuffer {
 }
 
 export interface MandelbrotRenderingUnit {
-  mandelbrotParams: MandelbrotParams;
   rect: Rect;
 }
 
@@ -129,6 +128,7 @@ export interface BatchContext {
   onComplete: BatchCompleteCallback;
   onChangeProgress: BatchProgressChangedCallback;
 
+  mandelbrotParams: MandelbrotParams;
   refX: string;
   refY: string;
   pixelWidth: number;

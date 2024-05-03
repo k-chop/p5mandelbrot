@@ -125,9 +125,17 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
       }
     };
 
-    const { rect, mandelbrotParams, id } = job;
-    const { pixelHeight, pixelWidth, xn, blaTable, refX, refY, terminator } =
-      batchContext;
+    const { rect, id } = job;
+    const {
+      pixelHeight,
+      pixelWidth,
+      xn,
+      blaTable,
+      refX,
+      refY,
+      terminator,
+      mandelbrotParams,
+    } = batchContext;
 
     this.worker.addEventListener("message", f);
 
@@ -239,10 +247,10 @@ export class CalcReferencePointWorker implements MandelbrotFacadeLike {
   ) => {
     this.running = true;
 
-    const complexCenterX = job.mandelbrotParams.x.toString();
-    const complexCenterY = job.mandelbrotParams.y.toString();
-    const complexRadius = job.mandelbrotParams.r.toString();
-    const maxIteration = job.mandelbrotParams.N;
+    const complexCenterX = batchContext.mandelbrotParams.x.toString();
+    const complexCenterY = batchContext.mandelbrotParams.y.toString();
+    const complexRadius = batchContext.mandelbrotParams.r.toString();
+    const maxIteration = batchContext.mandelbrotParams.N;
     const pixelHeight = batchContext.pixelHeight;
     const pixelWidth = batchContext.pixelWidth;
 
