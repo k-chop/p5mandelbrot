@@ -41,10 +41,7 @@ import "./style.css";
 import { AppRoot } from "./view/app-root";
 import { extractMandelbrotParams } from "./lib/params";
 import { d3ChromaticPalettes } from "./color/color-d3-chromatic";
-import {
-  getProgressString,
-  prepareWorkerPool,
-} from "./worker-pool/worker-pool";
+import { getProgressData, prepareWorkerPool } from "./worker-pool/worker-pool";
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
@@ -61,7 +58,7 @@ const drawInfo = (p: p5) => {
   };
 
   const params = getCurrentParams();
-  const progress = getProgressString();
+  const progress = getProgressData();
 
   updateStore("centerX", params.x);
   updateStore("centerY", params.y);

@@ -7,6 +7,8 @@ import {
   MandelbrotJob,
   MandelbrotRenderingUnit,
   MandelbrotWorkerType,
+  ResultSpans,
+  Span,
   WorkerIntermediateResult,
   mandelbrotWorkerTypes,
 } from "@/types";
@@ -86,7 +88,7 @@ const getLatestBatchContext = () => {
   return batchContext;
 };
 
-export const getProgressString = () => {
+export const getProgressData = (): string | ResultSpans => {
   const batchContext = getLatestBatchContext();
 
   if (!batchContext) {
@@ -94,13 +96,10 @@ export const getProgressString = () => {
   }
 
   if (batchContext.finishedAt) {
-    const allElapsed = batchContext.spans
-      .map((e) => `${e.name}: ${Math.floor(e.elapsed)}ms`)
-      .join(", ");
-
-    return `Done! (${Math.floor(
-      batchContext.finishedAt - batchContext.startedAt,
-    )}ms), ${allElapsed}`;
+    return {
+      total: Math.floor(batchContext.finishedAt - batchContext.startedAt),
+      spans: batchContext.spans,
+    };
   }
 
   const { progressMap, mandelbrotParams, refProgress } = batchContext;
@@ -167,7 +166,7 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
   batchContext.blaTable = blaTable;
   batchContext.spans.push({
     name: "reference_orbit",
-    elapsed,
+    elapsed: Math.floor(elapsed),
   });
 
   runningList = runningList.filter((j) => j.id !== job.id);
@@ -200,7 +199,7 @@ const onCalcIterationWorkerResult: WorkerResultCallback = (result, job) => {
 
   batchContext.spans.push({
     name: `iteration_${job.workerIdx}`,
-    elapsed,
+    elapsed: Math.floor(elapsed),
   });
 
   renderToResultBuffer(rect);

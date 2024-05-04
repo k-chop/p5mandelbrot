@@ -131,6 +131,11 @@ export interface Span {
   elapsed: number;
 }
 
+export interface ResultSpans {
+  total: number;
+  spans: Span[];
+}
+
 export interface BatchContext {
   onComplete: BatchCompleteCallback;
   onChangeProgress: BatchProgressChangedCallback;
