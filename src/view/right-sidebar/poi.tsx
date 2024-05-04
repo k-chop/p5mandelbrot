@@ -17,7 +17,7 @@ export const POI = () => {
 
   return (
     <>
-      <div className="pr-4">
+      <div>
         <div className="mb-2 flex justify-between">
           <Button
             variant="ghost"
@@ -51,7 +51,7 @@ export const POI = () => {
         </div>
       </div>
       <ScrollArea className="h-[500px]">
-        <div className="pr-4">
+        <div>
           <div className="flex flex-col gap-2">
             {poiList.map((poi, index) => (
               <POICard
