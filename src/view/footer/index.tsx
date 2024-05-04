@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@radix-ui/react-tooltip";
+import { Separator } from "@/components/ui/separator";
 
 const convertSpans = (value: any): ResultSpans | undefined => {
   if (value !== null && typeof value === "object") {
@@ -118,12 +119,13 @@ const BarContent = (props: {
 
   const width = (elapsed / total) * 100;
   const bgColorClassName = colorMap(name);
+
   return (
     <Tooltip delayDuration={0}>
       <div
         ref={ref}
         className={clsx(
-          "flex items-center justify-center overflow-hidden overflow-ellipsis whitespace-nowrap text-whiteA-12",
+          "flex w-52 items-center justify-center overflow-hidden overflow-ellipsis whitespace-nowrap text-whiteA-12",
           bgColorClassName,
         )}
         style={{ width: `${width}%` }}
@@ -131,16 +133,70 @@ const BarContent = (props: {
         <TooltipTrigger>{displayText}</TooltipTrigger>
       </div>
       <TooltipContent>
-        <div className="rounded-md bg-iris-5 p-2 text-whiteA-12">
-          {spans.map((span, idx) => {
-            return (
-              <div key={idx}>
-                {span.name}: {span.elapsed}ms
-              </div>
-            );
-          })}
+        <div
+          className={clsx(
+            "w-52 rounded-md p-2 text-whiteA-12",
+            bgColorClassName,
+          )}
+        >
+          <SpansDetail name={name} spans={spans} />
         </div>
       </TooltipContent>
     </Tooltip>
+  );
+};
+
+const SpansDetail = (props: { name: string; spans: Span[] }) => {
+  const { name, spans } = props;
+
+  const label = nameToLabel(name);
+
+  if (spans.length === 1) {
+    return (
+      <div>
+        <div className="pb-2">{label}</div>
+        <ListItem label="Total" value={`${spans[0].elapsed} ms`} />
+      </div>
+    );
+  }
+
+  const elapses = spans.map((s) => s.elapsed);
+  const maxElapsed = Math.max(...elapses);
+  const minElapsed = Math.min(...elapses);
+  const totalElapsed = elapses.reduce((acc, cur) => acc + cur, 0);
+  const averageElapsed = (totalElapsed / elapses.length).toFixed(1);
+
+  return (
+    <div>
+      <div className="pb-2">{label}</div>
+      <ListItem label="Max" value={`${maxElapsed} ms`} />
+      <Separator />
+      <ListItem label="Min" value={`${minElapsed} ms`} />
+      <Separator />
+      <ListItem label="Count" value={`${elapses.length} workers`} />
+      <Separator />
+      <ListItem label="Average" value={`${averageElapsed} ms`} />
+    </div>
+  );
+};
+
+const nameToLabel = (name: string) => {
+  if (name.includes("reference")) {
+    return "Calculate Reference Point";
+  }
+  if (name.includes("iteration")) {
+    return "Calculate Iteration";
+  }
+  return name;
+};
+
+const ListItem = (props: { label: string; value: string }) => {
+  const { label, value } = props;
+
+  return (
+    <div className="flex justify-between">
+      <div>{label}:</div>
+      <div>{value}</div>
+    </div>
   );
 };
