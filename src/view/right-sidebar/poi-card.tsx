@@ -25,7 +25,7 @@ export const POICard = ({ poi, onDelete, onApply }: POICardProps) => {
         <div className="ml-2 flex flex-grow flex-col">
           <div className="flex justify-between">
             <div>r</div>
-            <div>{r.toPrecision(10)}</div>
+            <div>{r.toPrecision(5)}</div>
           </div>
           <div className="flex justify-between">
             <div>N</div>
