@@ -38,6 +38,7 @@ const calcHandler = (data: MandelbrotCalculationWorkerParams) => {
     workerIdx,
   } = data;
 
+  const startedAt = performance.now();
   console.debug(`${jobId}: start`);
 
   const terminateChecker = new Uint8Array(terminator);
@@ -223,7 +224,10 @@ const calcHandler = (data: MandelbrotCalculationWorkerParams) => {
     console.debug(`${jobId}: completed`);
   }
 
-  self.postMessage({ type: "result", iterations }, [iterations.buffer]);
+  const elapsed = performance.now() - startedAt;
+  self.postMessage({ type: "result", iterations, elapsed }, [
+    iterations.buffer,
+  ]);
 };
 
 self.addEventListener("message", (event) => {

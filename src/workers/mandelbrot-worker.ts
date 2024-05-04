@@ -17,6 +17,8 @@ self.addEventListener("message", (event) => {
     endY,
   } = event.data as MandelbrotCalculationWorkerParams;
 
+  const startedAt = performance.now();
+
   const iterations = new Uint32Array((endY - startY) * (endX - startX));
 
   const cx = parseFloat(cxStr);
@@ -55,5 +57,8 @@ self.addEventListener("message", (event) => {
     });
   }
 
-  self.postMessage({ type: "result", iterations }, [iterations.buffer]);
+  const elapsed = performance.now() - startedAt;
+  self.postMessage({ type: "result", iterations, elapsed }, [
+    iterations.buffer,
+  ]);
 });

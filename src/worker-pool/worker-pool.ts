@@ -2,10 +2,13 @@ import {
   BatchContext,
   CalcIterationJob,
   CalcReferencePointJob,
+  InitialOmittedBatchContextKeys,
   JobType,
   MandelbrotJob,
   MandelbrotRenderingUnit,
   MandelbrotWorkerType,
+  ResultSpans,
+  Span,
   WorkerIntermediateResult,
   mandelbrotWorkerTypes,
 } from "@/types";
@@ -85,7 +88,7 @@ const getLatestBatchContext = () => {
   return batchContext;
 };
 
-export const getProgressString = () => {
+export const getProgressData = (): string | ResultSpans => {
   const batchContext = getLatestBatchContext();
 
   if (!batchContext) {
@@ -93,9 +96,10 @@ export const getProgressString = () => {
   }
 
   if (batchContext.finishedAt) {
-    return `Done! (${Math.floor(
-      batchContext.finishedAt - batchContext.startedAt,
-    )}ms)`;
+    return {
+      total: Math.floor(batchContext.finishedAt - batchContext.startedAt),
+      spans: batchContext.spans,
+    };
   }
 
   const { progressMap, mandelbrotParams, refProgress } = batchContext;
@@ -148,7 +152,7 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
   result,
   job,
 ) => {
-  const { xn, blaTable } = result;
+  const { xn, blaTable, elapsed } = result;
   const batchContext = batchContextMap.get(job.batchId);
 
   // 停止が間に合わなかったケースや既にcancelされているケース。何もしない
@@ -160,6 +164,10 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
 
   batchContext.xn = xn;
   batchContext.blaTable = blaTable;
+  batchContext.spans.push({
+    name: "reference_orbit",
+    elapsed: Math.floor(elapsed),
+  });
 
   runningList = runningList.filter((j) => j.id !== job.id);
   runningWorkerFacadeMap.delete(job.id);
@@ -168,7 +176,7 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
 };
 
 const onCalcIterationWorkerResult: WorkerResultCallback = (result, job) => {
-  const { iterations } = result;
+  const { iterations, elapsed } = result;
   const { rect } = job;
   const batchContext = batchContextMap.get(job.batchId);
 
@@ -189,9 +197,14 @@ const onCalcIterationWorkerResult: WorkerResultCallback = (result, job) => {
   runningList = runningList.filter((j) => j.id !== job.id);
   runningWorkerFacadeMap.delete(job.id);
 
+  batchContext.spans.push({
+    name: `iteration_${job.workerIdx}`,
+    elapsed: Math.floor(elapsed),
+  });
+
   renderToResultBuffer(rect);
 
-  // バッチが完了していたらcallbackを呼び、BatchContextを削除する
+  // バッチ全体が完了していたらonComplete callbackを呼ぶ
   const waitingJobInSameBatch = waitingList.find(
     (j) => j.batchId === job.batchId,
   );
@@ -344,7 +357,7 @@ export function resetWorkers() {
 export function registerBatch(
   batchId: BatchId,
   units: MandelbrotRenderingUnit[],
-  batchContext: Omit<BatchContext, "progressMap" | "startedAt" | "refProgress">,
+  batchContext: Omit<BatchContext, InitialOmittedBatchContextKeys>,
 ) {
   console.log("registerBatch", batchId, units.length);
 
@@ -381,6 +394,7 @@ export function registerBatch(
     progressMap,
     startedAt: performance.now(),
     refProgress: -1,
+    spans: [],
   });
 
   tick();
@@ -449,21 +463,24 @@ function start(workerIdx: number, job: MandelbrotJob) {
   switch (job.type) {
     // どうしてこうなった
     case "calc-iteration": {
-      const workerFacade = getWorkerPool(job.type)[workerIdx];
-      workerFacade.startCalculate(job, batchContext, workerIdx);
+      const assignedJob = { ...job, workerIdx };
+      const workerFacade = getWorkerPool(assignedJob.type)[workerIdx];
 
-      runningList.push({ ...job, workerIdx });
-      runningWorkerFacadeMap.set(job.id, workerFacade);
+      workerFacade.startCalculate(assignedJob, batchContext, workerIdx);
+      runningList.push(assignedJob);
+      runningWorkerFacadeMap.set(assignedJob.id, workerFacade);
       break;
     }
     case "calc-reference-point": {
       const workerFacade = getWorkerPool(job.type)[workerIdx];
       // calc-iterationのworkerIdxと被らないように
       const refWorkerIdx = getWorkerPool("calc-iteration").length + workerIdx;
-      workerFacade.startCalculate(job, batchContext, refWorkerIdx);
 
-      runningList.push({ ...job, workerIdx: refWorkerIdx });
-      runningWorkerFacadeMap.set(job.id, workerFacade);
+      const assignedJob = { ...job, workerIdx: refWorkerIdx };
+
+      workerFacade.startCalculate(assignedJob, batchContext, refWorkerIdx);
+      runningList.push(assignedJob);
+      runningWorkerFacadeMap.set(assignedJob.id, workerFacade);
       break;
     }
   }
