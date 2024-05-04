@@ -182,7 +182,7 @@ const SpansDetail = (props: { name: string; spans: Span[] }) => {
 
 const nameToLabel = (name: string) => {
   if (name.includes("reference")) {
-    return "Calculate Reference Point";
+    return "Calculate Reference Orbit";
   }
   if (name.includes("iteration")) {
     return "Calculate Iteration";
