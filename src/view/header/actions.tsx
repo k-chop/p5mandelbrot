@@ -1,3 +1,4 @@
+import { getResizedCanvasImageDataURL } from "@/canvas-reference";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { copyCurrentParamsToClipboard } from "@/lib/params";
@@ -49,16 +50,20 @@ const SaveImageButton = () => {
       variant="outline"
       size="sm"
       onClick={() => {
-        // TODO: Implement image saving
+        const imageDataURL = getResizedCanvasImageDataURL(0);
+        const link = document.createElement("a");
+        link.download = `mandelbrot-${Date.now()}.png`;
+        link.href = imageDataURL;
+        link.click();
 
         toast({
           description: (
             <div className="flex items-center justify-center gap-2">
-              <IconDots />
-              Saving image...
+              <IconCircleCheck />
+              Image saved!
             </div>
           ),
-          variant: "default",
+          variant: "primary",
           duration: 2000,
         });
       }}

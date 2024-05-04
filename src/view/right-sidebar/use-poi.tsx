@@ -18,7 +18,7 @@ export const usePOI = () => {
       const newPOIList = [newPOI, ...poiList];
       writePOIListToStorage(newPOIList);
 
-      const imageDataURL = getResizedCanvasImageDataURL();
+      const imageDataURL = getResizedCanvasImageDataURL(100);
       savePreview(newPOI.id, imageDataURL);
 
       updateStore("poi", newPOIList);
