@@ -29,6 +29,7 @@ import { encodeBlaTableItems } from "@/lib/bla-table-item-buffer";
 export type ReferencePointContext = {
   xn: XnBuffer;
   blaTable: BLATableBuffer;
+  elapsed: number;
 };
 
 export type ReferencePointContextPopulated = {
@@ -157,6 +158,7 @@ async function setup() {
       workerIdx,
     } = event.data as ReferencePointCalculationWorkerParams;
 
+    const startedAt = performance.now();
     console.debug(`${jobId}: start (ref)`);
 
     const terminateChecker = new Uint8Array(terminator);
@@ -198,10 +200,13 @@ async function setup() {
     const xnConverted = encodeComplexArray(xn);
     const blaTableConverted = encodeBlaTableItems(blaTable);
 
+    const elapsed = performance.now() - startedAt;
+
     self.postMessage({
       type: "result",
       xn: xnConverted,
       blaTable: blaTableConverted,
+      elapsed,
     });
 
     console.debug(`${jobId}: completed (ref)`);

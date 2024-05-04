@@ -14,6 +14,7 @@ export interface Resolution {
 export interface WorkerResult {
   type: "result";
   iterations: ArrayBuffer;
+  elapsed: number;
 }
 
 export interface WorkerIntermediateResult {
@@ -31,6 +32,7 @@ export interface ReferencePointResult {
   type: "result" | "terminated";
   xn: XnBuffer;
   blaTable: BLATableBuffer;
+  elapsed: number;
 }
 
 export interface ReferencePointProgress {
@@ -124,6 +126,11 @@ export interface CalcReferencePointJob extends MandelbrotJobBase {
   mandelbrotParams: MandelbrotParams;
 }
 
+export interface Span {
+  name: string;
+  elapsed: number;
+}
+
 export interface BatchContext {
   onComplete: BatchCompleteCallback;
   onChangeProgress: BatchProgressChangedCallback;
@@ -141,6 +148,13 @@ export interface BatchContext {
   refProgress: number;
   startedAt: number;
   finishedAt?: number;
+  spans: Span[];
 }
+
+export type InitialOmittedBatchContextKeys =
+  | "progressMap"
+  | "startedAt"
+  | "refProgress"
+  | "spans";
 
 export type JobType = "calc-iteration" | "calc-reference-point";
