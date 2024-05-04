@@ -1,19 +1,12 @@
 import { POICard } from "./poi-card";
-import {
-  IconCircleCheck,
-  IconCirclePlus,
-  IconShare,
-} from "@tabler/icons-react";
+import { IconCirclePlus } from "@tabler/icons-react";
 import { usePOI } from "./use-poi";
 import { cloneParams, getCurrentParams } from "../../mandelbrot";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/components/ui/use-toast";
-import { copyCurrentParamsToClipboard } from "@/lib/params";
 
 export const POI = () => {
   const { poiList, addPOI, deletePOIAt, applyPOI } = usePOI();
-  const { toast } = useToast();
 
   return (
     <>
