@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Actions } from "./actions";
 
 export const Header = () => {
   const [opened, { open, toggle }] = useModalState();
@@ -23,7 +24,7 @@ export const Header = () => {
         </DialogContent>
       </Dialog>
       <div className="mt-2 grid grid-cols-2">
-        <div></div>
+        <Actions />
         <div className="col-end-7 flex items-center gap-1">
           <Button variant="outline" size="icon-sm" asChild>
             <a href="https://github.com/k-chop/p5mandelbrot" target="_blank">
