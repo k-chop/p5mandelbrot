@@ -511,6 +511,8 @@ function tick() {
     }
 
     start(workerIdx, job);
+
+    deleteCompletedDoneJobs();
   }
 
   if (hasWaitingJob || runningList.length === 0) {
@@ -519,6 +521,22 @@ function tick() {
     );
   }
 }
+
+/**
+ * 役目を終えたdoneJobIdを削除する
+ */
+const deleteCompletedDoneJobs = () => {
+  const remainingRequiredJobIds = new Set(
+    ...(getWaitingList("calc-iteration") as CalcIterationJob[]).map(
+      (job) => job.requiredJobIds,
+    ),
+  );
+  Array.from(doneJobIds.values()).forEach((id) => {
+    if (remainingRequiredJobIds.has(id)) return;
+
+    doneJobIds.delete(id);
+  });
+};
 
 function start(workerIdx: number, job: MandelbrotJob) {
   const batchContext = batchContextMap.get(job.batchId)!;
