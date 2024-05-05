@@ -8,7 +8,6 @@ import {
   MandelbrotRenderingUnit,
   MandelbrotWorkerType,
   ResultSpans,
-  Span,
   WorkerIntermediateResult,
   mandelbrotWorkerTypes,
 } from "@/types";
@@ -30,6 +29,11 @@ import {
   getWorkerPool,
   resetWorkerPool,
 } from "./pool-instance";
+import {
+  getRefOrbitCache,
+  getRefOrbitCacheIfAvailable,
+  setRefOrbitCache,
+} from "./reference-orbit-cache";
 
 let waitingList: MandelbrotJob[] = [];
 let runningList: MandelbrotJob[] = [];
@@ -167,6 +171,16 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
   batchContext.spans.push({
     name: "reference_orbit",
     elapsed: Math.floor(elapsed),
+  });
+
+  // cacheに登録
+  setRefOrbitCache({
+    x: batchContext.mandelbrotParams.x,
+    y: batchContext.mandelbrotParams.y,
+    r: batchContext.mandelbrotParams.r,
+    N: batchContext.mandelbrotParams.N,
+    xn,
+    blaTable,
   });
 
   runningList = runningList.filter((j) => j.id !== job.id);
@@ -369,12 +383,29 @@ export function registerBatch(
   const progressMap = new Map<string, number>();
 
   const refPointJobId = crypto.randomUUID();
-  waitingList.push({
-    type: "calc-reference-point",
-    id: refPointJobId,
-    batchId,
-    mandelbrotParams: batchContext.mandelbrotParams,
-  } satisfies CalcReferencePointJob);
+  let refX = batchContext.mandelbrotParams.x.toString();
+  let refY = batchContext.mandelbrotParams.y.toString();
+
+  // 再利用フラグが立っているなら問答無用でcacheを使い、そうでない場合は使える場合のみ使う
+  const refOrbitCache = batchContext.shouldReuseRefOrbit
+    ? getRefOrbitCache()
+    : getRefOrbitCacheIfAvailable(batchContext.mandelbrotParams);
+
+  if (refOrbitCache) {
+    console.debug("Cache available. Using reference orbit cache");
+
+    batchContext.xn = refOrbitCache.xn;
+    batchContext.blaTable = refOrbitCache.blaTable;
+    refX = refOrbitCache.x.toString();
+    refY = refOrbitCache.y.toString();
+  } else {
+    waitingList.push({
+      type: "calc-reference-point",
+      id: refPointJobId,
+      batchId,
+      mandelbrotParams: batchContext.mandelbrotParams,
+    } satisfies CalcReferencePointJob);
+  }
 
   for (const unit of units) {
     const job = {
@@ -391,13 +422,15 @@ export function registerBatch(
 
   batchContextMap.set(batchId, {
     ...batchContext,
+    refX,
+    refY,
     progressMap,
     startedAt: performance.now(),
     refProgress: -1,
     spans: [],
   });
 
-  tick();
+  tick(refOrbitCache ? refPointJobId : null);
 }
 
 function tick(doneJobId: JobId | null = null) {

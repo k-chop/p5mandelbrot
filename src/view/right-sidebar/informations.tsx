@@ -4,14 +4,14 @@ import { useStoreValue } from "@/store/store";
 import { IconPin } from "@tabler/icons-react";
 
 export const Informations = () => {
-  const isReferencePinned = useStoreValue("isReferencePinned");
+  const shouldReuseRefOrbit = useStoreValue("shouldReuseRefOrbit");
 
-  if (!isReferencePinned) return null;
+  if (!shouldReuseRefOrbit) return null;
 
   return (
     <Card className="mx-2">
       <CardContent className="p-0 px-2 pt-1">
-        {isReferencePinned && (
+        {shouldReuseRefOrbit && (
           <div className="flex flex-col gap-1">
             <div className="flex">
               <IconPin /> Reference Orbit Pinned

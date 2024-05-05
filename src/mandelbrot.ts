@@ -5,7 +5,7 @@ import {
 } from "./aggregator";
 import { BLATableItem, Complex } from "./math";
 import { divideRect, Rect } from "./rect";
-import { updateStore, getStore } from "./store/store";
+import { updateStore, getStore, updateStoreWith } from "./store/store";
 import {
   BLATableBuffer,
   MandelbrotParams,
@@ -41,33 +41,12 @@ let prevBatchId = "";
 let width = DEFAULT_WIDTH;
 let height = DEFAULT_HEIGHT;
 
-// 最後のReference Orbitの計算結果
-const lastReferenceCache: {
-  x: BigNumber;
-  y: BigNumber;
-  xn: XnBuffer;
-  blaTable: BLATableBuffer;
-} = {
-  x: new BigNumber(0),
-  y: new BigNumber(0),
-  xn: new ArrayBuffer(0),
-  blaTable: new ArrayBuffer(0),
-};
-
-let isReferencePinned = false;
-
 export const togglePinReference = () => {
   if (getCurrentParams().mode !== "perturbation") return;
 
-  isReferencePinned = !isReferencePinned;
-  updateStore("isReferencePinned", isReferencePinned);
+  const newValue = updateStoreWith("shouldReuseRefOrbit", (t) => !t);
 
-  console.debug(`Reference point has pinned: ${isReferencePinned}`);
-
-  const { x: refX, y: refY } = lastReferenceCache;
-  const { x, y } = currentParams;
-
-  console.debug("params: ", { refX, refY, x, y });
+  console.debug(`Reference point has pinned: ${newValue}`);
 };
 
 let currentParams: MandelbrotParams = {
@@ -234,9 +213,6 @@ export const startCalculation = async (onComplete: () => void) => {
     clearIterationCache();
   }
 
-  let refX = currentParams.x.toString();
-  let refY = currentParams.y.toString();
-
   const units = calculationRects.map((rect) => ({
     rect,
     mandelbrotParams: currentParams,
@@ -250,11 +226,10 @@ export const startCalculation = async (onComplete: () => void) => {
     onComplete,
     onChangeProgress: () => {},
     mandelbrotParams: currentParams,
-    refX,
-    refY,
     pixelWidth: width,
     pixelHeight: height,
     terminator,
+    shouldReuseRefOrbit: getStore("shouldReuseRefOrbit"),
   });
 };
 
