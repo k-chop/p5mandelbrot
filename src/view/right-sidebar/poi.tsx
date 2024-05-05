@@ -3,6 +3,7 @@ import { IconCirclePlus } from "@tabler/icons-react";
 import { usePOI } from "./use-poi";
 import { cloneParams, getCurrentParams } from "../../mandelbrot";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const POI = () => {
   const { poiList, addPOI, deletePOIAt, applyPOI } = usePOI();
@@ -23,7 +24,7 @@ export const POI = () => {
         </div>
       </div>
 
-      <div className="flex min-h-10 flex-grow basis-0 flex-col overflow-y-auto ">
+      <ScrollArea className="flex min-h-10 flex-grow basis-0 flex-col overflow-y-auto pr-3">
         <div>
           <div className="flex flex-col gap-2">
             {poiList.map((poi, index) => (
@@ -36,7 +37,7 @@ export const POI = () => {
             ))}
           </div>
         </div>
-      </div>
+      </ScrollArea>
     </>
   );
 };
