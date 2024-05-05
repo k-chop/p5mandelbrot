@@ -24,6 +24,10 @@ const updateColor = () => {
   lastColorIdx = currentColorIdx;
 };
 
+export const redraw = () => {
+  lastColorIdx = -1;
+};
+
 export const addPalettes = (...plts: Palette[]) => {
   palettes.push(...plts);
 };

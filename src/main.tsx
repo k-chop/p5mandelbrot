@@ -315,6 +315,8 @@ const entrypoint = () => {
     canvasLocked: false,
     // mandelbrot state
     shouldReuseRefOrbit: false,
+    // palette settings
+    paletteLength: 128,
   });
 
   // localStorageから復帰
