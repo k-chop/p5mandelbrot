@@ -439,7 +439,7 @@ function tick(doneJobId: JobId | null = null) {
   const refPool = getWorkerPool("calc-reference-point");
   if (refPool.some((worker) => !worker.isReady() || worker.isRunning())) {
     // まだ準備ができていないworkerがいる場合は待つ
-    setTimeout(tick, 100);
+    setTimeout(() => tick(doneJobId), 100);
     return;
   }
 
