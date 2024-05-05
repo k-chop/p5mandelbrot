@@ -157,6 +157,8 @@ export interface BatchContext {
 }
 
 export type InitialOmittedBatchContextKeys =
+  | "refX"
+  | "refY"
   | "progressMap"
   | "startedAt"
   | "refProgress"

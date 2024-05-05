@@ -379,6 +379,8 @@ export function registerBatch(
   const progressMap = new Map<string, number>();
 
   const refPointJobId = crypto.randomUUID();
+  let refX = batchContext.mandelbrotParams.x.toString();
+  let refY = batchContext.mandelbrotParams.y.toString();
 
   const refOrbitCache = getRefOrbitCache(batchContext.mandelbrotParams);
   if (refOrbitCache) {
@@ -386,8 +388,8 @@ export function registerBatch(
 
     batchContext.xn = refOrbitCache.xn;
     batchContext.blaTable = refOrbitCache.blaTable;
-    batchContext.refX = refOrbitCache.x.toString();
-    batchContext.refY = refOrbitCache.y.toString();
+    refX = refOrbitCache.x.toString();
+    refY = refOrbitCache.y.toString();
   } else {
     waitingList.push({
       type: "calc-reference-point",
@@ -412,6 +414,8 @@ export function registerBatch(
 
   batchContextMap.set(batchId, {
     ...batchContext,
+    refX,
+    refY,
     progressMap,
     startedAt: performance.now(),
     refProgress: -1,

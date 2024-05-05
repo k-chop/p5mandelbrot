@@ -234,9 +234,6 @@ export const startCalculation = async (onComplete: () => void) => {
     clearIterationCache();
   }
 
-  let refX = currentParams.x.toString();
-  let refY = currentParams.y.toString();
-
   const units = calculationRects.map((rect) => ({
     rect,
     mandelbrotParams: currentParams,
@@ -250,8 +247,6 @@ export const startCalculation = async (onComplete: () => void) => {
     onComplete,
     onChangeProgress: () => {},
     mandelbrotParams: currentParams,
-    refX,
-    refY,
     pixelWidth: width,
     pixelHeight: height,
     terminator,
