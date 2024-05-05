@@ -37,14 +37,14 @@ export const Settings = () => {
   const workerCountValues = createWorkerCountValues();
   const animationTimeValues = [
     "0",
-    "6",
-    "16",
-    "33",
-    "60",
-    "100",
-    "300",
-    "600",
     "1000",
+    "600",
+    "300",
+    "100",
+    "60",
+    "33",
+    "16",
+    "6",
   ];
 
   const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
