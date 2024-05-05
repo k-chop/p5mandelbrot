@@ -3,7 +3,6 @@ import { MandelbrotParams, RefOrbitCache } from "@/types";
 let latestRefOrbitCache: RefOrbitCache | null = null;
 
 export const setRefOrbitCache = (cache: RefOrbitCache) => {
-  console.debug("setRefOrbitCache", cache);
   latestRefOrbitCache = cache;
 };
 
