@@ -5,6 +5,7 @@ import { getStore, updateStore } from "@/store/store";
 import { useState } from "react";
 
 const paletteLengthValues = [
+  "4",
   "8",
   "16",
   "32",
@@ -15,6 +16,8 @@ const paletteLengthValues = [
   "512",
   "1024",
   "2048",
+  "4096",
+  "8192",
 ];
 
 export const PaletteEditor = () => {
@@ -37,13 +40,17 @@ export const PaletteEditor = () => {
           onValueCommit={(value) => {
             updateStore("paletteLength", value);
             const paletteMirroredLength = value * 2;
-            if (paletteOffset >= paletteMirroredLength) {
-              setPaletteOffset(paletteMirroredLength - 1);
-              updateStore("paletteOffset", paletteMirroredLength - 1);
-            }
+
             const palette = getPalette();
             palette.setLength(value);
-            palette.setOffset(value);
+
+            if (paletteOffset > paletteMirroredLength) {
+              setPaletteOffset(paletteMirroredLength - 1);
+              updateStore("paletteOffset", paletteMirroredLength - 1);
+              palette.setOffset(paletteMirroredLength - 1);
+            } else {
+              palette.setOffset(paletteOffset);
+            }
             redraw();
           }}
         />
