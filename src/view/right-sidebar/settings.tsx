@@ -1,4 +1,4 @@
-import { updateStore, useStoreValue } from "../../store/store";
+import { getStore, updateStore, useStoreValue } from "../../store/store";
 import { DEFAULT_WORKER_COUNT } from "../../store/sync-storage/settings";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { IconCircleCheck } from "@tabler/icons-react";
 import { prepareWorkerPool } from "@/worker-pool/worker-pool";
 import { ValueSlider } from "@/components/slider-wrapper";
+import { set } from "idb-keyval";
 
 const createWorkerCountValues = () => {
   const base = DEFAULT_WORKER_COUNT;
@@ -34,9 +35,23 @@ export const Settings = () => {
 
   const zoomRateValues = ["1.2", "1.5", "2.0", "4.0", "6.0", "10", "50", "100"];
   const workerCountValues = createWorkerCountValues();
+  const animationTimeValues = [
+    "0",
+    "1000",
+    "600",
+    "300",
+    "100",
+    "60",
+    "33",
+    "16",
+    "6",
+  ];
 
   const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
   const [workerCountPreview, setWorkerCountPreview] = useState(workerCount);
+  const [animationTime, setAnimationTime] = useState(() =>
+    getStore("animationTime"),
+  );
 
   return (
     <div className="flex max-w-80 flex-col gap-6">
@@ -60,6 +75,24 @@ export const Settings = () => {
           onValueCommit={(value) => {
             updateStore("workerCount", value);
             prepareWorkerPool();
+          }}
+        />
+      </div>
+      <div>
+        <div className="mb-1 ml-2">
+          Animation Frequency:{" "}
+          {animationTime === 0 ? "None" : `${animationTime} ms`}
+        </div>
+        <ValueSlider<number>
+          values={animationTimeValues}
+          defaultValue={animationTime}
+          valueConverter={(value) => parseInt(value)}
+          onValueChange={(value) => {
+            setAnimationTime(value);
+          }}
+          onValueCommit={(value) => {
+            setAnimationTime(value);
+            updateStore("animationTime", value);
           }}
         />
       </div>
