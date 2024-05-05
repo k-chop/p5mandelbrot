@@ -22,7 +22,7 @@ export type Palette = {
   size(): number;
 
   setOffset(offsetIndex: number): void;
-  cycleOffset(): void;
+  cycleOffset(step?: number): void;
   setLength(length: number): void;
   setMirrored(mirrored: boolean): void;
 };
@@ -111,8 +111,8 @@ export class BasePalette implements Palette {
     this.offsetIndex = offsetIndex;
   }
 
-  public cycleOffset(): void {
-    this.offsetIndex = (this.offsetIndex + 1) % (this.colorLength * 2);
+  public cycleOffset(step = 1): void {
+    this.offsetIndex = (this.offsetIndex + step) % (this.colorLength * 2);
   }
 
   public setLength(length: number): void {
