@@ -27,8 +27,8 @@ export type Palette = {
 };
 
 export class BasePalette implements Palette {
-  cache: Uint8ClampedArray;
-  cacheInitialized: boolean[];
+  cache!: Uint8ClampedArray;
+  cacheInitialized!: boolean[];
 
   offsetIndex = 0;
   mirrored = true;
@@ -36,9 +36,13 @@ export class BasePalette implements Palette {
 
   constructor(length: number) {
     this.colorLength = length;
+  }
 
+  resetCache(): void {
     this.cache = new Uint8ClampedArray(this.colorLength * 3);
     this.cacheInitialized = new Array(this.colorLength).fill(false);
+
+    console.log("resetCache", this.cache, this.cacheInitialized);
   }
 
   getRGBFromColorIndex(index: number): RGB {

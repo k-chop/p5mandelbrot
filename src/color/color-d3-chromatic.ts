@@ -28,6 +28,8 @@ class D3ChromaticPalette extends BasePalette {
   }
 
   buildColors(): void {
+    this.resetCache();
+
     this.colors = samples(this.colorLength)
       .map((t) => color(this.interpolator(t)))
       .filter((v): v is NonNullable<typeof v> => v != null);
