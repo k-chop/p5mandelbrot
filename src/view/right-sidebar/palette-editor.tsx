@@ -25,7 +25,7 @@ export const PaletteEditor = () => {
   );
 
   const paletteOffsetValues = useMemo(() => {
-    return Array.from({ length: paletteLength }, (_, i) => i.toString());
+    return Array.from({ length: paletteLength * 2 }, (_, i) => i.toString());
   }, [paletteLength]);
 
   return (
@@ -39,9 +39,10 @@ export const PaletteEditor = () => {
           onValueChange={(value) => setPaletteLength(value)}
           onValueCommit={(value) => {
             updateStore("paletteLength", value);
-            if (paletteOffset >= value) {
-              setPaletteOffset(value - 1);
-              updateStore("paletteOffset", value - 1);
+            const paletteMirroredLength = value * 2;
+            if (paletteOffset >= paletteMirroredLength) {
+              setPaletteOffset(paletteMirroredLength - 1);
+              updateStore("paletteOffset", paletteMirroredLength - 1);
             }
             const palette = getPalette();
             palette.setLength(value);
