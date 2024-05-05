@@ -34,7 +34,7 @@ export function ValueSlider<T extends {}>({
   return (
     <Slider
       min={0}
-      max={7}
+      max={marks.length - 1}
       step={1}
       defaultValue={[
         marks.find((mark) => valueConverter(mark.value) === defaultValue)
