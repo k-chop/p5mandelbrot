@@ -437,12 +437,10 @@ function tick(doneJobId: JobId | null = null) {
   const hasWaitingJob = waitingList.length > 0;
 
   const refPool = getWorkerPool("calc-reference-point");
-  const iterPool = getWorkerPool("calc-iteration");
   if (
-    // reference orbitを計算するworkerが初期化されていない、もしくはすべて終わっていない
-    refPool.some((worker) => !worker.isReady() || worker.isRunning()) ||
-    // iterationを計算するworkerに1つも空きがない
-    (iterPool.length > 0 && iterPool.every((worker) => worker.isRunning()))
+    (refPool.length > 0 &&
+      findFreeWorkerIndex("calc-reference-point") === -1) ||
+    findFreeWorkerIndex("calc-iteration") === -1
   ) {
     // まだ準備ができていないworkerがいる場合は待つ
     setTimeout(() => tick(doneJobId), 100);
@@ -457,7 +455,17 @@ function tick(doneJobId: JobId | null = null) {
     const job = popWaitingList("calc-reference-point")!;
     const workerIdx = findFreeWorkerIndex("calc-reference-point");
 
-    if (!refPool[workerIdx]) break;
+    if (!refPool[workerIdx]) {
+      console.error("No worker found", {
+        refPoolLength: refPool.length,
+        waitingList,
+        runningList,
+        job,
+      });
+      waitingList.push(job);
+
+      break;
+    }
 
     start(workerIdx, job);
   }
@@ -483,7 +491,17 @@ function tick(doneJobId: JobId | null = null) {
       const job = popWaitingListFiltered("calc-iteration", filter)!;
       const workerIdx = findFreeWorkerIndex("calc-iteration");
 
-      if (!iterPool[workerIdx]) break;
+      if (!iterPool[workerIdx]) {
+        console.error("No worker found", {
+          iterPoolLength: iterPool.length,
+          waitingList,
+          runningList,
+          job,
+        });
+        waitingList.push(job);
+
+        break;
+      }
 
       start(workerIdx, job);
     }

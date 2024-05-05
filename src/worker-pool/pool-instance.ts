@@ -21,5 +21,7 @@ export const getWorkerPool = <T extends JobType>(jobType: T): WorkerPool<T> =>
 export const resetWorkerPool = (jobType: JobType) => pool.set(jobType, []);
 
 export function findFreeWorkerIndex(jobType: JobType) {
-  return getWorkerPool(jobType).findIndex((worker) => !worker.isRunning());
+  return getWorkerPool(jobType).findIndex(
+    (worker) => worker.isReady() && !worker.isRunning(),
+  );
 }
