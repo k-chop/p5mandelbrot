@@ -39,19 +39,13 @@ export const PaletteEditor = () => {
           onValueChange={(value) => setPaletteLength(value)}
           onValueCommit={(value) => {
             updateStore("paletteLength", value);
-            const paletteMirroredLength = value * 2;
-
             const palette = getPalette();
             palette.setLength(value);
             palette.setOffset(0);
 
-            if (paletteOffset > paletteMirroredLength) {
-              setPaletteOffset(paletteMirroredLength - 1);
-              updateStore("paletteOffset", paletteMirroredLength - 1);
-              palette.setOffset(paletteMirroredLength - 1);
-            } else {
-              palette.setOffset(paletteOffset);
-            }
+            setPaletteOffset(0);
+            updateStore("paletteOffset", 0);
+
             redraw();
           }}
         />
@@ -61,7 +55,7 @@ export const PaletteEditor = () => {
         <Slider
           min={0}
           max={paletteLength * 2 - 1}
-          defaultValue={[paletteOffset]}
+          value={[paletteOffset]}
           onValueChange={([value]) => {
             setPaletteOffset(value);
             updateStore("paletteOffset", value);
