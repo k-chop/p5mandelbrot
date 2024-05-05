@@ -83,7 +83,7 @@ export const readPOIListFromClipboard = async (): Promise<
       importedPOIList,
     );
 
-    console.log(`Imported: ${imported}, Conflicted: ${conflicted}`);
+    console.info(`Imported: ${imported}, Conflicted: ${conflicted}`);
 
     writePOIListToStorage(result);
     updateStore("poi", result);

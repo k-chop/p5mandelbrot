@@ -336,7 +336,7 @@ export function prepareWorkerPool(
   count: number = getStore("workerCount"),
   workerType: MandelbrotWorkerType = getStore("mode"),
 ) {
-  console.log(`prepareWorkerPool: ${count}, ${workerType}`);
+  console.debug(`prepareWorkerPool: ${count}, ${workerType}`);
 
   updateStore("mode", workerType);
   if (workerType === "normal") {
@@ -585,7 +585,7 @@ export function cancelBatch(batchId: string) {
 
   const runningJobs = runningList.filter((job) => job.batchId === batchId);
 
-  console.log("cancelBatch", { batchId, runningJobs, runningList });
+  console.info("cancelBatch", { batchId, runningJobs, runningList });
 
   const batchContext = batchContextMap.get(batchId)!;
 
