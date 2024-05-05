@@ -462,7 +462,7 @@ function tick() {
 
     // 空いているworkerが見つからなかったのでwaitingListに戻す
     if (!refPool[workerIdx]) {
-      console.error("No worker found", {
+      console.error("All workers are currently busy: ", {
         refPoolLength: refPool.length,
         waitingList,
         runningList,
@@ -499,7 +499,7 @@ function tick() {
 
     // 空いているworkerが見つからなかったのでwaitingListに戻す
     if (!iterPool[workerIdx]) {
-      console.error("No worker found", {
+      console.error("All workers are currently busy: ", {
         iterPoolLength: iterPool.length,
         waitingList,
         runningList,
