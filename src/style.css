@@ -65,8 +65,8 @@ body {
 
   display: grid;
   gap: 0.2rem;
-  grid-template-rows: auto 1fr auto;
-  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr 2rem;
+  grid-template-columns: minmax(60%, auto) 1fr;
   grid-template-areas:
     "header header"
     "canvas sidebar"
@@ -79,6 +79,9 @@ body {
 
 #p5root {
   grid-area: canvas;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #sidebar-right {
