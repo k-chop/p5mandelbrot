@@ -24,7 +24,7 @@ export const POI = () => {
         </div>
       </div>
 
-      <ScrollArea className="flex min-h-10 flex-grow basis-0 flex-col overflow-y-auto pr-3">
+      <ScrollArea className="flex min-h-10 flex-grow basis-0 flex-col overflow-y-auto">
         <div>
           <div className="flex flex-row flex-wrap gap-2">
             {poiList.map((poi, index) => (
