@@ -23,7 +23,7 @@ export const Header = () => {
           <Instructions />
         </DialogContent>
       </Dialog>
-      <div className="mt-2 grid grid-cols-2">
+      <div className="grid grid-cols-2">
         <Actions />
         <div className="col-end-7 flex items-center gap-1">
           <Button variant="outline" size="icon-sm" asChild>
