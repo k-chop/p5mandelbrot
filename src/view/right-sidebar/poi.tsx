@@ -15,7 +15,7 @@ export const POI = () => {
           <Button
             variant="default"
             size="sm"
-            className="w-full"
+            className="w-64"
             onClick={() => addPOI(cloneParams(getCurrentParams()))}
           >
             <IconCirclePlus className="mr-2 h-6 w-6" />
