@@ -44,7 +44,7 @@ let height = DEFAULT_HEIGHT;
 export const togglePinReference = () => {
   if (getCurrentParams().mode !== "perturbation") return;
 
-  const newValue = updateStoreWith("isReferencePinned", (t) => !t);
+  const newValue = updateStoreWith("shouldReuseRefOrbit", (t) => !t);
 
   console.debug(`Reference point has pinned: ${newValue}`);
 };
@@ -229,7 +229,7 @@ export const startCalculation = async (onComplete: () => void) => {
     pixelWidth: width,
     pixelHeight: height,
     terminator,
-    reuseLastReference: getStore("isReferencePinned"),
+    shouldReuseRefOrbit: getStore("shouldReuseRefOrbit"),
   });
 };
 

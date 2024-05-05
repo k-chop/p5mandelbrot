@@ -387,7 +387,7 @@ export function registerBatch(
   let refY = batchContext.mandelbrotParams.y.toString();
 
   // 再利用フラグが立っているなら問答無用でcacheを使い、そうでない場合は使える場合のみ使う
-  const refOrbitCache = batchContext.reuseLastReference
+  const refOrbitCache = batchContext.shouldReuseRefOrbit
     ? getRefOrbitCache()
     : getRefOrbitCacheIfAvailable(batchContext.mandelbrotParams);
 

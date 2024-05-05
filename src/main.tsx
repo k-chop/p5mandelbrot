@@ -314,7 +314,7 @@ const entrypoint = () => {
     // UI state
     canvasLocked: false,
     // mandelbrot state
-    isReferencePinned: false,
+    shouldReuseRefOrbit: false,
   });
 
   // localStorageから復帰

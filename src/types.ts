@@ -148,7 +148,7 @@ export interface BatchContext {
   xn?: XnBuffer;
   blaTable?: BLATableBuffer;
   terminator: SharedArrayBuffer;
-  reuseLastReference: boolean;
+  shouldReuseRefOrbit: boolean;
 
   progressMap: Map<string, number>;
   refProgress: number;
