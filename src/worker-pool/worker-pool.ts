@@ -373,10 +373,10 @@ export function registerBatch(
   units: MandelbrotRenderingUnit[],
   batchContext: Omit<BatchContext, InitialOmittedBatchContextKeys>,
 ) {
-  console.log("registerBatch", batchId, units.length);
+  console.info("registerBatch", batchId, units.length);
 
   if (!acceptingBatchIds.has(batchId)) {
-    console.log("Denied: already cancelled. batchId =", batchId);
+    console.warn("Denied: already cancelled. batchId =", batchId);
     return;
   }
 
@@ -437,7 +437,13 @@ function tick(doneJobId: JobId | null = null) {
   const hasWaitingJob = waitingList.length > 0;
 
   const refPool = getWorkerPool("calc-reference-point");
-  if (refPool.some((worker) => !worker.isReady() || worker.isRunning())) {
+  const iterPool = getWorkerPool("calc-iteration");
+  if (
+    // reference orbitを計算するworkerが初期化されていない、もしくはすべて終わっていない
+    refPool.some((worker) => !worker.isReady() || worker.isRunning()) ||
+    // iterationを計算するworkerに1つも空きがない
+    (iterPool.length > 0 && iterPool.every((worker) => worker.isRunning()))
+  ) {
     // まだ準備ができていないworkerがいる場合は待つ
     setTimeout(() => tick(doneJobId), 100);
     return;
