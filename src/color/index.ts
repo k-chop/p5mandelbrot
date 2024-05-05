@@ -36,13 +36,13 @@ export class BasePalette implements Palette {
 
   constructor(length: number) {
     this.colorLength = length;
+
+    this.resetCache();
   }
 
   resetCache(): void {
     this.cache = new Uint8ClampedArray(this.colorLength * 3);
     this.cacheInitialized = new Array(this.colorLength).fill(false);
-
-    console.log("resetCache", this.cache, this.cacheInitialized);
   }
 
   getRGBFromColorIndex(index: number): RGB {
@@ -113,9 +113,7 @@ export class BasePalette implements Palette {
   public setLength(length: number): void {
     this.colorLength = length;
 
-    this.cache = new Uint8ClampedArray(this.colorLength * 3);
-    this.cacheInitialized = new Array(this.colorLength).fill(false);
-
+    this.resetCache();
     this.buildColors();
   }
 

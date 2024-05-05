@@ -40,7 +40,7 @@ class P5JsPalette extends BasePalette {
   }
 
   buildColors(): void {
-    this.resetCache();
+    // do nothing
   }
 
   getRGBFromColorIndex(index: number): RGB {

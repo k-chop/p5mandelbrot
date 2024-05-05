@@ -18,8 +18,6 @@ class ChromaJsPalette extends BasePalette {
   }
 
   buildColors(): void {
-    this.resetCache();
-
     this.colors = chroma
       .scale(this.colorConstructor)
       .colors(this.colorLength, null);
