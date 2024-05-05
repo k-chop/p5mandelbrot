@@ -269,11 +269,16 @@ const sketch = (p: p5) => {
   };
 
   p.draw = () => {
-    elapsed += p.deltaTime;
-    if (elapsed > 60) {
-      elapsed = elapsed % 60;
-      getPalette().cycleOffset();
-      redraw();
+    const time = getStore("animationTime");
+
+    if (time > 0) {
+      elapsed += p.deltaTime;
+
+      if (elapsed > time) {
+        elapsed = elapsed % time;
+        getPalette().cycleOffset();
+        redraw();
+      }
     }
 
     const mainBuffer = nextBuffer(p);
@@ -321,6 +326,7 @@ const entrypoint = () => {
     // Settings
     zoomRate: 2.0,
     workerCount: 2,
+    animationTime: 0,
     refPointWorkerCount: 1, // 仮
     // UI state
     canvasLocked: false,
