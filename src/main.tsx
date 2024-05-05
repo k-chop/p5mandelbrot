@@ -6,9 +6,11 @@ import { getIterationTimeAt } from "./aggregator";
 import {
   addPalettes,
   clearResultBuffer,
+  getPalette,
   mergeToMainBuffer,
   nextBuffer,
   nextResultBuffer,
+  redraw,
   setColorIndex,
   setupCamera,
 } from "./camera";
@@ -78,6 +80,8 @@ let mouseDragged = false;
 let mouseClickedOn = { mouseX: 0, mouseY: 0 };
 let mouseReleasedOn = { mouseX: 0, mouseY: 0 };
 let mouseDraggedComplete = false;
+
+let elapsed = 0;
 
 const isInside = (p: p5) =>
   0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
@@ -265,6 +269,13 @@ const sketch = (p: p5) => {
   };
 
   p.draw = () => {
+    elapsed += p.deltaTime;
+    if (elapsed > 60) {
+      elapsed = elapsed % 60;
+      getPalette().cycleOffset();
+      redraw();
+    }
+
     const mainBuffer = nextBuffer(p);
     const resultBuffer = nextResultBuffer(p);
 
