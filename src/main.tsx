@@ -317,6 +317,7 @@ const entrypoint = () => {
     shouldReuseRefOrbit: false,
     // palette settings
     paletteLength: 128,
+    paletteOffset: 0,
   });
 
   // localStorageから復帰
