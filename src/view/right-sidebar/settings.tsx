@@ -57,7 +57,7 @@ export const Settings = () => {
   const [workerCountPreview, setWorkerCountPreview] = useState(workerCount);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex max-w-80 flex-col gap-6">
       <div>
         <div className="mb-1 ml-2">Zoom Rate: x{zoomRatePreview}</div>
         <Slider
