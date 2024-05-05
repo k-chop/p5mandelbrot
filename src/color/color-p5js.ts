@@ -35,6 +35,8 @@ class P5JsPalette extends BasePalette {
 
     this.p5Instance = p;
     this.f = f;
+
+    this.buildColors();
   }
 
   buildColors(): void {

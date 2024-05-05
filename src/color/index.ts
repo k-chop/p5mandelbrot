@@ -27,8 +27,8 @@ export type Palette = {
 };
 
 export class BasePalette implements Palette {
-  cache: Uint8ClampedArray;
-  cacheInitialized: boolean[];
+  cache!: Uint8ClampedArray;
+  cacheInitialized!: boolean[];
 
   offsetIndex = 0;
   mirrored = true;
@@ -37,6 +37,10 @@ export class BasePalette implements Palette {
   constructor(length: number) {
     this.colorLength = length;
 
+    this.resetCache();
+  }
+
+  resetCache(): void {
     this.cache = new Uint8ClampedArray(this.colorLength * 3);
     this.cacheInitialized = new Array(this.colorLength).fill(false);
   }
@@ -109,9 +113,7 @@ export class BasePalette implements Palette {
   public setLength(length: number): void {
     this.colorLength = length;
 
-    this.cache = new Uint8ClampedArray(this.colorLength * 3);
-    this.cacheInitialized = new Array(this.colorLength).fill(false);
-
+    this.resetCache();
     this.buildColors();
   }
 
