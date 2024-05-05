@@ -29,7 +29,11 @@ import {
   getWorkerPool,
   resetWorkerPool,
 } from "./pool-instance";
-import { getRefOrbitCache, setRefOrbitCache } from "./reference-orbit-cache";
+import {
+  getRefOrbitCache,
+  getRefOrbitCacheIfAvailable,
+  setRefOrbitCache,
+} from "./reference-orbit-cache";
 
 let waitingList: MandelbrotJob[] = [];
 let runningList: MandelbrotJob[] = [];
@@ -382,7 +386,11 @@ export function registerBatch(
   let refX = batchContext.mandelbrotParams.x.toString();
   let refY = batchContext.mandelbrotParams.y.toString();
 
-  const refOrbitCache = getRefOrbitCache(batchContext.mandelbrotParams);
+  // 再利用フラグが立っているなら問答無用でcacheを使い、そうでない場合は使える場合のみ使う
+  const refOrbitCache = batchContext.reuseLastReference
+    ? getRefOrbitCache()
+    : getRefOrbitCacheIfAvailable(batchContext.mandelbrotParams);
+
   if (refOrbitCache) {
     console.debug("Cache available. Using reference orbit cache");
 
