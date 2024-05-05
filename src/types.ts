@@ -163,3 +163,12 @@ export type InitialOmittedBatchContextKeys =
   | "spans";
 
 export type JobType = "calc-iteration" | "calc-reference-point";
+
+export type RefOrbitCache = {
+  x: BigNumber;
+  y: BigNumber;
+  r: BigNumber; // 縮小時は100%再利用して良いのでその判断のために必要
+  N: number;
+  xn: XnBuffer;
+  blaTable: BLATableBuffer;
+};
