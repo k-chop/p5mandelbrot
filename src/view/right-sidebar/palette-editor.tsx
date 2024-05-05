@@ -1,7 +1,8 @@
 import { getPalette, redraw } from "@/camera";
 import { ValueSlider } from "@/components/slider-wrapper";
+import { Slider } from "@/components/ui/slider";
 import { getStore, updateStore } from "@/store/store";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 const paletteLengthValues = [
   "8",
@@ -23,10 +24,6 @@ export const PaletteEditor = () => {
   const [paletteOffset, setPaletteOffset] = useState(() =>
     getStore("paletteOffset"),
   );
-
-  const paletteOffsetValues = useMemo(() => {
-    return Array.from({ length: paletteLength * 2 }, (_, i) => i.toString());
-  }, [paletteLength]);
 
   return (
     <div className="flex max-w-80 flex-col gap-6">
@@ -53,17 +50,17 @@ export const PaletteEditor = () => {
       </div>
       <div>
         <div className="mb-1 ml-2">Palette Offset: {paletteOffset}</div>
-        <ValueSlider<number>
-          values={paletteOffsetValues}
-          defaultValue={paletteOffset}
-          valueConverter={(value) => parseInt(value)}
-          onValueChange={(value) => {
+        <Slider
+          min={0}
+          max={paletteLength * 2 - 1}
+          defaultValue={[paletteOffset]}
+          onValueChange={([value]) => {
             setPaletteOffset(value);
             updateStore("paletteOffset", value);
             getPalette().setOffset(value);
             redraw();
           }}
-          onValueCommit={(value) => {
+          onValueCommit={([value]) => {
             updateStore("paletteOffset", value);
             getPalette().setOffset(value);
             redraw();
