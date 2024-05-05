@@ -43,6 +43,7 @@ export const PaletteEditor = () => {
 
             const palette = getPalette();
             palette.setLength(value);
+            palette.setOffset(0);
 
             if (paletteOffset > paletteMirroredLength) {
               setPaletteOffset(paletteMirroredLength - 1);
