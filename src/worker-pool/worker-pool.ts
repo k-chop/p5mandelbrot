@@ -339,6 +339,9 @@ export function prepareWorkerPool(
   console.log(`prepareWorkerPool: ${count}, ${workerType}`);
 
   updateStore("mode", workerType);
+  if (workerType === "normal") {
+    updateStore("shouldReuseRefOrbit", false);
+  }
 
   resetWorkers();
 
@@ -376,7 +379,7 @@ export function registerBatch(
   units: MandelbrotRenderingUnit[],
   batchContext: Omit<BatchContext, InitialOmittedBatchContextKeys>,
 ) {
-  console.info("registerBatch", batchId, units.length);
+  console.info("registerBatch", { batchId, unitLength: units.length });
 
   if (!acceptingBatchIds.has(batchId)) {
     console.warn("Denied: already cancelled. batchId =", batchId);
@@ -517,7 +520,7 @@ function tick() {
 
   if (hasWaitingJob || runningList.length === 0) {
     console.debug(
-      `running: ${runningList.length}, waiting: ${waitingList.length}`,
+      `Job status: running: ${runningList.length}, waiting: ${waitingList.length}`,
     );
   }
 }
