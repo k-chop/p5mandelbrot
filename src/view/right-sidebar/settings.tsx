@@ -7,10 +7,10 @@ import { readPOIListFromClipboard } from "@/store/sync-storage/poi-list";
 import { useToast } from "@/components/ui/use-toast";
 import { IconCircleCheck } from "@tabler/icons-react";
 import { prepareWorkerPool } from "@/worker-pool/worker-pool";
+import { ValueSlider } from "@/components/slider-wrapper";
 
-const createWorkerCountMarks = () => {
+const createWorkerCountValues = () => {
   const base = DEFAULT_WORKER_COUNT;
-  const result = [{ value: 0, label: "1" }];
   const counts = [
     base / 8,
     base / 4,
@@ -20,82 +20,45 @@ const createWorkerCountMarks = () => {
     base * 4,
     base * 8,
   ].map(Math.ceil);
-  const distinctCounts = [...new Set(counts)];
+  const distinctCounts = [...new Set([1, ...counts])];
   distinctCounts.sort((a, b) => a - b);
 
-  let i = 1;
-  for (const count of distinctCounts) {
-    const label = count.toString();
-    result.push({ value: i, label });
-    i++;
-  }
-
-  return result;
+  return distinctCounts.map((count) => count.toString());
 };
 
 export const Settings = () => {
   const { toast } = useToast();
 
-  const zoomRate = useStoreValue("zoomRate");
-  const workerCount = useStoreValue("workerCount");
+  const zoomRate = useStoreValue<number>("zoomRate");
+  const workerCount = useStoreValue<number>("workerCount");
 
-  const zoomRateMarks = [
-    { value: 0, label: "1.2" },
-    { value: 1, label: "1.5" },
-    { value: 2, label: "2.0" },
-    { value: 3, label: "4.0" },
-    { value: 4, label: "6.0" },
-    { value: 5, label: "10" },
-    { value: 6, label: "50" },
-    { value: 7, label: "100" },
-  ];
-
-  const workerCountMarks = createWorkerCountMarks();
+  const zoomRateValues = ["1.2", "1.5", "2.0", "4.0", "6.0", "10", "50", "100"];
+  const workerCountValues = createWorkerCountValues();
 
   const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
-
   const [workerCountPreview, setWorkerCountPreview] = useState(workerCount);
 
   return (
     <div className="flex max-w-80 flex-col gap-6">
       <div>
         <div className="mb-1 ml-2">Zoom Rate: x{zoomRatePreview}</div>
-        <Slider
-          min={0}
-          max={7}
-          step={1}
-          defaultValue={[
-            zoomRateMarks.find((mark) => parseFloat(mark.label) === zoomRate)
-              ?.value!,
-          ]}
-          onValueChange={([value]) => {
-            const v = parseFloat(zoomRateMarks[value].label);
-            setZoomRatePreview(v);
-          }}
-          onValueCommit={([value]) => {
-            const v = parseFloat(zoomRateMarks[value].label);
-            updateStore("zoomRate", v);
-          }}
+        <ValueSlider<number>
+          values={zoomRateValues}
+          defaultValue={zoomRate}
+          valueConverter={(value) => parseFloat(value)}
+          onValueChange={(value) => setZoomRatePreview(value)}
+          onValueCommit={(value) => updateStore("zoomRate", value)}
         />
       </div>
       <div>
         <div className="mb-1 ml-2">Worker Count: {workerCountPreview}</div>
-        <Slider
-          min={0}
-          max={workerCountMarks.length - 1}
-          step={1}
-          defaultValue={[
-            workerCountMarks.find(
-              (mark) => parseInt(mark.label) === workerCount,
-            )?.value!,
-          ]}
-          onValueChange={([value]) => {
-            const v = parseInt(workerCountMarks[value].label);
-            setWorkerCountPreview(v);
-          }}
-          onValueCommit={([value]) => {
-            const v = parseInt(workerCountMarks[value].label);
-            updateStore("workerCount", v);
+        <ValueSlider<number>
+          values={workerCountValues}
+          defaultValue={workerCount}
+          valueConverter={(value) => parseInt(value)}
+          onValueChange={(value) => setWorkerCountPreview(value)}
+          onValueCommit={(value) => {
+            updateStore("workerCount", value);
             prepareWorkerPool();
           }}
         />

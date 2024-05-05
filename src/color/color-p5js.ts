@@ -37,6 +37,10 @@ class P5JsPalette extends BasePalette {
     this.f = f;
   }
 
+  buildColors(): void {
+    // do nothing
+  }
+
   getRGBFromColorIndex(index: number): RGB {
     const color = this.p5Instance.color(this.f(index, this.colorLength));
     return extractRGB(this.p5Instance, color);

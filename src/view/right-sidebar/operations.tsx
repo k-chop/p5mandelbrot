@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { IconCircleCheck, IconCopy } from "@tabler/icons-react";
 import { usePOI } from "./use-poi";
 import { useToast } from "@/components/ui/use-toast";
+import { PaletteEditor } from "./palette-editor";
+
+const tabsContentClass =
+  "flex h-full flex-grow flex-col data-[state=inactive]:hidden";
 
 export const Operations = () => {
   if (isGithubPages()) {
@@ -16,21 +20,16 @@ export const Operations = () => {
     <Tabs className="mx-2 flex flex-grow flex-col" defaultValue="poi">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="poi">POI</TabsTrigger>
-        <TabsTrigger value="palette" disabled>
-          Palette
-        </TabsTrigger>
+        <TabsTrigger value="palette">Palette</TabsTrigger>
         <TabsTrigger value="settings">Settings</TabsTrigger>
       </TabsList>
-      <TabsContent
-        className="flex h-full flex-grow flex-col data-[state=inactive]:hidden"
-        value="poi"
-      >
+      <TabsContent className={tabsContentClass} value="poi">
         <POI />
       </TabsContent>
-      <TabsContent
-        className="flex h-full flex-grow flex-col data-[state=inactive]:hidden"
-        value="settings"
-      >
+      <TabsContent className={tabsContentClass} value="palette">
+        <PaletteEditor />
+      </TabsContent>
+      <TabsContent className={tabsContentClass} value="settings">
         <Settings />
       </TabsContent>
     </Tabs>

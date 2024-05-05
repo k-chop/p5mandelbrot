@@ -41,7 +41,7 @@ export const updateStoreWith = <T extends any>(
   return newValue;
 };
 
-export const useStoreValue = (key: string) => {
+export const useStoreValue = <T = any>(key: string) => {
   const [value, setValue] = useState(getStore(key));
 
   useEffect(() => {
@@ -57,5 +57,5 @@ export const useStoreValue = (key: string) => {
     };
   }, []);
 
-  return value;
+  return value as T;
 };
