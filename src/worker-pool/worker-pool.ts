@@ -406,6 +406,9 @@ export function registerBatch(
     refY = refOrbitCache.y.toString();
 
     doneJobIds.add(refPointJobId);
+  } else if (batchContext.mandelbrotParams.mode === "normal") {
+    // normalモードの場合はreference pointの計算は不要
+    doneJobIds.add(refPointJobId);
   } else {
     waitingList.push({
       type: "calc-reference-point",
@@ -477,14 +480,6 @@ function tick() {
     }
 
     start(workerIdx, job);
-  }
-
-  // 空のときはperturbationではないのでwaitingListから取り出し、doneJobIdに上書き
-  // FIXME: なんかもうちょっとどうにかしてね
-  if (refPool.length === 0) {
-    const refJob = popWaitingList("calc-reference-point");
-    if (!refJob) return;
-    doneJobIds.add(refJob.id);
   }
 
   // requiresが空のもの、もしくはrequiresがdoneJobIdsと一致しているものを処理する
