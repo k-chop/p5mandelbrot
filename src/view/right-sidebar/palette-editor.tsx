@@ -3,8 +3,18 @@ import { ValueSlider } from "@/components/slider-wrapper";
 import { getStore, updateStore } from "@/store/store";
 import { useMemo, useState } from "react";
 
-const paletteLengthValues = ["8", "16", "32", "48", "64", "128", "256", "512"];
-// const paletteOffsetValues = ["0", "16", "32", "48", "64", "128", "256", "512"];
+const paletteLengthValues = [
+  "8",
+  "16",
+  "32",
+  "48",
+  "64",
+  "128",
+  "256",
+  "512",
+  "1024",
+  "2048",
+];
 
 export const PaletteEditor = () => {
   const [paletteLength, setPaletteLength] = useState(() =>
