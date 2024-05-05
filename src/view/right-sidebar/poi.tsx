@@ -10,12 +10,12 @@ export const POI = () => {
 
   return (
     <>
-      <div>
+      <div className="flex-none">
         <div className="mb-2 flex justify-between">
           <Button
             variant="default"
             size="sm"
-            className="w-full"
+            className="w-64"
             onClick={() => addPOI(cloneParams(getCurrentParams()))}
           >
             <IconCirclePlus className="mr-2 h-6 w-6" />
@@ -23,9 +23,10 @@ export const POI = () => {
           </Button>
         </div>
       </div>
-      <ScrollArea className="h-[500px]">
+
+      <ScrollArea className="flex min-h-10 flex-grow basis-0 flex-col overflow-y-auto">
         <div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-row flex-wrap gap-2">
             {poiList.map((poi, index) => (
               <POICard
                 key={poi.id}

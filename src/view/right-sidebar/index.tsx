@@ -4,7 +4,7 @@ import { Parameters } from "./parameters";
 
 export const RightSidebar = () => {
   return (
-    <div className="grid gap-2">
+    <div className="flex h-full flex-col gap-2">
       <Parameters />
       <Informations />
       <Operations />

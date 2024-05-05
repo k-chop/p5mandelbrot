@@ -15,7 +15,7 @@ export const POICard = ({ poi, onDelete, onApply }: POICardProps) => {
   const { r, N, id } = poi;
 
   return (
-    <Card className="p-2">
+    <Card className="w-64 p-2">
       <div className="flex">
         <div className="">
           <Suspense fallback={"loading..."}>

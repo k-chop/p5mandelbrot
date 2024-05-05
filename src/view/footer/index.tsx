@@ -135,7 +135,7 @@ const BarContent = (props: {
       <TooltipContent>
         <div
           className={clsx(
-            "w-52 rounded-md p-2 text-whiteA-12",
+            "w-52 rounded-md border-2 border-teal-2 p-2 text-whiteA-12",
             bgColorClassName,
           )}
         >

@@ -13,7 +13,7 @@ export const Operations = () => {
   }
 
   return (
-    <Tabs className="mx-2" defaultValue="poi">
+    <Tabs className="mx-2 flex flex-grow flex-col" defaultValue="poi">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="poi">POI</TabsTrigger>
         <TabsTrigger value="palette" disabled>
@@ -21,10 +21,16 @@ export const Operations = () => {
         </TabsTrigger>
         <TabsTrigger value="settings">Settings</TabsTrigger>
       </TabsList>
-      <TabsContent value="poi">
+      <TabsContent
+        className="flex h-full flex-grow flex-col data-[state=inactive]:hidden"
+        value="poi"
+      >
         <POI />
       </TabsContent>
-      <TabsContent value="settings">
+      <TabsContent
+        className="flex h-full flex-grow flex-col data-[state=inactive]:hidden"
+        value="settings"
+      >
         <Settings />
       </TabsContent>
     </Tabs>
