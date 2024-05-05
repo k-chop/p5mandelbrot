@@ -37,6 +37,7 @@ import {
 
 let waitingList: MandelbrotJob[] = [];
 let runningList: MandelbrotJob[] = [];
+const doneJobIds = new Set<string>();
 
 const getWaitingList = (jobType: JobType) =>
   waitingList.filter((job) => job.type === jobType);
@@ -186,7 +187,9 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
   runningList = runningList.filter((j) => j.id !== job.id);
   runningWorkerFacadeMap.delete(job.id);
 
-  tick(job.id);
+  doneJobIds.add(job.id);
+
+  tick();
 };
 
 const onCalcIterationWorkerResult: WorkerResultCallback = (result, job) => {
@@ -398,6 +401,8 @@ export function registerBatch(
     batchContext.blaTable = refOrbitCache.blaTable;
     refX = refOrbitCache.x.toString();
     refY = refOrbitCache.y.toString();
+
+    doneJobIds.add(refPointJobId);
   } else {
     waitingList.push({
       type: "calc-reference-point",
@@ -430,10 +435,10 @@ export function registerBatch(
     spans: [],
   });
 
-  tick(refOrbitCache ? refPointJobId : null);
+  tick();
 }
 
-function tick(doneJobId: JobId | null = null) {
+function tick() {
   const hasWaitingJob = waitingList.length > 0;
 
   const refPool = getWorkerPool("calc-reference-point");
@@ -443,7 +448,7 @@ function tick(doneJobId: JobId | null = null) {
     findFreeWorkerIndex("calc-iteration") === -1
   ) {
     // まだ準備ができていないworkerがいる場合は待つ
-    setTimeout(() => tick(doneJobId), 100);
+    setTimeout(tick, 100);
     return;
   }
 
@@ -455,6 +460,7 @@ function tick(doneJobId: JobId | null = null) {
     const job = popWaitingList("calc-reference-point")!;
     const workerIdx = findFreeWorkerIndex("calc-reference-point");
 
+    // 空いているworkerが見つからなかったのでwaitingListに戻す
     if (!refPool[workerIdx]) {
       console.error("No worker found", {
         refPoolLength: refPool.length,
@@ -475,36 +481,36 @@ function tick(doneJobId: JobId | null = null) {
   if (refPool.length === 0) {
     const refJob = popWaitingList("calc-reference-point");
     if (!refJob) return;
-    doneJobId = refJob.id;
+    doneJobIds.add(refJob.id);
   }
 
-  // doneJobIdが渡された場合は、それをrequiresとするjobをwaitingListから取り出して処理を開始
-  if (doneJobId) {
-    const iterPool = getWorkerPool("calc-iteration");
-    const filter = (job: CalcIterationJob) =>
-      job.requiredJobIds.includes(doneJobId);
+  // requiresが空のもの、もしくはrequiresがdoneJobIdsと一致しているものを処理する
+  const iterPool = getWorkerPool("calc-iteration");
+  const filter = (job: CalcIterationJob) =>
+    job.requiredJobIds.length === 0 ||
+    job.requiredJobIds.every((id) => doneJobIds.has(id));
 
-    while (
-      getRunningList("calc-iteration").length < iterPool.length &&
-      getWaitingListFiltered("calc-iteration", filter).length > 0
-    ) {
-      const job = popWaitingListFiltered("calc-iteration", filter)!;
-      const workerIdx = findFreeWorkerIndex("calc-iteration");
+  while (
+    getRunningList("calc-iteration").length < iterPool.length &&
+    getWaitingListFiltered("calc-iteration", filter).length > 0
+  ) {
+    const job = popWaitingListFiltered("calc-iteration", filter)!;
+    const workerIdx = findFreeWorkerIndex("calc-iteration");
 
-      if (!iterPool[workerIdx]) {
-        console.error("No worker found", {
-          iterPoolLength: iterPool.length,
-          waitingList,
-          runningList,
-          job,
-        });
-        waitingList.push(job);
+    // 空いているworkerが見つからなかったのでwaitingListに戻す
+    if (!iterPool[workerIdx]) {
+      console.error("No worker found", {
+        iterPoolLength: iterPool.length,
+        waitingList,
+        runningList,
+        job,
+      });
+      waitingList.push(job);
 
-        break;
-      }
-
-      start(workerIdx, job);
+      break;
     }
+
+    start(workerIdx, job);
   }
 
   if (hasWaitingJob || runningList.length === 0) {
