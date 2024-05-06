@@ -14,7 +14,7 @@ class ChromaJsPalette extends BasePalette {
   }
 
   getRGBFromColorIndex(index: number): RGB {
-    return this.colors[index].rgb();
+    return this.colors[index]?.rgb() ?? [0, 0, 0];
   }
 
   buildColors(): void {
