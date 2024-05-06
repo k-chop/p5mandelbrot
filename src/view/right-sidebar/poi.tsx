@@ -4,10 +4,28 @@ import { usePOI } from "./use-poi";
 import { cloneParams, getCurrentParams } from "../../mandelbrot";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect, useRef } from "react";
 
 export const POI = () => {
   const { poiList, addPOI, deletePOIAt, applyPOI, regenerateThumbnailPOI } =
     usePOI();
+  const scrollTop = useRef(parseInt(sessionStorage.getItem("scroll") ?? "0"));
+  const viewportRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (e: any) => {
+    scrollTop.current = e.target.scrollTop;
+  };
+
+  useEffect(() => {
+    const scroll = scrollTop.current;
+    if (viewportRef.current) {
+      viewportRef.current.scrollTop = scroll;
+    }
+
+    return () => {
+      sessionStorage.setItem("scroll", scrollTop.current.toString());
+    };
+  }, []);
 
   return (
     <>
@@ -25,7 +43,11 @@ export const POI = () => {
         </div>
       </div>
 
-      <ScrollArea className="flex min-h-10 flex-grow basis-0 flex-col overflow-y-auto">
+      <ScrollArea
+        ref={viewportRef}
+        className="flex min-h-10 flex-grow basis-0 flex-col overflow-y-auto"
+        onScroll={handleScroll}
+      >
         <div>
           <div className="flex flex-row flex-wrap gap-2">
             {poiList.map((poi, index) => (
