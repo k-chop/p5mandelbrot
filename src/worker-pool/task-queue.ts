@@ -17,6 +17,31 @@ export const getWaitingListFiltered = (
 export const getRunningList = (jobType: JobType) =>
   runningList.filter((job) => job.type === jobType);
 
+/**
+ * 同じbatchIdを持つ実行待ちのJobを1つ返す
+ */
+export const getWaitingJobs = (batchId: string) => {
+  return waitingList.find((job) => job.batchId === batchId);
+};
+
+/**
+ * 同じbatchIdを持つ実行待ちのJobが存在するかどうか
+ */
+export const isWaitingJobExists = (batchId: string) => {
+  return waitingList.some((job) => job.batchId === batchId);
+};
+
+/**
+ * 指定したbatchIdのJobが全て実行完了しているかどうかを返す
+ *
+ * runningListが空で、実行待ちがいなければ完了している
+ * FIXME: runningListもbatchIdを見なければならないのでは？
+ */
+export const isBatchCompleted = (batchId: string) =>
+  isRunningListEmpty() && !isWaitingJobExists(batchId);
+
+export const isRunningListEmpty = () => runningList.length === 0;
+
 export const popWaitingList = (jobType: JobType) => {
   const job = waitingList.find((job) => job.type === jobType);
   if (job) {
@@ -36,4 +61,13 @@ export const popWaitingListFiltered = (
     waitingList = waitingList.filter((j) => j.id !== job.id);
   }
   return job;
+};
+
+export const removeJobFromRunningList = (job: MandelbrotJob) => {
+  runningList = runningList.filter((j) => j.id !== job.id);
+};
+
+export const clearTaskQueue = () => {
+  waitingList = [];
+  runningList = [];
 };
