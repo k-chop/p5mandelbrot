@@ -46,17 +46,16 @@ export const POICard = ({
           </div>
 
           <div className="mt-2 flex justify-between">
-            {canRegenerate ? (
+            <Button variant="default" size="icon" onClick={onApply}>
+              <IconArrowBigLeftLine />
+            </Button>
+            {canRegenerate && (
               <Button
                 variant="secondary"
                 size="icon"
                 onClick={onRegenerateThumbnail}
               >
                 <IconRefresh />
-              </Button>
-            ) : (
-              <Button variant="default" size="icon" onClick={onApply}>
-                <IconArrowBigLeftLine />
               </Button>
             )}
             <Button variant="destructive" size="icon" onClick={onDelete}>
