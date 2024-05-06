@@ -24,15 +24,15 @@ export const getRunningList = (jobType?: JobType) =>
 /**
  * 同じbatchIdを持つ実行待ちのJobを返す
  */
-export const getWaitingJobs = (batchId: string) => {
+export const getWaitingJobsInBatch = (batchId: string) => {
   return waitingList.filter((job) => job.batchId === batchId);
 };
 
 /**
  * 同じbatchIdを持つ実行中のJobを返す
  */
-export const getRunningJobs = (batchId: string) => {
-  return waitingList.filter((job) => job.batchId === batchId);
+export const getRunningJobsInBatch = (batchId: string) => {
+  return runningList.filter((job) => job.batchId === batchId);
 };
 
 /**

@@ -39,7 +39,7 @@ import {
   clearTaskQueue,
   countRunningJobs,
   countWaitingJobs,
-  getRunningJobs,
+  getRunningJobsInBatch,
   getRunningList,
   getWaitingList,
   getWaitingListFiltered,
@@ -556,7 +556,7 @@ export function cancelBatch(batchId: string) {
   // 待ちリストからは単純に削除
   removeBatchFromWaitingJobs(batchId);
 
-  const runningJobs = getRunningJobs(batchId);
+  const runningJobs = getRunningJobsInBatch(batchId);
 
   console.info("cancelBatch", {
     batchId,
