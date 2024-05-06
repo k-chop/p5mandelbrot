@@ -1,20 +1,19 @@
-import { setRefOrbitCache } from "../reference-orbit-cache";
+import { setRefOrbitCache } from "../ref-orbit-cache";
 import { completeJob } from "../task-queue";
 import {
-  RefPointTerminatedCallback,
-  RefPointProgressCallback,
-  RefPointResultCallback,
+  RefOrbitTerminatedCallback,
+  RefOrbitProgressCallback,
+  RefOrbitResultCallback,
 } from "../worker-facade";
 import { getBatchContext } from "../worker-pool";
 import { removeWorkerReference } from "../worker-reference";
 
-export const onCalcReferencePointWorkerTerminated: RefPointTerminatedCallback =
-  (job) => {
-    // ここで何をする予定だったんだっけ...
-    // terminateされているということは外部からcancelされており、後始末はそっちで行われるはず
-  };
+export const onRefOrbitWorkerTerminated: RefOrbitTerminatedCallback = (job) => {
+  // ここで何をする予定だったんだっけ...
+  // terminateされているということは外部からcancelされており、後始末はそっちで行われるはず
+};
 
-export const onCalcReferencePointWorkerProgress: RefPointProgressCallback = (
+export const onRefOrbitWorkerProgress: RefOrbitProgressCallback = (
   { progress },
   job,
 ) => {
@@ -28,10 +27,7 @@ export const onCalcReferencePointWorkerProgress: RefPointProgressCallback = (
   batchContext.refProgress = progress;
 };
 
-export const onCalcReferencePointWorkerResult: RefPointResultCallback = (
-  result,
-  job,
-) => {
+export const onRefOrbitWorkerResult: RefOrbitResultCallback = (result, job) => {
   const { xn, blaTable, elapsed } = result;
   const batchContext = getBatchContext(job.batchId);
 

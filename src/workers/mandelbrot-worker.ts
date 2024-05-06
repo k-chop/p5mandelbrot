@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 declare const self: DedicatedWorkerGlobalScope;
 
-import { MandelbrotCalculationWorkerParams } from "../types";
+import { IterationWorkerParams } from "../types";
 
 self.addEventListener("message", (event) => {
   const {
@@ -15,7 +15,7 @@ self.addEventListener("message", (event) => {
     endX,
     startY,
     endY,
-  } = event.data as MandelbrotCalculationWorkerParams;
+  } = event.data as IterationWorkerParams;
 
   const startedAt = performance.now();
 

@@ -1,12 +1,15 @@
 import { upsertIterationCache } from "@/aggregator";
 import { renderToResultBuffer } from "@/camera";
-import { WorkerIntermediateResult, CalcIterationJob } from "@/types";
+import { IterationIntermediateResult, CalcIterationJob } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
-import { WorkerProgressCallback, WorkerResultCallback } from "../worker-facade";
+import {
+  IterationProgressCallback,
+  IterationResultCallback,
+} from "../worker-facade";
 import { getBatchContext } from "../worker-pool";
 import { removeWorkerReference } from "../worker-reference";
 
-export const onCalcIterationWorkerProgress: WorkerProgressCallback = (
+export const onIterationWorkerProgress: IterationProgressCallback = (
   result,
   job,
 ) => {
@@ -21,7 +24,7 @@ export const onCalcIterationWorkerProgress: WorkerProgressCallback = (
   batchContext.progressMap.set(job.id, progress);
 };
 
-export const onCalcIterationWorkerResult: WorkerResultCallback = (
+export const onIterationWorkerResult: IterationResultCallback = (
   result,
   job,
 ) => {
@@ -63,8 +66,8 @@ export const onCalcIterationWorkerResult: WorkerResultCallback = (
   }
 };
 
-export const onCalcIterationWorkerIntermediateResult = (
-  result: WorkerIntermediateResult,
+export const onIterationWorkerIntermediateResult = (
+  result: IterationIntermediateResult,
   job: CalcIterationJob,
 ) => {
   const { iterations, resolution } = result;

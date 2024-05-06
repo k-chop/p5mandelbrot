@@ -39,7 +39,7 @@ export const togglePinReference = () => {
 
   const newValue = updateStoreWith("shouldReuseRefOrbit", (t) => !t);
 
-  console.debug(`Reference point has pinned: ${newValue}`);
+  console.debug(`Reference orbit has pinned: ${newValue}`);
 };
 
 let currentParams: MandelbrotParams = {
@@ -192,7 +192,7 @@ export const startCalculation = async (onComplete: () => void) => {
     renderToResultBuffer(iterationBufferTransferedRect);
 
     // TODO:
-    // perturbation時はreference pointsの値を取っておけば移動がかなり高速化できる気がする
+    // perturbation時はreference orbitの値を取っておけば移動がかなり高速化できる気がする
     // ただしどのくらいの距離まで有効なのか、有効でなくなったことをどう検知したらいいのかわからん
 
     const expectedDivideCount = Math.max(divideRectCount, 2);

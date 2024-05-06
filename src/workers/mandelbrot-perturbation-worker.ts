@@ -12,12 +12,12 @@ import {
   toComplex,
 } from "../math";
 import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
-import { MandelbrotCalculationWorkerParams } from "../types";
-import { ReferencePointContextPopulated } from "./calc-reference-point";
+import { IterationWorkerParams } from "../types";
+import { RefOrbitContextPopulated } from "./calc-ref-orbit";
 import { decodeComplexArray } from "@/lib/xn-buffer";
 import { decodeBLATableItems } from "@/lib/bla-table-item-buffer";
 
-const calcHandler = (data: MandelbrotCalculationWorkerParams) => {
+const calcHandler = (data: IterationWorkerParams) => {
   const {
     pixelHeight,
     pixelWidth,
@@ -58,7 +58,7 @@ const calcHandler = (data: MandelbrotCalculationWorkerParams) => {
   function calcIterationAt(
     pixelX: number,
     pixelY: number,
-    context: ReferencePointContextPopulated,
+    context: RefOrbitContextPopulated,
   ): number {
     const { xn, blaTable } = context;
     const maxRefIteration = xn.length - 1;

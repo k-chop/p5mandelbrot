@@ -18,26 +18,22 @@ import {
   toComplex,
 } from "../math";
 import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
-import {
-  ReferencePointCalculationWorkerParams,
-  XnBuffer,
-  BLATableBuffer,
-} from "../types";
+import { RefOrbitWorkerParams, XnBuffer, BLATableBuffer } from "../types";
 import { encodeComplexArray } from "@/lib/xn-buffer";
 import { encodeBlaTableItems } from "@/lib/bla-table-item-buffer";
 
-export type ReferencePointContext = {
+export type RefOrbitContext = {
   xn: XnBuffer;
   blaTable: BLATableBuffer;
   elapsed: number;
 };
 
-export type ReferencePointContextPopulated = {
+export type RefOrbitContextPopulated = {
   xn: Complex[];
   blaTable: BLATableItem[][];
 };
 
-function calcReferencePoint(
+function calcRefOrbit(
   center: ComplexArbitrary,
   maxIteration: number,
   terminateChecker: Uint8Array,
@@ -156,7 +152,7 @@ async function setup() {
       jobId,
       terminator,
       workerIdx,
-    } = event.data as ReferencePointCalculationWorkerParams;
+    } = event.data as RefOrbitWorkerParams;
 
     const startedAt = performance.now();
     console.debug(`${jobId}: start (ref)`);
@@ -179,7 +175,7 @@ async function setup() {
       pixelHeight,
     );
 
-    const { xn } = calcReferencePoint(
+    const { xn } = calcRefOrbit(
       referencePoint,
       maxIteration,
       terminateChecker,

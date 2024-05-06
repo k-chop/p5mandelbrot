@@ -1,21 +1,21 @@
 import { JobType, MandelbrotWorkerType } from "@/types";
 import {
   CalcIterationWorker,
-  CalcReferencePointWorker,
+  RefOrbitWorker,
   MandelbrotFacadeLike,
 } from "./worker-facade";
 import { getStore, updateStore } from "@/store/store";
 import { clearTaskQueue } from "./task-queue";
 import { clearWorkerReference } from "./worker-reference";
 import {
-  onCalcIterationWorkerResult,
-  onCalcIterationWorkerIntermediateResult,
-  onCalcIterationWorkerProgress,
+  onIterationWorkerResult,
+  onIterationWorkerIntermediateResult,
+  onIterationWorkerProgress,
 } from "./callbacks/iteration-worker";
 import {
-  onCalcReferencePointWorkerResult,
-  onCalcReferencePointWorkerTerminated,
-  onCalcReferencePointWorkerProgress,
+  onRefOrbitWorkerResult,
+  onRefOrbitWorkerTerminated,
+  onRefOrbitWorkerProgress,
 } from "./callbacks/ref-orbit-worker";
 import { clearBatchContext, tickWorkerPool } from "./worker-pool";
 
@@ -23,7 +23,7 @@ type WorkerPool = MandelbrotFacadeLike[];
 
 const pool: Map<JobType, WorkerPool> = new Map([
   ["calc-iteration", []],
-  ["calc-reference-point", []],
+  ["calc-ref-orbit", []],
 ]);
 
 export const getWorkerPool = <T extends JobType>(jobType: T): WorkerPool =>
@@ -73,7 +73,7 @@ export const calcNormalizedWorkerIndex = (
   workerIdx: number,
 ) => {
   // FIXME: jobTypeが増えたときに対応できていない
-  if (jobType === "calc-reference-point") {
+  if (jobType === "calc-ref-orbit") {
     const pool = getWorkerPool("calc-iteration");
     return pool.length + workerIdx;
   }
@@ -98,8 +98,8 @@ export function prepareWorkerPool(
 
   resetWorkers();
 
-  fillCalcIterationWorkerPool(count, workerType);
-  fillCalcReferencePointWorkerPool(1 /* 仮 */, workerType);
+  fillIterationWorkerPool(count, workerType);
+  fillRefOrbitWorkerPool(1 /* 仮 */, workerType);
 }
 
 /**
@@ -120,7 +120,7 @@ export function resetWorkers() {
 /**
  * 指定した数になるまでWorkerPoolを埋める
  */
-function fillCalcIterationWorkerPool(
+function fillIterationWorkerPool(
   upTo: number = getStore("workerCount"),
   workerType: MandelbrotWorkerType = getStore("mode"),
 ) {
@@ -131,11 +131,11 @@ function fillCalcIterationWorkerPool(
     const workerFacade = new CalcIterationWorker(workerType);
 
     workerFacade.onResult((...args) => {
-      onCalcIterationWorkerResult(...args);
+      onIterationWorkerResult(...args);
       tickWorkerPool();
     });
-    workerFacade.onIntermediateResult(onCalcIterationWorkerIntermediateResult);
-    workerFacade.onProgress(onCalcIterationWorkerProgress);
+    workerFacade.onIntermediateResult(onIterationWorkerIntermediateResult);
+    workerFacade.onProgress(onIterationWorkerProgress);
 
     pool.push(workerFacade);
 
@@ -149,26 +149,26 @@ function fillCalcIterationWorkerPool(
   }
 }
 
-function fillCalcReferencePointWorkerPool(
+function fillRefOrbitWorkerPool(
   upTo: number = 1,
   workerType: MandelbrotWorkerType = getStore("mode"),
 ) {
   if (workerType !== "perturbation") return;
 
   let fillCount = 0;
-  const pool = getWorkerPool("calc-reference-point");
+  const pool = getWorkerPool("calc-ref-orbit");
 
   for (let i = 0; pool.length < upTo && i < upTo; i++) {
-    const worker = new CalcReferencePointWorker();
+    const worker = new RefOrbitWorker();
 
     worker.init();
 
     worker.onResult((...args) => {
-      onCalcReferencePointWorkerResult(...args);
+      onRefOrbitWorkerResult(...args);
       tickWorkerPool();
     });
-    worker.onTerminate(onCalcReferencePointWorkerTerminated);
-    worker.onProgress(onCalcReferencePointWorkerProgress);
+    worker.onTerminate(onRefOrbitWorkerTerminated);
+    worker.onProgress(onRefOrbitWorkerProgress);
 
     pool.push(worker);
 
@@ -177,7 +177,7 @@ function fillCalcReferencePointWorkerPool(
 
   if (fillCount > 0) {
     console.info(
-      `RefPoint Worker filled: fill count = ${fillCount}, pool size = ${pool.length}`,
+      `RefOrbit Worker filled: fill count = ${fillCount}, pool size = ${pool.length}`,
     );
   }
 }

@@ -328,7 +328,7 @@ const entrypoint = () => {
     zoomRate: 2.0,
     workerCount: 2,
     animationTime: 0,
-    refPointWorkerCount: 1, // 仮
+    refOrbitWorkerCount: 1, // 仮
     // UI state
     canvasLocked: false,
     // mandelbrot state

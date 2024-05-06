@@ -1,37 +1,37 @@
 import {
   BatchContext,
   CalcIterationJob,
-  CalcReferencePointJob,
+  CalcRefOrbitJob,
   MandelbrotJob,
   MandelbrotWorkerType,
-  ReferencePointProgress,
-  ReferencePointResult,
-  WorkerIntermediateResult,
-  WorkerProgress,
-  WorkerResult,
+  RefOrbitProgress,
+  RefOrbitResult,
+  IterationIntermediateResult,
+  IterationProgress,
+  IterationResult,
 } from "@/types";
-import { referencePointWorkerPath, workerPaths } from "@/workers";
-import { ReferencePointContext } from "@/workers/calc-reference-point";
+import { refOrbitWorkerPath, workerPaths } from "@/workers";
+import { RefOrbitContext } from "@/workers/calc-ref-orbit";
 
-export type RefPointResultCallback = (
-  result: ReferencePointContext,
-  job: CalcReferencePointJob,
+export type RefOrbitResultCallback = (
+  result: RefOrbitContext,
+  job: CalcRefOrbitJob,
 ) => void;
-export type RefPointProgressCallback = (
-  result: ReferencePointProgress,
-  job: CalcReferencePointJob,
+export type RefOrbitProgressCallback = (
+  result: RefOrbitProgress,
+  job: CalcRefOrbitJob,
 ) => void;
-export type RefPointTerminatedCallback = (job: CalcReferencePointJob) => void;
-export type WorkerResultCallback = (
-  result: WorkerResult,
+export type RefOrbitTerminatedCallback = (job: CalcRefOrbitJob) => void;
+export type IterationResultCallback = (
+  result: IterationResult,
   job: CalcIterationJob,
 ) => void;
-export type WorkerIntermediateResultCallback = (
-  result: WorkerIntermediateResult,
+export type IterationIntermediateResultCallback = (
+  result: IterationIntermediateResult,
   job: CalcIterationJob,
 ) => void;
-export type WorkerProgressCallback = (
-  progress: WorkerProgress,
+export type IterationProgressCallback = (
+  progress: IterationProgress,
   job: CalcIterationJob,
 ) => void;
 export type BatchCompleteCallback = (elapsed: number) => void;
@@ -60,9 +60,9 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
   worker: Worker;
   running = false;
 
-  resultCallback?: WorkerResultCallback;
-  intermediateResultCallback?: WorkerIntermediateResultCallback;
-  progressCallback?: WorkerProgressCallback;
+  resultCallback?: IterationResultCallback;
+  intermediateResultCallback?: IterationIntermediateResultCallback;
+  progressCallback?: IterationProgressCallback;
 
   constructor(workerType: MandelbrotWorkerType) {
     const workerConstructor = workerPaths[workerType];
@@ -86,7 +86,7 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
 
     const f = (
       ev: MessageEvent<
-        WorkerResult | WorkerIntermediateResult | WorkerProgress
+        IterationResult | IterationIntermediateResult | IterationProgress
       >,
     ) => {
       const data = ev.data;
@@ -187,15 +187,15 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
     Atomics.store(t, workerIdx, 1);
   };
 
-  onResult = (callback: WorkerResultCallback) => {
+  onResult = (callback: IterationResultCallback) => {
     this.resultCallback = callback;
   };
 
-  onIntermediateResult = (callback: WorkerIntermediateResultCallback) => {
+  onIntermediateResult = (callback: IterationIntermediateResultCallback) => {
     this.intermediateResultCallback = callback;
   };
 
-  onProgress = (callback: WorkerProgressCallback) => {
+  onProgress = (callback: IterationProgressCallback) => {
     this.progressCallback = callback;
   };
 
@@ -206,17 +206,17 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
   };
 }
 
-export class CalcReferencePointWorker implements MandelbrotFacadeLike {
+export class RefOrbitWorker implements MandelbrotFacadeLike {
   worker: Worker;
   running = false;
   inited = false;
 
-  resultCallback?: RefPointResultCallback;
-  progressCallback?: RefPointProgressCallback;
-  terminatedCallback?: RefPointTerminatedCallback;
+  resultCallback?: RefOrbitResultCallback;
+  progressCallback?: RefOrbitProgressCallback;
+  terminatedCallback?: RefOrbitTerminatedCallback;
 
   constructor() {
-    this.worker = new referencePointWorkerPath();
+    this.worker = new refOrbitWorkerPath();
   }
 
   isRunning = () => {
@@ -242,7 +242,7 @@ export class CalcReferencePointWorker implements MandelbrotFacadeLike {
   };
 
   startCalculate = (
-    job: CalcReferencePointJob,
+    job: CalcRefOrbitJob,
     batchContext: BatchContext,
     workerIdx: number,
   ) => {
@@ -255,9 +255,7 @@ export class CalcReferencePointWorker implements MandelbrotFacadeLike {
     const pixelHeight = batchContext.pixelHeight;
     const pixelWidth = batchContext.pixelWidth;
 
-    const handler = (
-      ev: MessageEvent<ReferencePointResult | ReferencePointProgress>,
-    ) => {
+    const handler = (ev: MessageEvent<RefOrbitResult | RefOrbitProgress>) => {
       const { type } = ev.data;
       if (type === "terminated") {
         this.worker.removeEventListener("message", handler);
@@ -321,15 +319,15 @@ export class CalcReferencePointWorker implements MandelbrotFacadeLike {
     Atomics.store(t, workerIdx, 1);
   };
 
-  onResult = (callback: RefPointResultCallback) => {
+  onResult = (callback: RefOrbitResultCallback) => {
     this.resultCallback = callback;
   };
 
-  onProgress = (callback: RefPointProgressCallback) => {
+  onProgress = (callback: RefOrbitProgressCallback) => {
     this.progressCallback = callback;
   };
 
-  onTerminate = (callback: RefPointTerminatedCallback) => {
+  onTerminate = (callback: RefOrbitTerminatedCallback) => {
     this.terminatedCallback = callback;
   };
 
