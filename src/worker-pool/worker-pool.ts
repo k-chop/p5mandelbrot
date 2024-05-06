@@ -21,10 +21,14 @@ import {
 import { getStore, updateStore } from "@/store/store";
 import {
   calcNormalizedWorkerIndex,
+  clearWorkerReference,
   findFreeWorkerIndex,
   getWorkerPool,
   iterateAllWorker,
+  popWorkerReference,
+  removeWorkerReference,
   resetAllWorker,
+  setWorkerReference,
 } from "./pool-instance";
 import {
   getRefOrbitCache,
@@ -56,10 +60,8 @@ import {
   onCalcIterationWorkerResult,
 } from "./callbacks/iteration-worker";
 
-type JobId = string;
 type BatchId = string;
 
-const runningWorkerFacadeMap = new Map<JobId, MandelbrotFacadeLike>();
 const batchContextMap = new Map<BatchId, BatchContext>();
 const acceptingBatchIds = new Set<BatchId>();
 
@@ -165,7 +167,7 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
   });
 
   completeJob(job);
-  runningWorkerFacadeMap.delete(job.id);
+  removeWorkerReference(job.id);
 
   tick();
 };
@@ -280,8 +282,8 @@ export function resetWorkers() {
   resetAllWorker();
 
   clearTaskQueue();
+  clearWorkerReference();
 
-  runningWorkerFacadeMap.clear();
   batchContextMap.clear();
 }
 
@@ -434,7 +436,7 @@ function start(workerIdx: number, job: MandelbrotJob) {
 
   workerFacade.startCalculate(assignedJob, batchContext, workerIdxForTerminate);
   startJob(assignedJob);
-  runningWorkerFacadeMap.set(assignedJob.id, workerFacade);
+  setWorkerReference(assignedJob.id, workerFacade);
 }
 
 export function startBatch(batchId: BatchId) {
@@ -461,8 +463,7 @@ export function cancelBatch(batchId: string) {
   const batchContext = batchContextMap.get(batchId)!;
 
   runningJobsInBatch.forEach((job) => {
-    const facade = runningWorkerFacadeMap.get(job.id);
-    runningWorkerFacadeMap.delete(job.id);
+    const facade = popWorkerReference(job.id);
 
     if (facade == null) return;
 

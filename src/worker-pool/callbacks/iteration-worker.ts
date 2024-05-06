@@ -4,6 +4,7 @@ import { WorkerIntermediateResult, CalcIterationJob } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
 import { WorkerProgressCallback, WorkerResultCallback } from "../worker-facade";
 import { getBatchContext } from "../worker-pool";
+import { removeWorkerReference } from "../pool-instance";
 
 export const onCalcIterationWorkerProgress: WorkerProgressCallback = (
   result,
@@ -43,7 +44,7 @@ export const onCalcIterationWorkerResult: WorkerResultCallback = (
   batchContext.progressMap.set(job.id, 1.0);
 
   completeJob(job);
-  runningWorkerFacadeMap.delete(job.id);
+  removeWorkerReference(job.id);
 
   batchContext.spans.push({
     name: `iteration_${job.workerIdx}`,

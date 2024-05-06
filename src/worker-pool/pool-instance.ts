@@ -1,12 +1,14 @@
 import { JobType } from "@/types";
 import { MandelbrotFacadeLike } from "./worker-facade";
 
+type JobId = string;
 type WorkerPool = MandelbrotFacadeLike[];
 
 const pool: Map<JobType, WorkerPool> = new Map([
   ["calc-iteration", []],
   ["calc-reference-point", []],
 ]);
+const runningWorkerFacadeMap = new Map<JobId, MandelbrotFacadeLike>();
 
 export const getWorkerPool = <T extends JobType>(jobType: T): WorkerPool =>
   pool.get(jobType)! as WorkerPool;
@@ -52,4 +54,25 @@ export const calcNormalizedWorkerIndex = (
   }
 
   return workerIdx;
+};
+
+export const removeWorkerReference = (jobId: JobId) => {
+  runningWorkerFacadeMap.delete(jobId);
+};
+
+export const clearWorkerReference = () => {
+  runningWorkerFacadeMap.clear();
+};
+
+export const setWorkerReference = (
+  jobId: JobId,
+  worker: MandelbrotFacadeLike,
+) => {
+  runningWorkerFacadeMap.set(jobId, worker);
+};
+
+export const popWorkerReference = (jobId: JobId) => {
+  const result = runningWorkerFacadeMap.get(jobId);
+  runningWorkerFacadeMap.delete(jobId);
+  return result;
 };
