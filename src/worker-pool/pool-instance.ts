@@ -13,6 +13,15 @@ export const getWorkerPool = <T extends JobType>(jobType: T): WorkerPool =>
 export const resetWorkerPool = (jobType: JobType) => pool.set(jobType, []);
 
 /**
+ * workerの数を返す
+ * jobTypeが指定されていない場合は全workerが対象
+ */
+export const getWorkerCount = (jobType?: JobType) =>
+  jobType == null
+    ? [...pool.values()].reduce((acc, workers) => acc + workers.length, 0)
+    : getWorkerPool(jobType).length;
+
+/**
  * 全workerに対して処理を行う
  */
 export const iterateAllWorker = <T>(f: (worker: MandelbrotFacadeLike) => T) => {

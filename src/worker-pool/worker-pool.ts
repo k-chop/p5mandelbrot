@@ -111,10 +111,6 @@ export const getProgressData = (): string | ResultSpans => {
   return `Generating... ${Math.floor(progress * 100)}%`;
 };
 
-export const getWorkerCount = (jobType: JobType): number => {
-  return getWorkerPool(jobType).length;
-};
-
 export const cycleWorkerType = (): MandelbrotWorkerType => {
   const currentMode = getStore("mode");
 
