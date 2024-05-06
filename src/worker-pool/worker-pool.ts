@@ -3,21 +3,17 @@ import {
   CalcIterationJob,
   CalcReferencePointJob,
   InitialOmittedBatchContextKeys,
-  JobType,
   MandelbrotJob,
   MandelbrotRenderingUnit,
   MandelbrotWorkerType,
   ResultSpans,
   mandelbrotWorkerTypes,
 } from "@/types";
-import { CalcIterationWorker, CalcReferencePointWorker } from "./worker-facade";
-import { getStore, updateStore } from "@/store/store";
+import { getStore } from "@/store/store";
 import {
   calcNormalizedWorkerIndex,
   findFreeWorkerIndex,
   getWorkerPool,
-  iterateAllWorker,
-  resetAllWorker,
 } from "./pool-instance";
 import {
   getRefOrbitCache,
@@ -25,7 +21,6 @@ import {
 } from "./reference-orbit-cache";
 import {
   addJob,
-  clearTaskQueue,
   countRunningJobs,
   countWaitingJobs,
   getRunningJobsInBatch,
@@ -41,21 +36,7 @@ import {
   popWaitingExecutableJob,
   deleteCompletedDoneJobs,
 } from "./task-queue";
-import {
-  onCalcIterationWorkerIntermediateResult,
-  onCalcIterationWorkerProgress,
-  onCalcIterationWorkerResult,
-} from "./callbacks/iteration-worker";
-import {
-  clearWorkerReference,
-  setWorkerReference,
-  popWorkerReference,
-} from "./worker-reference";
-import {
-  onCalcReferencePointWorkerProgress,
-  onCalcReferencePointWorkerResult,
-  onCalcReferencePointWorkerTerminated,
-} from "./callbacks/ref-orbit-worker";
+import { setWorkerReference, popWorkerReference } from "./worker-reference";
 
 type BatchId = string;
 
@@ -84,6 +65,13 @@ const getLatestBatchContext = () => {
 export const getBatchContext = (batchId: string) =>
   batchContextMap.get(batchId);
 
+export const clearBatchContext = () => {
+  batchContextMap.clear();
+};
+
+/**
+ * Footerで表示するための進捗情報をbatchContextから取得する
+ */
 export const getProgressData = (): string | ResultSpans => {
   const batchContext = getLatestBatchContext();
 
@@ -123,108 +111,6 @@ export const cycleWorkerType = (): MandelbrotWorkerType => {
 
   return nextMode;
 };
-
-/**
- * 指定した数になるまでWorkerPoolを埋める
- */
-function fillCalcIterationWorkerPool(
-  upTo: number = getStore("workerCount"),
-  workerType: MandelbrotWorkerType = getStore("mode"),
-) {
-  let fillCount = 0;
-  const pool = getWorkerPool("calc-iteration");
-
-  for (let i = 0; pool.length < upTo && i < upTo; i++) {
-    const workerFacade = new CalcIterationWorker(workerType);
-
-    workerFacade.onResult((...args) => {
-      onCalcIterationWorkerResult(...args);
-      tick();
-    });
-    workerFacade.onIntermediateResult(onCalcIterationWorkerIntermediateResult);
-    workerFacade.onProgress(onCalcIterationWorkerProgress);
-
-    pool.push(workerFacade);
-
-    fillCount++;
-  }
-
-  if (fillCount > 0) {
-    console.info(
-      `Iteration Worker filled: fill count = ${fillCount}, pool size = ${pool.length}`,
-    );
-  }
-}
-
-function fillCalcReferencePointWorkerPool(
-  upTo: number = 1,
-  workerType: MandelbrotWorkerType = getStore("mode"),
-) {
-  if (workerType !== "perturbation") return;
-
-  let fillCount = 0;
-  const pool = getWorkerPool("calc-reference-point");
-
-  for (let i = 0; pool.length < upTo && i < upTo; i++) {
-    const worker = new CalcReferencePointWorker();
-
-    worker.init();
-
-    worker.onResult((...args) => {
-      onCalcReferencePointWorkerResult(...args);
-      tick();
-    });
-    worker.onTerminate(onCalcReferencePointWorkerTerminated);
-    worker.onProgress(onCalcReferencePointWorkerProgress);
-
-    pool.push(worker);
-
-    fillCount++;
-  }
-
-  if (fillCount > 0) {
-    console.info(
-      `RefPoint Worker filled: fill count = ${fillCount}, pool size = ${pool.length}`,
-    );
-  }
-}
-
-/**
- * WorkerPoolを再構築する
- * countやworkerTypeが変わった場合に呼ばれる
- */
-export function prepareWorkerPool(
-  count: number = getStore("workerCount"),
-  workerType: MandelbrotWorkerType = getStore("mode"),
-) {
-  console.debug(`prepareWorkerPool: ${count}, ${workerType}`);
-
-  updateStore("mode", workerType);
-  if (workerType === "normal") {
-    updateStore("shouldReuseRefOrbit", false);
-  }
-
-  resetWorkers();
-
-  fillCalcIterationWorkerPool(count, workerType);
-  fillCalcReferencePointWorkerPool(1 /* 仮 */, workerType);
-}
-
-/**
- * WorkerPoolを溜まっていたJobごと全部リセットする
- */
-export function resetWorkers() {
-  iterateAllWorker((workerFacade) => {
-    workerFacade.clearCallbacks();
-    workerFacade.terminate();
-  });
-  resetAllWorker();
-
-  clearTaskQueue();
-  clearWorkerReference();
-
-  batchContextMap.clear();
-}
 
 export function registerBatch(
   batchId: BatchId,
@@ -294,10 +180,10 @@ export function registerBatch(
     spans: [],
   });
 
-  tick();
+  tickWorkerPool();
 }
 
-function tick() {
+export function tickWorkerPool() {
   const refPool = getWorkerPool("calc-reference-point");
   if (
     (refPool.length > 0 &&
@@ -305,7 +191,7 @@ function tick() {
     findFreeWorkerIndex("calc-iteration") === -1
   ) {
     // まだ準備ができていないworkerがいる場合は待つ
-    setTimeout(tick, 100);
+    setTimeout(tickWorkerPool, 100);
     return;
   }
 
@@ -414,5 +300,5 @@ export function cancelBatch(batchId: string) {
   removeBatchFromRunningJobs(batchId);
   batchContextMap.delete(batchId);
 
-  tick();
+  tickWorkerPool();
 }

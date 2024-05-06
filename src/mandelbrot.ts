@@ -9,12 +9,11 @@ import { MandelbrotParams, OffsetParams } from "./types";
 import {
   cancelBatch,
   cycleWorkerType,
-  prepareWorkerPool,
   registerBatch,
   startBatch,
 } from "./worker-pool/worker-pool";
 import { renderToResultBuffer } from "./camera";
-import { getWorkerCount } from "./worker-pool/pool-instance";
+import { getWorkerCount, prepareWorkerPool } from "./worker-pool/pool-instance";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;

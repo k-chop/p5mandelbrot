@@ -43,7 +43,8 @@ import "./style.css";
 import { AppRoot } from "./view/app-root";
 import { extractMandelbrotParams } from "./lib/params";
 import { d3ChromaticPalettes } from "./color/color-d3-chromatic";
-import { getProgressData, prepareWorkerPool } from "./worker-pool/worker-pool";
+import { getProgressData } from "./worker-pool/worker-pool";
+import { prepareWorkerPool } from "./worker-pool/pool-instance";
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
