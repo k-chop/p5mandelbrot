@@ -391,6 +391,7 @@ export function registerBatch(
     addJob({
       type: "calc-reference-point",
       id: refPointJobId,
+      requiredJobIds: [],
       batchId,
       mandelbrotParams: batchContext.mandelbrotParams,
     } satisfies CalcReferencePointJob);
@@ -436,7 +437,7 @@ function tick() {
 
   // reference point jobがある場合はpoolに空きがある限り処理を開始する
   while (canQueueJob("calc-reference-point", refPool)) {
-    const job = popWaitingJob("calc-reference-point")!;
+    const job = popWaitingExecutableJob("calc-reference-point")!;
     const workerIdx = findFreeWorkerIndex("calc-reference-point");
 
     // 空いているworkerが見つからなかったのでqueueに戻す

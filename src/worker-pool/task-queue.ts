@@ -1,11 +1,11 @@
-import { MandelbrotJob, JobType, CalcIterationJob } from "@/types";
+import { MandelbrotJob, JobType } from "@/types";
 
 let waitingList: MandelbrotJob[] = [];
 let runningList: MandelbrotJob[] = [];
 
 const doneJobIds = new Set<string>();
 
-const executableJobFilter = (job: CalcIterationJob) =>
+const executableJobFilter = (job: MandelbrotJob) =>
   job.requiredJobIds.length === 0 ||
   job.requiredJobIds.every((id) => doneJobIds.has(id));
 
@@ -16,11 +16,8 @@ export const getWaitingJobs = (jobType?: JobType) =>
 
 export const getFilteredWaitingJobs = (
   jobType: JobType,
-  predicate: (job: CalcIterationJob) => boolean,
-) =>
-  waitingList.filter(
-    (job) => job.type === jobType && predicate(job as CalcIterationJob),
-  );
+  predicate: (job: MandelbrotJob) => boolean,
+) => waitingList.filter((job) => job.type === jobType && predicate(job));
 
 export const getRunningJobs = (jobType?: JobType) =>
   jobType == null
@@ -95,11 +92,9 @@ export const startJob = (job: MandelbrotJob) => {
 
 export const popWaitingJob = (
   jobType: JobType,
-  predicate: (job: CalcIterationJob) => boolean = () => true,
+  predicate: (job: MandelbrotJob) => boolean = () => true,
 ) => {
-  const job = waitingList.find(
-    (job) => job.type === jobType && predicate(job as CalcIterationJob),
-  );
+  const job = waitingList.find((job) => job.type === jobType && predicate(job));
   if (job) {
     waitingList = waitingList.filter((j) => j.id !== job.id);
   }
@@ -124,9 +119,7 @@ export const markDoneJob = (jobId: string) => {
  */
 export const deleteCompletedDoneJobs = () => {
   const remainingRequiredJobIds = new Set(
-    ...(getWaitingJobs() as CalcIterationJob[]).map(
-      (job) => job.requiredJobIds ?? [],
-    ),
+    ...getWaitingJobs().map((job) => job.requiredJobIds ?? []),
   );
   Array.from(doneJobIds.values()).forEach((id) => {
     if (remainingRequiredJobIds.has(id)) return;
