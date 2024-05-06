@@ -24,7 +24,7 @@ class D3ChromaticPalette extends BasePalette {
   }
 
   getRGBFromColorIndex(index: number): RGB {
-    return buildRGB(this.colors[index].rgb());
+    return buildRGB(this.colors[index]?.rgb() ?? [0, 0, 0]);
   }
 
   buildColors(): void {

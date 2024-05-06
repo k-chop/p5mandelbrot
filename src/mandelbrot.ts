@@ -3,24 +3,17 @@ import {
   clearIterationCache,
   translateRectInIterationCache,
 } from "./aggregator";
-import { BLATableItem, Complex } from "./math";
 import { divideRect, Rect } from "./rect";
-import { updateStore, getStore, updateStoreWith } from "./store/store";
-import {
-  BLATableBuffer,
-  MandelbrotParams,
-  OffsetParams,
-  XnBuffer,
-} from "./types";
+import { getStore, updateStoreWith } from "./store/store";
+import { MandelbrotParams, OffsetParams } from "./types";
 import {
   cancelBatch,
   cycleWorkerType,
-  getWorkerCount,
-  prepareWorkerPool,
   registerBatch,
   startBatch,
 } from "./worker-pool/worker-pool";
 import { renderToResultBuffer } from "./camera";
+import { getWorkerCount, prepareWorkerPool } from "./worker-pool/pool-instance";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;
@@ -218,9 +211,7 @@ export const startCalculation = async (onComplete: () => void) => {
     mandelbrotParams: currentParams,
   }));
 
-  const terminator = new SharedArrayBuffer(
-    getWorkerCount("calc-iteration") + getWorkerCount("calc-reference-point"),
-  );
+  const terminator = new SharedArrayBuffer(getWorkerCount());
 
   registerBatch(currentBatchId, units, {
     onComplete,
