@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const POI = () => {
-  const { poiList, addPOI, deletePOIAt, applyPOI } = usePOI();
+  const { poiList, addPOI, deletePOIAt, applyPOI, regenerateThumbnailPOI } =
+    usePOI();
 
   return (
     <>
@@ -33,6 +34,7 @@ export const POI = () => {
                 poi={poi}
                 onDelete={() => deletePOIAt(index)}
                 onApply={() => applyPOI(poi)}
+                onRegenerateThumbnail={() => regenerateThumbnailPOI(index)}
               />
             ))}
           </div>

@@ -26,6 +26,16 @@ export const usePOI = () => {
     [poiList],
   );
 
+  const regenerateThumbnailPOI = useCallback(
+    (index: number) => {
+      const poi = poiList[index];
+
+      const imageDataURL = getResizedCanvasImageDataURL(100);
+      savePreview(poi.id, imageDataURL);
+    },
+    [poiList],
+  );
+
   const deletePOIAt = useCallback(
     (index: number) => {
       const del = poiList[index];
@@ -54,5 +64,6 @@ export const usePOI = () => {
     deletePOIAt,
     applyPOI,
     copyPOIListToClipboard,
+    regenerateThumbnailPOI,
   };
 };
