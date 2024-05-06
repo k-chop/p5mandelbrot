@@ -10,13 +10,7 @@ import {
   ResultSpans,
   mandelbrotWorkerTypes,
 } from "@/types";
-import {
-  CalcIterationWorker,
-  CalcReferencePointWorker,
-  RefPointResultCallback,
-  RefPointTerminatedCallback,
-  RefPointProgressCallback,
-} from "./worker-facade";
+import { CalcIterationWorker, CalcReferencePointWorker } from "./worker-facade";
 import { getStore, updateStore } from "@/store/store";
 import {
   calcNormalizedWorkerIndex,
@@ -28,7 +22,6 @@ import {
 import {
   getRefOrbitCache,
   getRefOrbitCacheIfAvailable,
-  setRefOrbitCache,
 } from "./reference-orbit-cache";
 import {
   addJob,
@@ -42,7 +35,6 @@ import {
   hasWaitingJob,
   removeBatchFromRunningJobs,
   removeBatchFromWaitingJobs,
-  completeJob,
   startJob,
   canQueueJob,
   markDoneJob,
@@ -55,11 +47,15 @@ import {
   onCalcIterationWorkerResult,
 } from "./callbacks/iteration-worker";
 import {
-  removeWorkerReference,
   clearWorkerReference,
   setWorkerReference,
   popWorkerReference,
 } from "./worker-reference";
+import {
+  onCalcReferencePointWorkerProgress,
+  onCalcReferencePointWorkerResult,
+  onCalcReferencePointWorkerTerminated,
+} from "./callbacks/ref-orbit-worker";
 
 type BatchId = string;
 
@@ -113,64 +109,6 @@ export const getProgressData = (): string | ResultSpans => {
     progressList.reduce((a, b) => a + b, 0) / progressList.length;
 
   return `Generating... ${Math.floor(progress * 100)}%`;
-};
-
-const onCalcReferencePointWorkerTerminated: RefPointTerminatedCallback = (
-  job,
-) => {
-  // ここで何をする予定だったんだっけ...
-  // terminateされているということは外部からcancelされており、後始末はそっちで行われるはず
-};
-
-const onCalcReferencePointWorkerProgress: RefPointProgressCallback = (
-  { progress },
-  job,
-) => {
-  const batchContext = batchContextMap.get(job.batchId);
-
-  // 停止が間に合わなかったケースや既にcancelされているケース。何もしない
-  if (batchContext == null) {
-    return;
-  }
-
-  batchContext.refProgress = progress;
-};
-
-const onCalcReferencePointWorkerResult: RefPointResultCallback = (
-  result,
-  job,
-) => {
-  const { xn, blaTable, elapsed } = result;
-  const batchContext = batchContextMap.get(job.batchId);
-
-  // 停止が間に合わなかったケースや既にcancelされているケース。何もしない
-  if (batchContext == null) {
-    return;
-  }
-
-  batchContext.refProgress = batchContext.mandelbrotParams.N;
-
-  batchContext.xn = xn;
-  batchContext.blaTable = blaTable;
-  batchContext.spans.push({
-    name: "reference_orbit",
-    elapsed: Math.floor(elapsed),
-  });
-
-  // cacheに登録
-  setRefOrbitCache({
-    x: batchContext.mandelbrotParams.x,
-    y: batchContext.mandelbrotParams.y,
-    r: batchContext.mandelbrotParams.r,
-    N: batchContext.mandelbrotParams.N,
-    xn,
-    blaTable,
-  });
-
-  completeJob(job);
-  removeWorkerReference(job.id);
-
-  tick();
 };
 
 export const getWorkerCount = (jobType: JobType): number => {
@@ -235,7 +173,11 @@ function fillCalcReferencePointWorkerPool(
     const worker = new CalcReferencePointWorker();
 
     worker.init();
-    worker.onResult(onCalcReferencePointWorkerResult);
+
+    worker.onResult((...args) => {
+      onCalcReferencePointWorkerResult(...args);
+      tick();
+    });
     worker.onTerminate(onCalcReferencePointWorkerTerminated);
     worker.onProgress(onCalcReferencePointWorkerProgress);
 
