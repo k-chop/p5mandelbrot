@@ -9,37 +9,46 @@ const executableJobFilter = (job: MandelbrotJob) =>
   job.requiredJobIds.length === 0 ||
   job.requiredJobIds.every((id) => doneJobIds.has(id));
 
-export const getWaitingJobs = (jobType?: JobType) =>
+/**
+ * jobTypeに対応する実行待ちのJobを返す
+ * 追加の条件も与えられる
+ */
+export const getWaitingJobs = (
+  jobType?: JobType,
+  predicate: (job: MandelbrotJob) => boolean = () => true,
+) =>
   jobType == null
     ? waitingList
-    : waitingList.filter((job) => job.type === jobType);
-
-export const getFilteredWaitingJobs = (
-  jobType: JobType,
-  predicate: (job: MandelbrotJob) => boolean,
-) => waitingList.filter((job) => job.type === jobType && predicate(job));
-
-export const getRunningJobs = (jobType?: JobType) =>
-  jobType == null
-    ? runningList
-    : runningList.filter((job) => job.type === jobType);
+    : waitingList.filter((job) => job.type === jobType && predicate(job));
 
 /**
- * 同じbatchIdを持つ実行待ちのJobを返す
+ * jobTypeに対応する実行中のJobを返す
+ * 追加の条件も与えられる
+ */
+export const getRunningJobs = (
+  jobType?: JobType,
+  predicate: (job: MandelbrotJob) => boolean = () => true,
+) =>
+  jobType == null
+    ? runningList
+    : runningList.filter((job) => job.type === jobType && predicate(job));
+
+/**
+ * 指定したbatchIdを持つ実行待ちのJobを返す
  */
 export const getWaitingJobsInBatch = (batchId: string) => {
   return waitingList.filter((job) => job.batchId === batchId);
 };
 
 /**
- * 同じbatchIdを持つ実行中のJobを返す
+ * 指定したbatchIdを持つ実行中のJobを返す
  */
 export const getRunningJobsInBatch = (batchId: string) => {
   return runningList.filter((job) => job.batchId === batchId);
 };
 
 /**
- * 同じbatchIdを持つ実行待ちのJobが存在するかどうか
+ * 指定したbatchIdを持つ実行待ちのJobが存在するかどうかを返す
  */
 export const isWaitingJobExists = (batchId: string) => {
   return waitingList.some((job) => job.batchId === batchId);
@@ -68,7 +77,7 @@ export const hasRunningJob = () => runningList.length > 0;
 export const canQueueJob = <T>(jobType: JobType, pool: T[]) => {
   const hasFreeWorker = getRunningJobs(jobType).length < pool.length;
 
-  const waitingJobs = getFilteredWaitingJobs(jobType, executableJobFilter);
+  const waitingJobs = getWaitingJobs(jobType, executableJobFilter);
   return hasFreeWorker && waitingJobs.length > 0;
 };
 
@@ -86,11 +95,15 @@ export const startJob = (job: MandelbrotJob) => {
   runningList.push(job);
 };
 
-const popWaitingJob = (
-  jobType: JobType,
-  predicate: (job: MandelbrotJob) => boolean = () => true,
-) => {
-  const job = waitingList.find((job) => job.type === jobType && predicate(job));
+/**
+ * jobTypeに対応する実行可能なJobを取り出す
+ *
+ * 実行可能とは、requiredJobIdsが空か、全て完了していることを指す
+ */
+export const popWaitingExecutableJob = (jobType: JobType) => {
+  const job = waitingList.find(
+    (job) => job.type === jobType && executableJobFilter(job),
+  );
   if (job) {
     waitingList = waitingList.filter((j) => j.id !== job.id);
   }
@@ -98,19 +111,17 @@ const popWaitingJob = (
 };
 
 /**
- * jobTypeに対応する実行可能なJobを取り出す
- *
- * 実行可能とは、requiredJobIdsが空か、全て完了していることを指す
+ * jobをdoneとしてマークし、実行中リストから削除する
  */
-export const popWaitingExecutableJob = (jobType: JobType) => {
-  return popWaitingJob(jobType, executableJobFilter);
-};
-
 export const completeJob = (job: MandelbrotJob) => {
   markDoneJob(job.id);
   runningList = runningList.filter((j) => j.id !== job.id);
 };
 
+/**
+ * jobをdoneとしてマークする
+ * マークされると、このjobIdがrequiredJobIdsに含まれているjobが実行可能になる
+ */
 export const markDoneJob = (jobId: string) => {
   doneJobIds.add(jobId);
 };
@@ -143,6 +154,9 @@ export const removeBatchFromRunningJobs = (batchId: string) => {
   runningList = runningList.filter((job) => job.batchId !== batchId);
 };
 
+/**
+ * 実行待ちリストをクリアする
+ */
 export const clearTaskQueue = () => {
   waitingList = [];
   runningList = [];
