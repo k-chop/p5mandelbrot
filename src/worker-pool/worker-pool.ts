@@ -34,6 +34,25 @@ import {
   getRefOrbitCacheIfAvailable,
   setRefOrbitCache,
 } from "./reference-orbit-cache";
+import {
+  addJob,
+  clearTaskQueue,
+  countRunningJobs,
+  countWaitingJobs,
+  getRunningJobs,
+  getRunningList,
+  getWaitingList,
+  getWaitingListFiltered,
+  hasRunningJob,
+  hasWaitingJob,
+  isBatchCompleted,
+  popWaitingList,
+  popWaitingListFiltered,
+  removeBatchFromRunningJobs,
+  removeBatchFromWaitingJobs,
+  removeJobFromRunningList,
+  startJob,
+} from "./task-queue";
 
 const doneJobIds = new Set<string>();
 
@@ -151,7 +170,7 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
     blaTable,
   });
 
-  runningList = runningList.filter((j) => j.id !== job.id);
+  removeJobFromRunningList(job);
   runningWorkerFacadeMap.delete(job.id);
 
   doneJobIds.add(job.id);
@@ -178,7 +197,7 @@ const onCalcIterationWorkerResult: WorkerResultCallback = (result, job) => {
   // jobを完了させる
   batchContext.progressMap.set(job.id, 1.0);
 
-  runningList = runningList.filter((j) => j.id !== job.id);
+  removeJobFromRunningList(job);
   runningWorkerFacadeMap.delete(job.id);
 
   batchContext.spans.push({
@@ -189,11 +208,7 @@ const onCalcIterationWorkerResult: WorkerResultCallback = (result, job) => {
   renderToResultBuffer(rect);
 
   // バッチ全体が完了していたらonComplete callbackを呼ぶ
-  const waitingJobInSameBatch = waitingList.find(
-    (j) => j.batchId === job.batchId,
-  );
-
-  if (runningList.length === 0 && waitingJobInSameBatch == null) {
+  if (isBatchCompleted(job.batchId)) {
     const finishedAt = performance.now();
     batchContext.finishedAt = finishedAt;
     const elapsed = finishedAt - batchContext.startedAt;
@@ -333,9 +348,7 @@ export function resetWorkers() {
   });
   resetWorkerPool("calc-reference-point");
 
-  // queueに溜まってるJobも全部消す
-  runningList = [];
-  waitingList = [];
+  clearTaskQueue();
 
   runningWorkerFacadeMap.clear();
   batchContextMap.clear();
@@ -377,7 +390,7 @@ export function registerBatch(
     // normalモードの場合はreference pointの計算は不要
     doneJobIds.add(refPointJobId);
   } else {
-    waitingList.push({
+    addJob({
       type: "calc-reference-point",
       id: refPointJobId,
       batchId,
@@ -394,7 +407,7 @@ export function registerBatch(
       batchId,
     } satisfies CalcIterationJob;
 
-    waitingList.push(job);
+    addJob(job);
     progressMap.set(job.id, 0);
   }
 
@@ -412,8 +425,6 @@ export function registerBatch(
 }
 
 function tick() {
-  const hasWaitingJob = waitingList.length > 0;
-
   const refPool = getWorkerPool("calc-reference-point");
   if (
     (refPool.length > 0 &&
@@ -437,11 +448,11 @@ function tick() {
     if (!refPool[workerIdx]) {
       console.error("All workers are currently busy: ", {
         refPoolLength: refPool.length,
-        waitingList,
-        runningList,
+        waitingList: getWaitingList(),
+        runningList: getRunningList(),
         job,
       });
-      waitingList.push(job);
+      addJob(job);
 
       break;
     }
@@ -466,11 +477,11 @@ function tick() {
     if (!iterPool[workerIdx]) {
       console.error("All workers are currently busy: ", {
         iterPoolLength: iterPool.length,
-        waitingList,
-        runningList,
+        waitingList: getWaitingList(),
+        runningList: getRunningList(),
         job,
       });
-      waitingList.push(job);
+      addJob(job);
 
       break;
     }
@@ -480,9 +491,9 @@ function tick() {
     deleteCompletedDoneJobs();
   }
 
-  if (hasWaitingJob || runningList.length === 0) {
+  if (hasWaitingJob() || hasRunningJob()) {
     console.debug(
-      `Job status: running: ${runningList.length}, waiting: ${waitingList.length}`,
+      `Job status: running: ${countRunningJobs()}, waiting: ${countWaitingJobs()}`,
     );
   }
 }
@@ -513,7 +524,7 @@ function start(workerIdx: number, job: MandelbrotJob) {
       const workerFacade = getWorkerPool(assignedJob.type)[workerIdx];
 
       workerFacade.startCalculate(assignedJob, batchContext, workerIdx);
-      runningList.push(assignedJob);
+      startJob(assignedJob);
       runningWorkerFacadeMap.set(assignedJob.id, workerFacade);
       break;
     }
@@ -525,7 +536,7 @@ function start(workerIdx: number, job: MandelbrotJob) {
       const assignedJob = { ...job, workerIdx: refWorkerIdx };
 
       workerFacade.startCalculate(assignedJob, batchContext, refWorkerIdx);
-      runningList.push(assignedJob);
+      startJob(assignedJob);
       runningWorkerFacadeMap.set(assignedJob.id, workerFacade);
       break;
     }
@@ -543,11 +554,15 @@ export function cancelBatch(batchId: string) {
   acceptingBatchIds.delete(batchId);
 
   // 待ちリストからは単純に削除
-  waitingList = waitingList.filter((job) => job.batchId !== batchId);
+  removeBatchFromWaitingJobs(batchId);
 
-  const runningJobs = runningList.filter((job) => job.batchId === batchId);
+  const runningJobs = getRunningJobs(batchId);
 
-  console.info("cancelBatch", { batchId, runningJobs, runningList });
+  console.info("cancelBatch", {
+    batchId,
+    runningJobs,
+    runningList: getRunningList(),
+  });
 
   const batchContext = batchContextMap.get(batchId)!;
 
@@ -562,7 +577,7 @@ export function cancelBatch(batchId: string) {
 
   batchContext?.onComplete(0);
 
-  runningList = runningList.filter((job) => job.batchId !== batchId);
+  removeBatchFromRunningJobs(batchId);
   batchContextMap.delete(batchId);
 
   tick();
