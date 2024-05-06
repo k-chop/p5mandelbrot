@@ -27,7 +27,8 @@ import { getStore, updateStore } from "@/store/store";
 import {
   findFreeWorkerIndex,
   getWorkerPool,
-  resetWorkerPool,
+  iterateAllWorker,
+  resetAllWorker,
 } from "./pool-instance";
 import {
   getRefOrbitCache,
@@ -332,18 +333,11 @@ export function prepareWorkerPool(
  * WorkerPoolを溜まっていたJobごと全部リセットする
  */
 export function resetWorkers() {
-  getWorkerPool("calc-iteration").forEach((workerFacade) => {
+  iterateAllWorker((workerFacade) => {
     workerFacade.clearCallbacks();
     workerFacade.terminate();
   });
-  resetWorkerPool("calc-iteration");
-
-  // どうしてこうなった
-  getWorkerPool("calc-reference-point").forEach((workerFacade) => {
-    workerFacade.clearCallbacks();
-    workerFacade.terminate();
-  });
-  resetWorkerPool("calc-reference-point");
+  resetAllWorker();
 
   clearTaskQueue();
 
