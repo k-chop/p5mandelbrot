@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { POICardPreview } from "./poi-card-preview";
 import { Suspense } from "react";
 import { useStoreValue } from "@/store/store";
+import { SimpleTooltip } from "@/components/simple-tooltip";
 
 type POICardProps = {
   poi: POIData;
@@ -46,21 +47,27 @@ export const POICard = ({
           </div>
 
           <div className="mt-2 flex justify-between">
-            <Button variant="default" size="icon" onClick={onApply}>
-              <IconArrowBigLeftLine />
-            </Button>
-            {canRegenerate && (
-              <Button
-                variant="secondary"
-                size="icon"
-                onClick={onRegenerateThumbnail}
-              >
-                <IconRefresh />
+            <SimpleTooltip content="Apply params">
+              <Button variant="default" size="icon" onClick={onApply}>
+                <IconArrowBigLeftLine />
               </Button>
+            </SimpleTooltip>
+            {canRegenerate && (
+              <SimpleTooltip content="Regenerate thumbnail">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={onRegenerateThumbnail}
+                >
+                  <IconRefresh />
+                </Button>
+              </SimpleTooltip>
             )}
-            <Button variant="destructive" size="icon" onClick={onDelete}>
-              <IconTrash />
-            </Button>
+            <SimpleTooltip content="Delete">
+              <Button variant="destructive" size="icon" onClick={onDelete}>
+                <IconTrash />
+              </Button>
+            </SimpleTooltip>
           </div>
         </div>
       </div>
