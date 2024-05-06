@@ -42,19 +42,19 @@ import {
   getRunningJobsInBatch,
   getRunningJobs,
   getWaitingJobs,
-  getFilteredWaitingJobs,
   hasRunningJob,
   hasWaitingJob,
   isBatchCompleted,
   popWaitingJob,
-  popWaitingJobWithFilter,
   removeBatchFromRunningJobs,
   removeBatchFromWaitingJobs,
-  stopJob,
+  completeJob,
   startJob,
+  canQueueJob,
+  markDoneJob,
+  popWaitingExecutableJob,
+  deleteCompletedDoneJobs,
 } from "./task-queue";
-
-const doneJobIds = new Set<string>();
 
 type JobId = string;
 type BatchId = string;
@@ -170,10 +170,8 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
     blaTable,
   });
 
-  stopJob(job);
+  completeJob(job);
   runningWorkerFacadeMap.delete(job.id);
-
-  doneJobIds.add(job.id);
 
   tick();
 };
@@ -197,7 +195,7 @@ const onCalcIterationWorkerResult: WorkerResultCallback = (result, job) => {
   // jobを完了させる
   batchContext.progressMap.set(job.id, 1.0);
 
-  stopJob(job);
+  completeJob(job);
   runningWorkerFacadeMap.delete(job.id);
 
   batchContext.spans.push({
@@ -385,10 +383,10 @@ export function registerBatch(
     refX = refOrbitCache.x.toString();
     refY = refOrbitCache.y.toString();
 
-    doneJobIds.add(refPointJobId);
+    markDoneJob(refPointJobId);
   } else if (batchContext.mandelbrotParams.mode === "normal") {
     // normalモードの場合はreference pointの計算は不要
-    doneJobIds.add(refPointJobId);
+    markDoneJob(refPointJobId);
   } else {
     addJob({
       type: "calc-reference-point",
@@ -437,10 +435,7 @@ function tick() {
   }
 
   // reference point jobがある場合はpoolに空きがある限り処理を開始する
-  while (
-    getRunningJobs("calc-reference-point").length < refPool.length &&
-    getWaitingJobs("calc-reference-point").length > 0
-  ) {
+  while (canQueueJob("calc-reference-point", refPool)) {
     const job = popWaitingJob("calc-reference-point")!;
     const workerIdx = findFreeWorkerIndex("calc-reference-point");
 
@@ -462,15 +457,9 @@ function tick() {
 
   // requiresが空のもの、もしくはrequiresがdoneJobIdsと一致しているものを処理する
   const iterPool = getWorkerPool("calc-iteration");
-  const filter = (job: CalcIterationJob) =>
-    job.requiredJobIds.length === 0 ||
-    job.requiredJobIds.every((id) => doneJobIds.has(id));
 
-  while (
-    getRunningJobs("calc-iteration").length < iterPool.length &&
-    getFilteredWaitingJobs("calc-iteration", filter).length > 0
-  ) {
-    const job = popWaitingJobWithFilter("calc-iteration", filter)!;
+  while (canQueueJob("calc-iteration", iterPool)) {
+    const job = popWaitingExecutableJob("calc-iteration")!;
     const workerIdx = findFreeWorkerIndex("calc-iteration");
 
     // 空いているworkerが見つからなかったのでqueueに戻す
@@ -497,22 +486,6 @@ function tick() {
     );
   }
 }
-
-/**
- * 役目を終えたdoneJobIdを削除する
- */
-const deleteCompletedDoneJobs = () => {
-  const remainingRequiredJobIds = new Set(
-    ...(getWaitingJobs("calc-iteration") as CalcIterationJob[]).map(
-      (job) => job.requiredJobIds,
-    ),
-  );
-  Array.from(doneJobIds.values()).forEach((id) => {
-    if (remainingRequiredJobIds.has(id)) return;
-
-    doneJobIds.delete(id);
-  });
-};
 
 function start(workerIdx: number, job: MandelbrotJob) {
   const batchContext = batchContextMap.get(job.batchId)!;

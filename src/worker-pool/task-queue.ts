@@ -3,6 +3,12 @@ import { MandelbrotJob, JobType, CalcIterationJob } from "@/types";
 let waitingList: MandelbrotJob[] = [];
 let runningList: MandelbrotJob[] = [];
 
+const doneJobIds = new Set<string>();
+
+const executableJobFilter = (job: CalcIterationJob) =>
+  job.requiredJobIds.length === 0 ||
+  job.requiredJobIds.every((id) => doneJobIds.has(id));
+
 export const getWaitingJobs = (jobType?: JobType) =>
   jobType == null
     ? waitingList
@@ -60,6 +66,20 @@ export const hasWaitingJob = () => waitingList.length > 0;
 export const hasRunningJob = () => runningList.length > 0;
 
 /**
+ * 指定したjobTypeのJobをqueueに積める余地があるかどうかを返す
+ */
+export const canQueueJob = <T>(jobType: JobType, pool: T[]) => {
+  const hasFreeWorker = getRunningJobs(jobType).length < pool.length;
+
+  if (jobType === "calc-iteration") {
+    const waitingJobs = getFilteredWaitingJobs(jobType, executableJobFilter);
+    return hasFreeWorker && waitingJobs.length > 0;
+  }
+
+  return hasFreeWorker && getWaitingJobs(jobType).length > 0;
+};
+
+/**
  * 待ちリストにJobを追加する
  */
 export const addJob = (job: MandelbrotJob) => {
@@ -73,17 +93,9 @@ export const startJob = (job: MandelbrotJob) => {
   runningList.push(job);
 };
 
-export const popWaitingJob = (jobType: JobType) => {
-  const job = waitingList.find((job) => job.type === jobType);
-  if (job) {
-    waitingList = waitingList.filter((j) => j.id !== job.id);
-  }
-  return job;
-};
-
-export const popWaitingJobWithFilter = (
+export const popWaitingJob = (
   jobType: JobType,
-  predicate: (job: CalcIterationJob) => boolean,
+  predicate: (job: CalcIterationJob) => boolean = () => true,
 ) => {
   const job = waitingList.find(
     (job) => job.type === jobType && predicate(job as CalcIterationJob),
@@ -94,8 +106,33 @@ export const popWaitingJobWithFilter = (
   return job;
 };
 
-export const stopJob = (job: MandelbrotJob) => {
+export const popWaitingExecutableJob = (jobType: JobType) => {
+  return popWaitingJob(jobType, executableJobFilter);
+};
+
+export const completeJob = (job: MandelbrotJob) => {
+  markDoneJob(job.id);
   runningList = runningList.filter((j) => j.id !== job.id);
+};
+
+export const markDoneJob = (jobId: string) => {
+  doneJobIds.add(jobId);
+};
+
+/**
+ * 役目を終えたdoneJobIdを削除する
+ */
+export const deleteCompletedDoneJobs = () => {
+  const remainingRequiredJobIds = new Set(
+    ...(getWaitingJobs() as CalcIterationJob[]).map(
+      (job) => job.requiredJobIds ?? [],
+    ),
+  );
+  Array.from(doneJobIds.values()).forEach((id) => {
+    if (remainingRequiredJobIds.has(id)) return;
+
+    doneJobIds.delete(id);
+  });
 };
 
 /**
