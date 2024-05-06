@@ -25,6 +25,7 @@ import { upsertIterationCache } from "@/aggregator";
 import { renderToResultBuffer } from "@/camera";
 import { getStore, updateStore } from "@/store/store";
 import {
+  calcNormalizedWorkerIndex,
   findFreeWorkerIndex,
   getWorkerPool,
   iterateAllWorker,
@@ -481,33 +482,20 @@ function tick() {
   }
 }
 
+/**
+ * 指定したworkerを使ってjobを開始する
+ */
 function start(workerIdx: number, job: MandelbrotJob) {
   const batchContext = batchContextMap.get(job.batchId)!;
 
-  switch (job.type) {
-    // どうしてこうなった
-    case "calc-iteration": {
-      const assignedJob = { ...job, workerIdx };
-      const workerFacade = getWorkerPool(assignedJob.type)[workerIdx];
+  const workerIdxForTerminate = calcNormalizedWorkerIndex(job.type, workerIdx);
 
-      workerFacade.startCalculate(assignedJob, batchContext, workerIdx);
-      startJob(assignedJob);
-      runningWorkerFacadeMap.set(assignedJob.id, workerFacade);
-      break;
-    }
-    case "calc-reference-point": {
-      const workerFacade = getWorkerPool(job.type)[workerIdx];
-      // calc-iterationのworkerIdxと被らないように
-      const refWorkerIdx = getWorkerPool("calc-iteration").length + workerIdx;
+  const assignedJob = { ...job, workerIdx: workerIdxForTerminate };
+  const workerFacade = getWorkerPool(assignedJob.type)[workerIdx];
 
-      const assignedJob = { ...job, workerIdx: refWorkerIdx };
-
-      workerFacade.startCalculate(assignedJob, batchContext, refWorkerIdx);
-      startJob(assignedJob);
-      runningWorkerFacadeMap.set(assignedJob.id, workerFacade);
-      break;
-    }
-  }
+  workerFacade.startCalculate(assignedJob, batchContext, workerIdxForTerminate);
+  startJob(assignedJob);
+  runningWorkerFacadeMap.set(assignedJob.id, workerFacade);
 }
 
 export function startBatch(batchId: BatchId) {
