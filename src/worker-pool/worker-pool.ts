@@ -35,40 +35,7 @@ import {
   setRefOrbitCache,
 } from "./reference-orbit-cache";
 
-let waitingList: MandelbrotJob[] = [];
-let runningList: MandelbrotJob[] = [];
 const doneJobIds = new Set<string>();
-
-const getWaitingList = (jobType: JobType) =>
-  waitingList.filter((job) => job.type === jobType);
-const getWaitingListFiltered = (
-  jobType: JobType,
-  predicate: (job: CalcIterationJob) => boolean,
-) =>
-  waitingList.filter(
-    (job) => job.type === jobType && predicate(job as CalcIterationJob),
-  );
-const getRunningList = (jobType: JobType) =>
-  runningList.filter((job) => job.type === jobType);
-const popWaitingList = (jobType: JobType) => {
-  const job = waitingList.find((job) => job.type === jobType);
-  if (job) {
-    waitingList = waitingList.filter((j) => j.id !== job.id);
-  }
-  return job;
-};
-const popWaitingListFiltered = (
-  jobType: JobType,
-  predicate: (job: CalcIterationJob) => boolean,
-) => {
-  const job = waitingList.find(
-    (job) => job.type === jobType && predicate(job as CalcIterationJob),
-  );
-  if (job) {
-    waitingList = waitingList.filter((j) => j.id !== job.id);
-  }
-  return job;
-};
 
 type JobId = string;
 type BatchId = string;
