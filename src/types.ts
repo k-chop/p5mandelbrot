@@ -112,13 +112,13 @@ export interface MandelbrotJobBase {
   batchId: string;
   // jobが実際に走るタイミングで設定される
   workerIdx?: number;
+  requiredJobIds: string[];
 }
 
 export interface CalcIterationJob
   extends MandelbrotJobBase,
     MandelbrotRenderingUnit {
   type: "calc-iteration";
-  requiredJobIds: string[];
 }
 
 export interface CalcReferencePointJob extends MandelbrotJobBase {

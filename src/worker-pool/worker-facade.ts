@@ -50,6 +50,7 @@ export interface MandelbrotFacadeLike {
   init(): Promise<void>;
 
   cancel(batchContext: BatchContext, job: MandelbrotJob): void;
+  clearCallbacks(): void;
 
   isRunning(): boolean;
   isReady(): boolean;
