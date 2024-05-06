@@ -480,7 +480,7 @@ function tick() {
     deleteCompletedDoneJobs();
   }
 
-  if (hasWaitingJob() || hasRunningJob()) {
+  if (hasWaitingJob() || !hasRunningJob()) {
     console.debug(
       `Job status: running: ${countRunningJobs()}, waiting: ${countWaitingJobs()}`,
     );
