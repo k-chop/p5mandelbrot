@@ -1,12 +1,15 @@
-import { loadPreview } from "@/store/preview-store";
+import { loadPreview, useTrackChangePreview } from "@/store/preview-store";
+import { POIData } from "@/types";
 import usePromise from "react-promise-suspense";
 
 type Props = {
-  poiId: string;
+  poi: POIData;
 };
 
-export const POICardPreview = ({ poiId }: Props) => {
-  const data = usePromise(loadPreview, [poiId]);
+export const POICardPreview = ({ poi }: Props) => {
+  const data = usePromise(loadPreview, [poi.id], 1000);
+
+  useTrackChangePreview(poi.id);
 
   if (data == null)
     return (

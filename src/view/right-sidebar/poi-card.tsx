@@ -1,25 +1,39 @@
-import { IconArrowBigLeftLine, IconTrash } from "@tabler/icons-react";
+import {
+  IconArrowBigLeftLine,
+  IconRefresh,
+  IconTrash,
+} from "@tabler/icons-react";
 import { POIData } from "../../types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { POICardPreview } from "./poi-card-preview";
 import { Suspense } from "react";
+import { useStoreValue } from "@/store/store";
+import { SimpleTooltip } from "@/components/simple-tooltip";
 
 type POICardProps = {
   poi: POIData;
   onDelete: () => void;
   onApply: () => void;
+  onRegenerateThumbnail: () => void;
 };
 
-export const POICard = ({ poi, onDelete, onApply }: POICardProps) => {
+export const POICard = ({
+  poi,
+  onDelete,
+  onApply,
+  onRegenerateThumbnail,
+}: POICardProps) => {
   const { r, N, id } = poi;
+
+  const canRegenerate = useIsInSamePlace(poi);
 
   return (
     <Card className="w-64 p-2">
       <div className="flex">
         <div className="">
           <Suspense fallback={"loading..."}>
-            <POICardPreview poiId={id} />
+            <POICardPreview poi={poi} />
           </Suspense>
         </div>
         <div className="ml-2 flex flex-grow flex-col">
@@ -33,15 +47,46 @@ export const POICard = ({ poi, onDelete, onApply }: POICardProps) => {
           </div>
 
           <div className="mt-2 flex justify-between">
-            <Button variant="default" size="icon" onClick={onApply}>
-              <IconArrowBigLeftLine />
-            </Button>
-            <Button variant="destructive" size="icon" onClick={onDelete}>
-              <IconTrash />
-            </Button>
+            <SimpleTooltip content="Apply params">
+              <Button variant="default" size="icon" onClick={onApply}>
+                <IconArrowBigLeftLine />
+              </Button>
+            </SimpleTooltip>
+            {canRegenerate && (
+              <SimpleTooltip content="Regenerate thumbnail">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={onRegenerateThumbnail}
+                >
+                  <IconRefresh />
+                </Button>
+              </SimpleTooltip>
+            )}
+            <SimpleTooltip content="Delete">
+              <Button variant="destructive" size="icon" onClick={onDelete}>
+                <IconTrash />
+              </Button>
+            </SimpleTooltip>
           </div>
         </div>
       </div>
     </Card>
+  );
+};
+
+const useIsInSamePlace = (poi: POIData) => {
+  const centerX = useStoreValue("centerX");
+  const centerY = useStoreValue("centerY");
+  const r = useStoreValue("r");
+  const N = useStoreValue("N");
+  const mode = useStoreValue("mode");
+
+  return (
+    poi.x.eq(centerX) &&
+    poi.y.eq(centerY) &&
+    poi.r.eq(r) &&
+    poi.N === N &&
+    poi.mode === mode
   );
 };
