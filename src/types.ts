@@ -1,6 +1,5 @@
 import { BigNumber } from "bignumber.js";
 import { Rect } from "./rect";
-import { BLATableItem, Complex } from "./math";
 import {
   BatchCompleteCallback,
   BatchProgressChangedCallback,
@@ -11,31 +10,31 @@ export interface Resolution {
   height: number;
 }
 
-export interface WorkerResult {
+export interface IterationResult {
   type: "result";
   iterations: ArrayBuffer;
   elapsed: number;
 }
 
-export interface WorkerIntermediateResult {
+export interface IterationIntermediateResult {
   type: "intermediateResult";
   iterations: ArrayBuffer;
   resolution: Resolution;
 }
 
-export interface WorkerProgress {
+export interface IterationProgress {
   type: "progress";
   progress: number;
 }
 
-export interface ReferencePointResult {
+export interface RefOrbitResult {
   type: "result" | "terminated";
   xn: XnBuffer;
   blaTable: BLATableBuffer;
   elapsed: number;
 }
 
-export interface ReferencePointProgress {
+export interface RefOrbitProgress {
   type: "progress";
   progress: number;
 }
@@ -57,7 +56,7 @@ export interface POIData extends MandelbrotParams {
   id: string; // UUID
 }
 
-export interface MandelbrotCalculationWorkerParams {
+export interface IterationWorkerParams {
   pixelHeight: number;
   pixelWidth: number;
   cx: string;
@@ -80,7 +79,7 @@ export interface MandelbrotCalculationWorkerParams {
 export type XnBuffer = ArrayBuffer;
 export type BLATableBuffer = ArrayBuffer;
 
-export interface ReferencePointCalculationWorkerParams {
+export interface RefOrbitWorkerParams {
   complexCenterX: string;
   complexCenterY: string;
   pixelWidth: number;
@@ -105,7 +104,7 @@ export interface MandelbrotRenderingUnit {
   rect: Rect;
 }
 
-export type MandelbrotJob = CalcIterationJob | CalcReferencePointJob;
+export type MandelbrotJob = CalcIterationJob | CalcRefOrbitJob;
 
 export interface MandelbrotJobBase {
   id: string;
@@ -121,8 +120,8 @@ export interface CalcIterationJob
   type: "calc-iteration";
 }
 
-export interface CalcReferencePointJob extends MandelbrotJobBase {
-  type: "calc-reference-point";
+export interface CalcRefOrbitJob extends MandelbrotJobBase {
+  type: "calc-ref-orbit";
   mandelbrotParams: MandelbrotParams;
 }
 
@@ -165,7 +164,7 @@ export type InitialOmittedBatchContextKeys =
   | "refProgress"
   | "spans";
 
-export type JobType = "calc-iteration" | "calc-reference-point";
+export type JobType = "calc-iteration" | "calc-ref-orbit";
 
 export type RefOrbitCache = {
   x: BigNumber;

@@ -1,7 +1,7 @@
 import {
   BatchContext,
   CalcIterationJob,
-  CalcReferencePointJob,
+  CalcRefOrbitJob,
   InitialOmittedBatchContextKeys,
   MandelbrotJob,
   MandelbrotRenderingUnit,
@@ -18,7 +18,7 @@ import {
 import {
   getRefOrbitCache,
   getRefOrbitCacheIfAvailable,
-} from "./reference-orbit-cache";
+} from "./ref-orbit-cache";
 import {
   addJob,
   countRunningJobs,
@@ -126,7 +126,7 @@ export function registerBatch(
 
   const progressMap = new Map<string, number>();
 
-  const refPointJobId = crypto.randomUUID();
+  const refOrbitJobId = crypto.randomUUID();
   let refX = batchContext.mandelbrotParams.x.toString();
   let refY = batchContext.mandelbrotParams.y.toString();
 
@@ -143,18 +143,18 @@ export function registerBatch(
     refX = refOrbitCache.x.toString();
     refY = refOrbitCache.y.toString();
 
-    markDoneJob(refPointJobId);
+    markDoneJob(refOrbitJobId);
   } else if (batchContext.mandelbrotParams.mode === "normal") {
-    // normalモードの場合はreference pointの計算は不要
-    markDoneJob(refPointJobId);
+    // normalモードの場合はreference orbitの計算は不要
+    markDoneJob(refOrbitJobId);
   } else {
     addJob({
-      type: "calc-reference-point",
-      id: refPointJobId,
+      type: "calc-ref-orbit",
+      id: refOrbitJobId,
       requiredJobIds: [],
       batchId,
       mandelbrotParams: batchContext.mandelbrotParams,
-    } satisfies CalcReferencePointJob);
+    } satisfies CalcRefOrbitJob);
   }
 
   for (const unit of units) {
@@ -162,7 +162,7 @@ export function registerBatch(
       type: "calc-iteration",
       ...unit,
       id: crypto.randomUUID(),
-      requiredJobIds: [refPointJobId],
+      requiredJobIds: [refOrbitJobId],
       batchId,
     } satisfies CalcIterationJob;
 
@@ -184,10 +184,9 @@ export function registerBatch(
 }
 
 export function tickWorkerPool() {
-  const refPool = getWorkerPool("calc-reference-point");
+  const refPool = getWorkerPool("calc-ref-orbit");
   if (
-    (refPool.length > 0 &&
-      findFreeWorkerIndex("calc-reference-point") === -1) ||
+    (refPool.length > 0 && findFreeWorkerIndex("calc-ref-orbit") === -1) ||
     findFreeWorkerIndex("calc-iteration") === -1
   ) {
     // まだ準備ができていないworkerがいる場合は待つ
@@ -195,10 +194,10 @@ export function tickWorkerPool() {
     return;
   }
 
-  // reference point jobがある場合はpoolに空きがある限り処理を開始する
-  while (canQueueJob("calc-reference-point", refPool)) {
-    const job = popWaitingExecutableJob("calc-reference-point")!;
-    const workerIdx = findFreeWorkerIndex("calc-reference-point");
+  // reference orbit jobがある場合はpoolに空きがある限り処理を開始する
+  while (canQueueJob("calc-ref-orbit", refPool)) {
+    const job = popWaitingExecutableJob("calc-ref-orbit")!;
+    const workerIdx = findFreeWorkerIndex("calc-ref-orbit");
 
     // 空いているworkerが見つからなかったのでqueueに戻す
     if (!refPool[workerIdx]) {
