@@ -3,12 +3,12 @@ import { MandelbrotJob, JobType, CalcIterationJob } from "@/types";
 let waitingList: MandelbrotJob[] = [];
 let runningList: MandelbrotJob[] = [];
 
-export const getWaitingList = (jobType?: JobType) =>
+export const getWaitingJobs = (jobType?: JobType) =>
   jobType == null
     ? waitingList
     : waitingList.filter((job) => job.type === jobType);
 
-export const getWaitingListFiltered = (
+export const getFilteredWaitingJobs = (
   jobType: JobType,
   predicate: (job: CalcIterationJob) => boolean,
 ) =>
@@ -16,7 +16,7 @@ export const getWaitingListFiltered = (
     (job) => job.type === jobType && predicate(job as CalcIterationJob),
   );
 
-export const getRunningList = (jobType?: JobType) =>
+export const getRunningJobs = (jobType?: JobType) =>
   jobType == null
     ? runningList
     : runningList.filter((job) => job.type === jobType);
@@ -73,7 +73,7 @@ export const startJob = (job: MandelbrotJob) => {
   runningList.push(job);
 };
 
-export const popWaitingList = (jobType: JobType) => {
+export const popWaitingJob = (jobType: JobType) => {
   const job = waitingList.find((job) => job.type === jobType);
   if (job) {
     waitingList = waitingList.filter((j) => j.id !== job.id);
@@ -81,7 +81,7 @@ export const popWaitingList = (jobType: JobType) => {
   return job;
 };
 
-export const popWaitingListFiltered = (
+export const popWaitingJobWithFilter = (
   jobType: JobType,
   predicate: (job: CalcIterationJob) => boolean,
 ) => {
@@ -94,7 +94,7 @@ export const popWaitingListFiltered = (
   return job;
 };
 
-export const removeJobFromRunningList = (job: MandelbrotJob) => {
+export const stopJob = (job: MandelbrotJob) => {
   runningList = runningList.filter((j) => j.id !== job.id);
 };
 

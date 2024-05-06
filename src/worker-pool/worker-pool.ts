@@ -40,17 +40,17 @@ import {
   countRunningJobs,
   countWaitingJobs,
   getRunningJobsInBatch,
-  getRunningList,
-  getWaitingList,
-  getWaitingListFiltered,
+  getRunningJobs,
+  getWaitingJobs,
+  getFilteredWaitingJobs,
   hasRunningJob,
   hasWaitingJob,
   isBatchCompleted,
-  popWaitingList,
-  popWaitingListFiltered,
+  popWaitingJob,
+  popWaitingJobWithFilter,
   removeBatchFromRunningJobs,
   removeBatchFromWaitingJobs,
-  removeJobFromRunningList,
+  stopJob,
   startJob,
 } from "./task-queue";
 
@@ -170,7 +170,7 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
     blaTable,
   });
 
-  removeJobFromRunningList(job);
+  stopJob(job);
   runningWorkerFacadeMap.delete(job.id);
 
   doneJobIds.add(job.id);
@@ -197,7 +197,7 @@ const onCalcIterationWorkerResult: WorkerResultCallback = (result, job) => {
   // jobを完了させる
   batchContext.progressMap.set(job.id, 1.0);
 
-  removeJobFromRunningList(job);
+  stopJob(job);
   runningWorkerFacadeMap.delete(job.id);
 
   batchContext.spans.push({
@@ -438,18 +438,18 @@ function tick() {
 
   // reference point jobがある場合はpoolに空きがある限り処理を開始する
   while (
-    getRunningList("calc-reference-point").length < refPool.length &&
-    getWaitingList("calc-reference-point").length > 0
+    getRunningJobs("calc-reference-point").length < refPool.length &&
+    getWaitingJobs("calc-reference-point").length > 0
   ) {
-    const job = popWaitingList("calc-reference-point")!;
+    const job = popWaitingJob("calc-reference-point")!;
     const workerIdx = findFreeWorkerIndex("calc-reference-point");
 
-    // 空いているworkerが見つからなかったのでwaitingListに戻す
+    // 空いているworkerが見つからなかったのでqueueに戻す
     if (!refPool[workerIdx]) {
       console.error("All workers are currently busy: ", {
         refPoolLength: refPool.length,
-        waitingList: getWaitingList(),
-        runningList: getRunningList(),
+        waitingJobs: getWaitingJobs(),
+        runningJobs: getRunningJobs(),
         job,
       });
       addJob(job);
@@ -467,18 +467,18 @@ function tick() {
     job.requiredJobIds.every((id) => doneJobIds.has(id));
 
   while (
-    getRunningList("calc-iteration").length < iterPool.length &&
-    getWaitingListFiltered("calc-iteration", filter).length > 0
+    getRunningJobs("calc-iteration").length < iterPool.length &&
+    getFilteredWaitingJobs("calc-iteration", filter).length > 0
   ) {
-    const job = popWaitingListFiltered("calc-iteration", filter)!;
+    const job = popWaitingJobWithFilter("calc-iteration", filter)!;
     const workerIdx = findFreeWorkerIndex("calc-iteration");
 
-    // 空いているworkerが見つからなかったのでwaitingListに戻す
+    // 空いているworkerが見つからなかったのでqueueに戻す
     if (!iterPool[workerIdx]) {
       console.error("All workers are currently busy: ", {
         iterPoolLength: iterPool.length,
-        waitingList: getWaitingList(),
-        runningList: getRunningList(),
+        waitingJobs: getWaitingJobs(),
+        runningJobs: getRunningJobs(),
         job,
       });
       addJob(job);
@@ -503,7 +503,7 @@ function tick() {
  */
 const deleteCompletedDoneJobs = () => {
   const remainingRequiredJobIds = new Set(
-    ...(getWaitingList("calc-iteration") as CalcIterationJob[]).map(
+    ...(getWaitingJobs("calc-iteration") as CalcIterationJob[]).map(
       (job) => job.requiredJobIds,
     ),
   );
@@ -556,17 +556,17 @@ export function cancelBatch(batchId: string) {
   // 待ちリストからは単純に削除
   removeBatchFromWaitingJobs(batchId);
 
-  const runningJobs = getRunningJobsInBatch(batchId);
+  const runningJobsInBatch = getRunningJobsInBatch(batchId);
 
   console.info("cancelBatch", {
     batchId,
-    runningJobs,
-    runningList: getRunningList(),
+    runningJobsInBatch,
+    runningJobs: getRunningJobs(),
   });
 
   const batchContext = batchContextMap.get(batchId)!;
 
-  runningJobs.forEach((job) => {
+  runningJobsInBatch.forEach((job) => {
     const facade = runningWorkerFacadeMap.get(job.id);
     runningWorkerFacadeMap.delete(job.id);
 
