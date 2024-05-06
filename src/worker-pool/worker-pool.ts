@@ -45,7 +45,6 @@ import {
   hasRunningJob,
   hasWaitingJob,
   isBatchCompleted,
-  popWaitingJob,
   removeBatchFromRunningJobs,
   removeBatchFromWaitingJobs,
   completeJob,

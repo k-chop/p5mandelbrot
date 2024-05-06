@@ -68,12 +68,8 @@ export const hasRunningJob = () => runningList.length > 0;
 export const canQueueJob = <T>(jobType: JobType, pool: T[]) => {
   const hasFreeWorker = getRunningJobs(jobType).length < pool.length;
 
-  if (jobType === "calc-iteration") {
-    const waitingJobs = getFilteredWaitingJobs(jobType, executableJobFilter);
-    return hasFreeWorker && waitingJobs.length > 0;
-  }
-
-  return hasFreeWorker && getWaitingJobs(jobType).length > 0;
+  const waitingJobs = getFilteredWaitingJobs(jobType, executableJobFilter);
+  return hasFreeWorker && waitingJobs.length > 0;
 };
 
 /**
@@ -90,7 +86,7 @@ export const startJob = (job: MandelbrotJob) => {
   runningList.push(job);
 };
 
-export const popWaitingJob = (
+const popWaitingJob = (
   jobType: JobType,
   predicate: (job: MandelbrotJob) => boolean = () => true,
 ) => {
@@ -101,6 +97,11 @@ export const popWaitingJob = (
   return job;
 };
 
+/**
+ * jobTypeに対応する実行可能なJobを取り出す
+ *
+ * 実行可能とは、requiredJobIdsが空か、全て完了していることを指す
+ */
 export const popWaitingExecutableJob = (jobType: JobType) => {
   return popWaitingJob(jobType, executableJobFilter);
 };
