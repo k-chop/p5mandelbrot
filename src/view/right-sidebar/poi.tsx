@@ -5,6 +5,7 @@ import { cloneParams, getCurrentParams } from "../../mandelbrot";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useRef } from "react";
+import throttle from "lodash.throttle";
 
 export const POI = () => {
   const { poiList, addPOI, deletePOIAt, applyPOI, regenerateThumbnailPOI } =
@@ -12,9 +13,9 @@ export const POI = () => {
   const scrollTop = useRef(parseInt(sessionStorage.getItem("scroll") ?? "0"));
   const viewportRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = (e: any) => {
+  const handleScroll = throttle((e: any) => {
     scrollTop.current = e.target.scrollTop;
-  };
+  }, 500);
 
   useEffect(() => {
     const scroll = scrollTop.current;
