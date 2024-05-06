@@ -8,12 +8,9 @@ import {
   MandelbrotRenderingUnit,
   MandelbrotWorkerType,
   ResultSpans,
-  WorkerIntermediateResult,
   mandelbrotWorkerTypes,
 } from "@/types";
 import {
-  WorkerProgressCallback,
-  WorkerResultCallback,
   CalcIterationWorker,
   MandelbrotFacadeLike,
   CalcReferencePointWorker,
@@ -21,8 +18,6 @@ import {
   RefPointTerminatedCallback,
   RefPointProgressCallback,
 } from "./worker-facade";
-import { upsertIterationCache } from "@/aggregator";
-import { renderToResultBuffer } from "@/camera";
 import { getStore, updateStore } from "@/store/store";
 import {
   calcNormalizedWorkerIndex,
@@ -46,7 +41,6 @@ import {
   getWaitingJobs,
   hasRunningJob,
   hasWaitingJob,
-  isBatchCompleted,
   removeBatchFromRunningJobs,
   removeBatchFromWaitingJobs,
   completeJob,
@@ -56,6 +50,11 @@ import {
   popWaitingExecutableJob,
   deleteCompletedDoneJobs,
 } from "./task-queue";
+import {
+  onCalcIterationWorkerIntermediateResult,
+  onCalcIterationWorkerProgress,
+  onCalcIterationWorkerResult,
+} from "./callbacks/iteration-worker";
 
 type JobId = string;
 type BatchId = string;
@@ -79,6 +78,12 @@ const getLatestBatchContext = () => {
 
   return batchContext;
 };
+
+/**
+ * BatchContextを取得する
+ */
+export const getBatchContext = (batchId: string) =>
+  batchContextMap.get(batchId);
 
 export const getProgressData = (): string | ResultSpans => {
   const batchContext = getLatestBatchContext();
@@ -105,18 +110,6 @@ export const getProgressData = (): string | ResultSpans => {
     progressList.reduce((a, b) => a + b, 0) / progressList.length;
 
   return `Generating... ${Math.floor(progress * 100)}%`;
-};
-
-const onCalcIterationWorkerProgress: WorkerProgressCallback = (result, job) => {
-  const { progress } = result;
-  const batchContext = batchContextMap.get(job.batchId);
-
-  // 停止が間に合わなかったケースや既にcancelされているケース。何もしない
-  if (batchContext == null) {
-    return;
-  }
-
-  batchContext.progressMap.set(job.id, progress);
 };
 
 const onCalcReferencePointWorkerTerminated: RefPointTerminatedCallback = (
@@ -177,63 +170,6 @@ const onCalcReferencePointWorkerResult: RefPointResultCallback = (
   tick();
 };
 
-const onCalcIterationWorkerResult: WorkerResultCallback = (result, job) => {
-  const { iterations, elapsed } = result;
-  const { rect } = job;
-  const batchContext = batchContextMap.get(job.batchId);
-
-  // 停止が間に合わなかったケースや既にcancelされているケース。何もしない
-  if (batchContext == null) {
-    return;
-  }
-
-  const iterationsResult = new Uint32Array(iterations);
-  upsertIterationCache(rect, iterationsResult, {
-    width: rect.width,
-    height: rect.height,
-  });
-
-  // jobを完了させる
-  batchContext.progressMap.set(job.id, 1.0);
-
-  completeJob(job);
-  runningWorkerFacadeMap.delete(job.id);
-
-  batchContext.spans.push({
-    name: `iteration_${job.workerIdx}`,
-    elapsed: Math.floor(elapsed),
-  });
-
-  renderToResultBuffer(rect);
-
-  // バッチ全体が完了していたらonComplete callbackを呼ぶ
-  if (isBatchCompleted(job.batchId)) {
-    const finishedAt = performance.now();
-    batchContext.finishedAt = finishedAt;
-    const elapsed = finishedAt - batchContext.startedAt;
-
-    batchContext.onComplete(elapsed);
-  }
-
-  tick();
-};
-
-const onCalcIterationWorkerIntermediateResult = (
-  result: WorkerIntermediateResult,
-  job: CalcIterationJob,
-) => {
-  const { iterations, resolution } = result;
-  const { rect } = job;
-
-  // 停止が間に合わなかったケース。何もしない
-  if (!batchContextMap.has(job.batchId)) {
-    return;
-  }
-
-  upsertIterationCache(rect, new Uint32Array(iterations), resolution);
-  renderToResultBuffer(rect);
-};
-
 export const getWorkerCount = (jobType: JobType): number => {
   return getWorkerPool(jobType).length;
 };
@@ -264,7 +200,10 @@ function fillCalcIterationWorkerPool(
   for (let i = 0; pool.length < upTo && i < upTo; i++) {
     const workerFacade = new CalcIterationWorker(workerType);
 
-    workerFacade.onResult(onCalcIterationWorkerResult);
+    workerFacade.onResult((...args) => {
+      onCalcIterationWorkerResult(...args);
+      tick();
+    });
     workerFacade.onIntermediateResult(onCalcIterationWorkerIntermediateResult);
     workerFacade.onProgress(onCalcIterationWorkerProgress);
 
