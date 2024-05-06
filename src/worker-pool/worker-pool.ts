@@ -12,7 +12,6 @@ import {
 } from "@/types";
 import {
   CalcIterationWorker,
-  MandelbrotFacadeLike,
   CalcReferencePointWorker,
   RefPointResultCallback,
   RefPointTerminatedCallback,
@@ -21,14 +20,10 @@ import {
 import { getStore, updateStore } from "@/store/store";
 import {
   calcNormalizedWorkerIndex,
-  clearWorkerReference,
   findFreeWorkerIndex,
   getWorkerPool,
   iterateAllWorker,
-  popWorkerReference,
-  removeWorkerReference,
   resetAllWorker,
-  setWorkerReference,
 } from "./pool-instance";
 import {
   getRefOrbitCache,
@@ -59,6 +54,12 @@ import {
   onCalcIterationWorkerProgress,
   onCalcIterationWorkerResult,
 } from "./callbacks/iteration-worker";
+import {
+  removeWorkerReference,
+  clearWorkerReference,
+  setWorkerReference,
+  popWorkerReference,
+} from "./worker-reference";
 
 type BatchId = string;
 

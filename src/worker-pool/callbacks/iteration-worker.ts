@@ -4,7 +4,7 @@ import { WorkerIntermediateResult, CalcIterationJob } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
 import { WorkerProgressCallback, WorkerResultCallback } from "../worker-facade";
 import { getBatchContext } from "../worker-pool";
-import { removeWorkerReference } from "../pool-instance";
+import { removeWorkerReference } from "../worker-reference";
 
 export const onCalcIterationWorkerProgress: WorkerProgressCallback = (
   result,
