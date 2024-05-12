@@ -1,4 +1,4 @@
-import { ChromaJsPalette } from "./color-chromajs";
+import { clamp } from "@/math";
 
 export type RGB = [number, number, number];
 
@@ -155,13 +155,9 @@ export class BasePalette implements Palette {
   }
 }
 
-export const deserializePalette = (serialized: string): Palette => {
-  const [type] = serialized.split(",");
-
-  switch (type) {
-    case "chroma-js":
-      return ChromaJsPalette.deserialize(serialized);
-    default:
-      throw new Error(`Unknown palette type: ${type}`);
-  }
+export const clampedPaletteParams = (length: number, offset: number) => {
+  return {
+    colorLength: clamp(length, 1, 8192),
+    offsetIndex: clamp(offset, 0, length * 2 - 1),
+  };
 };
