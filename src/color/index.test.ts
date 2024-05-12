@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { ChromaJsPalette } from "./color-chromajs";
-import { deserializePalette } from ".";
+import { deserializePalette } from "./deserializer";
 import { repeatUntil } from "@/math";
+import { D3ChromaticPalette } from "./color-d3-chromatic";
+import { interpolateRdYlBu } from "d3-scale-chromatic";
 
 describe("chroma-js", () => {
   it("不正な入力に対してデフォルト値を適用する", () => {
@@ -45,5 +47,32 @@ describe("chroma-js", () => {
     const palette = deserializePalette(serialized);
     const serialized2 = palette.serialize();
     expect(serialized2).toBe("chroma-js,2,black,white,0,16,0");
+  });
+});
+
+describe("d3-chromatic", () => {
+  it("不正な入力に対してデフォルト値を適用する", () => {
+    const palette = new D3ChromaticPalette(interpolateRdYlBu, -1, true, -512);
+    const serialized = palette.serialize();
+    expect(serialized).toBe("d3-chromatic,RdYlBlu,1,1,0");
+  });
+
+  it("serializeできる", () => {
+    const palette = new D3ChromaticPalette(interpolateRdYlBu, 128, true, 8);
+    expect(palette.serialize()).toBe("d3-chromatic,RdYlBlu,1,128,8");
+  });
+
+  it("deserializeできる", () => {
+    const serialized = "d3-chromatic,RdYlBlu,1,128,8";
+    const palette = deserializePalette(serialized);
+    const serialized2 = palette.serialize();
+    expect(serialized2).toBe(serialized);
+  });
+
+  it("deserialize時に不正な入力を与えられた場合はデフォルトのパレットを返す", () => {
+    const serialized = "d3-chromatic,asd,asd,asd,asd,asd";
+    const palette = deserializePalette(serialized);
+    const serialized2 = palette.serialize();
+    expect(serialized2).toBe("d3-chromatic,RdYlBlu,0,1,0");
   });
 });

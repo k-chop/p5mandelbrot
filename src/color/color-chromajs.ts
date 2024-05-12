@@ -1,6 +1,6 @@
 import chroma from "chroma-js";
-import { BasePalette, Palette, RGB } from ".";
-import { clamp, safeParseInt } from "@/math";
+import { BasePalette, Palette, RGB, clampedPaletteParams } from ".";
+import { safeParseInt } from "@/math";
 
 export class ChromaJsPalette extends BasePalette {
   colorConstructor: string[];
@@ -12,8 +12,7 @@ export class ChromaJsPalette extends BasePalette {
     mirrored = true,
     offset = 0,
   ) {
-    const colorLength = clamp(length, 1, 8192);
-    const offsetIndex = clamp(offset, 0, colorLength * 2 - 1);
+    const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
     super(colorLength, mirrored, offsetIndex);
 
