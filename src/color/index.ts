@@ -1,3 +1,5 @@
+import { clamp } from "@/math";
+
 export type RGB = [number, number, number];
 
 export const buildRGB = ({
@@ -10,6 +12,18 @@ export const buildRGB = ({
   b: number;
 }): RGB => {
   return [r, g, b];
+};
+
+export const buildRGB32Byte = ({
+  r,
+  g,
+  b,
+}: {
+  r: number;
+  g: number;
+  b: number;
+}): RGB => {
+  return [r * 255, g * 255, b * 255];
 };
 
 export type Palette = {
@@ -25,6 +39,8 @@ export type Palette = {
   cycleOffset(step?: number): void;
   setLength(length: number): void;
   setMirrored(mirrored: boolean): void;
+
+  serialize(): string;
 };
 
 export class BasePalette implements Palette {
@@ -35,8 +51,10 @@ export class BasePalette implements Palette {
   mirrored = true;
   colorLength;
 
-  constructor(length: number) {
+  constructor(length: number, mirrored = true, offsetIndex = 0) {
     this.colorLength = length;
+    this.mirrored = mirrored;
+    this.offsetIndex = offsetIndex;
 
     this.resetCache();
   }
@@ -51,6 +69,10 @@ export class BasePalette implements Palette {
   }
 
   buildColors(): void {
+    throw new Error("Not implemented");
+  }
+
+  serialize(): string {
     throw new Error("Not implemented");
   }
 
@@ -144,3 +166,10 @@ export class BasePalette implements Palette {
     this.cacheInitialized[index] = true;
   }
 }
+
+export const clampedPaletteParams = (length: number, offset: number) => {
+  return {
+    colorLength: clamp(length, 1, 8192),
+    offsetIndex: clamp(offset, 0, length * 2 - 1),
+  };
+};
