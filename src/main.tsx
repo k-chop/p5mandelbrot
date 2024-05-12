@@ -110,7 +110,7 @@ const sketch = (p: p5) => {
     const { width, height } = getCanvasSize();
 
     addPalettes(...d3ChromaticPalettes);
-    addPalettes(...othersPalettes(p));
+    addPalettes(...othersPalettes);
     addPalettes(...chromaJsPalettes);
 
     p.createCanvas(width, height);

@@ -38,22 +38,21 @@ export class OthersPalette extends BasePalette {
   }
 }
 
-export const othersPalettes = (p: p5) =>
-  [
-    new OthersPalette(128, (t) => {
-      // hue 0~360
-      const hue = Math.floor(t * 360);
-      return { mode: "hsv", h: hue, s: 0.75, v: 1 };
-    }),
-    new OthersPalette(128, (t) => {
-      // monochrome
-      const brightness = t * 0.8 + 0.2;
-      return { mode: "hsv", s: 0, v: brightness };
-    }),
-    new OthersPalette(128, (t) => {
-      // fire
-      const brightness = t * 0.7 + 0.3;
-      const hue = Math.floor(t * 90) - 30;
-      return { mode: "hsv", h: hue, s: 0.9, v: brightness };
-    }),
-  ] satisfies Palette[];
+export const othersPalettes = [
+  new OthersPalette(128, (t) => {
+    // hue 0~360
+    const hue = Math.floor(t * 360);
+    return { mode: "hsv", h: hue, s: 0.75, v: 1 };
+  }),
+  new OthersPalette(128, (t) => {
+    // monochrome
+    const brightness = t * 0.8 + 0.2;
+    return { mode: "hsv", s: 0, v: brightness };
+  }),
+  new OthersPalette(128, (t) => {
+    // fire
+    const brightness = t * 0.7 + 0.3;
+    const hue = Math.floor(t * 90) - 30;
+    return { mode: "hsv", h: hue, s: 0.9, v: brightness };
+  }),
+] satisfies Palette[];
