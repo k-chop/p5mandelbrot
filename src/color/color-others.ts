@@ -6,6 +6,7 @@ import {
   buildRGB32Byte,
   clampedPaletteParams,
 } from ".";
+import { safeParseInt } from "@/math";
 
 type OthersInterpolator = (t: number) => Hsv;
 
@@ -85,8 +86,8 @@ export class OthersPalette extends BasePalette {
     const [, rawInterpolate, rawMirrored, rawLength, rawOffset] =
       serialized.split(",");
 
-    const length = parseInt(rawLength);
-    const offset = parseInt(rawOffset);
+    const length = safeParseInt(rawLength);
+    const offset = safeParseInt(rawOffset);
     const mirrored = rawMirrored === "1";
 
     const interpolator = getInterpolatorFromName(rawInterpolate);
