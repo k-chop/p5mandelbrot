@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ChromaJsPalette } from "./color-chromajs";
 import { deserializePalette } from ".";
-import { repeatUntil } from "../math";
+import { repeatUntil } from "@/math";
 
 describe("chroma-js", () => {
   it("不正な入力に対してデフォルト値を適用する", () => {
