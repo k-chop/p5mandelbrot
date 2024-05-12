@@ -12,7 +12,7 @@ import { safeParseInt } from "@/math";
 type D3Interpolator = (t: number) => string;
 type D3Color = ReturnType<typeof color>;
 
-export const getInterpolatorFromName = (name: string): D3Interpolator => {
+const getInterpolatorFromName = (name: string): D3Interpolator => {
   switch (name) {
     case "Inferno":
       return interpolateInferno;
@@ -27,7 +27,7 @@ export const getInterpolatorFromName = (name: string): D3Interpolator => {
   }
 };
 
-export const getInterpolatorName = (interpolator: D3Interpolator): string => {
+const getInterpolatorName = (interpolator: D3Interpolator): string => {
   if (interpolator === interpolateInferno) {
     return "Inferno";
   } else if (interpolator === interpolateRdYlBu) {
