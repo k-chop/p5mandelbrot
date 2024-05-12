@@ -16,7 +16,6 @@ export class ChromaJsPalette extends BasePalette {
     const offsetIndex = clamp(offset, 0, colorLength * 2 - 1);
 
     super(colorLength, mirrored, offsetIndex);
-    this.colorLength = colorLength;
 
     if (colorConstructor.length === 0) {
       this.colorConstructor = ["black", "white"];
