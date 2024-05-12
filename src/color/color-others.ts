@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { BasePalette, Palette, RGB } from ".";
+import { BasePalette, Palette, RGB, clampedPaletteParams } from ".";
 
 const posterize = (
   p: p5,
@@ -22,7 +22,7 @@ const extractRGB = (p: p5, color: p5.Color): RGB => {
   return [p.red(color), p.green(color), p.blue(color)] satisfies RGB;
 };
 
-class P5JsPalette extends BasePalette {
+export class OthersPalette extends BasePalette {
   private p5Instance: p5;
   private f: (index: number, colorLength: number) => p5.Color;
 
@@ -30,8 +30,12 @@ class P5JsPalette extends BasePalette {
     p: p5,
     length: number,
     f: (index: number, colorLength: number) => p5.Color,
+    mirrored = true,
+    offset = 0,
   ) {
-    super(length);
+    const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
+
+    super(colorLength, mirrored, offsetIndex);
 
     this.p5Instance = p;
     this.f = f;
@@ -49,19 +53,20 @@ class P5JsPalette extends BasePalette {
   }
 }
 
-export const p5jsPalettes = (p: p5) =>
+export const othersPalettes = (p: p5) =>
   [
-    new P5JsPalette(p, 128, (idx, length) => {
+    new OthersPalette(p, 128, (idx, length) => {
       // hue 0~360
       const hue = posterize(p, idx, length, 0, 360);
       return p.color(hue, 75, 100);
     }),
-    new P5JsPalette(p, 128, (idx, length) => {
+    new OthersPalette(p, 128, (idx, length) => {
       // monochrome
       const brightness = posterize(p, idx, length, 20, 100);
       return p.color(0, 0, brightness);
     }),
-    new P5JsPalette(p, 128, (idx, length) => {
+
+    new OthersPalette(p, 128, (idx, length) => {
       // fire
       const brightness = posterize(p, idx, length, 30, 100);
       const hue = posterize(p, idx, length, -30, 60);

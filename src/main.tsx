@@ -16,7 +16,7 @@ import {
 } from "./camera";
 import { setP5 } from "./canvas-reference";
 import { chromaJsPalettes } from "./color/color-chromajs";
-import { p5jsPalettes } from "./color/color-p5js";
+import { othersPalettes } from "./color/color-others";
 import {
   calcVars,
   cycleMode,
@@ -110,7 +110,7 @@ const sketch = (p: p5) => {
     const { width, height } = getCanvasSize();
 
     addPalettes(...d3ChromaticPalettes);
-    addPalettes(...p5jsPalettes(p));
+    addPalettes(...othersPalettes(p));
     addPalettes(...chromaJsPalettes);
 
     p.createCanvas(width, height);
