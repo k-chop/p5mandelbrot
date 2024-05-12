@@ -11,29 +11,30 @@ Web-based Interactive Mandelbrot Set Viewer by p5.js
   <a href="/README-ja.md">日本語</a>
 </p>
 
-## Try It Out
+## 試す
 
 👉 https://p5mandelbrot.pages.dev
 
-## What is this?
+## これは何？
 
-This is a web-based Mandelbrot set viewer that allows for relatively fast and deep exploration directly in your browser.
+ブラウザで動く、比較的高速で深いところまで見れるマンデルブロ集合ビューアです
 
-## Features
+## 機能
 
-- Parallel rendering using Web Workers
-- Capable of rendering depths down to `r: 1e-300` [using perturbation theory](https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Perturbation_theory_and_series_approximation)
-- POI List (stored in localStorage)
-- Permalink for current locations
-- PNG image output
-- Simple palette editing features (only length and offset)
-- Palette offset animation
+- Web Workerによる並列描画
+- [摂動法による計算](https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Perturbation_theory_and_series_approximation)で`r: 1e-300`の深さまで描画可能
+  - double(f64)では`r: 1e-14`が限界
+- 気になった場所を保存できるリスト (localStorageに保存)
+- 現在地点の共有URLの出力
+- png画像出力
+- パレットの簡易な編集機能 (長さとオフセットのみ)
+- パレットのオフセットアニメーション
 
-## Images
+## 画像
 
 ![Image](images/image-ui.png)
 
-### Images linked to same location in app
+### 画像をクリックするとアプリ内で同じ位置を開きます
 
 <div style="display: grid;grid-template-columns: 1fr 1fr 1fr;gap: 1rem;">
 <a href="https://p5mandelbrot.pages.dev/?x=-1.408537418404429933891979284359521316094543408325989730656147003173828125&y=0.136038566617522636749464336108637068090132515862933360040187835693359375&r=1.734723476e-12&N=5000&mode=normal" target="_blank" rel="noopener noreferrer"><img src="images/image-01.png" /></a>
