@@ -1,35 +1,20 @@
+import { Hsv, convertHsvToRgb, samples } from "culori";
 import p5 from "p5";
-import { BasePalette, Palette, RGB, clampedPaletteParams } from ".";
-
-const posterize = (
-  p: p5,
-  value: number,
-  numberOfTones: number,
-  lower: number,
-  upper: number,
-) => {
-  const paletteLength = numberOfTones * 2;
-  const v = value % paletteLength;
-
-  if (v < numberOfTones) {
-    return p.map(Math.floor(v % numberOfTones), 0, numberOfTones, lower, upper);
-  } else {
-    return p.map(Math.floor(v % numberOfTones), 0, numberOfTones, upper, lower);
-  }
-};
-
-const extractRGB = (p: p5, color: p5.Color): RGB => {
-  return [p.red(color), p.green(color), p.blue(color)] satisfies RGB;
-};
+import {
+  BasePalette,
+  Palette,
+  RGB,
+  buildRGB32Byte,
+  clampedPaletteParams,
+} from ".";
 
 export class OthersPalette extends BasePalette {
-  private p5Instance: p5;
-  private f: (index: number, colorLength: number) => p5.Color;
+  private f: (t: number) => Hsv;
+  colors: Hsv[] = [];
 
   constructor(
-    p: p5,
     length: number,
-    f: (index: number, colorLength: number) => p5.Color,
+    f: (t: number) => Hsv,
     mirrored = true,
     offset = 0,
   ) {
@@ -37,39 +22,38 @@ export class OthersPalette extends BasePalette {
 
     super(colorLength, mirrored, offsetIndex);
 
-    this.p5Instance = p;
     this.f = f;
 
     this.buildColors();
   }
 
   buildColors(): void {
-    // do nothing
+    this.colors = samples(this.colorLength)
+      .map((t) => this.f(t))
+      .filter((v): v is NonNullable<typeof v> => v != null);
   }
 
   getRGBFromColorIndex(index: number): RGB {
-    const color = this.p5Instance.color(this.f(index, this.colorLength));
-    return extractRGB(this.p5Instance, color);
+    return buildRGB32Byte(convertHsvToRgb(this.colors[index]));
   }
 }
 
 export const othersPalettes = (p: p5) =>
   [
-    new OthersPalette(p, 128, (idx, length) => {
+    new OthersPalette(128, (t) => {
       // hue 0~360
-      const hue = posterize(p, idx, length, 0, 360);
-      return p.color(hue, 75, 100);
+      const hue = Math.floor(t * 360);
+      return { mode: "hsv", h: hue, s: 0.75, v: 1 };
     }),
-    new OthersPalette(p, 128, (idx, length) => {
+    new OthersPalette(128, (t) => {
       // monochrome
-      const brightness = posterize(p, idx, length, 20, 100);
-      return p.color(0, 0, brightness);
+      const brightness = t * 0.8 + 0.2;
+      return { mode: "hsv", s: 0, v: brightness };
     }),
-
-    new OthersPalette(p, 128, (idx, length) => {
+    new OthersPalette(128, (t) => {
       // fire
-      const brightness = posterize(p, idx, length, 30, 100);
-      const hue = posterize(p, idx, length, -30, 60);
-      return p.color(hue, 90, brightness);
+      const brightness = t * 0.7 + 0.3;
+      const hue = Math.floor(t * 90) - 30;
+      return { mode: "hsv", h: hue, s: 0.9, v: brightness };
     }),
   ] satisfies Palette[];

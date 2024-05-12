@@ -14,6 +14,18 @@ export const buildRGB = ({
   return [r, g, b];
 };
 
+export const buildRGB32Byte = ({
+  r,
+  g,
+  b,
+}: {
+  r: number;
+  g: number;
+  b: number;
+}): RGB => {
+  return [r * 255, g * 255, b * 255];
+};
+
 export type Palette = {
   rgb(index: number): RGB;
 
