@@ -16,6 +16,9 @@ export const extractMandelbrotParams = () => {
     return null;
   }
 
+  // 共有されたURLを読み込んだあとは消しておく
+  history.replaceState({}, "", location.origin);
+
   try {
     const safeN = isNaN(parseInt(N, 10)) ? 500 : parseInt(N, 10);
     const safeMode = mandelbrotWorkerTypes.some((t) => t === mode)
