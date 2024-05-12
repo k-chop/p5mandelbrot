@@ -1,14 +1,21 @@
 import chroma from "chroma-js";
 import { BasePalette, Palette, RGB } from ".";
 
-class ChromaJsPalette extends BasePalette {
-  colorConstructor: (string | chroma.Color)[];
+export class ChromaJsPalette extends BasePalette {
+  colorConstructor: string[];
   colors: chroma.Color[] = [];
 
-  constructor(colorConstructor: (string | chroma.Color)[], length: number) {
-    super(length);
+  constructor(colorConstructor: string[], length: number) {
+    const colorLength = Math.max(1, length);
 
-    this.colorConstructor = colorConstructor;
+    super(colorLength);
+    this.colorLength = colorLength;
+
+    if (colorConstructor.length === 0) {
+      this.colorConstructor = ["black"];
+    } else {
+      this.colorConstructor = colorConstructor;
+    }
 
     this.buildColors();
   }
@@ -21,6 +28,17 @@ class ChromaJsPalette extends BasePalette {
     this.colors = chroma
       .scale(this.colorConstructor)
       .colors(this.colorLength, null);
+  }
+
+  serialize(): string {
+    const result = ["chroma-js"];
+    result.push(`${this.colorConstructor.length}`);
+    result.push(...this.colorConstructor);
+    result.push(`${this.mirrored ? 1 : 0}`);
+    result.push(`${this.colorLength}`);
+    result.push(`${this.offsetIndex}`);
+
+    return result.join(",");
   }
 }
 
