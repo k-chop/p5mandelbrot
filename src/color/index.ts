@@ -1,3 +1,5 @@
+import { ChromaJsPalette } from "./color-chromajs";
+
 export type RGB = [number, number, number];
 
 export const buildRGB = ({
@@ -25,6 +27,8 @@ export type Palette = {
   cycleOffset(step?: number): void;
   setLength(length: number): void;
   setMirrored(mirrored: boolean): void;
+
+  serialize(): string;
 };
 
 export class BasePalette implements Palette {
@@ -35,8 +39,10 @@ export class BasePalette implements Palette {
   mirrored = true;
   colorLength;
 
-  constructor(length: number) {
+  constructor(length: number, mirrored = true, offsetIndex = 0) {
     this.colorLength = length;
+    this.mirrored = mirrored;
+    this.offsetIndex = offsetIndex;
 
     this.resetCache();
   }
@@ -51,6 +57,10 @@ export class BasePalette implements Palette {
   }
 
   buildColors(): void {
+    throw new Error("Not implemented");
+  }
+
+  serialize(): string {
     throw new Error("Not implemented");
   }
 
@@ -144,3 +154,14 @@ export class BasePalette implements Palette {
     this.cacheInitialized[index] = true;
   }
 }
+
+export const deserializePalette = (serialized: string): Palette => {
+  const [type] = serialized.split(",");
+
+  switch (type) {
+    case "chroma-js":
+      return ChromaJsPalette.deserialize(serialized);
+    default:
+      throw new Error(`Unknown palette type: ${type}`);
+  }
+};
