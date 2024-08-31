@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 astro-float = "0.9.4"
+rug = "1.26"
