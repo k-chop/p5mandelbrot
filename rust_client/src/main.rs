@@ -17,7 +17,6 @@ struct CalculationRequest {
 struct CalculationResult {
     r#type: String,
     ref_orbit: Vec<f64>,
-    bla_table: Vec<f64>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -82,7 +81,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let result_msg = CalculationResult {
                 r#type: "calculation_result".to_string(),
                 ref_orbit: result.ref_orbit,
-                bla_table: result.bla_table,
             };
             let result_msg_str = serde_json::to_string(&result_msg)?;
             write.send(Message::Text(result_msg_str)).await?;
@@ -133,7 +131,6 @@ fn perform_calculation(req: CalculationRequest) -> CalculationResult {
 
     CalculationResult {
         r#type: "calculation_result".to_string(),
-        ref_orbit: result.clone(),
-        bla_table: result,
+        ref_orbit: result,
     }
 }
