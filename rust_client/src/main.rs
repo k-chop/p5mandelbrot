@@ -113,12 +113,12 @@ fn perform_calculation(req: CalculationRequest) -> CalculationResult {
     let mut z_norm = Float::with_val(1000, 0.0);
 
     while n <= req.max_iter && z_norm < 4.0 {
-        z = z.square() + center.clone();
-
         result.push(z.real().to_f64());
         result.push(z.imag().to_f64());
 
-        z_norm = Float::with_val(53, z.norm_ref());
+        z = z.square() + center.clone();
+
+        z_norm = Float::with_val(1000, z.norm_ref());
 
         n += 1;
     }

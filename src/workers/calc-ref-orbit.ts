@@ -239,6 +239,8 @@ async function setup() {
       return;
     }
 
+    console.log("Reference orbit calculated", xn);
+
     const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
     const blaTable = calcBLACoefficient(xn, pixelSpacing);
 
