@@ -1,4 +1,4 @@
-import WebSocket, { WebSocketServer } from "ws";
+import { WebSocketServer, type WebSocket } from "ws";
 
 interface CalculationClient {
   ws: WebSocket;
@@ -20,48 +20,89 @@ const wss = new WebSocketServer({ port: 8080 });
 
 let calculationClients: CalculationClient[] = [];
 
-// クライアント接続時
 wss.on("connection", (ws: WebSocket) => {
-  ws.on("message", (message: string) => {
-    const data = JSON.parse(message);
+  console.log("New client connected");
 
-    if (data.type === "calculation_client") {
+  ws.on("message", (message: string) => {
+    let data: any;
+    try {
+      data = JSON.parse(message);
+    } catch (e) {
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          message: "Invalid JSON",
+        }),
+      );
+      return;
+    }
+
+    if (data.type === "register_calculation_client") {
       // 計算を行うクライアントとして登録
       const newClient: CalculationClient = { ws: ws, busy: false, queue: [] };
       calculationClients.push(newClient);
-      console.log("New calculation client connected");
-      ws.send(JSON.stringify({ message: "Connected as calculation client" }));
+      console.log("Connected as calculation client");
 
-      // クライアント切断時にキュー内のリクエストにエラーメッセージを送る
+      ws.send(
+        JSON.stringify({
+          type: "connection_confirmation",
+          message: "Connected as calculation client",
+        }),
+      );
+
+      // クライアント切断時の処理
       ws.on("close", () => {
         handleClientDisconnection(newClient);
+        console.log(
+          `Calculation client disconnected. ${calculationClients.length} clients remaining`,
+        );
       });
-    } else if (data.type === "request_client") {
-      // 計算要求クライアントからのリクエスト
+    } else if (data.type === "calculation_request") {
+      // 計算要求クライアントからのリクエスト処理
       handleRequestClient(ws, data);
     }
   });
+
+  ws.on("close", () => {
+    console.log("Client disconnected");
+  });
 });
 
+const validateCalculationRequest = (data: any) => {
+  return (
+    typeof data.x === "string" &&
+    typeof data.y === "string" &&
+    typeof data.maxIter === "number"
+  );
+};
+
 function handleRequestClient(ws: WebSocket, data: any) {
+  if (!validateCalculationRequest(data)) {
+    ws.send(
+      JSON.stringify({
+        type: "error",
+        message: "Invalid calculation request data",
+      }),
+    );
+    return;
+  }
+
   const availableClient = calculationClients.find(
     (client) => !client.busy || client.queue.length < MAX_QUEUE_SIZE,
   );
 
   if (availableClient) {
     if (availableClient.busy) {
-      // 計算クライアントがビジーだがキューに空きがある場合、キューに追加
       availableClient.queue.push({ ws: ws, data: data });
     } else {
-      // クライアントが空いている場合、即座に計算を実行
       availableClient.busy = true;
       sendCalculationRequest(availableClient, ws, data);
     }
   } else {
-    // 全クライアントのキューが満杯の場合、エラーメッセージを返す
     ws.send(
       JSON.stringify({
-        error:
+        type: "error",
+        message:
           "All calculation clients are busy and queue is full. Please fallback to local calculation.",
       }),
     );
@@ -75,19 +116,17 @@ function sendCalculationRequest(
 ) {
   client.ws.send(
     JSON.stringify({
+      type: "calculation_request",
       x: data.x,
       y: data.y,
-      maxIter: data.maxIter,
+      max_iter: data.maxIter,
     }),
   );
 
   client.ws.once("message", (result: string) => {
-    // 計算結果を受信して要求クライアントに転送
     requestWs.send(result);
 
-    // クライアントを再び利用可能に
     if (client.queue.length > 0) {
-      // キューにリクエストがあれば次を処理
       const nextRequest = client.queue.shift()!;
       sendCalculationRequest(client, nextRequest.ws, nextRequest.data);
     } else {
@@ -97,16 +136,14 @@ function sendCalculationRequest(
 }
 
 function handleClientDisconnection(client: CalculationClient) {
-  // クライアントのキューに残っている全てのリクエストにエラーメッセージを送信
   client.queue.forEach((request) => {
     request.ws.send(
       JSON.stringify({
-        error:
+        type: "error",
+        message:
           "The calculation client has disconnected. Further waiting is futile.",
       }),
     );
   });
-
-  // 計算クライアントのリストから削除
   calculationClients = calculationClients.filter((c) => c !== client);
 }

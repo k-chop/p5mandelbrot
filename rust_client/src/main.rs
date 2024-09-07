@@ -2,11 +2,12 @@ use futures_util::{SinkExt, StreamExt};
 use rug::{Complex, Float};
 use serde::{Deserialize, Serialize};
 use std::time;
-use tokio_tungstenite::connect_async;
-use tokio_tungstenite::tungstenite::protocol::Message;
+use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
 #[derive(Serialize, Deserialize)]
 struct CalculationRequest {
+    r#type: String,
     x: String,
     y: String,
     max_iter: u32,
@@ -14,11 +15,17 @@ struct CalculationRequest {
 
 #[derive(Serialize, Deserialize)]
 struct CalculationResult {
+    r#type: String,
     ref_orbit: Vec<f64>,
     bla_table: Vec<f64>,
 }
 
-// calculation_clientの登録メッセージ
+#[derive(Serialize, Deserialize)]
+struct ConnectionConfirmation {
+    r#type: String,
+    message: String,
+}
+
 #[derive(Serialize, Deserialize)]
 struct RegisterMessage {
     r#type: String,
@@ -26,21 +33,40 @@ struct RegisterMessage {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let url = "ws://localhost:8080";
+    let url = "ws://localhost:8080".into_client_request()?;
     let (ws_stream, _) = connect_async(url).await?;
+    let (mut write, mut read) = ws_stream.split(); // ここで WebSocketStream を使う
 
     println!("Connected to WebSocket server");
 
-    let (mut write, mut read) = ws_stream.split();
-
     // サーバにcalculation_clientとして登録を通知
     let register_msg = RegisterMessage {
-        r#type: "calculation_client".to_string(),
+        r#type: "register_calculation_client".to_string(),
     };
     let register_msg_str = serde_json::to_string(&register_msg)?;
     write.send(Message::Text(register_msg_str)).await?;
 
-    // WebSocketメッセージの受信ループ
+    // 接続確認メッセージを待つ
+    if let Some(msg) = read.next().await {
+        let msg = msg?;
+
+        if msg.is_text() {
+            let confirmation: ConnectionConfirmation = serde_json::from_str(msg.to_text()?)?;
+
+            // 確認メッセージが"connection_confirmation"かどうか確認
+            if confirmation.r#type == "connection_confirmation" {
+                println!("{}", confirmation.message);
+            } else {
+                println!("Failed to receive connection confirmation. Exiting.");
+                return Ok(());
+            }
+        }
+    } else {
+        println!("Failed to receive any message. Exiting.");
+        return Ok(());
+    }
+
+    // ここから通常の処理を開始
     while let Some(msg) = read.next().await {
         let msg = msg?;
 
@@ -53,8 +79,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let result = perform_calculation(request);
 
             // 結果をWebSocketサーバーに送信
-            let result_msg = serde_json::to_string(&result)?;
-            write.send(Message::Text(result_msg)).await?;
+            let result_msg = CalculationResult {
+                r#type: "calculation_result".to_string(),
+                ref_orbit: result.ref_orbit,
+                bla_table: result.bla_table,
+            };
+            let result_msg_str = serde_json::to_string(&result_msg)?;
+            write.send(Message::Text(result_msg_str)).await?;
 
             println!("Total elapsed time: {} ms", now.elapsed().as_millis());
         }
@@ -101,6 +132,7 @@ fn perform_calculation(req: CalculationRequest) -> CalculationResult {
     );
 
     CalculationResult {
+        r#type: "calculation_result".to_string(),
         ref_orbit: result.clone(),
         bla_table: result,
     }
