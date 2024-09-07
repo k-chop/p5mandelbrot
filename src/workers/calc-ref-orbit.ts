@@ -202,11 +202,14 @@ async function setup() {
           const data = JSON.parse(message);
           console.log("Received message:", data);
         } else if (message instanceof ArrayBuffer) {
-          const decoder = new TextDecoder("utf-8");
-          const text = decoder.decode(message);
-          const data = JSON.parse(text);
-          console.log("Received binary message:", data);
-          xnn = data.ref_orbit;
+          const view = new DataView(message);
+          const type = view.getUint8(0);
+
+          if (type === 0x03) {
+            for (let i = 1; i < view.byteLength; i += 8) {
+              xnn.push(view.getFloat64(i, true));
+            }
+          }
         }
         resolve();
       });

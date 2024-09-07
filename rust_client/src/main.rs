@@ -30,6 +30,8 @@ struct RegisterMessage {
     r#type: String,
 }
 
+const CALCULATION_RESULT: u8 = 0x03;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let url = "ws://localhost:8080".into_client_request()?;
@@ -70,22 +72,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let msg = msg?;
 
         if msg.is_text() {
-            let request: CalculationRequest = serde_json::from_str(msg.to_text()?)?;
+            let str = msg.to_text()?;
+            let request: CalculationRequest = serde_json::from_str(str)?;
 
-            let now = time::Instant::now();
+            if request.r#type == "calculation_request" {
+                println!(
+                    "Received calculation request: x={}, y={}, max_iter={}",
+                    request.x, request.y, request.max_iter
+                );
+                let now = time::Instant::now();
 
-            // 計算の実行
-            let result = perform_calculation(request);
+                let result = perform_calculation(request);
 
-            // 結果をWebSocketサーバーに送信
-            let result_msg = CalculationResult {
-                r#type: "calculation_result".to_string(),
-                ref_orbit: result.ref_orbit,
-            };
-            let result_msg_str = serde_json::to_string(&result_msg)?;
-            write.send(Message::Text(result_msg_str)).await?;
+                let mut result_msg = vec![CALCULATION_RESULT];
+                result_msg.extend(result.iter().flat_map(|f| f.to_le_bytes()));
 
-            println!("Total elapsed time: {} ms", now.elapsed().as_millis());
+                write.send(Message::Binary(result_msg)).await?;
+
+                println!("Total elapsed time: {} ms", now.elapsed().as_millis());
+            }
         }
     }
 
@@ -93,7 +98,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // 計算処理の関数
-fn perform_calculation(req: CalculationRequest) -> CalculationResult {
+fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
     let now = time::Instant::now();
 
     let center_re_i = Float::parse(&req.x).unwrap();
@@ -129,8 +134,5 @@ fn perform_calculation(req: CalculationRequest) -> CalculationResult {
         n
     );
 
-    CalculationResult {
-        r#type: "calculation_result".to_string(),
-        ref_orbit: result,
-    }
+    result
 }

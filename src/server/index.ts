@@ -16,6 +16,8 @@ interface CalculationRequest {
 }
 
 const MAX_QUEUE_SIZE = 10;
+const CALCULATION_RESULT = 0x03 as const;
+
 const wss = new WebSocketServer({ port: 8080 });
 
 let calculationClients: CalculationClient[] = [];
@@ -23,43 +25,59 @@ let calculationClients: CalculationClient[] = [];
 wss.on("connection", (ws: WebSocket) => {
   console.log("New client connected");
 
-  ws.on("message", (message: string) => {
+  ws.on("message", (message, isBinary) => {
     let data: any;
-    try {
-      data = JSON.parse(message);
-    } catch (e) {
-      ws.send(
-        JSON.stringify({
-          type: "error",
-          message: "Invalid JSON",
-        }),
-      );
-      return;
-    }
+    if (isBinary && message instanceof Buffer) {
+      const type = message[0];
 
-    if (data.type === "register_calculation_client") {
-      // 計算を行うクライアントとして登録
-      const newClient: CalculationClient = { ws: ws, busy: false, queue: [] };
-      calculationClients.push(newClient);
-      console.log("Connected as calculation client");
-
-      ws.send(
-        JSON.stringify({
-          type: "connection_confirmation",
-          message: "Connected as calculation client",
-        }),
-      );
-
-      // クライアント切断時の処理
-      ws.on("close", () => {
-        handleClientDisconnection(newClient);
-        console.log(
-          `Calculation client disconnected. ${calculationClients.length} clients remaining`,
+      if (type === CALCULATION_RESULT) {
+        // ここでは何もしない
+      } else {
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            message: "Invalid binary message",
+          }),
         );
-      });
-    } else if (data.type === "calculation_request") {
-      // 計算要求クライアントからのリクエスト処理
-      handleRequestClient(ws, data);
+      }
+      return;
+    } else {
+      try {
+        data = JSON.parse(message as any);
+      } catch (e) {
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            message: "Invalid JSON",
+          }),
+        );
+        return;
+      }
+
+      if (data.type === "register_calculation_client") {
+        // 計算を行うクライアントとして登録
+        const newClient: CalculationClient = { ws: ws, busy: false, queue: [] };
+        calculationClients.push(newClient);
+        console.log("Connected as calculation client");
+
+        ws.send(
+          JSON.stringify({
+            type: "connection_confirmation",
+            message: "Connected as calculation client",
+          }),
+        );
+
+        // クライアント切断時の処理
+        ws.on("close", () => {
+          handleClientDisconnection(newClient);
+          console.log(
+            `Calculation client disconnected. ${calculationClients.length} clients remaining`,
+          );
+        });
+      } else if (data.type === "calculation_request") {
+        // 計算要求クライアントからのリクエスト処理
+        handleRequestClient(ws, data);
+      }
     }
   });
 
