@@ -18,40 +18,57 @@ struct CalculationResult {
     bla_table: Vec<f64>,
 }
 
+// calculation_clientの登録メッセージ
+#[derive(Serialize, Deserialize)]
+struct RegisterMessage {
+    r#type: String,
+}
+
 #[tokio::main]
-async fn main() {
-    // WebSocket URLを文字列で指定
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let url = "ws://localhost:8080";
-    let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
+    let (ws_stream, _) = connect_async(url).await?;
 
     println!("Connected to WebSocket server");
 
     let (mut write, mut read) = ws_stream.split();
 
+    // サーバにcalculation_clientとして登録を通知
+    let register_msg = RegisterMessage {
+        r#type: "calculation_client".to_string(),
+    };
+    let register_msg_str = serde_json::to_string(&register_msg)?;
+    write.send(Message::Text(register_msg_str)).await?;
+
     // WebSocketメッセージの受信ループ
     while let Some(msg) = read.next().await {
-        let msg = msg.expect("Error receiving message");
+        let msg = msg?;
 
         if msg.is_text() {
-            let request: CalculationRequest = serde_json::from_str(msg.to_text().unwrap()).unwrap();
+            let request: CalculationRequest = serde_json::from_str(msg.to_text()?)?;
+
+            let now = time::Instant::now();
 
             // 計算の実行
             let result = perform_calculation(request);
 
             // 結果をWebSocketサーバーに送信
-            let result_msg = serde_json::to_string(&result).unwrap();
-            write.send(Message::Text(result_msg)).await.unwrap();
+            let result_msg = serde_json::to_string(&result)?;
+            write.send(Message::Text(result_msg)).await?;
+
+            println!("Total elapsed time: {} ms", now.elapsed().as_millis());
         }
     }
+
+    Ok(())
 }
 
 // 計算処理の関数
 fn perform_calculation(req: CalculationRequest) -> CalculationResult {
     let now = time::Instant::now();
 
-    // 任意精度小数点数に変換
-    let center_re_i = Float::parse(&req.x).unwrap(); // 文字列をFloatに変換
-    let center_im_i = Float::parse(&req.y).unwrap(); // 同様に変換
+    let center_re_i = Float::parse(&req.x).unwrap();
+    let center_im_i = Float::parse(&req.y).unwrap();
 
     let center = Complex::with_val(
         1000,
@@ -78,7 +95,7 @@ fn perform_calculation(req: CalculationRequest) -> CalculationResult {
     }
 
     println!(
-        "Elapsed time: {} ms (iter={})",
+        "Calculation elapsed time: {} ms (iter={})",
         now.elapsed().as_millis(),
         n
     );

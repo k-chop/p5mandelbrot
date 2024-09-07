@@ -12,7 +12,6 @@ interface CalculationRequest {
     x: number;
     y: number;
     maxIter: number;
-    magnification: number;
   };
 }
 
@@ -30,6 +29,7 @@ wss.on("connection", (ws: WebSocket) => {
       // 計算を行うクライアントとして登録
       const newClient: CalculationClient = { ws: ws, busy: false, queue: [] };
       calculationClients.push(newClient);
+      console.log("New calculation client connected");
       ws.send(JSON.stringify({ message: "Connected as calculation client" }));
 
       // クライアント切断時にキュー内のリクエストにエラーメッセージを送る
@@ -78,7 +78,6 @@ function sendCalculationRequest(
       x: data.x,
       y: data.y,
       maxIter: data.maxIter,
-      magnification: data.magnification,
     }),
   );
 
