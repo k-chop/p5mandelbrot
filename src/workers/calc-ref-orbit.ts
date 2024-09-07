@@ -141,7 +141,7 @@ async function setup() {
 
   self.postMessage({ type: "init" });
 
-  self.addEventListener("message", (event) => {
+  self.addEventListener("message", async (event) => {
     const {
       complexCenterX,
       complexCenterY,
@@ -175,12 +175,61 @@ async function setup() {
       pixelHeight,
     );
 
-    const { xn } = calcRefOrbit(
-      referencePoint,
-      maxIteration,
-      terminateChecker,
-      workerIdx,
+    let xnn: number[] = [];
+
+    const ws = new WebSocket("ws://localhost:8080");
+    ws.binaryType = "arraybuffer";
+
+    await new Promise<void>((resolve) => {
+      ws.addEventListener("open", () => {
+        console.log("Connected to server");
+        resolve();
+      });
+    });
+    ws.send(
+      JSON.stringify({
+        type: "calculation_request",
+        x: referencePoint.re.toString(),
+        y: referencePoint.im.toString(),
+        maxIter: maxIteration,
+      }),
     );
+    await new Promise<void>((resolve) => {
+      ws.addEventListener("message", (ev) => {
+        const message = ev.data;
+        console.log("hello I got a message", message);
+        if (typeof message === "string") {
+          const data = JSON.parse(message);
+          console.log("Received message:", data);
+        } else if (message instanceof ArrayBuffer) {
+          const decoder = new TextDecoder("utf-8");
+          const text = decoder.decode(message);
+          const data = JSON.parse(text);
+          console.log("Received binary message:", data);
+          xnn = data.ref_orbit;
+        }
+        resolve();
+      });
+    });
+    ws.close();
+
+    const n = Math.floor(xnn.length / 2);
+    let xn: Complex[] = [];
+
+    for (let i = 0; i < n; i++) {
+      xn.push({ re: xnn[i * 2], im: xnn[i * 2 + 1] });
+    }
+
+    if (xn.length === 0) {
+      console.log("Failed to get reference orbit from external worker");
+      const { xn: xn2 } = calcRefOrbit(
+        referencePoint,
+        maxIteration,
+        terminateChecker,
+        workerIdx,
+      );
+      xn = xn2;
+    }
 
     if (terminateChecker[workerIdx] !== 0) {
       console.debug(`${jobId}: terminated (ref)`);
