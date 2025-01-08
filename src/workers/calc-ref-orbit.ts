@@ -33,6 +33,9 @@ export type RefOrbitContextPopulated = {
   blaTable: BLATableItem[][];
 };
 
+// FIXME: 手抜き
+let websocketServerConnectedInDevelopment = true;
+
 function calcRefOrbit(
   center: ComplexArbitrary,
   maxIteration: number,
@@ -150,7 +153,15 @@ async function calcRefOrbitExternal(
   const ws = new WebSocket("ws://localhost:8080");
   ws.binaryType = "arraybuffer";
 
-  await new Promise<void>((resolve) => {
+  await new Promise<void>((resolve, reject) => {
+    ws.addEventListener("error", (event) => {
+      console.error("Failed to connect to websocket server", event);
+      console.error(
+        "Check the server and refOrbit calculation server is running",
+      );
+      websocketServerConnectedInDevelopment = false;
+      reject(event);
+    });
     ws.addEventListener("open", () => {
       console.log("Connected to server");
       resolve();
@@ -167,7 +178,6 @@ async function calcRefOrbitExternal(
   await new Promise<void>((resolve) => {
     ws.addEventListener("message", (ev) => {
       const message = ev.data;
-      console.log("hello I got a message", message);
       if (typeof message === "string") {
         const data = JSON.parse(message);
         console.log("Received message:", data);
@@ -237,15 +247,17 @@ async function setup() {
 
     let xn: Complex[] = [];
 
-    console.log(process.env.NODE_ENV);
-
     try {
       // とりあえずrefOrbit計算serverは開発環境のみ使えるようにしておく
-      if (process.env.NODE_ENV === "development") {
+      // worker起動のタイミングでwebsocket serverが立ち上がってなかったら、次からローカルで計算する
+      if (
+        process.env.NODE_ENV === "development" &&
+        websocketServerConnectedInDevelopment
+      ) {
         xn = await calcRefOrbitExternal(referencePoint, maxIteration);
       }
-    } catch (e) {
-      console.error("Failed to calculate reference orbit", e);
+    } catch {
+      // wow
     }
 
     if (xn.length === 0) {
