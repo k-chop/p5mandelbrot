@@ -34,7 +34,8 @@ export type RefOrbitContextPopulated = {
 };
 
 // FIXME: 手抜き
-let websocketServerConnectedInDevelopment = true;
+let websocketServerConnected = false;
+let ws: WebSocket | null = null;
 
 function calcRefOrbit(
   center: ComplexArbitrary,
@@ -148,25 +149,12 @@ async function calcRefOrbitExternal(
   referencePoint: ComplexArbitrary,
   maxIteration: number,
 ): Promise<Complex[]> {
+  if (ws == null) {
+    return [];
+  }
+
   let xnn: number[] = [];
 
-  const ws = new WebSocket("ws://localhost:8080");
-  ws.binaryType = "arraybuffer";
-
-  await new Promise<void>((resolve, reject) => {
-    ws.addEventListener("error", (event) => {
-      console.error("Failed to connect to websocket server", event);
-      console.error(
-        "Check the server and refOrbit calculation server is running",
-      );
-      websocketServerConnectedInDevelopment = false;
-      reject(event);
-    });
-    ws.addEventListener("open", () => {
-      console.log("Connected to server");
-      resolve();
-    });
-  });
   ws.send(
     JSON.stringify({
       type: "calculation_request",
@@ -176,25 +164,28 @@ async function calcRefOrbitExternal(
     }),
   );
   await new Promise<void>((resolve) => {
-    ws.addEventListener("message", (ev) => {
-      const message = ev.data;
-      if (typeof message === "string") {
-        const data = JSON.parse(message);
-        console.log("Received message:", data);
-      } else if (message instanceof ArrayBuffer) {
-        const view = new DataView(message);
-        const type = view.getUint8(0);
+    ws.addEventListener(
+      "message",
+      (ev) => {
+        const message = ev.data;
+        if (typeof message === "string") {
+          const data = JSON.parse(message);
+          console.log("Received message:", data);
+        } else if (message instanceof ArrayBuffer) {
+          const view = new DataView(message);
+          const type = view.getUint8(0);
 
-        if (type === 0x03) {
-          for (let i = 1; i < view.byteLength; i += 8) {
-            xnn.push(view.getFloat64(i, true));
+          if (type === 0x03) {
+            for (let i = 1; i < view.byteLength; i += 8) {
+              xnn.push(view.getFloat64(i, true));
+            }
           }
         }
-      }
-      resolve();
-    });
+        resolve();
+      },
+      { once: true },
+    );
   });
-  ws.close();
 
   const n = Math.floor(xnn.length / 2);
   let xn: Complex[] = [];
@@ -206,8 +197,46 @@ async function calcRefOrbitExternal(
   return xn;
 }
 
+/**
+ * websocket serverに接続できるならしておく
+ */
+async function initWebsocketServer() {
+  const ws = new WebSocket("ws://localhost:8080");
+  ws.binaryType = "arraybuffer";
+
+  return new Promise<void>((resolve, reject) => {
+    ws.addEventListener("error", (event) => {
+      console.error("Failed to connect to websocket server!", event);
+      console.error(
+        "Check the server and refOrbit calculation rust client is running",
+      );
+      reject(event);
+    });
+    ws.addEventListener("open", () => {
+      console.log("Websocket connection established!");
+      resolve();
+    });
+    // FIXME: 外からteminateされたときにWebSocketが閉じられない不具合がある
+    // MandelbrotFacadeLikeのterminateで即worker.terminateを呼ぶのではなくちゃんと後始末する
+    ws.addEventListener("close", () => {
+      console.log("Websocket connection closed.");
+    });
+  });
+}
+
+/**
+ * worker起動時に呼ばれる
+ */
 async function setup() {
-  // init here in future
+  if (
+    process.env.NODE_ENV === "development" &&
+    websocketServerConnected === false
+  ) {
+    try {
+      await initWebsocketServer();
+      websocketServerConnected = true;
+    } catch {}
+  }
 
   self.postMessage({ type: "init" });
 
@@ -250,10 +279,7 @@ async function setup() {
     try {
       // とりあえずrefOrbit計算serverは開発環境のみ使えるようにしておく
       // worker起動のタイミングでwebsocket serverが立ち上がってなかったら、次からローカルで計算する
-      if (
-        process.env.NODE_ENV === "development" &&
-        websocketServerConnectedInDevelopment
-      ) {
+      if (process.env.NODE_ENV === "development" && websocketServerConnected) {
         xn = await calcRefOrbitExternal(referencePoint, maxIteration);
       }
     } catch {
