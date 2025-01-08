@@ -136,6 +136,66 @@ function calcBLACoefficient(ref: Complex[], pixelSpacing: number) {
   return blaTable;
 }
 
+/**
+ * 別serverでrefOrbitを計算する
+ *
+ * FIXME: serverが立っていない場合はとりあえず勝手に落ちるに任せる
+ */
+async function calcRefOrbitExternal(
+  referencePoint: ComplexArbitrary,
+  maxIteration: number,
+): Promise<Complex[]> {
+  let xnn: number[] = [];
+
+  const ws = new WebSocket("ws://localhost:8080");
+  ws.binaryType = "arraybuffer";
+
+  await new Promise<void>((resolve) => {
+    ws.addEventListener("open", () => {
+      console.log("Connected to server");
+      resolve();
+    });
+  });
+  ws.send(
+    JSON.stringify({
+      type: "calculation_request",
+      x: referencePoint.re.toString(),
+      y: referencePoint.im.toString(),
+      maxIter: maxIteration,
+    }),
+  );
+  await new Promise<void>((resolve) => {
+    ws.addEventListener("message", (ev) => {
+      const message = ev.data;
+      console.log("hello I got a message", message);
+      if (typeof message === "string") {
+        const data = JSON.parse(message);
+        console.log("Received message:", data);
+      } else if (message instanceof ArrayBuffer) {
+        const view = new DataView(message);
+        const type = view.getUint8(0);
+
+        if (type === 0x03) {
+          for (let i = 1; i < view.byteLength; i += 8) {
+            xnn.push(view.getFloat64(i, true));
+          }
+        }
+      }
+      resolve();
+    });
+  });
+  ws.close();
+
+  const n = Math.floor(xnn.length / 2);
+  let xn: Complex[] = [];
+
+  for (let i = 0; i < n; i++) {
+    xn.push({ re: xnn[i * 2], im: xnn[i * 2 + 1] });
+  }
+
+  return xn;
+}
+
 async function setup() {
   // init here in future
 
@@ -175,56 +235,21 @@ async function setup() {
       pixelHeight,
     );
 
-    let xnn: number[] = [];
-
-    const ws = new WebSocket("ws://localhost:8080");
-    ws.binaryType = "arraybuffer";
-
-    await new Promise<void>((resolve) => {
-      ws.addEventListener("open", () => {
-        console.log("Connected to server");
-        resolve();
-      });
-    });
-    ws.send(
-      JSON.stringify({
-        type: "calculation_request",
-        x: referencePoint.re.toString(),
-        y: referencePoint.im.toString(),
-        maxIter: maxIteration,
-      }),
-    );
-    await new Promise<void>((resolve) => {
-      ws.addEventListener("message", (ev) => {
-        const message = ev.data;
-        console.log("hello I got a message", message);
-        if (typeof message === "string") {
-          const data = JSON.parse(message);
-          console.log("Received message:", data);
-        } else if (message instanceof ArrayBuffer) {
-          const view = new DataView(message);
-          const type = view.getUint8(0);
-
-          if (type === 0x03) {
-            for (let i = 1; i < view.byteLength; i += 8) {
-              xnn.push(view.getFloat64(i, true));
-            }
-          }
-        }
-        resolve();
-      });
-    });
-    ws.close();
-
-    const n = Math.floor(xnn.length / 2);
     let xn: Complex[] = [];
 
-    for (let i = 0; i < n; i++) {
-      xn.push({ re: xnn[i * 2], im: xnn[i * 2 + 1] });
+    console.log(process.env.NODE_ENV);
+
+    try {
+      // とりあえずrefOrbit計算serverは開発環境のみ使えるようにしておく
+      if (process.env.NODE_ENV === "development") {
+        xn = await calcRefOrbitExternal(referencePoint, maxIteration);
+      }
+    } catch (e) {
+      console.error("Failed to calculate reference orbit", e);
     }
 
     if (xn.length === 0) {
-      console.log("Failed to get reference orbit from external worker");
+      // サーバーが立っていない場合はローカルで計算する
       const { xn: xn2 } = calcRefOrbit(
         referencePoint,
         maxIteration,
