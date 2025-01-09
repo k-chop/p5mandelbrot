@@ -74,7 +74,7 @@ export const calculateDivideArea = (
 export const divideRect = (
   rects: Rect[],
   expectedDivideCount: number,
-  minSide = 100,
+  minSide = 1,
 ): Rect[] => {
   if (rects.length > expectedDivideCount) {
     throw new Error("rects.length > expectedDivideCount");
