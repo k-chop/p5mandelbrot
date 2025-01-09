@@ -1,4 +1,4 @@
-import { getPalette, redraw } from "@/camera/palette";
+import { getCurrentPalette, redraw } from "@/camera/palette";
 import { ValueSlider } from "@/components/slider-wrapper";
 import { Slider } from "@/components/ui/slider";
 import { getStore, updateStore } from "@/store/store";
@@ -39,7 +39,7 @@ export const PaletteEditor = () => {
           onValueChange={(value) => setPaletteLength(value)}
           onValueCommit={(value) => {
             updateStore("paletteLength", value);
-            const palette = getPalette();
+            const palette = getCurrentPalette();
             palette.setLength(value);
             palette.setOffset(0);
 
@@ -59,12 +59,12 @@ export const PaletteEditor = () => {
           onValueChange={([value]) => {
             setPaletteOffset(value);
             updateStore("paletteOffset", value);
-            getPalette().setOffset(value);
+            getCurrentPalette().setOffset(value);
             redraw();
           }}
           onValueCommit={([value]) => {
             updateStore("paletteOffset", value);
-            getPalette().setOffset(value);
+            getCurrentPalette().setOffset(value);
             redraw();
           }}
         />

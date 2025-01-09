@@ -1,10 +1,19 @@
-import type { Palette } from "@/color";
+import {
+  chromaJsPalettes,
+  d3ChromaticPalettes,
+  othersPalettes,
+  type Palette,
+} from "@/color";
 
 // 描画時に使うpaletteに関するファイル
 
 let lastColorIdx = 0;
 let currentColorIdx = 0;
-let palettes: Palette[] = [];
+const palettePresets: Palette[] = [
+  ...d3ChromaticPalettes,
+  ...othersPalettes,
+  ...chromaJsPalettes,
+];
 
 export const colorChanged = () => {
   return lastColorIdx !== currentColorIdx;
@@ -18,16 +27,15 @@ export const redraw = () => {
   lastColorIdx = -1;
 };
 
-export const addPalettes = (...plts: Palette[]) => {
-  palettes.push(...plts);
-};
-
 export const setColorIndex = (index: number) => {
-  if (palettes[index]) {
+  if (palettePresets[index]) {
     currentColorIdx = index;
   } else {
     currentColorIdx = 0;
   }
 };
 
-export const getPalette = () => palettes[currentColorIdx];
+/**
+ * 現在描画に使用しているPaletteを返す
+ */
+export const getCurrentPalette = () => palettePresets[currentColorIdx];

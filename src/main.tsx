@@ -1,4 +1,3 @@
-import { chromaJsPalettes, d3ChromaticPalettes, othersPalettes } from "@/color";
 import BigNumber from "bignumber.js";
 import p5 from "p5";
 import React from "react";
@@ -11,12 +10,7 @@ import {
   nextResultBuffer,
   setupCamera,
 } from "./camera/camera";
-import {
-  addPalettes,
-  getPalette,
-  redraw,
-  setColorIndex,
-} from "./camera/palette";
+import { getCurrentPalette, redraw, setColorIndex } from "./camera/palette";
 import { setP5 } from "./canvas-reference";
 import { extractMandelbrotParams } from "./lib/params";
 import {
@@ -108,10 +102,6 @@ const sketch = (p: p5) => {
 
   p.setup = () => {
     const { width, height } = getCanvasSize();
-
-    addPalettes(...d3ChromaticPalettes);
-    addPalettes(...othersPalettes);
-    addPalettes(...chromaJsPalettes);
 
     p.createCanvas(width, height);
     setupCamera(p, width, height);
@@ -277,7 +267,7 @@ const sketch = (p: p5) => {
 
       if (elapsed > time) {
         elapsed = elapsed % time;
-        getPalette().cycleOffset();
+        getCurrentPalette().cycleOffset();
         redraw();
       }
     }

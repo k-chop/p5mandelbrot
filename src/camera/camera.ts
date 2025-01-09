@@ -3,7 +3,7 @@ import { getIterationCache } from "../aggregator";
 import { getCurrentParams } from "../mandelbrot";
 import { Rect } from "../rect";
 import { renderIterationsToPixel } from "../rendering";
-import { colorChanged, getPalette, updateColor } from "./palette";
+import { colorChanged, getCurrentPalette, updateColor } from "./palette";
 
 let mainBuffer: p5.Graphics;
 let resultBuffer: p5.Graphics;
@@ -50,7 +50,7 @@ export const renderToMainBuffer = (rect: Rect) => {
     mainBuffer,
     params.N,
     getIterationCache(),
-    getPalette(),
+    getCurrentPalette(),
   );
 };
 
@@ -62,7 +62,7 @@ export const renderToResultBuffer = (rect: Rect) => {
     resultBuffer,
     params.N,
     getIterationCache(),
-    getPalette(),
+    getCurrentPalette(),
   );
 };
 
