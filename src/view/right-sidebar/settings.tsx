@@ -44,11 +44,32 @@ export const Settings = () => {
     "16",
     "6",
   ];
+  const animationCycleStepValues = [
+    "1",
+    "2",
+    "3",
+    "5",
+    "7",
+    "11",
+    "13",
+    "17",
+    "19",
+    "23",
+    "29",
+    "31",
+    "37",
+    "41",
+    "43",
+    "47",
+  ];
 
   const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
   const [workerCountPreview, setWorkerCountPreview] = useState(workerCount);
   const [animationTime, setAnimationTime] = useState(() =>
     getStore("animationTime"),
+  );
+  const [animationCycleStep, setAnimationCycleStep] = useState(() =>
+    getStore("animationCycleStep"),
   );
 
   return (
@@ -92,6 +113,18 @@ export const Settings = () => {
             setAnimationTime(value);
             updateStore("animationTime", value);
           }}
+        />
+      </div>
+      <div>
+        <div className="mb-1 ml-2">
+          Animation Cycle Step: {animationCycleStep}
+        </div>
+        <ValueSlider<number>
+          values={animationCycleStepValues}
+          defaultValue={animationCycleStep}
+          valueConverter={(value) => parseInt(value)}
+          onValueChange={(value) => setAnimationCycleStep(value)}
+          onValueCommit={(value) => updateStore("animationCycleStep", value)}
         />
       </div>
       <div>
