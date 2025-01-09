@@ -1,14 +1,14 @@
+import { Separator } from "@/components/ui/separator";
 import { ResultSpans, Span } from "@/types";
-import { useStoreValue } from "../../store/store";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@radix-ui/react-tooltip";
 import clsx from "clsx";
 import React from "react";
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@radix-ui/react-tooltip";
-import { Separator } from "@/components/ui/separator";
+import { useStoreValue } from "../../store/store";
 
 const convertSpans = (value: any): ResultSpans | undefined => {
   if (value !== null && typeof value === "object") {

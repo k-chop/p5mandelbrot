@@ -1,5 +1,7 @@
 /// <reference lib="webworker" />
 
+import { decodeBLATableItems } from "@/lib/bla-table-item-buffer";
+import { decodeComplexArray } from "@/lib/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
   BLATableItem,
@@ -14,8 +16,6 @@ import {
 import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
 import { IterationWorkerParams } from "../types";
 import { RefOrbitContextPopulated } from "./calc-ref-orbit";
-import { decodeComplexArray } from "@/lib/xn-buffer";
-import { decodeBLATableItems } from "@/lib/bla-table-item-buffer";
 
 const calcHandler = (data: IterationWorkerParams) => {
   const {

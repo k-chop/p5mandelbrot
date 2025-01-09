@@ -1,6 +1,3 @@
-import { IconHelp } from "@tabler/icons-react";
-import { useModalState } from "../modal/use-modal-state";
-import { Instructions } from "./instructions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,7 +5,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { IconHelp } from "@tabler/icons-react";
+import { useModalState } from "../modal/use-modal-state";
 import { Actions } from "./actions";
+import { Instructions } from "./instructions";
 
 export const Header = () => {
   const [opened, { open, toggle }] = useModalState();

@@ -1,5 +1,5 @@
-import { bufferLocalLogicalIndex } from "./rendering";
 import { Rect } from "./rect";
+import { bufferLocalLogicalIndex } from "./rendering";
 import { IterationBuffer, Resolution } from "./types";
 
 // FIXME: たぶんIterationBufferは複素数平面座標に対するキャッシュを持つべき

@@ -1,3 +1,4 @@
+import { getStore } from "@/store/store";
 import {
   BatchContext,
   CalcIterationJob,
@@ -9,7 +10,6 @@ import {
   ResultSpans,
   mandelbrotWorkerTypes,
 } from "@/types";
-import { getStore } from "@/store/store";
 import {
   calcNormalizedWorkerIndex,
   findFreeWorkerIndex,
@@ -21,22 +21,22 @@ import {
 } from "./ref-orbit-cache";
 import {
   addJob,
+  canQueueJob,
   countRunningJobs,
   countWaitingJobs,
-  getRunningJobsInBatch,
+  deleteCompletedDoneJobs,
   getRunningJobs,
+  getRunningJobsInBatch,
   getWaitingJobs,
   hasRunningJob,
   hasWaitingJob,
+  markDoneJob,
+  popWaitingExecutableJob,
   removeBatchFromRunningJobs,
   removeBatchFromWaitingJobs,
   startJob,
-  canQueueJob,
-  markDoneJob,
-  popWaitingExecutableJob,
-  deleteCompletedDoneJobs,
 } from "./task-queue";
-import { setWorkerReference, popWorkerReference } from "./worker-reference";
+import { popWorkerReference, setWorkerReference } from "./worker-reference";
 
 type BatchId = string;
 

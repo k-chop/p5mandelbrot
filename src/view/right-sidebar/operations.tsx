@@ -1,12 +1,12 @@
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { isGithubPages } from "@/lib/location";
+import { IconCircleCheck, IconCopy } from "@tabler/icons-react";
+import { PaletteEditor } from "./palette-editor";
 import { POI } from "./poi";
 import { Settings } from "./settings";
-import { isGithubPages } from "@/lib/location";
-import { Button } from "@/components/ui/button";
-import { IconCircleCheck, IconCopy } from "@tabler/icons-react";
 import { usePOI } from "./use-poi";
-import { useToast } from "@/components/ui/use-toast";
-import { PaletteEditor } from "./palette-editor";
 
 const tabsContentClass =
   "flex h-full flex-grow flex-col data-[state=inactive]:hidden";

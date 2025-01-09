@@ -16,7 +16,9 @@ import {
 } from "./camera";
 import { setP5 } from "./canvas-reference";
 import { chromaJsPalettes } from "./color/color-chromajs";
+import { d3ChromaticPalettes } from "./color/color-d3-chromatic";
 import { othersPalettes } from "./color/color-others";
+import { extractMandelbrotParams } from "./lib/params";
 import {
   calcVars,
   cycleMode,
@@ -28,8 +30,8 @@ import {
   setCurrentParams,
   setDeepIterationCount,
   setOffsetParams,
-  togglePinReference,
   startCalculation,
+  togglePinReference,
   zoom,
 } from "./mandelbrot";
 import { drawCrossHair } from "./rendering";
@@ -41,10 +43,8 @@ import {
 } from "./store/sync-storage/settings";
 import "./style.css";
 import { AppRoot } from "./view/app-root";
-import { extractMandelbrotParams } from "./lib/params";
-import { d3ChromaticPalettes } from "./color/color-d3-chromatic";
-import { getProgressData } from "./worker-pool/worker-pool";
 import { prepareWorkerPool } from "./worker-pool/pool-instance";
+import { getProgressData } from "./worker-pool/worker-pool";
 
 const drawInfo = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(

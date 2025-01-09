@@ -1,13 +1,13 @@
+import { getResizedCanvasImageDataURL } from "@/canvas-reference";
+import { deletePreview, savePreview } from "@/store/preview-store";
 import { useCallback } from "react";
-import { MandelbrotParams, POIData } from "../../types";
-import { updateStore, useStoreValue } from "../../store/store";
 import { cloneParams, setCurrentParams } from "../../mandelbrot";
+import { updateStore, useStoreValue } from "../../store/store";
 import {
   createNewPOIData,
   writePOIListToStorage,
 } from "../../store/sync-storage/poi-list";
-import { getResizedCanvasImageDataURL } from "@/canvas-reference";
-import { deletePreview, savePreview } from "@/store/preview-store";
+import { MandelbrotParams, POIData } from "../../types";
 
 export const usePOI = () => {
   const poiList: POIData[] = useStoreValue("poi");
