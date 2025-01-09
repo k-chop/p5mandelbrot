@@ -18,6 +18,13 @@ const palettePresets: Palette[] = [
 ];
 
 /**
+ * 次に再renderするようマークする
+ */
+const markNeedsRerender = () => {
+  renderNext = true;
+};
+
+/**
  * 再renderが必要かどうかを返す
  */
 export const needsRerender = () => {
@@ -31,13 +38,6 @@ export const needsRerender = () => {
  */
 export const markAsRendered = () => {
   renderNext = false;
-};
-
-/**
- * 次に再renderするようマークする
- */
-const markNeedsRerender = () => {
-  renderNext = true;
 };
 
 /**
