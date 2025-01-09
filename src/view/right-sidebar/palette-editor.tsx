@@ -1,4 +1,7 @@
-import { getPalette, redraw } from "@/camera";
+import {
+  setCurrentPaletteLength,
+  setCurrentPaletteOffset,
+} from "@/camera/palette";
 import { ValueSlider } from "@/components/slider-wrapper";
 import { Slider } from "@/components/ui/slider";
 import { getStore, updateStore } from "@/store/store";
@@ -21,51 +24,47 @@ const paletteLengthValues = [
 ];
 
 export const PaletteEditor = () => {
-  const [paletteLength, setPaletteLength] = useState(() =>
+  const [paletteLengthValue, setPaletteLengthValue] = useState(() =>
     getStore("paletteLength"),
   );
-  const [paletteOffset, setPaletteOffset] = useState(() =>
+  const [paletteOffsetValue, setPaletteOffsetValue] = useState(() =>
     getStore("paletteOffset"),
   );
 
   return (
     <div className="flex max-w-80 flex-col gap-6">
       <div>
-        <div className="mb-1 ml-2">Palette Length: {paletteLength}</div>
+        <div className="mb-1 ml-2">Palette Length: {paletteLengthValue}</div>
         <ValueSlider<number>
           values={paletteLengthValues}
-          defaultValue={paletteLength}
+          defaultValue={paletteLengthValue}
           valueConverter={(value) => parseInt(value)}
-          onValueChange={(value) => setPaletteLength(value)}
+          onValueChange={(value) => setPaletteLengthValue(value)}
           onValueCommit={(value) => {
             updateStore("paletteLength", value);
-            const palette = getPalette();
-            palette.setLength(value);
-            palette.setOffset(0);
 
-            setPaletteOffset(0);
+            setCurrentPaletteOffset(0);
+            setCurrentPaletteLength(value);
+
+            setPaletteOffsetValue(0);
             updateStore("paletteOffset", 0);
-
-            redraw();
           }}
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">Palette Offset: {paletteOffset}</div>
+        <div className="mb-1 ml-2">Palette Offset: {paletteOffsetValue}</div>
         <Slider
           min={0}
-          max={paletteLength * 2 - 1}
-          value={[paletteOffset]}
+          max={paletteLengthValue * 2 - 1}
+          value={[paletteOffsetValue]}
           onValueChange={([value]) => {
-            setPaletteOffset(value);
+            setPaletteOffsetValue(value);
             updateStore("paletteOffset", value);
-            getPalette().setOffset(value);
-            redraw();
+            setCurrentPaletteOffset(value);
           }}
           onValueCommit={([value]) => {
             updateStore("paletteOffset", value);
-            getPalette().setOffset(value);
-            redraw();
+            setCurrentPaletteOffset(value);
           }}
         />
       </div>

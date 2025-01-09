@@ -1,23 +1,20 @@
+import {
+  clearResultBuffer,
+  mergeToMainBuffer,
+  nextBuffer,
+  nextResultBuffer,
+  setupCamera,
+} from "@/camera/camera";
+import {
+  changePaletteFromPresets,
+  cycleCurrentPaletteOffset,
+} from "@/camera/palette";
 import BigNumber from "bignumber.js";
 import p5 from "p5";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
 import { getIterationTimeAt } from "./aggregator";
-import {
-  addPalettes,
-  clearResultBuffer,
-  getPalette,
-  mergeToMainBuffer,
-  nextBuffer,
-  nextResultBuffer,
-  redraw,
-  setColorIndex,
-  setupCamera,
-} from "./camera";
 import { setP5 } from "./canvas-reference";
-import { chromaJsPalettes } from "./color/color-chromajs";
-import { d3ChromaticPalettes } from "./color/color-d3-chromatic";
-import { othersPalettes } from "./color/color-others";
 import { extractMandelbrotParams } from "./lib/params";
 import {
   calcVars,
@@ -108,10 +105,6 @@ const sketch = (p: p5) => {
 
   p.setup = () => {
     const { width, height } = getCanvasSize();
-
-    addPalettes(...d3ChromaticPalettes);
-    addPalettes(...othersPalettes);
-    addPalettes(...chromaJsPalettes);
 
     p.createCanvas(width, height);
     setupCamera(p, width, height);
@@ -245,14 +238,14 @@ const sketch = (p: p5) => {
           diff = 100000;
         }
       }
-      if (event.key === "1") setColorIndex(0);
-      if (event.key === "2") setColorIndex(1);
-      if (event.key === "3") setColorIndex(2);
-      if (event.key === "4") setColorIndex(3);
-      if (event.key === "5") setColorIndex(4);
-      if (event.key === "6") setColorIndex(5);
-      if (event.key === "7") setColorIndex(6);
-      if (event.key === "8") setColorIndex(7);
+      if (event.key === "1") changePaletteFromPresets(0);
+      if (event.key === "2") changePaletteFromPresets(1);
+      if (event.key === "3") changePaletteFromPresets(2);
+      if (event.key === "4") changePaletteFromPresets(3);
+      if (event.key === "5") changePaletteFromPresets(4);
+      if (event.key === "6") changePaletteFromPresets(5);
+      if (event.key === "7") changePaletteFromPresets(6);
+      if (event.key === "8") changePaletteFromPresets(7);
       if (event.key === "0") resetIterationCount();
       if (event.key === "9") setDeepIterationCount();
       if (event.key === "r") resetRadius();
@@ -277,8 +270,7 @@ const sketch = (p: p5) => {
 
       if (elapsed > time) {
         elapsed = elapsed % time;
-        getPalette().cycleOffset();
-        redraw();
+        cycleCurrentPaletteOffset();
       }
     }
 

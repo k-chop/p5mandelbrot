@@ -3,7 +3,7 @@ import {
   clearIterationCache,
   translateRectInIterationCache,
 } from "./aggregator";
-import { renderToResultBuffer } from "./camera";
+import { renderToResultBuffer } from "./camera/camera";
 import { divideRect, Rect } from "./rect";
 import { getStore, updateStoreWith } from "./store/store";
 import { MandelbrotParams, OffsetParams } from "./types";
