@@ -5,6 +5,7 @@ import {
   othersPalettes,
   type Palette,
 } from "@/color";
+import { updateStore } from "@/store/store";
 
 // 描画時に使うpaletteの状態に関するファイル
 
@@ -66,6 +67,9 @@ export const changePaletteFromPresets = (index: number) => {
 export const setPalette = (palette: Palette) => {
   currentPalette = palette;
   markNeedsRerender();
+
+  updateStore("paletteLength", palette.length);
+  updateStore("paletteOffset", palette.offset);
 };
 
 /**

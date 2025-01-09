@@ -42,6 +42,14 @@ export class BasePalette implements Palette {
     throw new Error("Not implemented");
   }
 
+  public get length(): number {
+    return this.colorLength;
+  }
+
+  public get offset(): number {
+    return this.offsetIndex;
+  }
+
   public rgb(index: number): RGB {
     const colorIndex = this.getColorIndex(index);
 

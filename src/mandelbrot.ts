@@ -5,7 +5,7 @@ import {
 } from "./aggregator";
 import { renderToResultBuffer } from "./camera/camera";
 import { divideRect, Rect } from "./rect";
-import { getStore, updateStoreWith } from "./store/store";
+import { getStore, updateStore, updateStoreWith } from "./store/store";
 import { MandelbrotParams, OffsetParams } from "./types";
 import { getWorkerCount, prepareWorkerPool } from "./worker-pool/pool-instance";
 import {
@@ -111,6 +111,10 @@ export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
   const needResetOffset = params.r != null && !currentParams.r.eq(params.r);
 
   currentParams = { ...currentParams, ...params };
+
+  updateStore("r", params.r);
+  updateStore("N", params.N);
+  updateStore("mode", params.mode);
 
   if (needModeChange) {
     const workerCount = getStore("workerCount");
