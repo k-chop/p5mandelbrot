@@ -55,7 +55,7 @@ export const useStoreValue = <T = any>(key: string) => {
     return () => {
       event.off(handler);
     };
-  }, []);
+  }, [key]);
 
   return value as T;
 };
