@@ -8,6 +8,7 @@ import {
 import {
   changePaletteFromPresets,
   cycleCurrentPaletteOffset,
+  setPalette,
 } from "@/camera/palette";
 import BigNumber from "bignumber.js";
 import p5 from "p5";
@@ -118,7 +119,8 @@ const sketch = (p: p5) => {
     const initialParams = extractMandelbrotParams();
 
     if (initialParams) {
-      setCurrentParams(initialParams);
+      setCurrentParams(initialParams.mandelbrot);
+      setPalette(initialParams.palette);
     }
   };
 

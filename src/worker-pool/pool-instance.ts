@@ -118,10 +118,11 @@ export async function prepareWorkerPool(
 /**
  * WorkerPoolを溜まっていたJobごと全部リセットする
  */
-export async function resetWorkers() {
-  await iterateAllWorkerAsync(async (workerFacade) => {
+export function resetWorkers() {
+  iterateAllWorker((workerFacade) => {
     workerFacade.clearCallbacks();
-    await workerFacade.terminateAsync();
+    // fire and forget
+    workerFacade.terminateAsync();
   });
   resetAllWorker();
 

@@ -11,6 +11,9 @@ export type Palette = {
 
   size(): number;
 
+  get offset(): number;
+  get length(): number;
+
   setOffset(offsetIndex: number): void;
   cycleOffset(step?: number): void;
   setLength(length: number): void;

@@ -21,6 +21,15 @@ export class BasePalette implements Palette {
     this.cacheInitialized = new Array(this.colorLength).fill(false);
   }
 
+  fillCache(): void {
+    console.log("Fill cache: ", this.colorLength);
+
+    for (let i = 0; i < this.colorLength; i++) {
+      const rgb = this.getRGBFromColorIndex(i);
+      this.writeCache(i, rgb);
+    }
+  }
+
   getRGBFromColorIndex(index: number): RGB {
     throw new Error("Not implemented");
   }
@@ -31,6 +40,14 @@ export class BasePalette implements Palette {
 
   serialize(): string {
     throw new Error("Not implemented");
+  }
+
+  public get length(): number {
+    return this.colorLength;
+  }
+
+  public get offset(): number {
+    return this.offsetIndex;
   }
 
   public rgb(index: number): RGB {

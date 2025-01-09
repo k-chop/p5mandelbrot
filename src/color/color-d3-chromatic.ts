@@ -59,6 +59,7 @@ export class D3ChromaticPalette extends BasePalette {
     this.interpolator = interpolator;
 
     this.buildColors();
+    this.fillCache();
   }
 
   getRGBFromColorIndex(index: number): RGB {

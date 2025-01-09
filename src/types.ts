@@ -58,6 +58,7 @@ export interface MandelbrotParams {
 
 export interface POIData extends MandelbrotParams {
   id: string; // UUID
+  serializedPalette?: string;
 }
 
 export interface IterationWorkerParams {
