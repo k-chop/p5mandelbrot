@@ -4,8 +4,8 @@ import {
 } from "@/camera/palette";
 import { ValueSlider } from "@/components/slider-wrapper";
 import { Slider } from "@/components/ui/slider";
-import { getStore, updateStore } from "@/store/store";
-import { useState } from "react";
+import { getStore, updateStore, useStoreValue } from "@/store/store";
+import { useEffect, useState } from "react";
 
 const paletteLengthValues = [
   "4",
@@ -30,6 +30,16 @@ export const PaletteEditor = () => {
   const [paletteOffsetValue, setPaletteOffsetValue] = useState(() =>
     getStore("paletteOffset"),
   );
+
+  // subscribe
+  const paletteLength = useStoreValue("paletteLength");
+  useEffect(() => {
+    setPaletteLengthValue(paletteLength);
+  }, [paletteLength]);
+  const paletteOffset = useStoreValue("paletteOffset");
+  useEffect(() => {
+    setPaletteOffsetValue(paletteOffset);
+  }, [paletteOffset]);
 
   return (
     <div className="flex max-w-80 flex-col gap-6">

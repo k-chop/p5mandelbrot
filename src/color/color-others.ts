@@ -55,13 +55,13 @@ export class OthersPalette extends BasePalette {
     this.interpolator = interpolator;
 
     this.buildColors();
-    this.fillCache();
   }
 
   buildColors(): void {
     this.colors = samples(this.colorLength)
       .map((t) => this.interpolator(t))
       .filter((v): v is NonNullable<typeof v> => v != null);
+    this.fillCache();
   }
 
   getRGBFromColorIndex(index: number): RGB {

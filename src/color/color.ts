@@ -22,7 +22,11 @@ export class BasePalette implements Palette {
   }
 
   fillCache(): void {
-    console.log("Fill cache: ", this.colorLength);
+    console.log(
+      "Fill palette cache:",
+      this.colorLength,
+      `(${this.serialize()})`,
+    );
 
     for (let i = 0; i < this.colorLength; i++) {
       const rgb = this.getRGBFromColorIndex(i);
