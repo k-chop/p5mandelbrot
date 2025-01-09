@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js";
 import { eventmit } from "eventmit";
 import { useEffect, useState } from "react";
 import {
@@ -20,6 +21,11 @@ export const getStore = (key: string) => store[key];
 
 export const updateStore = (key: string, value: any) => {
   if (store[key] === value) return;
+  // BigNumberはeqで比較
+  if (value instanceof BigNumber && value.eq(store[key])) return;
+  // progressがobjectなので、totalが同じなら更新しない
+  if (value != null && value.total != null && value.total === store[key].total)
+    return;
 
   store[key] = value;
 
