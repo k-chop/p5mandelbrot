@@ -55,6 +55,7 @@ export class OthersPalette extends BasePalette {
     this.interpolator = interpolator;
 
     this.buildColors();
+    this.fillCache();
   }
 
   buildColors(): void {

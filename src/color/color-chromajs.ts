@@ -26,6 +26,7 @@ export class ChromaJsPalette extends BasePalette {
     }
 
     this.buildColors();
+    this.fillCache();
   }
 
   getRGBFromColorIndex(index: number): RGB {
