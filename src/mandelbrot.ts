@@ -112,9 +112,9 @@ export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
 
   currentParams = { ...currentParams, ...params };
 
-  updateStore("r", params.r);
-  updateStore("N", params.N);
-  updateStore("mode", params.mode);
+  updateStore("r", currentParams.r);
+  updateStore("N", currentParams.N);
+  updateStore("mode", currentParams.mode);
 
   if (needModeChange) {
     const workerCount = getStore("workerCount");
