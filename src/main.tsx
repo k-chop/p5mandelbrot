@@ -1,19 +1,19 @@
-import BigNumber from "bignumber.js";
-import p5 from "p5";
-import React from "react";
-import ReactDOMClient from "react-dom/client";
-import { getIterationTimeAt } from "./aggregator";
 import {
   clearResultBuffer,
   mergeToMainBuffer,
   nextBuffer,
   nextResultBuffer,
   setupCamera,
-} from "./camera/camera";
+} from "@/camera/camera";
 import {
   changePaletteFromPresets,
   cycleCurrentPaletteOffset,
-} from "./camera/palette";
+} from "@/camera/palette";
+import BigNumber from "bignumber.js";
+import p5 from "p5";
+import React from "react";
+import ReactDOMClient from "react-dom/client";
+import { getIterationTimeAt } from "./aggregator";
 import { setP5 } from "./canvas-reference";
 import { extractMandelbrotParams } from "./lib/params";
 import {
