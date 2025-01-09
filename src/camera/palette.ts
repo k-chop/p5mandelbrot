@@ -60,6 +60,14 @@ export const changePaletteFromPresets = (index: number) => {
 };
 
 /**
+ * Paletteを指定して変更する
+ */
+export const setPalette = (palette: Palette) => {
+  currentPalette = palette;
+  markNeedsRerender();
+};
+
+/**
  * 現在描画に使用しているPaletteのオフセットを設定する
  */
 export const setCurrentPaletteOffset = (offset: number) => {
