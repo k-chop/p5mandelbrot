@@ -30,9 +30,13 @@ export const usePOI = () => {
   const regenerateThumbnailPOI = useCallback(
     (index: number) => {
       const poi = poiList[index];
+      poi.serializedPalette = getCurrentPalette().serialize();
+      writePOIListToStorage(poiList);
 
       const imageDataURL = getResizedCanvasImageDataURL(100);
       savePreview(poi.id, imageDataURL);
+
+      updateStore("poi", poiList);
     },
     [poiList],
   );
