@@ -143,34 +143,30 @@ function calcBLACoefficient(ref: Complex[], pixelSpacing: number) {
 /**
  * 別serverでrefOrbitを計算する
  *
- * FIXME: serverが立っていない場合はとりあえず勝手に落ちるに任せる
+ * FIXME: serverが立っていない場合はとりあえず勝手に落ちるに任せている
  */
 async function calcRefOrbitExternal(
   referencePoint: ComplexArbitrary,
   maxIteration: number,
 ): Promise<Complex[]> {
-  if (ws == null) {
+  if (ws == null || ws.readyState !== WebSocket.OPEN) {
     return [];
   }
 
   let xnn: number[] = [];
 
-  ws.send(
-    JSON.stringify({
-      type: "calculation_request",
-      x: referencePoint.re.toString(),
-      y: referencePoint.im.toString(),
-      maxIter: maxIteration,
-    }),
-  );
-  await new Promise<void>((resolve) => {
-    ws.addEventListener(
+  const promise = new Promise<void>((resolve) => {
+    ws?.addEventListener(
       "message",
       (ev) => {
         const message = ev.data;
         if (typeof message === "string") {
           const data = JSON.parse(message);
-          console.log("Received message:", data);
+          if (data.type === "error") {
+            console.error("Received message:", data);
+          } else {
+            console.log("Received message:", data);
+          }
         } else if (message instanceof ArrayBuffer) {
           const view = new DataView(message);
           const type = view.getUint8(0);
@@ -187,6 +183,17 @@ async function calcRefOrbitExternal(
     );
   });
 
+  ws.send(
+    JSON.stringify({
+      type: "calculation_request",
+      x: referencePoint.re.toString(),
+      y: referencePoint.im.toString(),
+      maxIter: maxIteration,
+    }),
+  );
+
+  await promise;
+
   const n = Math.floor(xnn.length / 2);
   let xn: Complex[] = [];
 
@@ -201,10 +208,12 @@ async function calcRefOrbitExternal(
  * websocket serverに接続できるならしておく
  */
 async function initWebsocketServer() {
-  const ws = new WebSocket("ws://localhost:8080");
+  ws = new WebSocket("ws://localhost:8080");
   ws.binaryType = "arraybuffer";
 
   return new Promise<void>((resolve, reject) => {
+    if (ws == null) return reject("WebSocket is not initialized");
+
     ws.addEventListener("error", (event) => {
       console.error("Failed to connect to websocket server!", event);
       console.error(
@@ -219,6 +228,8 @@ async function initWebsocketServer() {
     // FIXME: 外からteminateされたときにWebSocketが閉じられない不具合がある
     // MandelbrotFacadeLikeのterminateで即worker.terminateを呼ぶのではなくちゃんと後始末する
     ws.addEventListener("close", () => {
+      websocketServerConnected = false;
+      ws = null;
       console.log("Websocket connection closed.");
     });
   });
@@ -283,11 +294,13 @@ async function setup() {
         xn = await calcRefOrbitExternal(referencePoint, maxIteration);
       }
     } catch {
-      // wow
+      console.warn(
+        "Failed to calculate refOrbit on external server. Fallback.",
+      );
     }
 
     if (xn.length === 0) {
-      // サーバーが立っていない場合はローカルで計算する
+      // この時点で計算結果がない場合はローカルで計算する
       const { xn: xn2 } = calcRefOrbit(
         referencePoint,
         maxIteration,
