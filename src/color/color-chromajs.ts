@@ -1,6 +1,7 @@
 import { safeParseInt } from "@/math";
 import chroma from "chroma-js";
-import { BasePalette, Palette, RGB, clampedPaletteParams } from ".";
+import { Palette, RGB, clampedPaletteParams } from ".";
+import { BasePalette } from "./color";
 
 export class ChromaJsPalette extends BasePalette {
   colorConstructor: string[];

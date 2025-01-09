@@ -1,12 +1,7 @@
 import { safeParseInt } from "@/math";
 import { Hsv, convertHsvToRgb, samples } from "culori";
-import {
-  BasePalette,
-  Palette,
-  RGB,
-  buildRGB32Byte,
-  clampedPaletteParams,
-} from ".";
+import { Palette, RGB, buildRGB32Byte, clampedPaletteParams } from ".";
+import { BasePalette } from "./color";
 
 type OthersInterpolator = (t: number) => Hsv;
 
