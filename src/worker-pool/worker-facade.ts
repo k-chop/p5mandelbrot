@@ -2,13 +2,14 @@ import {
   BatchContext,
   CalcIterationJob,
   CalcRefOrbitJob,
+  IterationIntermediateResult,
+  IterationProgress,
+  IterationResult,
   MandelbrotJob,
   MandelbrotWorkerType,
   RefOrbitProgress,
   RefOrbitResult,
-  IterationIntermediateResult,
-  IterationProgress,
-  IterationResult,
+  type RefOrbitShutdown,
 } from "@/types";
 import { refOrbitWorkerPath, workerPaths } from "@/workers";
 import { RefOrbitContext } from "@/workers/calc-ref-orbit";
@@ -280,6 +281,7 @@ export class RefOrbitWorker implements MandelbrotFacadeLike {
     Atomics.store(t, workerIdx, 0);
 
     this.worker.postMessage({
+      type: "calc-reference-orbit",
       complexCenterX,
       complexCenterY,
       pixelWidth,
@@ -299,10 +301,22 @@ export class RefOrbitWorker implements MandelbrotFacadeLike {
   };
 
   terminateAsync = () => {
-    this.worker.terminate();
+    const promise = new Promise<void>((resolve) => {
+      const handler = (ev: MessageEvent<RefOrbitShutdown>) => {
+        if (ev.data.type === "shutdown") {
+          this.worker.terminate();
+          this.running = false;
+          this.worker.removeEventListener("message", handler);
+          resolve();
+        }
+      };
 
-    this.running = false;
-    return Promise.resolve();
+      this.worker.addEventListener("message", handler);
+
+      this.worker.postMessage({ type: "request-shutdown" });
+    });
+
+    return promise;
   };
 
   cancel = ({ terminator }: BatchContext, { workerIdx }: MandelbrotJob) => {

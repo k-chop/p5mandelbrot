@@ -39,6 +39,10 @@ export interface RefOrbitProgress {
   progress: number;
 }
 
+export interface RefOrbitShutdown {
+  type: "shutdown";
+}
+
 export interface OffsetParams {
   x: number;
   y: number;

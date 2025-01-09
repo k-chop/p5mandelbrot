@@ -1,5 +1,7 @@
 /// <reference lib="webworker" />
 
+import { encodeBlaTableItems } from "@/lib/bla-table-item-buffer";
+import { encodeComplexArray } from "@/lib/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
   BLATableItem,
@@ -18,9 +20,7 @@ import {
   toComplex,
 } from "../math";
 import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
-import { RefOrbitWorkerParams, XnBuffer, BLATableBuffer } from "../types";
-import { encodeComplexArray } from "@/lib/xn-buffer";
-import { encodeBlaTableItems } from "@/lib/bla-table-item-buffer";
+import { BLATableBuffer, RefOrbitWorkerParams, XnBuffer } from "../types";
 
 export type RefOrbitContext = {
   xn: XnBuffer;
@@ -252,90 +252,102 @@ async function setup() {
   self.postMessage({ type: "init" });
 
   self.addEventListener("message", async (event) => {
-    const {
-      complexCenterX,
-      complexCenterY,
-      pixelHeight,
-      pixelWidth,
-      complexRadius: radiusStr,
-      maxIteration,
-      jobId,
-      terminator,
-      workerIdx,
-    } = event.data as RefOrbitWorkerParams;
-
-    const startedAt = performance.now();
-    console.debug(`${jobId}: start (ref)`);
-
-    const terminateChecker = new Uint8Array(terminator);
-
-    // 適当に中央のピクセルを参照点とする
-    const refPixelX = Math.floor(pixelWidth / 2);
-    const refPixelY = Math.floor(pixelHeight / 2);
-
-    const center = complexArbitary(complexCenterX, complexCenterY);
-    const radius = new BigNumber(radiusStr);
-
-    const referencePoint = pixelToComplexCoordinateComplexArbitrary(
-      refPixelX,
-      refPixelY,
-      center,
-      radius,
-      pixelWidth,
-      pixelHeight,
-    );
-
-    let xn: Complex[] = [];
-
-    try {
-      // とりあえずrefOrbit計算serverは開発環境のみ使えるようにしておく
-      // worker起動のタイミングでwebsocket serverが立ち上がってなかったら、次からローカルで計算する
-      if (process.env.NODE_ENV === "development" && websocketServerConnected) {
-        xn = await calcRefOrbitExternal(referencePoint, maxIteration);
-      }
-    } catch {
-      console.warn(
-        "Failed to calculate refOrbit on external server. Fallback.",
-      );
-    }
-
-    if (xn.length === 0) {
-      // この時点で計算結果がない場合はローカルで計算する
-      const { xn: xn2 } = calcRefOrbit(
-        referencePoint,
+    if (event.data.type === "calc-reference-orbit") {
+      const {
+        complexCenterX,
+        complexCenterY,
+        pixelHeight,
+        pixelWidth,
+        complexRadius: radiusStr,
         maxIteration,
-        terminateChecker,
+        jobId,
+        terminator,
         workerIdx,
+      } = event.data as RefOrbitWorkerParams;
+
+      const startedAt = performance.now();
+      console.debug(`${jobId}: start (ref)`);
+
+      const terminateChecker = new Uint8Array(terminator);
+
+      // 適当に中央のピクセルを参照点とする
+      const refPixelX = Math.floor(pixelWidth / 2);
+      const refPixelY = Math.floor(pixelHeight / 2);
+
+      const center = complexArbitary(complexCenterX, complexCenterY);
+      const radius = new BigNumber(radiusStr);
+
+      const referencePoint = pixelToComplexCoordinateComplexArbitrary(
+        refPixelX,
+        refPixelY,
+        center,
+        radius,
+        pixelWidth,
+        pixelHeight,
       );
-      xn = xn2;
-    }
 
-    if (terminateChecker[workerIdx] !== 0) {
-      console.debug(`${jobId}: terminated (ref)`);
+      let xn: Complex[] = [];
+
+      try {
+        // とりあえずrefOrbit計算serverは開発環境のみ使えるようにしておく
+        // worker起動のタイミングでwebsocket serverが立ち上がってなかったら、次からローカルで計算する
+        if (
+          process.env.NODE_ENV === "development" &&
+          websocketServerConnected
+        ) {
+          xn = await calcRefOrbitExternal(referencePoint, maxIteration);
+        }
+      } catch {
+        console.warn(
+          "Failed to calculate refOrbit on external server. Fallback.",
+        );
+      }
+
+      if (xn.length === 0) {
+        // この時点で計算結果がない場合はローカルで計算する
+        const { xn: xn2 } = calcRefOrbit(
+          referencePoint,
+          maxIteration,
+          terminateChecker,
+          workerIdx,
+        );
+        xn = xn2;
+      }
+
+      if (terminateChecker[workerIdx] !== 0) {
+        console.debug(`${jobId}: terminated (ref)`);
+        self.postMessage({
+          type: "terminated",
+        });
+        return;
+      }
+
+      console.log("Reference orbit calculated", xn);
+
+      const pixelSpacing =
+        radius.toNumber() / Math.max(pixelWidth, pixelHeight);
+      const blaTable = calcBLACoefficient(xn, pixelSpacing);
+
+      const xnConverted = encodeComplexArray(xn);
+      const blaTableConverted = encodeBlaTableItems(blaTable);
+
+      const elapsed = performance.now() - startedAt;
+
       self.postMessage({
-        type: "terminated",
+        type: "result",
+        xn: xnConverted,
+        blaTable: blaTableConverted,
+        elapsed,
       });
-      return;
+
+      console.debug(`${jobId}: completed (ref)`);
+    } else if (event.data.type === "request-shutdown") {
+      console.log("Shutdown requested");
+      ws?.close();
+      self.postMessage({ type: "shutdown" });
+    } else {
+      console.error("Unknown message", event.data);
     }
-
-    console.log("Reference orbit calculated", xn);
-
-    const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
-    const blaTable = calcBLACoefficient(xn, pixelSpacing);
-
-    const xnConverted = encodeComplexArray(xn);
-    const blaTableConverted = encodeBlaTableItems(blaTable);
-
-    const elapsed = performance.now() - startedAt;
-
-    self.postMessage({
-      type: "result",
-      xn: xnConverted,
-      blaTable: blaTableConverted,
-      elapsed,
-    });
-
-    console.debug(`${jobId}: completed (ref)`);
   });
 }
 
