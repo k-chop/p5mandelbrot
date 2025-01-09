@@ -5,16 +5,18 @@ import React from "react";
 import ReactDOMClient from "react-dom/client";
 import { getIterationTimeAt } from "./aggregator";
 import {
-  addPalettes,
   clearResultBuffer,
-  getPalette,
   mergeToMainBuffer,
   nextBuffer,
   nextResultBuffer,
-  redraw,
-  setColorIndex,
   setupCamera,
 } from "./camera/camera";
+import {
+  addPalettes,
+  getPalette,
+  redraw,
+  setColorIndex,
+} from "./camera/palette";
 import { setP5 } from "./canvas-reference";
 import { extractMandelbrotParams } from "./lib/params";
 import {

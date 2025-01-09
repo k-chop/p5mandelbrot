@@ -1,4 +1,4 @@
-import { getPalette, redraw } from "@/camera/camera";
+import { getPalette, redraw } from "@/camera/palette";
 import { ValueSlider } from "@/components/slider-wrapper";
 import { Slider } from "@/components/ui/slider";
 import { getStore, updateStore } from "@/store/store";
