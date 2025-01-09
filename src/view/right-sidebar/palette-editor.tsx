@@ -1,5 +1,5 @@
 import {
-  redraw,
+  markNeedsRerender,
   setCurrentPaletteLength,
   setCurrentPaletteOffset,
 } from "@/camera/palette";
@@ -50,7 +50,7 @@ export const PaletteEditor = () => {
             setPaletteOffsetValue(0);
             updateStore("paletteOffset", 0);
 
-            redraw();
+            markNeedsRerender();
           }}
         />
       </div>
@@ -64,12 +64,12 @@ export const PaletteEditor = () => {
             setPaletteOffsetValue(value);
             updateStore("paletteOffset", value);
             setCurrentPaletteOffset(value);
-            redraw();
+            markNeedsRerender();
           }}
           onValueCommit={([value]) => {
             updateStore("paletteOffset", value);
             setCurrentPaletteOffset(value);
-            redraw();
+            markNeedsRerender();
           }}
         />
       </div>

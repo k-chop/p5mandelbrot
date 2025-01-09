@@ -3,7 +3,7 @@ import { getIterationCache } from "../aggregator";
 import { getCurrentParams } from "../mandelbrot";
 import { Rect } from "../rect";
 import { renderIterationsToPixel } from "../rendering";
-import { colorChanged, getCurrentPalette, updateColor } from "./palette";
+import { getCurrentPalette, markAsRendered, needsRerender } from "./palette";
 
 let mainBuffer: p5.Graphics;
 let resultBuffer: p5.Graphics;
@@ -24,8 +24,8 @@ export const setupCamera = (p: p5, w: number, h: number) => {
 };
 
 export const nextBuffer = (p: p5): p5.Graphics => {
-  if (colorChanged()) {
-    updateColor();
+  if (needsRerender()) {
+    markAsRendered();
 
     renderToMainBuffer(bufferRect);
   }

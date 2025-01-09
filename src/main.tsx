@@ -10,7 +10,11 @@ import {
   nextResultBuffer,
   setupCamera,
 } from "./camera/camera";
-import { getCurrentPalette, redraw, setColorIndex } from "./camera/palette";
+import {
+  changePaletteFromPresets,
+  cycleCurrentPaletteOffset,
+  markNeedsRerender,
+} from "./camera/palette";
 import { setP5 } from "./canvas-reference";
 import { extractMandelbrotParams } from "./lib/params";
 import {
@@ -235,14 +239,14 @@ const sketch = (p: p5) => {
           diff = 100000;
         }
       }
-      if (event.key === "1") setColorIndex(0);
-      if (event.key === "2") setColorIndex(1);
-      if (event.key === "3") setColorIndex(2);
-      if (event.key === "4") setColorIndex(3);
-      if (event.key === "5") setColorIndex(4);
-      if (event.key === "6") setColorIndex(5);
-      if (event.key === "7") setColorIndex(6);
-      if (event.key === "8") setColorIndex(7);
+      if (event.key === "1") changePaletteFromPresets(0);
+      if (event.key === "2") changePaletteFromPresets(1);
+      if (event.key === "3") changePaletteFromPresets(2);
+      if (event.key === "4") changePaletteFromPresets(3);
+      if (event.key === "5") changePaletteFromPresets(4);
+      if (event.key === "6") changePaletteFromPresets(5);
+      if (event.key === "7") changePaletteFromPresets(6);
+      if (event.key === "8") changePaletteFromPresets(7);
       if (event.key === "0") resetIterationCount();
       if (event.key === "9") setDeepIterationCount();
       if (event.key === "r") resetRadius();
@@ -267,8 +271,8 @@ const sketch = (p: p5) => {
 
       if (elapsed > time) {
         elapsed = elapsed % time;
-        getCurrentPalette().cycleOffset();
-        redraw();
+        cycleCurrentPaletteOffset();
+        markNeedsRerender();
       }
     }
 

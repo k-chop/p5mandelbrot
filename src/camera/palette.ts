@@ -15,19 +15,33 @@ const palettePresets: Palette[] = [
   ...chromaJsPalettes,
 ];
 
-export const colorChanged = () => {
+/**
+ * 再renderが必要かどうかを返す
+ */
+export const needsRerender = () => {
   return lastColorIdx !== currentColorIdx;
 };
 
-export const updateColor = () => {
+/**
+ * 現状のPaletteの状態でrender済みとしてマークする
+ *
+ * canvasの状態が変わらない時に次回以降のrenderをスキップするために使う
+ */
+export const markAsRendered = () => {
   lastColorIdx = currentColorIdx;
 };
 
-export const redraw = () => {
+/**
+ * 次に再renderするようマークする
+ */
+export const markNeedsRerender = () => {
   lastColorIdx = -1;
 };
 
-export const setColorIndex = (index: number) => {
+/**
+ * presetに登録してあるPaletteを選択する
+ */
+export const changePaletteFromPresets = (index: number) => {
   if (palettePresets[index]) {
     currentColorIdx = index;
   } else {
