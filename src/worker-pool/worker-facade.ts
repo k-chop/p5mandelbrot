@@ -95,12 +95,7 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
         case "result": {
           const { iterations, elapsed } = data;
 
-          const iterationsResult = new Uint32Array(iterations);
-
-          this.resultCallback?.(
-            { type: "result", iterations: iterationsResult, elapsed },
-            job,
-          );
+          this.resultCallback?.({ type: "result", iterations, elapsed }, job);
 
           this.worker.removeEventListener("message", f);
           this.running = false;
@@ -111,7 +106,7 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
           this.intermediateResultCallback?.(
             {
               type: "intermediateResult",
-              iterations: new Uint32Array(iterations),
+              iterations: iterations,
               resolution,
             },
             job,
