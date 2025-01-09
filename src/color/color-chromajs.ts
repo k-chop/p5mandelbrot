@@ -26,7 +26,6 @@ export class ChromaJsPalette extends BasePalette {
     }
 
     this.buildColors();
-    this.fillCache();
   }
 
   getRGBFromColorIndex(index: number): RGB {
@@ -37,6 +36,7 @@ export class ChromaJsPalette extends BasePalette {
     this.colors = chroma
       .scale(this.colorConstructor)
       .colors(this.colorLength, null);
+    this.fillCache();
   }
 
   serialize(): string {
