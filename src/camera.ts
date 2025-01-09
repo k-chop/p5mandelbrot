@@ -1,6 +1,6 @@
+import { Palette } from "@/color";
 import p5 from "p5";
 import { getIterationCache } from "./aggregator";
-import { Palette } from "./color/model";
 import { getCurrentParams } from "./mandelbrot";
 import { Rect } from "./rect";
 import { renderIterationsToPixel } from "./rendering";

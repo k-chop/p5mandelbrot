@@ -1,3 +1,4 @@
+import { chromaJsPalettes, d3ChromaticPalettes, othersPalettes } from "@/color";
 import BigNumber from "bignumber.js";
 import p5 from "p5";
 import React from "react";
@@ -15,9 +16,6 @@ import {
   setupCamera,
 } from "./camera";
 import { setP5 } from "./canvas-reference";
-import { chromaJsPalettes } from "./color/color-chromajs";
-import { d3ChromaticPalettes } from "./color/color-d3-chromatic";
-import { othersPalettes } from "./color/color-others";
 import { extractMandelbrotParams } from "./lib/params";
 import {
   calcVars,
