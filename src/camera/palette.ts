@@ -5,10 +5,12 @@ import {
   type Palette,
 } from "@/color";
 
-// 描画時に使うpaletteに関するファイル
+// 描画時に使うpaletteの状態に関するファイル
 
-let lastColorIdx = 0;
 let currentColorIdx = 0;
+/** trueなら次回renderが必要 */
+let renderNext = true;
+
 const palettePresets: Palette[] = [
   ...d3ChromaticPalettes,
   ...othersPalettes,
@@ -19,7 +21,7 @@ const palettePresets: Palette[] = [
  * 再renderが必要かどうかを返す
  */
 export const needsRerender = () => {
-  return lastColorIdx !== currentColorIdx;
+  return renderNext;
 };
 
 /**
@@ -28,14 +30,14 @@ export const needsRerender = () => {
  * canvasの状態が変わらない時に次回以降のrenderをスキップするために使う
  */
 export const markAsRendered = () => {
-  lastColorIdx = currentColorIdx;
+  renderNext = false;
 };
 
 /**
  * 次に再renderするようマークする
  */
 export const markNeedsRerender = () => {
-  lastColorIdx = -1;
+  renderNext = true;
 };
 
 /**
@@ -59,6 +61,7 @@ export const getCurrentPalette = () => palettePresets[currentColorIdx];
  */
 export const setCurrentPaletteOffset = (offset: number) => {
   getCurrentPalette().setOffset(offset);
+  markNeedsRerender();
 };
 
 /**
@@ -66,6 +69,7 @@ export const setCurrentPaletteOffset = (offset: number) => {
  */
 export const setCurrentPaletteLength = (length: number) => {
   getCurrentPalette().setLength(length);
+  markNeedsRerender();
 };
 
 /**
@@ -73,4 +77,5 @@ export const setCurrentPaletteLength = (length: number) => {
  */
 export const cycleCurrentPaletteOffset = (step = 1) => {
   getCurrentPalette().cycleOffset(step);
+  markNeedsRerender();
 };
