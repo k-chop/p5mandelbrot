@@ -36,7 +36,7 @@ export const markAsRendered = () => {
 /**
  * 次に再renderするようマークする
  */
-export const markNeedsRerender = () => {
+const markNeedsRerender = () => {
   renderNext = true;
 };
 

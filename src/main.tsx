@@ -13,7 +13,6 @@ import {
 import {
   changePaletteFromPresets,
   cycleCurrentPaletteOffset,
-  markNeedsRerender,
 } from "./camera/palette";
 import { setP5 } from "./canvas-reference";
 import { extractMandelbrotParams } from "./lib/params";
@@ -272,7 +271,6 @@ const sketch = (p: p5) => {
       if (elapsed > time) {
         elapsed = elapsed % time;
         cycleCurrentPaletteOffset();
-        markNeedsRerender();
       }
     }
 
