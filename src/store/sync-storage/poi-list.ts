@@ -1,15 +1,20 @@
+import type { Palette } from "@/color";
 import BigNumber from "bignumber.js";
 import { Result, err, ok } from "neverthrow";
 import { MandelbrotParams, POIData } from "../../types";
 import { updateStore } from "../store";
 
-export const createNewPOIData = (params: MandelbrotParams): POIData => ({
+export const createNewPOIData = (
+  params: MandelbrotParams,
+  palette: Palette,
+): POIData => ({
   id: crypto.randomUUID(),
   ...params,
+  serializedPalette: palette.serialize(),
 });
 
 export const writePOIListToStorage = (poiList: POIData[]) => {
-  const serialized = JSON.stringify(poiList.map(serializedMandelbrotParams));
+  const serialized = JSON.stringify(poiList.map(serializedPOIData));
   localStorage.setItem("poiList", serialized);
 };
 
@@ -21,7 +26,7 @@ export const readPOIListFromStorage = (): POIData[] => {
   return rawList.map(deserializedMandelbrotParams);
 };
 
-const serializedMandelbrotParams = (params: POIData) => {
+const serializedPOIData = (params: POIData) => {
   return {
     id: params.id,
     x: params.x.toString(),
@@ -29,6 +34,7 @@ const serializedMandelbrotParams = (params: POIData) => {
     r: params.r.toString(),
     N: params.N,
     mode: params.mode,
+    serializedPalette: params.serializedPalette,
   };
 };
 
@@ -42,6 +48,7 @@ const deserializedMandelbrotParams = (params: any): POIData => {
     r: new BigNumber(params.r),
     N: params.N,
     mode: params.mode,
+    serializedPalette: params.serializedPalette,
   };
 };
 

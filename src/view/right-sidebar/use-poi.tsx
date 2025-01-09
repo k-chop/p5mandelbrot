@@ -1,3 +1,4 @@
+import { getCurrentPalette, setSerializedPalette } from "@/camera/palette";
 import { getResizedCanvasImageDataURL } from "@/canvas-reference";
 import { deletePreview, savePreview } from "@/store/preview-store";
 import { useCallback } from "react";
@@ -14,7 +15,7 @@ export const usePOI = () => {
 
   const addPOI = useCallback(
     (newParams: MandelbrotParams) => {
-      const newPOI = createNewPOIData(newParams);
+      const newPOI = createNewPOIData(newParams, getCurrentPalette());
       const newPOIList = [newPOI, ...poiList];
       writePOIListToStorage(newPOIList);
 
@@ -49,8 +50,9 @@ export const usePOI = () => {
     [poiList],
   );
 
-  const applyPOI = useCallback((poi: MandelbrotParams) => {
+  const applyPOI = useCallback((poi: POIData) => {
     setCurrentParams(cloneParams(poi));
+    setSerializedPalette(poi.serializedPalette);
   }, []);
 
   const copyPOIListToClipboard = useCallback(() => {

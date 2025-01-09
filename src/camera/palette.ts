@@ -1,6 +1,7 @@
 import {
   chromaJsPalettes,
   d3ChromaticPalettes,
+  deserializePalette,
   othersPalettes,
   type Palette,
 } from "@/color";
@@ -65,6 +66,26 @@ export const changePaletteFromPresets = (index: number) => {
 export const setPalette = (palette: Palette) => {
   currentPalette = palette;
   markNeedsRerender();
+};
+
+/**
+ * serializedされたPaletteを設定する
+ *
+ * deserializeに失敗した場合は握りつぶして現在のpaletteを維持する
+ */
+export const setSerializedPalette = (serialized?: string) => {
+  if (serialized == null) return;
+
+  let palette = getCurrentPalette();
+
+  try {
+    palette = deserializePalette(serialized);
+  } catch (e) {
+    console.error(e);
+  }
+
+  console.log("Loaded serialized palette", palette);
+  setPalette(palette);
 };
 
 /**
