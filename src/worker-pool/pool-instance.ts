@@ -1,23 +1,23 @@
+import { getStore, updateStore } from "@/store/store";
 import { JobType, MandelbrotWorkerType } from "@/types";
 import {
-  CalcIterationWorker,
-  RefOrbitWorker,
-  MandelbrotFacadeLike,
-} from "./worker-facade";
-import { getStore, updateStore } from "@/store/store";
-import { clearTaskQueue } from "./task-queue";
-import { clearWorkerReference } from "./worker-reference";
-import {
-  onIterationWorkerResult,
   onIterationWorkerIntermediateResult,
   onIterationWorkerProgress,
+  onIterationWorkerResult,
 } from "./callbacks/iteration-worker";
 import {
+  onRefOrbitWorkerProgress,
   onRefOrbitWorkerResult,
   onRefOrbitWorkerTerminated,
-  onRefOrbitWorkerProgress,
 } from "./callbacks/ref-orbit-worker";
+import { clearTaskQueue } from "./task-queue";
+import {
+  CalcIterationWorker,
+  MandelbrotFacadeLike,
+  RefOrbitWorker,
+} from "./worker-facade";
 import { clearBatchContext, tickWorkerPool } from "./worker-pool";
+import { clearWorkerReference } from "./worker-reference";
 
 type WorkerPool = MandelbrotFacadeLike[];
 
@@ -46,6 +46,19 @@ export const iterateAllWorker = <T>(f: (worker: MandelbrotFacadeLike) => T) => {
   for (const workers of pool.values()) {
     workers.forEach(f);
   }
+};
+
+/**
+ * 全workerに対して非同期処理を行う
+ */
+export const iterateAllWorkerAsync = async <T>(
+  f: (worker: MandelbrotFacadeLike) => Promise<T>,
+) => {
+  const promises = [];
+  for (const workers of pool.values()) {
+    promises.push(...workers.map(f));
+  }
+  return Promise.all(promises);
 };
 
 /**
@@ -85,7 +98,7 @@ export const calcNormalizedWorkerIndex = (
  * WorkerPoolを再構築する
  * countやworkerTypeが変わった場合に呼ばれる
  */
-export function prepareWorkerPool(
+export async function prepareWorkerPool(
   count: number = getStore("workerCount"),
   workerType: MandelbrotWorkerType = getStore("mode"),
 ) {
@@ -96,7 +109,7 @@ export function prepareWorkerPool(
     updateStore("shouldReuseRefOrbit", false);
   }
 
-  resetWorkers();
+  await resetWorkers();
 
   fillIterationWorkerPool(count, workerType);
   fillRefOrbitWorkerPool(1 /* 仮 */, workerType);
@@ -105,10 +118,10 @@ export function prepareWorkerPool(
 /**
  * WorkerPoolを溜まっていたJobごと全部リセットする
  */
-export function resetWorkers() {
-  iterateAllWorker((workerFacade) => {
+export async function resetWorkers() {
+  await iterateAllWorkerAsync(async (workerFacade) => {
     workerFacade.clearCallbacks();
-    workerFacade.terminate();
+    await workerFacade.terminateAsync();
   });
   resetAllWorker();
 

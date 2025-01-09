@@ -1,5 +1,7 @@
 /// <reference lib="webworker" />
 
+import { encodeBlaTableItems } from "@/lib/bla-table-item-buffer";
+import { encodeComplexArray } from "@/lib/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
   BLATableItem,
@@ -18,9 +20,7 @@ import {
   toComplex,
 } from "../math";
 import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
-import { RefOrbitWorkerParams, XnBuffer, BLATableBuffer } from "../types";
-import { encodeComplexArray } from "@/lib/xn-buffer";
-import { encodeBlaTableItems } from "@/lib/bla-table-item-buffer";
+import { BLATableBuffer, RefOrbitWorkerParams, XnBuffer } from "../types";
 
 export type RefOrbitContext = {
   xn: XnBuffer;
@@ -32,6 +32,10 @@ export type RefOrbitContextPopulated = {
   xn: Complex[];
   blaTable: BLATableItem[][];
 };
+
+// FIXME: 手抜き
+let websocketServerConnected = false;
+let ws: WebSocket | null = null;
 
 function calcRefOrbit(
   center: ComplexArbitrary,
@@ -136,76 +140,214 @@ function calcBLACoefficient(ref: Complex[], pixelSpacing: number) {
   return blaTable;
 }
 
+/**
+ * 別serverでrefOrbitを計算する
+ *
+ * FIXME: serverが立っていない場合はとりあえず勝手に落ちるに任せている
+ */
+async function calcRefOrbitExternal(
+  referencePoint: ComplexArbitrary,
+  maxIteration: number,
+): Promise<Complex[]> {
+  if (ws == null || ws.readyState !== WebSocket.OPEN) {
+    return [];
+  }
+
+  let xnn: number[] = [];
+
+  const promise = new Promise<void>((resolve) => {
+    ws?.addEventListener(
+      "message",
+      (ev) => {
+        const message = ev.data;
+        if (typeof message === "string") {
+          const data = JSON.parse(message);
+          if (data.type === "error") {
+            console.error("Received message:", data);
+          } else {
+            console.log("Received message:", data);
+          }
+        } else if (message instanceof ArrayBuffer) {
+          const view = new DataView(message);
+          const type = view.getUint8(0);
+
+          if (type === 0x03) {
+            for (let i = 1; i < view.byteLength; i += 8) {
+              xnn.push(view.getFloat64(i, true));
+            }
+          }
+        }
+        resolve();
+      },
+      { once: true },
+    );
+  });
+
+  ws.send(
+    JSON.stringify({
+      type: "calculation_request",
+      x: referencePoint.re.toString(),
+      y: referencePoint.im.toString(),
+      maxIter: maxIteration,
+    }),
+  );
+
+  await promise;
+
+  const n = Math.floor(xnn.length / 2);
+  let xn: Complex[] = [];
+
+  for (let i = 0; i < n; i++) {
+    xn.push({ re: xnn[i * 2], im: xnn[i * 2 + 1] });
+  }
+
+  return xn;
+}
+
+/**
+ * websocket serverに接続できるならしておく
+ */
+async function initWebsocketServer() {
+  ws = new WebSocket("ws://localhost:8080");
+  ws.binaryType = "arraybuffer";
+
+  return new Promise<void>((resolve, reject) => {
+    if (ws == null) return reject("WebSocket is not initialized");
+
+    ws.addEventListener("error", (event) => {
+      console.error("Failed to connect to websocket server!", event);
+      console.error(
+        "Check the server and refOrbit calculation rust client is running",
+      );
+      reject(event);
+    });
+    ws.addEventListener("open", () => {
+      console.log("Websocket connection established!");
+      resolve();
+    });
+    // FIXME: 外からteminateされたときにWebSocketが閉じられない不具合がある
+    // MandelbrotFacadeLikeのterminateで即worker.terminateを呼ぶのではなくちゃんと後始末する
+    ws.addEventListener("close", () => {
+      websocketServerConnected = false;
+      ws = null;
+      console.log("Websocket connection closed.");
+    });
+  });
+}
+
+/**
+ * worker起動時に呼ばれる
+ */
 async function setup() {
-  // init here in future
+  if (
+    process.env.NODE_ENV === "development" &&
+    websocketServerConnected === false
+  ) {
+    try {
+      await initWebsocketServer();
+      websocketServerConnected = true;
+    } catch {}
+  }
 
   self.postMessage({ type: "init" });
 
-  self.addEventListener("message", (event) => {
-    const {
-      complexCenterX,
-      complexCenterY,
-      pixelHeight,
-      pixelWidth,
-      complexRadius: radiusStr,
-      maxIteration,
-      jobId,
-      terminator,
-      workerIdx,
-    } = event.data as RefOrbitWorkerParams;
+  self.addEventListener("message", async (event) => {
+    if (event.data.type === "calc-reference-orbit") {
+      const {
+        complexCenterX,
+        complexCenterY,
+        pixelHeight,
+        pixelWidth,
+        complexRadius: radiusStr,
+        maxIteration,
+        jobId,
+        terminator,
+        workerIdx,
+      } = event.data as RefOrbitWorkerParams;
 
-    const startedAt = performance.now();
-    console.debug(`${jobId}: start (ref)`);
+      const startedAt = performance.now();
+      console.debug(`${jobId}: start (ref)`);
 
-    const terminateChecker = new Uint8Array(terminator);
+      const terminateChecker = new Uint8Array(terminator);
 
-    // 適当に中央のピクセルを参照点とする
-    const refPixelX = Math.floor(pixelWidth / 2);
-    const refPixelY = Math.floor(pixelHeight / 2);
+      // 適当に中央のピクセルを参照点とする
+      const refPixelX = Math.floor(pixelWidth / 2);
+      const refPixelY = Math.floor(pixelHeight / 2);
 
-    const center = complexArbitary(complexCenterX, complexCenterY);
-    const radius = new BigNumber(radiusStr);
+      const center = complexArbitary(complexCenterX, complexCenterY);
+      const radius = new BigNumber(radiusStr);
 
-    const referencePoint = pixelToComplexCoordinateComplexArbitrary(
-      refPixelX,
-      refPixelY,
-      center,
-      radius,
-      pixelWidth,
-      pixelHeight,
-    );
+      const referencePoint = pixelToComplexCoordinateComplexArbitrary(
+        refPixelX,
+        refPixelY,
+        center,
+        radius,
+        pixelWidth,
+        pixelHeight,
+      );
 
-    const { xn } = calcRefOrbit(
-      referencePoint,
-      maxIteration,
-      terminateChecker,
-      workerIdx,
-    );
+      let xn: Complex[] = [];
 
-    if (terminateChecker[workerIdx] !== 0) {
-      console.debug(`${jobId}: terminated (ref)`);
+      try {
+        // とりあえずrefOrbit計算serverは開発環境のみ使えるようにしておく
+        // worker起動のタイミングでwebsocket serverが立ち上がってなかったら、次からローカルで計算する
+        if (
+          process.env.NODE_ENV === "development" &&
+          websocketServerConnected
+        ) {
+          xn = await calcRefOrbitExternal(referencePoint, maxIteration);
+        }
+      } catch {
+        console.warn(
+          "Failed to calculate refOrbit on external server. Fallback.",
+        );
+      }
+
+      if (xn.length === 0) {
+        // この時点で計算結果がない場合はローカルで計算する
+        const { xn: xn2 } = calcRefOrbit(
+          referencePoint,
+          maxIteration,
+          terminateChecker,
+          workerIdx,
+        );
+        xn = xn2;
+      }
+
+      if (terminateChecker[workerIdx] !== 0) {
+        console.debug(`${jobId}: terminated (ref)`);
+        self.postMessage({
+          type: "terminated",
+        });
+        return;
+      }
+
+      console.log("Reference orbit calculated", xn);
+
+      const pixelSpacing =
+        radius.toNumber() / Math.max(pixelWidth, pixelHeight);
+      const blaTable = calcBLACoefficient(xn, pixelSpacing);
+
+      const xnConverted = encodeComplexArray(xn);
+      const blaTableConverted = encodeBlaTableItems(blaTable);
+
+      const elapsed = performance.now() - startedAt;
+
       self.postMessage({
-        type: "terminated",
+        type: "result",
+        xn: xnConverted,
+        blaTable: blaTableConverted,
+        elapsed,
       });
-      return;
+
+      console.debug(`${jobId}: completed (ref)`);
+    } else if (event.data.type === "request-shutdown") {
+      console.log("Shutdown requested");
+      ws?.close();
+      self.postMessage({ type: "shutdown" });
+    } else {
+      console.error("Unknown message", event.data);
     }
-
-    const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
-    const blaTable = calcBLACoefficient(xn, pixelSpacing);
-
-    const xnConverted = encodeComplexArray(xn);
-    const blaTableConverted = encodeBlaTableItems(blaTable);
-
-    const elapsed = performance.now() - startedAt;
-
-    self.postMessage({
-      type: "result",
-      xn: xnConverted,
-      blaTable: blaTableConverted,
-      elapsed,
-    });
-
-    console.debug(`${jobId}: completed (ref)`);
   });
 }
 
