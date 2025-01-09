@@ -266,13 +266,14 @@ const sketch = (p: p5) => {
 
   p.draw = () => {
     const time = getStore("animationTime");
+    const step = getStore("animationCycleStep");
 
     if (time > 0) {
       elapsed += p.deltaTime;
 
       if (elapsed > time) {
         elapsed = elapsed % time;
-        cycleCurrentPaletteOffset();
+        cycleCurrentPaletteOffset(step);
       }
     }
 
