@@ -161,12 +161,9 @@ export const startCalculation = async (onComplete: () => void) => {
 
   const divideRectCount = getWorkerCount("calc-iteration");
 
-  const minSide = Math.floor(Math.sqrt((width * height) / divideRectCount));
-
   let calculationRects = divideRect(
     [{ x: 0, y: 0, width, height }],
     divideRectCount,
-    minSide,
   );
 
   if (offsetParams.x !== 0 || offsetParams.y !== 0) {
@@ -196,11 +193,7 @@ export const startCalculation = async (onComplete: () => void) => {
     // ただしどのくらいの距離まで有効なのか、有効でなくなったことをどう検知したらいいのかわからん
 
     const expectedDivideCount = Math.max(divideRectCount, 2);
-    calculationRects = divideRect(
-      getOffsetRects(),
-      expectedDivideCount,
-      minSide,
-    );
+    calculationRects = divideRect(getOffsetRects(), expectedDivideCount);
   } else {
     // 移動していない場合は再利用するCacheがないので消す
     clearIterationCache();
