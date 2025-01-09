@@ -85,7 +85,11 @@ export const setSerializedPalette = (serialized?: string) => {
   }
 
   console.log("Loaded serialized palette", palette);
-  setPalette(palette);
+  console.log(
+    "But this feature is currently bugged and not working. We'll keep the current palette for now, sorry.",
+  );
+
+  // setPalette(palette);
 };
 
 /**
