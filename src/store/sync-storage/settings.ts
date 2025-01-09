@@ -4,6 +4,7 @@ export type Settings = {
   zoomRate: number;
   workerCount: number;
   animationTime: number;
+  animationCycleStep?: number;
 };
 
 export const DEFAULT_WORKER_COUNT = navigator.hardwareConcurrency;
@@ -12,6 +13,7 @@ const defaultSettings = {
   zoomRate: 2.0,
   workerCount: DEFAULT_WORKER_COUNT,
   animationTime: 0,
+  animationCycleStep: 1,
 } satisfies Settings;
 
 export const isSettingField = (key: string): key is keyof Settings =>
@@ -22,6 +24,7 @@ export const writeSettingsToStorage = () => {
     zoomRate: getStore("zoomRate"),
     workerCount: getStore("workerCount"),
     animationTime: getStore("animationTime"),
+    animationCycleStep: getStore("animationCycleStep"),
   } satisfies Settings;
 
   const serialized = JSON.stringify(settings);
