@@ -7,15 +7,17 @@ import {
 
 // 描画時に使うpaletteの状態に関するファイル
 
-let currentColorIdx = 0;
-/** trueなら次回renderが必要 */
-let renderNext = true;
-
+/** 数値キーで選択できるpaletteのプリセット */
 const palettePresets: Palette[] = [
   ...d3ChromaticPalettes,
   ...othersPalettes,
   ...chromaJsPalettes,
 ];
+
+/** 現在選択中のPalette */
+let currentPalette: Palette = palettePresets[0];
+/** trueなら次回renderが必要 */
+let renderNext = true;
 
 /**
  * 次に再renderするようマークする
@@ -41,20 +43,21 @@ export const markAsRendered = () => {
 };
 
 /**
+ * 現在描画に使用しているPaletteを返す
+ */
+export const getCurrentPalette = () => currentPalette;
+
+/**
  * presetに登録してあるPaletteを選択する
  */
 export const changePaletteFromPresets = (index: number) => {
   if (palettePresets[index]) {
-    currentColorIdx = index;
+    currentPalette = palettePresets[index];
   } else {
-    currentColorIdx = 0;
+    currentPalette = palettePresets[0];
   }
+  markNeedsRerender();
 };
-
-/**
- * 現在描画に使用しているPaletteを返す
- */
-export const getCurrentPalette = () => palettePresets[currentColorIdx];
 
 /**
  * 現在描画に使用しているPaletteのオフセットを設定する
