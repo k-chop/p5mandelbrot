@@ -1,7 +1,7 @@
-import { Palette } from ".";
 import { ChromaJsPalette } from "./color-chromajs";
 import { D3ChromaticPalette } from "./color-d3-chromatic";
 import { OthersPalette } from "./color-others";
+import { Palette } from "./model";
 
 export const deserializePalette = (serialized: string): Palette => {
   const [type] = serialized.split(",");

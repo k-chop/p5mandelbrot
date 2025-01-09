@@ -7,8 +7,8 @@ import {
   interpolateSinebow,
   interpolateTurbo,
 } from "d3-scale-chromatic";
-import { Palette, RGB, buildRGB, clampedPaletteParams } from ".";
 import { BasePalette } from "./color";
+import { Palette, RGB, buildRGB, clampedPaletteParams } from "./model";
 
 type D3Interpolator = (t: number) => string;
 type D3Color = ReturnType<typeof color>;

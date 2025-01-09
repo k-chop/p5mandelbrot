@@ -1,4 +1,4 @@
-import type { Palette, RGB } from ".";
+import type { Palette, RGB } from "./model";
 
 export class BasePalette implements Palette {
   cache!: Uint8ClampedArray;

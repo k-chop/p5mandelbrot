@@ -2,6 +2,23 @@ import { clamp } from "@/math";
 
 export type RGB = [number, number, number];
 
+export type Palette = {
+  rgb(index: number): RGB;
+
+  r(index: number): number;
+  g(index: number): number;
+  b(index: number): number;
+
+  size(): number;
+
+  setOffset(offsetIndex: number): void;
+  cycleOffset(step?: number): void;
+  setLength(length: number): void;
+  setMirrored(mirrored: boolean): void;
+
+  serialize(): string;
+};
+
 export const buildRGB = ({
   r,
   g,
@@ -24,23 +41,6 @@ export const buildRGB32Byte = ({
   b: number;
 }): RGB => {
   return [r * 255, g * 255, b * 255];
-};
-
-export type Palette = {
-  rgb(index: number): RGB;
-
-  r(index: number): number;
-  g(index: number): number;
-  b(index: number): number;
-
-  size(): number;
-
-  setOffset(offsetIndex: number): void;
-  cycleOffset(step?: number): void;
-  setLength(length: number): void;
-  setMirrored(mirrored: boolean): void;
-
-  serialize(): string;
 };
 
 export const clampedPaletteParams = (length: number, offset: number) => {
