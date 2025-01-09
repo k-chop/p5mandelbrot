@@ -14,7 +14,7 @@ import {
   redraw,
   setColorIndex,
   setupCamera,
-} from "./camera";
+} from "./camera/camera";
 import { setP5 } from "./canvas-reference";
 import { extractMandelbrotParams } from "./lib/params";
 import {

@@ -1,5 +1,5 @@
 import { upsertIterationCache } from "@/aggregator";
-import { renderToResultBuffer } from "@/camera";
+import { renderToResultBuffer } from "@/camera/camera";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
 import {
