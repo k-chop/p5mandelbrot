@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
-import { MandelbrotParams, POIData } from "../../types";
 import { Result, err, ok } from "neverthrow";
+import { MandelbrotParams, POIData } from "../../types";
 import { updateStore } from "../store";
 
 export const createNewPOIData = (params: MandelbrotParams): POIData => ({

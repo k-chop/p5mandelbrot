@@ -1,10 +1,10 @@
+import { repeatUntil } from "@/math";
+import { interpolateRdYlBu } from "d3-scale-chromatic";
 import { describe, expect, it } from "vitest";
 import { ChromaJsPalette } from "./color-chromajs";
-import { deserializePalette } from "./deserializer";
-import { repeatUntil } from "@/math";
 import { D3ChromaticPalette } from "./color-d3-chromatic";
-import { interpolateRdYlBu } from "d3-scale-chromatic";
 import { OthersPalette, othersPalettes } from "./color-others";
+import { deserializePalette } from "./deserializer";
 
 describe("chroma-js", () => {
   it("不正な入力に対してデフォルト値を適用する", () => {

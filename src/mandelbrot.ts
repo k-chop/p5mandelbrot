@@ -3,17 +3,17 @@ import {
   clearIterationCache,
   translateRectInIterationCache,
 } from "./aggregator";
+import { renderToResultBuffer } from "./camera";
 import { divideRect, Rect } from "./rect";
 import { getStore, updateStoreWith } from "./store/store";
 import { MandelbrotParams, OffsetParams } from "./types";
+import { getWorkerCount, prepareWorkerPool } from "./worker-pool/pool-instance";
 import {
   cancelBatch,
   cycleWorkerType,
   registerBatch,
   startBatch,
 } from "./worker-pool/worker-pool";
-import { renderToResultBuffer } from "./camera";
-import { getWorkerCount, prepareWorkerPool } from "./worker-pool/pool-instance";
 
 const DEFAULT_N = 500;
 const DEFAULT_WIDTH = 800;

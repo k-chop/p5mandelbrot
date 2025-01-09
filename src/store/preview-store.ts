@@ -1,5 +1,5 @@
 import { eventmit } from "eventmit";
-import { get, set, del } from "idb-keyval";
+import { del, get, set } from "idb-keyval";
 import { useEffect, useState } from "react";
 
 const event = eventmit<string>();

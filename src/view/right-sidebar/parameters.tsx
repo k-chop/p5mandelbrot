@@ -1,22 +1,22 @@
+import { Kbd } from "@/components/kbd";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { GLITCHED_POINT_ITERATION, setCurrentParams } from "../../mandelbrot";
-import { useStoreValue } from "../../store/store";
-import { useModalState } from "../modal/use-modal-state";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { AlertCircleIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Kbd } from "@/components/kbd";
+import { AlertCircleIcon } from "lucide-react";
+import { GLITCHED_POINT_ITERATION, setCurrentParams } from "../../mandelbrot";
+import { useStoreValue } from "../../store/store";
+import { useModalState } from "../modal/use-modal-state";
 
 export const Parameters = () => {
   const [opened, { close, toggle }] = useModalState();

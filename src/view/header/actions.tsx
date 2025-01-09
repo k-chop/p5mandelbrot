@@ -2,12 +2,7 @@ import { getResizedCanvasImageDataURL } from "@/canvas-reference";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { copyCurrentParamsToClipboard } from "@/lib/params";
-import {
-  IconCircleCheck,
-  IconShare,
-  IconDownload,
-  IconDots,
-} from "@tabler/icons-react";
+import { IconCircleCheck, IconDownload, IconShare } from "@tabler/icons-react";
 
 export const Actions = () => {
   return (

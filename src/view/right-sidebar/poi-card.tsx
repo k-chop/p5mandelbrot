@@ -1,15 +1,15 @@
+import { SimpleTooltip } from "@/components/simple-tooltip";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useStoreValue } from "@/store/store";
 import {
   IconArrowBigLeftLine,
   IconRefresh,
   IconTrash,
 } from "@tabler/icons-react";
-import { POIData } from "../../types";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { POICardPreview } from "./poi-card-preview";
 import { Suspense } from "react";
-import { useStoreValue } from "@/store/store";
-import { SimpleTooltip } from "@/components/simple-tooltip";
+import { POIData } from "../../types";
+import { POICardPreview } from "./poi-card-preview";
 
 type POICardProps = {
   poi: POIData;

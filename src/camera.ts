@@ -1,9 +1,9 @@
 import p5 from "p5";
+import { getIterationCache } from "./aggregator";
+import { Palette } from "./color";
 import { getCurrentParams } from "./mandelbrot";
 import { Rect } from "./rect";
-import { getIterationCache } from "./aggregator";
 import { renderIterationsToPixel } from "./rendering";
-import { Palette } from "./color";
 
 let mainBuffer: p5.Graphics;
 let resultBuffer: p5.Graphics;

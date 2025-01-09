@@ -1,12 +1,12 @@
+import { ValueSlider } from "@/components/slider-wrapper";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { readPOIListFromClipboard } from "@/store/sync-storage/poi-list";
+import { prepareWorkerPool } from "@/worker-pool/pool-instance";
+import { IconCircleCheck } from "@tabler/icons-react";
+import { useState } from "react";
 import { getStore, updateStore, useStoreValue } from "../../store/store";
 import { DEFAULT_WORKER_COUNT } from "../../store/sync-storage/settings";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { readPOIListFromClipboard } from "@/store/sync-storage/poi-list";
-import { useToast } from "@/components/ui/use-toast";
-import { IconCircleCheck } from "@tabler/icons-react";
-import { prepareWorkerPool } from "@/worker-pool/pool-instance";
-import { ValueSlider } from "@/components/slider-wrapper";
 
 const createWorkerCountValues = () => {
   const base = DEFAULT_WORKER_COUNT;

@@ -1,9 +1,9 @@
 import { setRefOrbitCache } from "../ref-orbit-cache";
 import { completeJob } from "../task-queue";
 import {
-  RefOrbitTerminatedCallback,
   RefOrbitProgressCallback,
   RefOrbitResultCallback,
+  RefOrbitTerminatedCallback,
 } from "../worker-facade";
 import { getBatchContext } from "../worker-pool";
 import { removeWorkerReference } from "../worker-reference";

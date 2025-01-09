@@ -1,11 +1,11 @@
-import { POICard } from "./poi-card";
-import { IconCirclePlus } from "@tabler/icons-react";
-import { usePOI } from "./use-poi";
-import { cloneParams, getCurrentParams } from "../../mandelbrot";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEffect, useRef } from "react";
+import { IconCirclePlus } from "@tabler/icons-react";
 import throttle from "lodash.throttle";
+import { useEffect, useRef } from "react";
+import { cloneParams, getCurrentParams } from "../../mandelbrot";
+import { POICard } from "./poi-card";
+import { usePOI } from "./use-poi";
 
 export const POI = () => {
   const { poiList, addPOI, deletePOIAt, applyPOI, regenerateThumbnailPOI } =

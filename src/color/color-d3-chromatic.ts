@@ -1,13 +1,13 @@
-import { BasePalette, Palette, RGB, buildRGB, clampedPaletteParams } from ".";
+import { safeParseInt } from "@/math";
 import { samples } from "culori";
+import { color } from "d3-color";
 import {
   interpolateInferno,
   interpolateRdYlBu,
   interpolateSinebow,
   interpolateTurbo,
 } from "d3-scale-chromatic";
-import { color } from "d3-color";
-import { safeParseInt } from "@/math";
+import { BasePalette, Palette, RGB, buildRGB, clampedPaletteParams } from ".";
 
 type D3Interpolator = (t: number) => string;
 type D3Color = ReturnType<typeof color>;
