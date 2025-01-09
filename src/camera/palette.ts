@@ -53,12 +53,13 @@ export const getCurrentPalette = () => currentPalette;
  * presetに登録してあるPaletteを選択する
  */
 export const changePaletteFromPresets = (index: number) => {
+  let newPalette = currentPalette;
+
   if (palettePresets[index]) {
-    currentPalette = palettePresets[index];
-  } else {
-    currentPalette = palettePresets[0];
+    newPalette = palettePresets[index];
   }
-  markNeedsRerender();
+
+  setPalette(newPalette);
 };
 
 /**
