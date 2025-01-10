@@ -44,7 +44,7 @@ wss.on("connection", (ws: WebSocket) => {
     } else {
       try {
         data = JSON.parse(message as any);
-      } catch (e) {
+      } catch {
         ws.send(
           JSON.stringify({
             type: "error",

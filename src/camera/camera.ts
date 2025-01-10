@@ -25,7 +25,7 @@ export const setupCamera = (p: p5, w: number, h: number) => {
   console.log("Camera setup done", { width, height });
 };
 
-export const nextBuffer = (p: p5): p5.Graphics => {
+export const nextBuffer = (_p: p5): p5.Graphics => {
   if (needsRerender()) {
     markAsRendered();
 
@@ -35,7 +35,7 @@ export const nextBuffer = (p: p5): p5.Graphics => {
   return mainBuffer;
 };
 
-export const nextResultBuffer = (p: p5): p5.Graphics => {
+export const nextResultBuffer = (_p: p5): p5.Graphics => {
   return resultBuffer;
 };
 

@@ -24,7 +24,7 @@ export const POICard = ({
   onApply,
   onRegenerateThumbnail,
 }: POICardProps) => {
-  const { r, N, id } = poi;
+  const { r, N } = poi;
 
   const canRegenerate = useIsInSamePlace(poi);
 

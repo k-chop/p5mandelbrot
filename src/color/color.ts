@@ -34,6 +34,7 @@ export class BasePalette implements Palette {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getRGBFromColorIndex(index: number): RGB {
     throw new Error("Not implemented");
   }
