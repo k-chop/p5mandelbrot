@@ -77,11 +77,22 @@ body {
   grid-area: header;
 }
 
-#p5root {
+#canvas-wrapper {
+  position: relative;
   grid-area: canvas;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+#p5root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#canvas-overlay {
+  position: absolute;
 }
 
 #sidebar-right {
