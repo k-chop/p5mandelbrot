@@ -246,7 +246,9 @@ async function setup() {
     try {
       await initWebsocketServer();
       websocketServerConnected = true;
-    } catch {}
+    } catch {
+      console.warn("Failed to connect to websocket server");
+    }
   }
 
   self.postMessage({ type: "init" });
