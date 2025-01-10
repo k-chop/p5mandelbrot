@@ -31,8 +31,8 @@ let lastCalc: MandelbrotParams = {
 
 let prevBatchId = "";
 
-let width = DEFAULT_WIDTH;
-let height = DEFAULT_HEIGHT;
+const width = DEFAULT_WIDTH;
+const height = DEFAULT_HEIGHT;
 
 export const togglePinReference = () => {
   if (getCurrentParams().mode !== "perturbation") return;

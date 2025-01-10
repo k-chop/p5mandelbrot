@@ -153,7 +153,7 @@ async function calcRefOrbitExternal(
     return [];
   }
 
-  let xnn: number[] = [];
+  const xnn: number[] = [];
 
   const promise = new Promise<void>((resolve) => {
     ws?.addEventListener(
@@ -195,7 +195,7 @@ async function calcRefOrbitExternal(
   await promise;
 
   const n = Math.floor(xnn.length / 2);
-  let xn: Complex[] = [];
+  const xn: Complex[] = [];
 
   for (let i = 0; i < n; i++) {
     xn.push({ re: xnn[i * 2], im: xnn[i * 2 + 1] });

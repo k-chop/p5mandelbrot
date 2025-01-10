@@ -58,7 +58,7 @@ const drawInfo = (p: p5) => {
 
   const iteration = getIterationTimeAt(p.mouseX, p.mouseY);
 
-  const ifInside = (val: { toString: () => String }) => {
+  const ifInside = (val: { toString: () => string }) => {
     return isInside(p) ? val?.toString() : "-";
   };
 
@@ -78,7 +78,7 @@ const drawInfo = (p: p5) => {
   updateStore("progress", progress);
 };
 
-let currentCursor: "cross" | "grab" = "cross";
+const currentCursor: "cross" | "grab" = "cross";
 let mouseDragged = false;
 let mouseClickedOn = { mouseX: 0, mouseY: 0 };
 let mouseReleasedOn = { mouseX: 0, mouseY: 0 };
