@@ -157,7 +157,6 @@ export const paramsChanged = () => {
 
 export const startCalculation = async (
   onComplete: (elapsed: number) => void,
-  onTranslated: () => void,
 ) => {
   updateCurrentParams();
 
@@ -192,7 +191,6 @@ export const startCalculation = async (
     // FIXME: 画面pixel位置でキャッシュを持っているのでここで移動させている
     // 複素平面座標で持った方がいいのではないだろうかたぶん
     translateRectInIterationCache(offsetX, offsetY);
-    onTranslated();
 
     // 新しく計算しない部分を先に描画しておく
     renderToMainBuffer(iterationBufferTransferedRect);
