@@ -10,6 +10,7 @@ import clsx from "clsx";
 import React from "react";
 import { useStoreValue } from "../../store/store";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertSpans = (value: any): ResultSpans | undefined => {
   if (value !== null && typeof value === "object") {
     const total = value.total;

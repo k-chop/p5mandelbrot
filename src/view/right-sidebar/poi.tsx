@@ -13,8 +13,8 @@ export const POI = () => {
   const scrollTop = useRef(parseInt(sessionStorage.getItem("scroll") ?? "0"));
   const viewportRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = throttle((e: any) => {
-    scrollTop.current = e.target.scrollTop;
+  const handleScroll = throttle((e: React.UIEvent<HTMLDivElement>) => {
+    scrollTop.current = e.currentTarget.scrollTop;
   }, 500);
 
   useEffect(() => {
