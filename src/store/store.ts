@@ -1,3 +1,4 @@
+import type { POIData, ResultSpans } from "@/types";
 import BigNumber from "bignumber.js";
 import { eventmit } from "eventmit";
 import { useEffect, useState } from "react";
@@ -6,24 +7,74 @@ import {
   writeSettingsToStorage,
 } from "./sync-storage/settings";
 
-let store: any = {};
+type Store = {
+  centerX: BigNumber;
+  centerY: BigNumber;
+  mouseX: BigNumber;
+  mouseY: BigNumber;
+  r: BigNumber;
+  N: number;
+  iteration: number | string;
+  mode: "normal" | "perturbation";
+  poi: POIData[];
+  zoomRate: number;
+  workerCount: number;
+  animationTime: number;
+  refOrbitWorkerCount: number;
+  canvasLocked: boolean;
+  shouldReuseRefOrbit: boolean;
+  paletteLength: number;
+  paletteOffset: number;
+  animationCycleStep: number;
+  progress: string | ResultSpans;
+};
 
-type Store<T> = T;
+const store: Store = {
+  // mandelbrot params
+  centerX: new BigNumber(0),
+  centerY: new BigNumber(0),
+  mouseX: new BigNumber(0),
+  mouseY: new BigNumber(0),
+  r: new BigNumber(0),
+  N: 0,
+  iteration: 0,
+  mode: "normal",
+  // POI List
+  poi: [],
+  // Settings
+  zoomRate: 2.0,
+  workerCount: 2,
+  animationTime: 0,
+  refOrbitWorkerCount: 1, // 仮
+  // UI state
+  canvasLocked: false,
+  // mandelbrot state
+  shouldReuseRefOrbit: false,
+  // palette settings
+  paletteLength: 128,
+  paletteOffset: 0,
+  animationCycleStep: 1,
+  // state
+  progress: "",
+};
 
 const event = eventmit<string>();
 
-export const createStore = <T>(value: T): Store<T> => {
-  store = { ...value };
+export const createStore = (): Store => {
   return store;
 };
 
-export const getStore = (key: string) => store[key];
+export const getStore = <Key extends keyof Store>(key: Key) => store[key];
 
-export const updateStore = (key: string, value: any) => {
+export const updateStore = <Key extends keyof Store>(
+  key: Key,
+  value: Store[Key],
+) => {
   if (store[key] === value) return;
   // BigNumberはeqで比較
-  if (value instanceof BigNumber && value.eq(store[key])) return;
+  if (value instanceof BigNumber && value.eq(store[key] as BigNumber)) return;
   // progressがobjectなので、totalが同じなら更新しない
+  // @ts-expect-error 手抜き
   if (value != null && value.total != null && value.total === store[key].total)
     return;
 
@@ -37,14 +88,17 @@ export const updateStore = (key: string, value: any) => {
   event.emit(key);
 };
 
-export const updateStoreWith = <T>(key: string, f: (value: T) => T) => {
+export const updateStoreWith = <Key extends keyof Store>(
+  key: Key,
+  f: (value: Store[Key]) => Store[Key],
+) => {
   const newValue = f(store[key]);
   updateStore(key, newValue);
 
   return newValue;
 };
 
-export const useStoreValue = <T = any>(key: string) => {
+export const useStoreValue = <Key extends keyof Store>(key: Key) => {
   const [value, setValue] = useState(getStore(key));
 
   useEffect(() => {
@@ -60,5 +114,5 @@ export const useStoreValue = <T = any>(key: string) => {
     };
   }, [key]);
 
-  return value as T;
+  return value as Store[Key];
 };
