@@ -295,6 +295,9 @@ const sketch = (p: p5) => {
         (elapsed: number) => {
           // elapsed=0は中断時なのでなにもしない
           if (elapsed !== 0) {
+            // bufferに書き込んだあと、一度もrenderingされずに来るケースがある
+            // 再度描画してからthumbnailを保存する
+            p.image(nextBuffer(p), 0, 0);
             addCurrentLocationToPOIHistory();
           }
         },
