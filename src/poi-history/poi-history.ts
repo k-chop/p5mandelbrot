@@ -24,7 +24,8 @@ const MAX_HISTORY = 100;
  */
 export const addPOIToHistory = (poi: POIHistory) => {
   if (!initialized) {
-    throw new Error("POI History not initialized");
+    console.error("POI History is not initialized yet");
+    return;
   }
 
   poiHistory.push(poi);
