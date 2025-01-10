@@ -155,7 +155,9 @@ export const paramsChanged = () => {
   return !isSameParams(lastCalc, currentParams);
 };
 
-export const startCalculation = async (onComplete: () => void) => {
+export const startCalculation = async (
+  onComplete: (elapsed: number) => void,
+) => {
   updateCurrentParams();
 
   const currentBatchId = crypto.randomUUID();

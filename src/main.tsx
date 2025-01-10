@@ -301,9 +301,12 @@ const sketch = (p: p5) => {
     drawInfo(p);
 
     if (paramsChanged()) {
-      startCalculation(() => {
-        mouseDraggedComplete = false;
-        mergeToMainBuffer();
+      startCalculation((elapsed: number) => {
+        if (elapsed !== 0) {
+          // elapsed=0は中断時なのでなにもしない
+          mouseDraggedComplete = false;
+          mergeToMainBuffer();
+        }
       });
     }
   };
