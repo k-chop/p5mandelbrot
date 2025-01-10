@@ -28,8 +28,8 @@ const createWorkerCountValues = () => {
 export const Settings = () => {
   const { toast } = useToast();
 
-  const zoomRate = useStoreValue<number>("zoomRate");
-  const workerCount = useStoreValue<number>("workerCount");
+  const zoomRate = useStoreValue("zoomRate");
+  const workerCount = useStoreValue("workerCount");
 
   const zoomRateValues = ["1.2", "1.5", "2.0", "4.0", "6.0", "10", "50", "100"];
   const workerCountValues = createWorkerCountValues();
