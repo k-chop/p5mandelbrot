@@ -65,7 +65,7 @@ export const PaletteEditor = () => {
         <div className="mb-1 ml-2">Palette Offset: {paletteOffsetValue}</div>
         <Slider
           min={0}
-          max={paletteLengthValue * 2 - 1}
+          max={paletteLengthValue * 2 - 2 - 1} // mirroredの場合は2倍して先頭と末尾を引いた数になる
           value={[paletteOffsetValue]}
           onValueChange={([value]) => {
             setPaletteOffsetValue(value);

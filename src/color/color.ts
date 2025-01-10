@@ -87,23 +87,23 @@ export class BasePalette implements Palette {
   }
 
   public size(): number {
-    return this.mirrored ? this.colorLength * 2 : this.colorLength;
+    return this.mirrored ? this.colorLength * 2 - 2 : this.colorLength;
   }
 
   getColorIndex(index: number) {
+    const size = this.size();
     if (this.mirrored) {
       // 折り返す
-      const length = this.colorLength * 2;
-      const offsettedIndex = (index + this.offsetIndex) % length;
+      const offsettedIndex = (index + this.offsetIndex) % size;
 
       if (offsettedIndex < this.colorLength) {
         return offsettedIndex;
       } else {
-        return length - offsettedIndex - 1;
+        return size - offsettedIndex;
       }
     } else {
       // そのまま
-      const offsettedIndex = (index + this.offsetIndex) % this.colorLength;
+      const offsettedIndex = (index + this.offsetIndex) % size;
       return offsettedIndex;
     }
   }
@@ -113,7 +113,7 @@ export class BasePalette implements Palette {
   }
 
   public cycleOffset(step = 1): void {
-    this.offsetIndex = (this.offsetIndex + step) % (this.colorLength * 2);
+    this.offsetIndex = (this.offsetIndex + step) % this.size();
   }
 
   public setLength(length: number): void {
