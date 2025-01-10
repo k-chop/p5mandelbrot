@@ -39,7 +39,7 @@ export const Parameters = () => {
 
   return (
     <Card className="mx-2 min-w-64 max-w-80">
-      <CardContent className="px-2 py-2">
+      <CardContent className="p-2">
         <ul>
           <li className="flex justify-between">
             <div>CenterX</div>

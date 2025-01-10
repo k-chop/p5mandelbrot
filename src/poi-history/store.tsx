@@ -24,6 +24,7 @@ const serializePOIHistory = (history: POIHistory) => {
   };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const deserializePOIHistory = (history: any): POIHistory => {
   return {
     ...deserializeMandelbrotParams(history),

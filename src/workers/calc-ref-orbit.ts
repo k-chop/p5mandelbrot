@@ -153,7 +153,7 @@ async function calcRefOrbitExternal(
     return [];
   }
 
-  let xnn: number[] = [];
+  const xnn: number[] = [];
 
   const promise = new Promise<void>((resolve) => {
     ws?.addEventListener(
@@ -195,7 +195,7 @@ async function calcRefOrbitExternal(
   await promise;
 
   const n = Math.floor(xnn.length / 2);
-  let xn: Complex[] = [];
+  const xn: Complex[] = [];
 
   for (let i = 0; i < n; i++) {
     xn.push({ re: xnn[i * 2], im: xnn[i * 2 + 1] });
@@ -246,7 +246,9 @@ async function setup() {
     try {
       await initWebsocketServer();
       websocketServerConnected = true;
-    } catch {}
+    } catch {
+      console.warn("Failed to connect to websocket server");
+    }
   }
 
   self.postMessage({ type: "init" });

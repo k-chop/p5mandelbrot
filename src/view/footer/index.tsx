@@ -10,6 +10,7 @@ import clsx from "clsx";
 import React from "react";
 import { useStoreValue } from "../../store/store";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertSpans = (value: any): ResultSpans | undefined => {
   if (value !== null && typeof value === "object") {
     const total = value.total;
@@ -59,7 +60,7 @@ const BarGraph = (props: ResultSpans) => {
     <TooltipProvider>
       <div className="flex w-full items-center">
         <div className="mr-4 flex-none">Done! ({total}ms)</div>
-        <div className="flex flex-grow">
+        <div className="flex grow">
           <Bar spans={spans} total={total} />
         </div>
       </div>
@@ -125,7 +126,7 @@ const BarContent = (props: {
       <div
         ref={ref}
         className={clsx(
-          "flex w-52 items-center justify-center overflow-hidden overflow-ellipsis whitespace-nowrap text-whiteA-12",
+          "flex w-52 items-center justify-center truncate text-whiteA-12",
           bgColorClassName,
         )}
         style={{ width: `${width}%` }}

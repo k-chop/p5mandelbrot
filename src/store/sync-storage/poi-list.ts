@@ -38,6 +38,7 @@ export const serializePOIData = (params: POIData) => {
   };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const deserializeMandelbrotParams = (params: any): POIData => {
   const id = params.id == null ? crypto.randomUUID() : params.id;
 

@@ -26,6 +26,7 @@ wss.on("connection", (ws: WebSocket) => {
   console.log("New client connected");
 
   ws.on("message", (message, isBinary) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let data: any;
     if (isBinary && message instanceof Buffer) {
       const type = message[0];
@@ -43,8 +44,9 @@ wss.on("connection", (ws: WebSocket) => {
       return;
     } else {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data = JSON.parse(message as any);
-      } catch (e) {
+      } catch {
         ws.send(
           JSON.stringify({
             type: "error",
@@ -86,6 +88,7 @@ wss.on("connection", (ws: WebSocket) => {
   });
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validateCalculationRequest = (data: any) => {
   return (
     typeof data.x === "string" &&
@@ -94,6 +97,7 @@ const validateCalculationRequest = (data: any) => {
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleRequestClient(ws: WebSocket, data: any) {
   if (!validateCalculationRequest(data)) {
     ws.send(
@@ -130,6 +134,7 @@ function handleRequestClient(ws: WebSocket, data: any) {
 function sendCalculationRequest(
   client: CalculationClient,
   requestWs: WebSocket,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any,
 ) {
   client.ws.send(

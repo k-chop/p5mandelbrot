@@ -10,7 +10,6 @@ import {
   cycleCurrentPaletteOffset,
   setPalette,
 } from "@/camera/palette";
-import BigNumber from "bignumber.js";
 import p5 from "p5";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
@@ -58,7 +57,7 @@ const drawInfo = (p: p5) => {
 
   const iteration = getIterationTimeAt(p.mouseX, p.mouseY);
 
-  const ifInside = (val: { toString: () => String }) => {
+  const ifInside = (val: { toString: () => string }) => {
     return isInside(p) ? val?.toString() : "-";
   };
 
@@ -78,7 +77,7 @@ const drawInfo = (p: p5) => {
   updateStore("progress", progress);
 };
 
-let currentCursor: "cross" | "grab" = "cross";
+const currentCursor: "cross" | "grab" = "cross";
 let mouseDragged = false;
 let mouseClickedOn = { mouseX: 0, mouseY: 0 };
 let mouseReleasedOn = { mouseX: 0, mouseY: 0 };
@@ -318,31 +317,7 @@ const sketch = (p: p5) => {
 };
 
 const entrypoint = () => {
-  createStore({
-    // mandelbrot params
-    centerX: new BigNumber(0),
-    centerY: new BigNumber(0),
-    mouseX: new BigNumber(0),
-    mouseY: new BigNumber(0),
-    r: new BigNumber(0),
-    N: 0,
-    iteration: 0,
-    mode: "normal",
-    // POI List
-    poi: [],
-    // Settings
-    zoomRate: 2.0,
-    workerCount: 2,
-    animationTime: 0,
-    refOrbitWorkerCount: 1, // 仮
-    // UI state
-    canvasLocked: false,
-    // mandelbrot state
-    shouldReuseRefOrbit: false,
-    // palette settings
-    paletteLength: 128,
-    paletteOffset: 0,
-  });
+  createStore();
 
   // localStorageから復帰
   const hydratedPOIList = readPOIListFromStorage();
@@ -351,7 +326,7 @@ const entrypoint = () => {
   const hydratedSettings = readSettingsFromStorage();
   Object.keys(hydratedSettings).forEach((key) => {
     if (isSettingField(key)) {
-      updateStore(key, hydratedSettings[key]);
+      updateStore(key, hydratedSettings[key] ?? 1);
     }
   });
   updateStore("zoomRate", hydratedSettings.zoomRate);

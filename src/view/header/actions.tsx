@@ -33,7 +33,7 @@ const ShareButton = () => {
         });
       }}
     >
-      <IconShare className="mr-1 h-6 w-6" />
+      <IconShare className="mr-1 size-6" />
       Share
     </Button>
   );
@@ -63,7 +63,7 @@ const SaveImageButton = () => {
         });
       }}
     >
-      <IconDownload className="mr-1 h-6 w-6" />
+      <IconDownload className="mr-1 size-6" />
       Save Image
     </Button>
   );

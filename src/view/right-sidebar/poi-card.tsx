@@ -24,7 +24,7 @@ export const POICard = ({
   onApply,
   onRegenerateThumbnail,
 }: POICardProps) => {
-  const { r, N, id } = poi;
+  const { r, N } = poi;
 
   const canRegenerate = useIsInSamePlace(poi);
 
@@ -36,7 +36,7 @@ export const POICard = ({
             <POICardPreview poi={poi} />
           </Suspense>
         </div>
-        <div className="ml-2 flex flex-grow flex-col">
+        <div className="ml-2 flex grow flex-col">
           <div className="flex justify-between">
             <div>r</div>
             <div>{r.toPrecision(5)}</div>

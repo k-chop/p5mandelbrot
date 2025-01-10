@@ -27,7 +27,11 @@ export const Header = () => {
         <Actions />
         <div className="col-end-7 flex items-center gap-1">
           <Button variant="outline" size="icon-sm" asChild>
-            <a href="https://github.com/k-chop/p5mandelbrot" target="_blank">
+            <a
+              href="https://github.com/k-chop/p5mandelbrot"
+              target="_blank"
+              rel="noreferrer"
+            >
               <img src="/github-mark-white.svg" />
             </a>
           </Button>

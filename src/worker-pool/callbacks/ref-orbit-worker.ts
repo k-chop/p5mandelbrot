@@ -8,7 +8,9 @@ import {
 import { getBatchContext } from "../worker-pool";
 import { removeWorkerReference } from "../worker-reference";
 
-export const onRefOrbitWorkerTerminated: RefOrbitTerminatedCallback = (job) => {
+export const onRefOrbitWorkerTerminated: RefOrbitTerminatedCallback = (
+  _job,
+) => {
   // ここで何をする予定だったんだっけ...
   // terminateされているということは外部からcancelされており、後始末はそっちで行われるはず
 };
