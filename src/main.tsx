@@ -32,7 +32,10 @@ import {
   togglePinReference,
   zoom,
 } from "./mandelbrot";
-import { initializePOIHistory } from "./poi-history/poi-history";
+import {
+  addCurrentLocationToPOIHistory,
+  initializePOIHistory,
+} from "./poi-history/poi-history";
 import { drawCrossHair } from "./rendering";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
@@ -306,6 +309,8 @@ const sketch = (p: p5) => {
           // elapsed=0は中断時なのでなにもしない
           mouseDraggedComplete = false;
           mergeToMainBuffer();
+
+          addCurrentLocationToPOIHistory();
         }
       });
     }
