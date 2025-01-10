@@ -13,7 +13,7 @@ export const POICardPreview = ({ poi }: Props) => {
 
   if (data == null)
     return (
-      <div className="flex h-[100px] w-[100px] items-center justify-center border-2">
+      <div className="flex size-[100px] items-center justify-center border-2">
         No Image
       </div>
     );

@@ -17,7 +17,7 @@ export const Operations = () => {
   }
 
   return (
-    <Tabs className="mx-2 flex flex-grow flex-col" defaultValue="poi">
+    <Tabs className="mx-2 flex grow flex-col" defaultValue="poi">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="poi">POI</TabsTrigger>
         <TabsTrigger value="palette">Palette</TabsTrigger>

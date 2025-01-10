@@ -38,7 +38,7 @@ export const POI = () => {
             className="w-64"
             onClick={() => addPOI(cloneParams(getCurrentParams()))}
           >
-            <IconCirclePlus className="mr-2 h-6 w-6" />
+            <IconCirclePlus className="mr-2 size-6" />
             Save POI
           </Button>
         </div>
@@ -46,7 +46,7 @@ export const POI = () => {
 
       <ScrollArea
         ref={viewportRef}
-        className="flex min-h-10 flex-grow basis-0 flex-col overflow-y-auto"
+        className="flex min-h-10 grow basis-0 flex-col overflow-y-auto"
         onScroll={handleScroll}
       >
         <div>
