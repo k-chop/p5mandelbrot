@@ -3,7 +3,7 @@ import {
   clearIterationCache,
   translateRectInIterationCache,
 } from "./aggregator";
-import { renderToResultBuffer } from "./camera/camera";
+import { renderToMainBuffer } from "./camera/camera";
 import { divideRect, Rect } from "./rect";
 import { getStore, updateStore, updateStoreWith } from "./store/store";
 import { MandelbrotParams, OffsetParams } from "./types";
@@ -157,6 +157,7 @@ export const paramsChanged = () => {
 
 export const startCalculation = async (
   onComplete: (elapsed: number) => void,
+  onTranslated: () => void,
 ) => {
   updateCurrentParams();
 
@@ -188,11 +189,13 @@ export const startCalculation = async (
       height: height - Math.abs(offsetY),
     } satisfies Rect;
 
-    // FIXME: キャッシュ側を毎回書き換えるのはどう考えても悪手
+    // FIXME: 画面pixel位置でキャッシュを持っているのでここで移動させている
+    // 複素平面座標で持った方がいいのではないだろうかたぶん
     translateRectInIterationCache(offsetX, offsetY);
+    onTranslated();
 
     // 新しく計算しない部分を先に描画しておく
-    renderToResultBuffer(iterationBufferTransferedRect);
+    renderToMainBuffer(iterationBufferTransferedRect);
 
     // TODO:
     // perturbation時はreference orbitの値を取っておけば移動がかなり高速化できる気がする

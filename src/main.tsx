@@ -2,7 +2,6 @@ import {
   clearResultBuffer,
   mergeToMainBuffer,
   nextBuffer,
-  nextResultBuffer,
   setupCamera,
 } from "@/camera/camera";
 import {
@@ -283,7 +282,6 @@ const sketch = (p: p5) => {
     }
 
     const mainBuffer = nextBuffer(p);
-    const resultBuffer = nextResultBuffer(p);
 
     p.background(0);
 
@@ -298,20 +296,22 @@ const sketch = (p: p5) => {
       p.image(mainBuffer, 0, 0);
     }
 
-    p.image(resultBuffer, 0, 0);
-
     drawInfo(p);
 
     if (paramsChanged()) {
-      startCalculation((elapsed: number) => {
-        if (elapsed !== 0) {
+      startCalculation(
+        (elapsed: number) => {
           // elapsed=0は中断時なのでなにもしない
+          if (elapsed !== 0) {
+            addCurrentLocationToPOIHistory();
+          }
+        },
+        () => {
+          // onTranslated
+          // cacheの書き換えが終わったら通常位置に戻す
           mouseDraggedComplete = false;
-          mergeToMainBuffer();
-
-          addCurrentLocationToPOIHistory();
-        }
-      });
+        },
+      );
     }
   };
 };

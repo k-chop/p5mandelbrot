@@ -1,5 +1,5 @@
 import { upsertIterationCache } from "@/aggregator";
-import { renderToResultBuffer } from "@/camera/camera";
+import { renderToMainBuffer } from "@/camera/camera";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
 import {
@@ -54,7 +54,9 @@ export const onIterationWorkerResult: IterationResultCallback = (
     elapsed: Math.floor(elapsed),
   });
 
-  renderToResultBuffer(rect);
+  batchContext.onChangeProgress();
+
+  renderToMainBuffer(rect);
 
   // バッチ全体が完了していたらonComplete callbackを呼ぶ
   if (isBatchCompleted(job.batchId)) {
@@ -73,11 +75,15 @@ export const onIterationWorkerIntermediateResult = (
   const { iterations, resolution } = result;
   const { rect } = job;
 
+  const batchContext = getBatchContext(job.batchId);
+
   // 停止が間に合わなかったケース。何もしない
-  if (getBatchContext(job.batchId) == null) {
+  if (batchContext == null) {
     return;
   }
 
+  batchContext.onChangeProgress();
+
   upsertIterationCache(rect, new Uint32Array(iterations), resolution);
-  renderToResultBuffer(rect);
+  renderToMainBuffer(rect);
 };
