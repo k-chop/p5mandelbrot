@@ -36,7 +36,7 @@ export type IterationProgressCallback = (
   job: CalcIterationJob,
 ) => void;
 export type BatchCompleteCallback = (elapsed: number) => void;
-export type BatchProgressChangedCallback = (progressStr: string) => void;
+export type BatchProgressChangedCallback = () => void;
 
 export interface MandelbrotFacadeLike {
   startCalculate(

@@ -1,10 +1,4 @@
-import {
-  clearResultBuffer,
-  mergeToMainBuffer,
-  nextBuffer,
-  nextResultBuffer,
-  setupCamera,
-} from "@/camera/camera";
+import { nextBuffer, setupCamera } from "@/camera/camera";
 import {
   changePaletteFromPresets,
   cycleCurrentPaletteOffset,
@@ -133,8 +127,6 @@ const sketch = (p: p5) => {
     if (isInside(p)) {
       if (getStore("canvasLocked")) return;
 
-      mergeToMainBuffer();
-
       mouseClickStartedInside = true;
       mouseDragged = false;
       mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
@@ -147,7 +139,6 @@ const sketch = (p: p5) => {
 
       changeCursor(p, "grabbing");
       mouseDragged = true;
-      clearResultBuffer();
     }
   };
 
@@ -283,7 +274,6 @@ const sketch = (p: p5) => {
     }
 
     const mainBuffer = nextBuffer(p);
-    const resultBuffer = nextResultBuffer(p);
 
     p.background(0);
 
@@ -298,20 +288,25 @@ const sketch = (p: p5) => {
       p.image(mainBuffer, 0, 0);
     }
 
-    p.image(resultBuffer, 0, 0);
-
     drawInfo(p);
 
     if (paramsChanged()) {
-      startCalculation((elapsed: number) => {
-        if (elapsed !== 0) {
+      startCalculation(
+        (elapsed: number) => {
           // elapsed=0は中断時なのでなにもしない
+          if (elapsed !== 0) {
+            // bufferに書き込んだあと、一度もrenderingされずに来るケースがある
+            // 再度描画してからthumbnailを保存する
+            p.image(nextBuffer(p), 0, 0);
+            addCurrentLocationToPOIHistory();
+          }
+        },
+        () => {
+          // onTranslated
+          // cacheの書き換えが終わったら通常位置に戻す
           mouseDraggedComplete = false;
-          mergeToMainBuffer();
-
-          addCurrentLocationToPOIHistory();
-        }
-      });
+        },
+      );
     }
   };
 };
