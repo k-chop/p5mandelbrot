@@ -37,10 +37,7 @@ export const updateStore = (key: string, value: any) => {
   event.emit(key);
 };
 
-export const updateStoreWith = <T extends any>(
-  key: string,
-  f: (value: T) => T,
-) => {
+export const updateStoreWith = <T>(key: string, f: (value: T) => T) => {
   const newValue = f(store[key]);
   updateStore(key, newValue);
 
