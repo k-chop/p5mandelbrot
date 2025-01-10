@@ -1,3 +1,7 @@
+import {
+  deserializeMandelbrotParams,
+  serializePOIData,
+} from "@/store/sync-storage/poi-list";
 import { get, set } from "idb-keyval";
 import type { POIHistory } from "./poi-history";
 
@@ -7,10 +11,32 @@ import type { POIHistory } from "./poi-history";
 const POI_HISTORY_KEY = "poi-history";
 
 /**
- * 履歴データをindexedDBに保存
+ * indexedDBに保存するためにPOIHistoryの一部を文字列に変換して返す
+ *
+ * BigNumberはそのまま保存できないため
  */
-export const saveHistoriesToStorage = (history: POIHistory[]) => {
-  set(POI_HISTORY_KEY, history);
+const serializePOIHistory = (history: POIHistory) => {
+  const poiData = serializePOIData(history);
+
+  return {
+    ...poiData,
+    imageDataUrl: history.imageDataUrl,
+  };
+};
+
+const deserializePOIHistory = (history: any): POIHistory => {
+  return {
+    ...deserializeMandelbrotParams(history),
+    imageDataUrl: history.imageDataUrl,
+  };
+};
+
+/**
+ * 履歴データをserializeしてからindexedDBに保存
+ */
+export const saveHistoriesToStorage = (histories: POIHistory[]) => {
+  const serialized = histories.map(serializePOIHistory);
+  set(POI_HISTORY_KEY, serialized);
 };
 
 /**
@@ -19,5 +45,8 @@ export const saveHistoriesToStorage = (history: POIHistory[]) => {
 export const loadHistoriesFromStorage = async (): Promise<
   POIHistory[] | undefined
 > => {
-  return get(POI_HISTORY_KEY);
+  const serialized = await get(POI_HISTORY_KEY);
+  if (!serialized) return undefined;
+
+  return serialized.map(deserializePOIHistory);
 };

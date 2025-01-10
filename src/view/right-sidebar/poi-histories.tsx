@@ -1,9 +1,14 @@
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { usePOIHistories } from "@/poi-history/poi-history";
 import { useMemo } from "react";
+import { usePOI } from "./use-poi";
 
+/**
+ * 履歴データの表示コンポーネント
+ */
 export const POIHistories = () => {
   const raw = usePOIHistories();
+  const { applyPOI } = usePOI();
   const histories = useMemo(() => raw.slice().reverse(), [raw]);
 
   return (
@@ -12,11 +17,13 @@ export const POIHistories = () => {
         {histories.map((history) => {
           return (
             <div key={history.id} className="min-w-[100px]">
-              <img
-                src={history.imageDataUrl}
-                width="100"
-                className=" rounded-xl"
-              />
+              <button onClick={() => applyPOI(history)}>
+                <img
+                  src={history.imageDataUrl}
+                  width="100"
+                  className="rounded-xl"
+                />
+              </button>
             </div>
           );
         })}

@@ -1,7 +1,7 @@
-import { POIHistories } from "../footer/poi-histories";
 import { Informations } from "./informations";
 import { Operations } from "./operations";
 import { Parameters } from "./parameters";
+import { POIHistories } from "./poi-histories";
 
 export const RightSidebar = () => {
   return (
