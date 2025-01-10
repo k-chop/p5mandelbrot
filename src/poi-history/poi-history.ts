@@ -17,7 +17,7 @@ let initialized = false;
 
 const event = eventmit<string>();
 const POI_HISTORY_CHANGED = "poi-history-changed";
-const MAX_HISTORY = 100;
+const MAX_HISTORY = 25;
 
 /**
  * 末尾に履歴データを追加する
