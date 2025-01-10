@@ -32,6 +32,7 @@ import {
   togglePinReference,
   zoom,
 } from "./mandelbrot";
+import { initializePOIHistory } from "./poi-history/poi-history";
 import { drawCrossHair } from "./rendering";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
@@ -115,6 +116,8 @@ const sketch = (p: p5) => {
     p.cursor(p.CROSS);
 
     setP5(p);
+
+    initializePOIHistory();
 
     const initialParams = extractMandelbrotParams();
 
