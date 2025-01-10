@@ -13,7 +13,7 @@ export const POIHistories = () => {
 
   return (
     <ScrollArea className="w-full">
-      <div className="r-4 flex flex-nowrap gap-2 px-2 py-4">
+      <div className="flex flex-nowrap gap-2 px-2 py-4">
         {histories.map((history) => {
           return (
             <div key={history.id} className="min-w-[100px]">
