@@ -1,3 +1,4 @@
+import { POIHistories } from "../footer/poi-histories";
 import { Informations } from "./informations";
 import { Operations } from "./operations";
 import { Parameters } from "./parameters";
@@ -8,6 +9,7 @@ export const RightSidebar = () => {
       <Parameters />
       <Informations />
       <Operations />
+      <POIHistories />
     </div>
   );
 };
