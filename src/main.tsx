@@ -1,9 +1,4 @@
-import {
-  clearResultBuffer,
-  mergeToMainBuffer,
-  nextBuffer,
-  setupCamera,
-} from "@/camera/camera";
+import { nextBuffer, setupCamera } from "@/camera/camera";
 import {
   changePaletteFromPresets,
   cycleCurrentPaletteOffset,
@@ -132,8 +127,6 @@ const sketch = (p: p5) => {
     if (isInside(p)) {
       if (getStore("canvasLocked")) return;
 
-      mergeToMainBuffer();
-
       mouseClickStartedInside = true;
       mouseDragged = false;
       mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
@@ -146,7 +139,6 @@ const sketch = (p: p5) => {
 
       changeCursor(p, "grabbing");
       mouseDragged = true;
-      clearResultBuffer();
     }
   };
 
