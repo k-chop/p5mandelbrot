@@ -1,10 +1,10 @@
 // @ts-check
 
+import { fixupPluginRules } from "@eslint/compat";
 import eslint from "@eslint/js";
+import reactPlugin from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
-
-import { fixupPluginRules } from "@eslint/compat";
 
 export default tseslint.config(
   {
@@ -20,6 +20,8 @@ export default tseslint.config(
   { ignores: ["dist/", "src/components/ui/"] },
   eslint.configs.recommended,
   tseslint.configs.recommended,
+  reactPlugin.configs.flat?.recommended,
+  reactPlugin.configs.flat?.["jsx-runtime"],
   {
     rules: {
       "@typescript-eslint/no-unused-vars": [
