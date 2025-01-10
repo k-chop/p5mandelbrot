@@ -8,6 +8,7 @@
     "build": "cross-env NODE_ENV=production tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "lint": "eslint .",
     "server": "tsx src/server/index.ts"
   },
   "devDependencies": {
