@@ -32,6 +32,10 @@ import {
   togglePinReference,
   zoom,
 } from "./mandelbrot";
+import {
+  addCurrentLocationToPOIHistory,
+  initializePOIHistory,
+} from "./poi-history/poi-history";
 import { drawCrossHair } from "./rendering";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
@@ -115,6 +119,8 @@ const sketch = (p: p5) => {
     p.cursor(p.CROSS);
 
     setP5(p);
+
+    initializePOIHistory();
 
     const initialParams = extractMandelbrotParams();
 
@@ -298,9 +304,14 @@ const sketch = (p: p5) => {
     drawInfo(p);
 
     if (paramsChanged()) {
-      startCalculation(() => {
-        mouseDraggedComplete = false;
-        mergeToMainBuffer();
+      startCalculation((elapsed: number) => {
+        if (elapsed !== 0) {
+          // elapsed=0は中断時なのでなにもしない
+          mouseDraggedComplete = false;
+          mergeToMainBuffer();
+
+          addCurrentLocationToPOIHistory();
+        }
       });
     }
   };

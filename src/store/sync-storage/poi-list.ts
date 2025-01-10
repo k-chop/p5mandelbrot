@@ -14,7 +14,7 @@ export const createNewPOIData = (
 });
 
 export const writePOIListToStorage = (poiList: POIData[]) => {
-  const serialized = JSON.stringify(poiList.map(serializedPOIData));
+  const serialized = JSON.stringify(poiList.map(serializePOIData));
   localStorage.setItem("poiList", serialized);
 };
 
@@ -23,10 +23,10 @@ export const readPOIListFromStorage = (): POIData[] => {
   if (!serialized) return [];
 
   const rawList = JSON.parse(serialized);
-  return rawList.map(deserializedMandelbrotParams);
+  return rawList.map(deserializeMandelbrotParams);
 };
 
-const serializedPOIData = (params: POIData) => {
+export const serializePOIData = (params: POIData) => {
   return {
     id: params.id,
     x: params.x.toString(),
@@ -38,7 +38,7 @@ const serializedPOIData = (params: POIData) => {
   };
 };
 
-const deserializedMandelbrotParams = (params: any): POIData => {
+export const deserializeMandelbrotParams = (params: any): POIData => {
   const id = params.id == null ? crypto.randomUUID() : params.id;
 
   return {
@@ -82,7 +82,7 @@ export const readPOIListFromClipboard = async (): Promise<
 
     const rawList = JSON.parse(serialized);
 
-    const importedPOIList = rawList.map(deserializedMandelbrotParams);
+    const importedPOIList = rawList.map(deserializeMandelbrotParams);
 
     const existsPOIList = readPOIListFromStorage();
     const { result, imported, conflicted } = mergePOIList(

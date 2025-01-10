@@ -32,7 +32,7 @@ export const useTrackChangePreview = (id: string) => {
     return () => {
       event.off(handler);
     };
-  }, []);
+  }, [id]);
 
   return value;
 };
