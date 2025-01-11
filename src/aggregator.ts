@@ -1,12 +1,7 @@
 import { type ComplexRect } from "./rect";
 import { IterationBuffer, Resolution } from "./types";
 
-// FIXME: たぶんIterationBufferは複素数平面座標に対するキャッシュを持つべき
-// それならrがどうであれ使い回せるはず
-// 一方でちゃんとピクセル座標と誤差なく対応させられるかわからない
-// BigNumberだし比較重いかも
-
-// FIXME: もっと賢くデータを持つ
+// FIXME: 必要なくなったキャッシュを良い感じのタイミングで破棄できるようにする
 let iterationCache: IterationBuffer[] = [];
 
 export const upsertIterationCache = (
@@ -43,7 +38,7 @@ export const clearIterationCache = (): void => {
 /**
  * マウスXY座標の位置のiteration回数を取得する
  */
-export const getIterationTimeAt = (worldX: number, worldY: number) => {
+export const getIterationTimeAt = (_worldX: number, _worldY: number) => {
   // for (const iteration of iterationCache) {
   //   if (
   //     worldX < iteration.rect.x ||
