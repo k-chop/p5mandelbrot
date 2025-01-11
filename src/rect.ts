@@ -48,6 +48,48 @@ export const convertToComplexRect = (
   };
 };
 
+/**
+ * 複素数平面座標のRectをピクセル座標のRectに変換する
+ */
+export const convertToPixelRect = (
+  cx: BigNumber,
+  cy: BigNumber,
+  complexRect: ComplexRect,
+  canvasWidth: number,
+  canvasHeight: number,
+  r: BigNumber,
+): Rect => {
+  // 左上のピクセル座標を計算
+  const x = complexRect.x
+    .div(r)
+    .minus(cx)
+    .plus(1.0)
+    .times(canvasWidth / 2)
+    .toNumber();
+  const y = cy
+    .minus(complexRect.y.div(r))
+    .plus(1.0)
+    .times(canvasHeight / 2)
+    .toNumber();
+
+  // 幅と高さをピクセル単位で計算
+  const width = complexRect.width
+    .div(r)
+    .times(canvasWidth / 2)
+    .toNumber();
+  const height = complexRect.height
+    .div(r)
+    .times(canvasHeight / 2)
+    .toNumber();
+
+  return {
+    x: Math.round(x),
+    y: Math.round(y),
+    width: Math.round(width),
+    height: Math.round(height),
+  };
+};
+
 export const calculateDivideArea = (
   divideCount: number,
 ): { longSideCount: number; shortSideCount: number } => {

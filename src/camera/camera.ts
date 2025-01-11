@@ -13,6 +13,7 @@ let height: number;
 let bufferRect: Rect;
 
 export const getCanvasWidth = () => width;
+export const getCanvasHeight = () => height;
 
 export const setupCamera = (p: p5, w: number, h: number) => {
   mainBuffer = p.createGraphics(w, h);
@@ -39,7 +40,7 @@ export const renderToMainBuffer = (rect: Rect = bufferRect) => {
   renderIterationsToPixel(
     rect,
     mainBuffer,
-    params.N,
+    params,
     getIterationCache(),
     getCurrentPalette(),
   );

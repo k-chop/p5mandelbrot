@@ -1,9 +1,9 @@
 import { Palette } from "@/color";
 import p5 from "p5";
-import { getCanvasWidth } from "./camera/camera";
+import { getCanvasHeight, getCanvasWidth } from "./camera/camera";
 import { GLITCHED_POINT_ITERATION } from "./mandelbrot";
-import { Rect } from "./rect";
-import { IterationBuffer, Resolution } from "./types";
+import { convertToPixelRect, Rect } from "./rect";
+import { IterationBuffer, Resolution, type MandelbrotParams } from "./types";
 
 export const fillColor = (
   x: number,
@@ -66,11 +66,13 @@ export const bufferLocalLogicalIndex = (
 export const renderIterationsToPixel = (
   worldRect: Rect,
   graphics: p5.Graphics,
-  maxIteration: number,
+  params: MandelbrotParams,
   iterationsResult: IterationBuffer[],
   palette: Palette,
 ) => {
+  const maxIteration = params.N;
   const canvasWidth = getCanvasWidth();
+  const canvasHeight = getCanvasHeight();
 
   graphics.loadPixels();
   const density = graphics.pixelDensity();
@@ -78,20 +80,42 @@ export const renderIterationsToPixel = (
   for (const iteration of iterationsResult) {
     const { rect, buffer, resolution } = iteration;
 
+    // 描画単位はworldのpixelベースなので、範囲内にあるかどうかはiterationBufferのrectをpixel座標に変換して判定
+    const pixelRect = convertToPixelRect(
+      params.x,
+      params.y,
+      rect,
+      canvasWidth,
+      canvasHeight,
+      params.r,
+    );
+
     // worldRectとiterationのrectが一致する箇所だけ描画する
-    const startY = Math.max(rect.y, worldRect.y);
-    const startX = Math.max(rect.x, worldRect.x);
-    const endY = Math.min(rect.y + rect.height, worldRect.y + worldRect.height);
-    const endX = Math.min(rect.x + rect.width, worldRect.x + worldRect.width);
+    const startY = Math.max(pixelRect.y, worldRect.y);
+    const startX = Math.max(pixelRect.x, worldRect.x);
+    const endY = Math.min(
+      pixelRect.y + pixelRect.height,
+      worldRect.y + worldRect.height,
+    );
+    const endX = Math.min(
+      pixelRect.x + pixelRect.width,
+      worldRect.x + worldRect.width,
+    );
 
     for (let worldY = startY; worldY < endY; worldY++) {
       for (let worldX = startX; worldX < endX; worldX++) {
         // バッファ内で対応する点のiterationを取得
 
-        const idx = bufferLocalLogicalIndex(worldX, worldY, rect, resolution);
+        const idx = bufferLocalLogicalIndex(
+          worldX,
+          worldY,
+          pixelRect,
+          resolution,
+        );
         const n = buffer[idx];
 
         const pixels = graphics.pixels as unknown as Uint8ClampedArray;
+
         fillColor(
           worldX,
           worldY,

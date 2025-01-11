@@ -1,5 +1,4 @@
 import { type ComplexRect } from "./rect";
-import { bufferLocalLogicalIndex } from "./rendering";
 import { IterationBuffer, Resolution } from "./types";
 
 // FIXME: たぶんIterationBufferは複素数平面座標に対するキャッシュを持つべき
@@ -45,26 +44,26 @@ export const clearIterationCache = (): void => {
  * マウスXY座標の位置のiteration回数を取得する
  */
 export const getIterationTimeAt = (worldX: number, worldY: number) => {
-  for (const iteration of iterationCache) {
-    if (
-      worldX < iteration.rect.x ||
-      iteration.rect.x + iteration.rect.width < worldX
-    )
-      continue;
-    if (
-      worldY < iteration.rect.y ||
-      iteration.rect.y + iteration.rect.height < worldY
-    )
-      continue;
-    const idx = bufferLocalLogicalIndex(
-      Math.floor(worldX),
-      Math.floor(worldY),
-      iteration.rect,
-      iteration.resolution,
-    );
+  // for (const iteration of iterationCache) {
+  //   if (
+  //     worldX < iteration.rect.x ||
+  //     iteration.rect.x + iteration.rect.width < worldX
+  //   )
+  //     continue;
+  //   if (
+  //     worldY < iteration.rect.y ||
+  //     iteration.rect.y + iteration.rect.height < worldY
+  //   )
+  //     continue;
+  //   const idx = bufferLocalLogicalIndex(
+  //     Math.floor(worldX),
+  //     Math.floor(worldY),
+  //     iteration.rect,
+  //     iteration.resolution,
+  //   );
 
-    return iteration.buffer[idx];
-  }
+  //   return iteration.buffer[idx];
+  // }
   return -1;
 };
 
@@ -72,16 +71,16 @@ export const translateRectInIterationCache = (
   offsetX: number,
   offsetY: number,
 ): void => {
-  iterationCache = iterationCache.map((iteration) => {
-    return {
-      rect: {
-        x: iteration.rect.x - offsetX,
-        y: iteration.rect.y - offsetY,
-        width: iteration.rect.width,
-        height: iteration.rect.height,
-      },
-      buffer: iteration.buffer,
-      resolution: iteration.resolution,
-    };
-  });
+  // iterationCache = iterationCache.map((iteration) => {
+  //   return {
+  //     rect: {
+  //       x: iteration.rect.x - offsetX,
+  //       y: iteration.rect.y - offsetY,
+  //       width: iteration.rect.width,
+  //       height: iteration.rect.height,
+  //     },
+  //     buffer: iteration.buffer,
+  //     resolution: iteration.resolution,
+  //   };
+  // });
 };
