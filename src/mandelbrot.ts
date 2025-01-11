@@ -190,10 +190,6 @@ export const startCalculation = async (
     clearMainBuffer();
     renderToMainBuffer(iterationBufferTransferedRect);
 
-    // TODO:
-    // perturbation時はreference orbitの値を取っておけば移動がかなり高速化できる気がする
-    // ただしどのくらいの距離まで有効なのか、有効でなくなったことをどう検知したらいいのかわからん
-
     const expectedDivideCount = Math.max(divideRectCount, 2);
     calculationRects = divideRect(getOffsetRects(), expectedDivideCount);
   } else {
