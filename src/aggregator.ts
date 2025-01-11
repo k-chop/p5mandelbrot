@@ -66,21 +66,3 @@ export const getIterationTimeAt = (worldX: number, worldY: number) => {
   // }
   return -1;
 };
-
-export const translateRectInIterationCache = (
-  offsetX: number,
-  offsetY: number,
-): void => {
-  // iterationCache = iterationCache.map((iteration) => {
-  //   return {
-  //     rect: {
-  //       x: iteration.rect.x - offsetX,
-  //       y: iteration.rect.y - offsetY,
-  //       width: iteration.rect.width,
-  //       height: iteration.rect.height,
-  //     },
-  //     buffer: iteration.buffer,
-  //     resolution: iteration.resolution,
-  //   };
-  // });
-};

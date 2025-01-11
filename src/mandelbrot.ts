@@ -186,10 +186,6 @@ export const startCalculation = async (
       height: height - Math.abs(offsetY),
     } satisfies Rect;
 
-    // FIXME: 画面pixel位置でキャッシュを持っているのでここで移動させている
-    // 複素平面座標で持った方がいいのではないだろうかたぶん
-    // translateRectInIterationCache(offsetX, offsetY);
-
     // 新しく計算しない部分を先に描画
     clearMainBuffer();
     renderToMainBuffer(iterationBufferTransferedRect);
