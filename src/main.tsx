@@ -77,6 +77,8 @@ let mouseClickedOn = { mouseX: 0, mouseY: 0 };
 let shouldSavePOIHistoryNextRender = false;
 /** mainBufferの表示位置を0,0から変えているかどうか  */
 let isTranslatingMainBuffer = false;
+/** どのドラッグ操作をしているか */
+let draggingMode: "move" | "zoom" | undefined = undefined;
 
 let elapsed = 0;
 
@@ -99,13 +101,32 @@ const getDraggingPixelDiff = (p: p5) => {
   return { pixelDiffX, pixelDiffY };
 };
 
+const calcInteractiveZoomFactor = (p: p5) => {
+  const { pixelDiffY } = getDraggingPixelDiff(p);
+
+  const zoomRate = getStore("zoomRate");
+  const maxPixelDiff = p.height / 2;
+
+  const zoomFactor =
+    pixelDiffY < 0
+      ? Math.pow(zoomRate, -pixelDiffY / maxPixelDiff)
+      : 1 + pixelDiffY * -0.01;
+
+  const minSize = 20;
+  return Math.max(zoomFactor, minSize / p.width);
+};
+
 const sketch = (p: p5) => {
   let mouseClickStartedInside = false;
 
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
-    p.createCanvas(width, height);
+    const canvas = p.createCanvas(width, height);
+    // canvas上での右クリックを無効化
+    canvas.elt.addEventListener("contextmenu", (e: Event) =>
+      e.preventDefault(),
+    );
     setupCamera(p, width, height);
 
     p.colorMode(p.HSB, 360, 100, 100, 100);
@@ -138,7 +159,16 @@ const sketch = (p: p5) => {
     if (mouseClickStartedInside) {
       ev.preventDefault();
 
-      changeCursor(p, "grabbing");
+      if (ev.buttons === 1) {
+        // RMB
+        draggingMode = "move";
+        changeCursor(p, "grabbing");
+      } else if (ev.buttons === 2) {
+        // LMB
+        draggingMode = "zoom";
+        changeCursor(p, "zoom-in"); // FIXME: あとで始点からどっちにいるかどうかでアイコン変える
+      }
+
       mouseDragged = true;
       isTranslatingMainBuffer = true;
     }
@@ -146,7 +176,6 @@ const sketch = (p: p5) => {
 
   p.mouseReleased = (ev: MouseEvent) => {
     if (!ev) return;
-    if (ev.button !== 0) return;
 
     // canvas内でクリックして、canvas内で離した場合のみクリック時の処理を行う
     // これで外からcanvas内に流れてきた場合の誤クリックを防げる
@@ -157,21 +186,38 @@ const sketch = (p: p5) => {
       ev.preventDefault();
 
       if (mouseDragged) {
-        // ドラッグ終了時
-        const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
-        setOffsetParams({ x: -pixelDiffX, y: -pixelDiffY });
+        if (draggingMode === "move") {
+          // 左クリックドラッグ(移動)確定時
+          const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
+          setOffsetParams({ x: -pixelDiffX, y: -pixelDiffY });
 
-        const centerX = p.width / 2;
-        const centerY = p.height / 2;
+          const centerX = p.width / 2;
+          const centerY = p.height / 2;
 
-        const { mouseX, mouseY } = calcVars(
-          centerX - pixelDiffX,
-          centerY - pixelDiffY,
-          p.width,
-          p.height,
-        );
+          const { mouseX, mouseY } = calcVars(
+            centerX - pixelDiffX,
+            centerY - pixelDiffY,
+            p.width,
+            p.height,
+          );
 
-        setCurrentParams({ x: mouseX, y: mouseY });
+          setCurrentParams({ x: mouseX, y: mouseY });
+        } else if (draggingMode === "zoom") {
+          // 右クリックドラッグ(拡縮)確定時
+          const zoomFactor = calcInteractiveZoomFactor(p);
+
+          const { mouseX, mouseY } = calcVars(
+            mouseClickedOn.mouseX,
+            mouseClickedOn.mouseY,
+            p.width,
+            p.height,
+          );
+
+          setCurrentParams({ x: mouseX, y: mouseY });
+
+          // ズーム適用
+          zoom(1 / zoomFactor);
+        }
       } else {
         // クリック時
         const { mouseX, mouseY } = calcVars(
@@ -196,6 +242,7 @@ const sketch = (p: p5) => {
     changeCursor(p, p.CROSS);
     mouseClickStartedInside = false;
     mouseDragged = false;
+    draggingMode = undefined;
   };
 
   p.mouseWheel = (event: WheelEvent) => {
@@ -277,9 +324,34 @@ const sketch = (p: p5) => {
     p.background(0);
 
     if (isTranslatingMainBuffer) {
-      const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
-      p.image(mainBuffer, pixelDiffX, pixelDiffY);
-      drawCrossHair(p);
+      if (draggingMode === "move") {
+        const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
+        p.image(mainBuffer, pixelDiffX, pixelDiffY);
+        drawCrossHair(p);
+      } else if (draggingMode === "zoom") {
+        const { mouseX, mouseY } = mouseClickedOn;
+        const zoomFactor = calcInteractiveZoomFactor(p);
+
+        // クリック位置を画面の中心に置く
+        const offsetX = p.width / 2 - mouseX * zoomFactor;
+        const offsetY = p.height / 2 - mouseY * zoomFactor;
+
+        // ズーム適用
+        p.image(
+          mainBuffer,
+          offsetX,
+          offsetY,
+          p.width * zoomFactor,
+          p.height * zoomFactor,
+        );
+
+        // 拡大率表示
+        p.fill(255);
+        p.stroke(0);
+        p.strokeWeight(4);
+        p.textSize(14);
+        p.text(`x${zoomFactor.toFixed(2)}`, p.mouseX + 10, p.mouseY);
+      }
     } else {
       p.image(mainBuffer, 0, 0);
     }
