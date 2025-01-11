@@ -77,6 +77,8 @@ let mouseClickedOn = { mouseX: 0, mouseY: 0 };
 let shouldSavePOIHistoryNextRender = false;
 /** mainBufferの表示位置を0,0から変えているかどうか  */
 let isTranslatingMainBuffer = false;
+/** どのドラッグ操作をしているか */
+let draggingMode: "move" | "zoom" | undefined = undefined;
 
 let elapsed = 0;
 
@@ -128,11 +130,10 @@ const sketch = (p: p5) => {
     }
   };
 
-  p.mousePressed = (ev: MouseEvent) => {
+  p.mousePressed = () => {
     if (isInside(p)) {
       if (getStore("canvasLocked")) return;
 
-      console.debug("dragging start: ", ev.buttons);
       mouseClickStartedInside = true;
       mouseDragged = false;
       mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
@@ -143,7 +144,16 @@ const sketch = (p: p5) => {
     if (mouseClickStartedInside) {
       ev.preventDefault();
 
-      changeCursor(p, "grabbing");
+      if (ev.buttons === 1) {
+        // RMB
+        draggingMode = "move";
+        changeCursor(p, "grabbing");
+      } else if (ev.buttons === 2) {
+        // LMB
+        draggingMode = "zoom";
+        changeCursor(p, "zoom-in"); // FIXME: あとで始点からどっちにいるかどうかでアイコン変える
+      }
+
       mouseDragged = true;
       isTranslatingMainBuffer = true;
     }
@@ -281,9 +291,32 @@ const sketch = (p: p5) => {
     p.background(0);
 
     if (isTranslatingMainBuffer) {
-      const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
-      p.image(mainBuffer, pixelDiffX, pixelDiffY);
-      drawCrossHair(p);
+      if (draggingMode === "move") {
+        const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
+        p.image(mainBuffer, pixelDiffX, pixelDiffY);
+        drawCrossHair(p);
+      } else if (draggingMode === "zoom") {
+        const { mouseX, mouseY } = mouseClickedOn;
+        const { pixelDiffY } = getDraggingPixelDiff(p);
+
+        // 上にドラッグで拡大、下にドラッグで縮小
+        // 拡大時は感度強め
+        const zoomMultiplier = pixelDiffY < 0 ? 0.1 : 0.01;
+        const zoomFactor = 1 + pixelDiffY * -zoomMultiplier;
+
+        const minSize = 20;
+
+        // 新しい幅と高さを計算
+        const newWidth = Math.max(mainBuffer.width * zoomFactor, minSize);
+        const newHeight = Math.max(mainBuffer.height * zoomFactor, minSize);
+
+        // クリック位置を中心にするためのオフセット計算
+        const offsetX = mouseX - (mouseX * newWidth) / mainBuffer.width;
+        const offsetY = mouseY - (mouseY * newHeight) / mainBuffer.height;
+
+        // ズーム適用
+        p.image(mainBuffer, offsetX, offsetY, newWidth, newHeight);
+      }
     } else {
       p.image(mainBuffer, 0, 0);
     }
