@@ -11,8 +11,11 @@ export const Instructions = () => {
         <div>Click</div>
         <div>Zoom at clicked point</div>
 
-        <div>Drag</div>
+        <div>LMB Drag</div>
         <div>Change center</div>
+
+        <div>RMB Drag</div>
+        <div>Interactive zoom and change center</div>
       </div>
 
       <div className="mb-2 border-b text-lg font-bold">Keys</div>
