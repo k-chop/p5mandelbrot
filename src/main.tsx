@@ -336,9 +336,12 @@ const sketch = (p: p5) => {
         const newWidth = p.width * zoomFactor;
         const newHeight = p.height * zoomFactor;
 
-        // クリック位置を中心にするためのオフセット計算
-        const offsetX = mouseX - (mouseX * newWidth) / p.width;
-        const offsetY = mouseY - (mouseY * newHeight) / p.height;
+        // クリック位置を画面中心に移動させるためのオフセット計算
+        const centerX = p.width / 2;
+        const centerY = p.height / 2;
+
+        const offsetX = centerX - mouseX * zoomFactor;
+        const offsetY = centerY - mouseY * zoomFactor;
 
         // ズーム適用
         p.image(mainBuffer, offsetX, offsetY, newWidth, newHeight);
