@@ -344,6 +344,13 @@ const sketch = (p: p5) => {
           p.width * zoomFactor,
           p.height * zoomFactor,
         );
+
+        // 拡大率表示
+        p.fill(255);
+        p.stroke(0);
+        p.strokeWeight(4);
+        p.textSize(14);
+        p.text(`x${zoomFactor.toFixed(2)}`, p.mouseX + 10, p.mouseY);
       }
     } else {
       p.image(mainBuffer, 0, 0);
