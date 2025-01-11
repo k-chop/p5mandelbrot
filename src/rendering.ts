@@ -77,6 +77,7 @@ export const renderIterationsToPixel = (
   graphics.loadPixels();
   const density = graphics.pixelDensity();
 
+  // console.log("what", iterationsResult.length);
   for (const iteration of iterationsResult) {
     const { rect, buffer, resolution } = iteration;
 
@@ -101,6 +102,10 @@ export const renderIterationsToPixel = (
       pixelRect.x + pixelRect.width,
       worldRect.x + worldRect.width,
     );
+
+    if (startY >= endY && startX >= endX) {
+      // console.log("majide?");
+    }
 
     for (let worldY = startY; worldY < endY; worldY++) {
       for (let worldX = startX; worldX < endX; worldX++) {

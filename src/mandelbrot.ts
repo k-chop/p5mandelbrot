@@ -186,6 +186,7 @@ export const startCalculation = async (
       height: height - Math.abs(offsetY),
     } satisfies Rect;
 
+    clearIterationCache();
     // 新しく計算しない部分を先に描画
     clearMainBuffer();
     renderToMainBuffer(iterationBufferTransferedRect);
@@ -193,10 +194,9 @@ export const startCalculation = async (
     const expectedDivideCount = Math.max(divideRectCount, 2);
     calculationRects = divideRect(getOffsetRects(), expectedDivideCount);
   } else {
-    // FIXME: 拡縮時もキャッシュは使えるはず、消すのをどこでやるか考える
     clearIterationCache();
-    // clearMainBuffer();
-    // renderToMainBuffer();
+    clearMainBuffer();
+    renderToMainBuffer();
   }
 
   // ドラッグ中に描画をずらしていたのを戻す

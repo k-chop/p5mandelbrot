@@ -135,6 +135,7 @@ export function convertToPixelRect(
   canvasHeight: number,
   r: BigNumber,
 ): Rect {
+  console.log("e?");
   // 左上（x, y）をピクセルへ
   const topLeft = complexToPixel(
     complexRect.x,

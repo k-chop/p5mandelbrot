@@ -1,4 +1,5 @@
-import { type ComplexRect } from "./rect";
+import { getCanvasSize, getCurrentParams } from "./mandelbrot";
+import { convertToPixelRect, type ComplexRect } from "./rect";
 import { IterationBuffer, Resolution } from "./types";
 
 // FIXME: 必要なくなったキャッシュを良い感じのタイミングで破棄できるようにする
@@ -8,31 +9,60 @@ export const upsertIterationCache = (
   rect: ComplexRect,
   buffer: Uint32Array,
   resolution: Resolution,
-): void => {
-  const idx = iterationCache.findIndex(
-    (i) => i.rect.x === rect.x && i.rect.y === rect.y,
-  );
+): IterationBuffer => {
+  const item = { rect, buffer, resolution };
+  iterationCache.push(item);
 
-  if (idx !== -1) {
-    const old = iterationCache[idx];
-    if (
-      old.resolution.width * old.resolution.height <
-      resolution.width * resolution.height
-    ) {
-      // 解像度が大きい方を採用
-      iterationCache[idx] = { rect, buffer, resolution };
-    }
-  } else {
-    iterationCache.push({ rect, buffer, resolution });
-  }
+  return item;
 };
 
 export const getIterationCache = (): IterationBuffer[] => {
   return iterationCache;
 };
 
+/**
+ * 現状の x, y, r（中心 + 表示範囲）に対して
+ * - 数ピクセル以下になるキャッシュ
+ * - 画面から完全にはみ出しているキャッシュ
+ * を iterationCache から除外する
+ */
 export const clearIterationCache = (): void => {
-  iterationCache = [];
+  const { x: cx, y: cy, r } = getCurrentParams();
+  const { width: screenWidth, height: screenHeight } = getCanvasSize();
+
+  // 数ピクセル以下を削除する閾値 (要件に応じて調整)
+  const MIN_PIXEL_SIZE = 4;
+
+  iterationCache = iterationCache.filter((cache) => {
+    // キャッシュが持っている複素数平面上のRectをピクセル座標に変換
+    const pixelRect = convertToPixelRect(
+      cx,
+      cy,
+      cache.rect,
+      screenWidth,
+      screenHeight,
+      r,
+    );
+
+    // 1. ピクセルサイズが極端に小さいものは削除
+    if (pixelRect.width < MIN_PIXEL_SIZE || pixelRect.height < MIN_PIXEL_SIZE) {
+      return false;
+    }
+
+    // 2. 画面外だったら削除
+    if (
+      pixelRect.x + pixelRect.width < 0 ||
+      pixelRect.x > screenWidth ||
+      pixelRect.y + pixelRect.height < 0 ||
+      pixelRect.y > screenHeight
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+
+  console.log("iterationCache length: ", iterationCache.length);
 };
 
 /**

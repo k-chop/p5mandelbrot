@@ -43,7 +43,7 @@ export const onIterationWorkerResult: IterationResultCallback = (
   const { pixelHeight, pixelWidth } = batchContext;
 
   const cRect = convertToComplexRect(x, y, rect, pixelWidth, pixelHeight, r);
-  upsertIterationCache(cRect, iterationsResult, {
+  const iterBuf = upsertIterationCache(cRect, iterationsResult, {
     width: rect.width,
     height: rect.height,
   });
@@ -61,7 +61,8 @@ export const onIterationWorkerResult: IterationResultCallback = (
 
   batchContext.onChangeProgress();
 
-  renderToMainBuffer(rect);
+  // 必要な情報だけ渡して描画
+  renderToMainBuffer(rect, iterBuf);
 
   // バッチ全体が完了していたらonComplete callbackを呼ぶ
   if (isBatchCompleted(job.batchId)) {
@@ -93,7 +94,12 @@ export const onIterationWorkerIntermediateResult = (
   const { pixelHeight, pixelWidth } = batchContext;
 
   const cRect = convertToComplexRect(x, y, rect, pixelWidth, pixelHeight, r);
-  upsertIterationCache(cRect, new Uint32Array(iterations), resolution);
+  const iterBuf = upsertIterationCache(
+    cRect,
+    new Uint32Array(iterations),
+    resolution,
+  );
 
-  renderToMainBuffer(rect);
+  // 必要な情報だけ渡して描画
+  renderToMainBuffer(rect, iterBuf);
 };
