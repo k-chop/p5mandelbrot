@@ -9,23 +9,27 @@ export interface Rect {
 }
 
 /** 複素数平面座標の矩形 */
-export type RealRect = {
-  topLeftX: BigNumber;
-  topLeftY: BigNumber;
-  bottomRightX: BigNumber;
-  bottomRightY: BigNumber;
+export type ComplexRect = {
+  x: BigNumber;
+  y: BigNumber;
+  width: BigNumber;
+  height: BigNumber;
 };
 
-export const calculateRealRect = (
+/**
+ * ピクセル座標のRectを複素数平面座標のRectに変換する
+ */
+export const convertToComplexRect = (
   cx: BigNumber,
   cy: BigNumber,
   rect: Rect,
   canvasWidth: number,
   canvasHeight: number,
   r: BigNumber,
-): RealRect => {
-  const topLeftX = cx.plus((rect.x * 2) / canvasWidth - 1.0).times(r);
-  const topLeftY = cy.minus((rect.y * 2) / canvasHeight - 1.0).times(r);
+): ComplexRect => {
+  const x = cx.plus((rect.x * 2) / canvasWidth - 1.0).times(r);
+  const y = cy.minus((rect.y * 2) / canvasHeight - 1.0).times(r);
+
   const bottomRightX = cx
     .plus(((rect.x + rect.width) * 2) / canvasWidth - 1.0)
     .times(r);
@@ -33,11 +37,14 @@ export const calculateRealRect = (
     .minus(((rect.y + rect.height) * 2) / canvasHeight - 1.0)
     .times(r);
 
+  const width = bottomRightX.minus(x);
+  const height = y.minus(bottomRightY);
+
   return {
-    topLeftX,
-    topLeftY,
-    bottomRightX,
-    bottomRightY,
+    x,
+    y,
+    width,
+    height,
   };
 };
 
