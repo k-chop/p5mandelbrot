@@ -206,9 +206,6 @@ const sketch = (p: p5) => {
           // 右クリックドラッグ(拡縮)確定時
           const zoomFactor = calcInteractiveZoomFactor(p);
 
-          // ズーム適用
-          zoom(1 / zoomFactor);
-
           const { mouseX, mouseY } = calcVars(
             mouseClickedOn.mouseX,
             mouseClickedOn.mouseY,
@@ -217,6 +214,9 @@ const sketch = (p: p5) => {
           );
 
           setCurrentParams({ x: mouseX, y: mouseY });
+
+          // ズーム適用
+          zoom(1 / zoomFactor);
         }
       } else {
         // クリック時
