@@ -3,7 +3,7 @@ import {
   clearIterationCache,
   translateRectInIterationCache,
 } from "./aggregator";
-import { renderToMainBuffer } from "./camera/camera";
+import { clearMainBuffer, renderToMainBuffer } from "./camera/camera";
 import { divideRect, Rect } from "./rect";
 import { getStore, updateStore, updateStoreWith } from "./store/store";
 import { MandelbrotParams, OffsetParams } from "./types";
@@ -192,10 +192,11 @@ export const startCalculation = async (
     // FIXME: 画面pixel位置でキャッシュを持っているのでここで移動させている
     // 複素平面座標で持った方がいいのではないだろうかたぶん
     translateRectInIterationCache(offsetX, offsetY);
-    onTranslated();
 
-    // 新しく計算しない部分を先に描画しておく
+    // 新しく計算しない部分を先に描画し、ドラッグ中に描画をずらしていたのを戻す
+    clearMainBuffer();
     renderToMainBuffer(iterationBufferTransferedRect);
+    onTranslated();
 
     // TODO:
     // perturbation時はreference orbitの値を取っておけば移動がかなり高速化できる気がする

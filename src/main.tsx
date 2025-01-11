@@ -74,8 +74,9 @@ const drawInfo = (p: p5) => {
 const currentCursor: "cross" | "grab" = "cross";
 let mouseDragged = false;
 let mouseClickedOn = { mouseX: 0, mouseY: 0 };
-let mouseReleasedOn = { mouseX: 0, mouseY: 0 };
-let mouseDraggedComplete = false;
+let shouldSavePOIHistoryNextRender = false;
+/** mainBufferの表示位置を0,0から変えているかどうか  */
+let isTranslatingMainBuffer = false;
 
 let elapsed = 0;
 
@@ -139,6 +140,7 @@ const sketch = (p: p5) => {
 
       changeCursor(p, "grabbing");
       mouseDragged = true;
+      isTranslatingMainBuffer = true;
     }
   };
 
@@ -158,7 +160,6 @@ const sketch = (p: p5) => {
         // ドラッグ終了時
         const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
         setOffsetParams({ x: -pixelDiffX, y: -pixelDiffY });
-        mouseReleasedOn = { mouseX: pixelDiffX, mouseY: pixelDiffY };
 
         const centerX = p.width / 2;
         const centerY = p.height / 2;
@@ -171,8 +172,6 @@ const sketch = (p: p5) => {
         );
 
         setCurrentParams({ x: mouseX, y: mouseY });
-
-        mouseDraggedComplete = true;
       } else {
         // クリック時
         const { mouseX, mouseY } = calcVars(
@@ -277,35 +276,32 @@ const sketch = (p: p5) => {
 
     p.background(0);
 
-    if (mouseDragged) {
+    if (isTranslatingMainBuffer) {
       const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
       p.image(mainBuffer, pixelDiffX, pixelDiffY);
       drawCrossHair(p);
-    } else if (mouseDraggedComplete) {
-      const { mouseX, mouseY } = mouseReleasedOn;
-      p.image(mainBuffer, mouseX, mouseY);
     } else {
       p.image(mainBuffer, 0, 0);
     }
 
     drawInfo(p);
 
+    if (shouldSavePOIHistoryNextRender) {
+      shouldSavePOIHistoryNextRender = false;
+      addCurrentLocationToPOIHistory();
+    }
+
     if (paramsChanged()) {
       startCalculation(
         (elapsed: number) => {
           // elapsed=0は中断時なのでなにもしない
           if (elapsed !== 0) {
-            // bufferに書き込んだあと、一度もrenderingされずに来るケースがある
-            // 再度描画してからthumbnailを保存する
-            p.image(nextBuffer(p), 0, 0);
-            addCurrentLocationToPOIHistory();
+            // 次回のrendering後にPOIHistoryを更新する
+            shouldSavePOIHistoryNextRender = true;
           }
         },
-        () => {
-          // onTranslated
-          // cacheの書き換えが終わったら通常位置に戻す
-          mouseDraggedComplete = false;
-        },
+        // onTranslated - cacheのtranslateとmainBufferへの書き込みが済んでから描画位置を戻す
+        () => (isTranslatingMainBuffer = false),
       );
     }
   };
