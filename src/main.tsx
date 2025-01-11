@@ -75,6 +75,8 @@ const currentCursor: "cross" | "grab" = "cross";
 let mouseDragged = false;
 let mouseClickedOn = { mouseX: 0, mouseY: 0 };
 let shouldSavePOIHistoryNextRender = false;
+/** mainBufferの表示位置を0,0から変えているかどうか  */
+let isTranslatingMainBuffer = false;
 
 let elapsed = 0;
 
@@ -138,6 +140,7 @@ const sketch = (p: p5) => {
 
       changeCursor(p, "grabbing");
       mouseDragged = true;
+      isTranslatingMainBuffer = true;
     }
   };
 
@@ -192,6 +195,7 @@ const sketch = (p: p5) => {
 
     changeCursor(p, p.CROSS);
     mouseClickStartedInside = false;
+    mouseDragged = false;
   };
 
   p.mouseWheel = (event: WheelEvent) => {
@@ -272,7 +276,7 @@ const sketch = (p: p5) => {
 
     p.background(0);
 
-    if (mouseDragged) {
+    if (isTranslatingMainBuffer) {
       const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
       p.image(mainBuffer, pixelDiffX, pixelDiffY);
       drawCrossHair(p);
@@ -297,7 +301,7 @@ const sketch = (p: p5) => {
           }
         },
         // onTranslated - cacheのtranslateとmainBufferへの書き込みが済んでから描画位置を戻す
-        () => (mouseDragged = false),
+        () => (isTranslatingMainBuffer = false),
       );
     }
   };
