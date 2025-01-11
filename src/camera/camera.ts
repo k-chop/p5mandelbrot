@@ -27,13 +27,13 @@ export const nextBuffer = (_p: p5): p5.Graphics => {
   if (needsRerender()) {
     markAsRendered();
 
-    renderToMainBuffer(bufferRect);
+    renderToMainBuffer();
   }
 
   return mainBuffer;
 };
 
-export const renderToMainBuffer = (rect: Rect) => {
+export const renderToMainBuffer = (rect: Rect = bufferRect) => {
   const params = getCurrentParams();
 
   renderIterationsToPixel(
