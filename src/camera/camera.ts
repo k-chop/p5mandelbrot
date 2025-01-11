@@ -44,3 +44,7 @@ export const renderToMainBuffer = (rect: Rect) => {
     getCurrentPalette(),
   );
 };
+
+export const clearMainBuffer = () => {
+  mainBuffer.clear();
+};

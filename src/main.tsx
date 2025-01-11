@@ -192,7 +192,6 @@ const sketch = (p: p5) => {
 
     changeCursor(p, p.CROSS);
     mouseClickStartedInside = false;
-    mouseDragged = false;
   };
 
   p.mouseWheel = (event: WheelEvent) => {
@@ -289,13 +288,17 @@ const sketch = (p: p5) => {
     }
 
     if (paramsChanged()) {
-      startCalculation((elapsed: number) => {
-        // elapsed=0は中断時なのでなにもしない
-        if (elapsed !== 0) {
-          // 次回のrendering後にPOIHistoryを更新する
-          shouldSavePOIHistoryNextRender = true;
-        }
-      });
+      startCalculation(
+        (elapsed: number) => {
+          // elapsed=0は中断時なのでなにもしない
+          if (elapsed !== 0) {
+            // 次回のrendering後にPOIHistoryを更新する
+            shouldSavePOIHistoryNextRender = true;
+          }
+        },
+        // onTranslated - cacheのtranslateとmainBufferへの書き込みが済んでから描画位置を戻す
+        () => (mouseDragged = false),
+      );
     }
   };
 };
