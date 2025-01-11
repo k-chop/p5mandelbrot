@@ -193,10 +193,9 @@ export const startCalculation = async (
     // 複素平面座標で持った方がいいのではないだろうかたぶん
     translateRectInIterationCache(offsetX, offsetY);
 
-    // 新しく計算しない部分を先に描画し、ドラッグ中に描画をずらしていたのを戻す
+    // 新しく計算しない部分を先に描画
     clearMainBuffer();
     renderToMainBuffer(iterationBufferTransferedRect);
-    onTranslated();
 
     // TODO:
     // perturbation時はreference orbitの値を取っておけば移動がかなり高速化できる気がする
@@ -208,6 +207,9 @@ export const startCalculation = async (
     // 移動していない場合は再利用するCacheがないので消す
     clearIterationCache();
   }
+
+  // ドラッグ中に描画をずらしていたのを戻す
+  onTranslated();
 
   const units = calculationRects.map((rect) => ({
     rect,
