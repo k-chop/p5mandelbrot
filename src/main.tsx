@@ -332,19 +332,18 @@ const sketch = (p: p5) => {
         const { mouseX, mouseY } = mouseClickedOn;
         const zoomFactor = calcInteractiveZoomFactor(p);
 
-        // 新しい幅と高さを計算
-        const newWidth = p.width * zoomFactor;
-        const newHeight = p.height * zoomFactor;
-
-        // クリック位置を画面中心に移動させるためのオフセット計算
-        const centerX = p.width / 2;
-        const centerY = p.height / 2;
-
-        const offsetX = centerX - mouseX * zoomFactor;
-        const offsetY = centerY - mouseY * zoomFactor;
+        // クリック位置を画面の中心に置く
+        const offsetX = p.width / 2 - mouseX * zoomFactor;
+        const offsetY = p.height / 2 - mouseY * zoomFactor;
 
         // ズーム適用
-        p.image(mainBuffer, offsetX, offsetY, newWidth, newHeight);
+        p.image(
+          mainBuffer,
+          offsetX,
+          offsetY,
+          p.width * zoomFactor,
+          p.height * zoomFactor,
+        );
       }
     } else {
       p.image(mainBuffer, 0, 0);
