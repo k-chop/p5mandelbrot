@@ -101,6 +101,21 @@ const getDraggingPixelDiff = (p: p5) => {
   return { pixelDiffX, pixelDiffY };
 };
 
+const calcInteractiveZoomFactor = (p: p5) => {
+  const { pixelDiffY } = getDraggingPixelDiff(p);
+
+  const zoomRate = getStore("zoomRate");
+  const maxPixelDiff = p.height / 2;
+
+  const zoomFactor =
+    pixelDiffY < 0
+      ? Math.pow(zoomRate, -pixelDiffY / maxPixelDiff)
+      : 1 + pixelDiffY * -0.01;
+
+  const minSize = 20;
+  return Math.max(zoomFactor, minSize / p.width);
+};
+
 const sketch = (p: p5) => {
   let mouseClickStartedInside = false;
 
@@ -171,21 +186,38 @@ const sketch = (p: p5) => {
       ev.preventDefault();
 
       if (mouseDragged) {
-        // ドラッグ終了時
-        const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
-        setOffsetParams({ x: -pixelDiffX, y: -pixelDiffY });
+        if (draggingMode === "move") {
+          // 左クリックドラッグ(移動)確定時
+          const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
+          setOffsetParams({ x: -pixelDiffX, y: -pixelDiffY });
 
-        const centerX = p.width / 2;
-        const centerY = p.height / 2;
+          const centerX = p.width / 2;
+          const centerY = p.height / 2;
 
-        const { mouseX, mouseY } = calcVars(
-          centerX - pixelDiffX,
-          centerY - pixelDiffY,
-          p.width,
-          p.height,
-        );
+          const { mouseX, mouseY } = calcVars(
+            centerX - pixelDiffX,
+            centerY - pixelDiffY,
+            p.width,
+            p.height,
+          );
 
-        setCurrentParams({ x: mouseX, y: mouseY });
+          setCurrentParams({ x: mouseX, y: mouseY });
+        } else if (draggingMode === "zoom") {
+          // 右クリックドラッグ(拡縮)確定時
+          const zoomFactor = calcInteractiveZoomFactor(p);
+
+          // ズーム適用
+          zoom(1 / zoomFactor);
+
+          const { mouseX, mouseY } = calcVars(
+            mouseClickedOn.mouseX,
+            mouseClickedOn.mouseY,
+            p.width,
+            p.height,
+          );
+
+          setCurrentParams({ x: mouseX, y: mouseY });
+        }
       } else {
         // クリック時
         const { mouseX, mouseY } = calcVars(
@@ -210,6 +242,7 @@ const sketch = (p: p5) => {
     changeCursor(p, p.CROSS);
     mouseClickStartedInside = false;
     mouseDragged = false;
+    draggingMode = undefined;
   };
 
   p.mouseWheel = (event: WheelEvent) => {
@@ -297,22 +330,15 @@ const sketch = (p: p5) => {
         drawCrossHair(p);
       } else if (draggingMode === "zoom") {
         const { mouseX, mouseY } = mouseClickedOn;
-        const { pixelDiffY } = getDraggingPixelDiff(p);
-
-        // 上にドラッグで拡大、下にドラッグで縮小
-        // 拡大時は感度強め
-        const zoomMultiplier = pixelDiffY < 0 ? 0.1 : 0.01;
-        const zoomFactor = 1 + pixelDiffY * -zoomMultiplier;
-
-        const minSize = 20;
+        const zoomFactor = calcInteractiveZoomFactor(p);
 
         // 新しい幅と高さを計算
-        const newWidth = Math.max(mainBuffer.width * zoomFactor, minSize);
-        const newHeight = Math.max(mainBuffer.height * zoomFactor, minSize);
+        const newWidth = p.width * zoomFactor;
+        const newHeight = p.height * zoomFactor;
 
         // クリック位置を中心にするためのオフセット計算
-        const offsetX = mouseX - (mouseX * newWidth) / mainBuffer.width;
-        const offsetY = mouseY - (mouseY * newHeight) / mainBuffer.height;
+        const offsetX = mouseX - (mouseX * newWidth) / p.width;
+        const offsetY = mouseY - (mouseY * newHeight) / p.height;
 
         // ズーム適用
         p.image(mainBuffer, offsetX, offsetY, newWidth, newHeight);
