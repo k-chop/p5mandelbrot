@@ -105,7 +105,11 @@ const sketch = (p: p5) => {
   p.setup = () => {
     const { width, height } = getCanvasSize();
 
-    p.createCanvas(width, height);
+    const canvas = p.createCanvas(width, height);
+    // canvas上での右クリックを無効化
+    canvas.elt.addEventListener("contextmenu", (e: Event) =>
+      e.preventDefault(),
+    );
     setupCamera(p, width, height);
 
     p.colorMode(p.HSB, 360, 100, 100, 100);
@@ -124,10 +128,11 @@ const sketch = (p: p5) => {
     }
   };
 
-  p.mousePressed = () => {
+  p.mousePressed = (ev: MouseEvent) => {
     if (isInside(p)) {
       if (getStore("canvasLocked")) return;
 
+      console.debug("dragging start: ", ev.buttons);
       mouseClickStartedInside = true;
       mouseDragged = false;
       mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
@@ -146,7 +151,6 @@ const sketch = (p: p5) => {
 
   p.mouseReleased = (ev: MouseEvent) => {
     if (!ev) return;
-    if (ev.button !== 0) return;
 
     // canvas内でクリックして、canvas内で離した場合のみクリック時の処理を行う
     // これで外からcanvas内に流れてきた場合の誤クリックを防げる
