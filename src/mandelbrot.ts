@@ -193,8 +193,10 @@ export const startCalculation = async (
     const expectedDivideCount = Math.max(divideRectCount, 2);
     calculationRects = divideRect(getOffsetRects(), expectedDivideCount);
   } else {
-    // 移動していない場合は再利用するCacheがないので消す
+    // FIXME: 拡縮時もキャッシュは使えるはず、消すのをどこでやるか考える
     clearIterationCache();
+    // clearMainBuffer();
+    // renderToMainBuffer();
   }
 
   // ドラッグ中に描画をずらしていたのを戻す
