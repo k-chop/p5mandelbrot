@@ -1,5 +1,6 @@
 import { upsertIterationCache } from "@/aggregator";
 import { renderToMainBuffer } from "@/camera/camera";
+import { convertToComplexRect } from "@/rect";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
 import {
@@ -38,7 +39,11 @@ export const onIterationWorkerResult: IterationResultCallback = (
   }
 
   const iterationsResult = new Uint32Array(iterations);
-  upsertIterationCache(rect, iterationsResult, {
+  const { x, y, r } = batchContext.mandelbrotParams;
+  const { pixelHeight, pixelWidth } = batchContext;
+
+  const cRect = convertToComplexRect(x, y, rect, pixelWidth, pixelHeight, r);
+  upsertIterationCache(cRect, iterationsResult, {
     width: rect.width,
     height: rect.height,
   });
@@ -84,6 +89,11 @@ export const onIterationWorkerIntermediateResult = (
 
   batchContext.onChangeProgress();
 
-  upsertIterationCache(rect, new Uint32Array(iterations), resolution);
+  const { x, y, r } = batchContext.mandelbrotParams;
+  const { pixelHeight, pixelWidth } = batchContext;
+
+  const cRect = convertToComplexRect(x, y, rect, pixelWidth, pixelHeight, r);
+  upsertIterationCache(cRect, new Uint32Array(iterations), resolution);
+
   renderToMainBuffer(rect);
 };

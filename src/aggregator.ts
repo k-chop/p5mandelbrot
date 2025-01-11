@@ -1,4 +1,4 @@
-import { Rect } from "./rect";
+import { type ComplexRect } from "./rect";
 import { bufferLocalLogicalIndex } from "./rendering";
 import { IterationBuffer, Resolution } from "./types";
 
@@ -11,7 +11,7 @@ import { IterationBuffer, Resolution } from "./types";
 let iterationCache: IterationBuffer[] = [];
 
 export const upsertIterationCache = (
-  rect: Rect,
+  rect: ComplexRect,
   buffer: Uint32Array,
   resolution: Resolution,
 ): void => {

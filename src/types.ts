@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import { Rect } from "./rect";
+import { Rect, type ComplexRect } from "./rect";
 import {
   BatchCompleteCallback,
   BatchProgressChangedCallback,
@@ -100,7 +100,7 @@ export const mandelbrotWorkerTypes = ["normal", "perturbation"] as const;
 export type MandelbrotWorkerType = (typeof mandelbrotWorkerTypes)[number];
 
 export interface IterationBuffer {
-  rect: Rect;
+  rect: ComplexRect;
   buffer: Uint32Array;
   resolution: Resolution;
 }
