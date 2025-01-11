@@ -1,8 +1,5 @@
 import BigNumber from "bignumber.js";
-import {
-  clearIterationCache,
-  translateRectInIterationCache,
-} from "./aggregator";
+import { clearIterationCache } from "./aggregator";
 import { clearMainBuffer, renderToMainBuffer } from "./camera/camera";
 import { divideRect, Rect } from "./rect";
 import { getStore, updateStore, updateStoreWith } from "./store/store";
@@ -191,7 +188,7 @@ export const startCalculation = async (
 
     // FIXME: 画面pixel位置でキャッシュを持っているのでここで移動させている
     // 複素平面座標で持った方がいいのではないだろうかたぶん
-    translateRectInIterationCache(offsetX, offsetY);
+    // translateRectInIterationCache(offsetX, offsetY);
 
     // 新しく計算しない部分を先に描画
     clearMainBuffer();

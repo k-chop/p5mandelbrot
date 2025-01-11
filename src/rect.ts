@@ -17,28 +17,102 @@ export type ComplexRect = {
 };
 
 /**
- * ピクセル座標のRectを複素数平面座標のRectに変換する
+ * ピクセル座標 (px, py) → 複素数平面 (zx, zy)
  */
-export const convertToComplexRect = (
+export function pixelToComplex(
+  px: number,
+  py: number,
+  cx: BigNumber,
+  cy: BigNumber,
+  r: BigNumber,
+  canvasWidth: number,
+  canvasHeight: number,
+) {
+  // ピクセルの中心を 0 とし、[-1, +1] に正規化
+  //  px: canvasWidth/2 → 0, px: 0 → -1, px: canvasWidth → +1
+  const nx = new BigNumber(px - canvasWidth / 2).div(canvasWidth / 2);
+  //  py: canvasHeight/2 → 0, py: 0 → -1, py: canvasHeight → +1
+  const ny = new BigNumber(py - canvasHeight / 2).div(canvasHeight / 2);
+
+  // zx = cx + nx * r
+  // zy = cy - ny * r  (上下反転)
+  const zx = cx.plus(nx.multipliedBy(r));
+  const zy = cy.minus(ny.multipliedBy(r));
+
+  return { zx, zy };
+}
+
+/**
+ * 複素数平面 (zx, zy) → ピクセル座標 (px, py)
+ */
+export function complexToPixel(
+  zx: BigNumber,
+  zy: BigNumber,
+  cx: BigNumber,
+  cy: BigNumber,
+  r: BigNumber,
+  canvasWidth: number,
+  canvasHeight: number,
+) {
+  // zx - cx の範囲 [-r, +r] をピクセルの [-canvasWidth/2, +canvasWidth/2] に線形マップ
+  // → 最終的に [0, canvasWidth] の座標へ
+  const px = zx
+    .minus(cx)
+    .div(r)
+    .multipliedBy(canvasWidth / 2)
+    .plus(canvasWidth / 2);
+
+  // zy - cy の範囲 [-r, +r] をピクセルの [+canvasHeight/2, -canvasHeight/2] に線形マップ
+  // → 最終的に [0, canvasHeight] の座標へ (y は上下反転のため cy - zy)
+  const py = cy
+    .minus(zy)
+    .div(r)
+    .multipliedBy(canvasHeight / 2)
+    .plus(canvasHeight / 2);
+
+  return { px, py };
+}
+
+/**
+ * ピクセル座標の Rect → 複素数平面の Rect
+ *  - rect.x, rect.y, rect.width, rect.height
+ *    はピクセルベースの "左上の (x,y) + 幅 & 高さ"
+ */
+export function convertToComplexRect(
   cx: BigNumber,
   cy: BigNumber,
   rect: Rect,
   canvasWidth: number,
   canvasHeight: number,
   r: BigNumber,
-): ComplexRect => {
-  const x = cx.plus((rect.x * 2) / canvasWidth - 1.0).times(r);
-  const y = cy.minus((rect.y * 2) / canvasHeight - 1.0).times(r);
+): ComplexRect {
+  // 左上と右下ピクセルをそれぞれ複素数平面座標へ
+  const topLeft = pixelToComplex(
+    rect.x,
+    rect.y,
+    cx,
+    cy,
+    r,
+    canvasWidth,
+    canvasHeight,
+  );
+  const bottomRight = pixelToComplex(
+    rect.x + rect.width,
+    rect.y + rect.height,
+    cx,
+    cy,
+    r,
+    canvasWidth,
+    canvasHeight,
+  );
 
-  const bottomRightX = cx
-    .plus(((rect.x + rect.width) * 2) / canvasWidth - 1.0)
-    .times(r);
-  const bottomRightY = cy
-    .minus(((rect.y + rect.height) * 2) / canvasHeight - 1.0)
-    .times(r);
-
-  const width = bottomRightX.minus(x);
-  const height = y.minus(bottomRightY);
+  // topLeft.zx, topLeft.zy が左上、bottomRight.zx, bottomRight.zy が右下
+  // ただし複素平面は y が小さい方が上、大きい方が下
+  // ここでは「Rect でも (x, y) は左上とし、width, height が正になるようにする」
+  const x = topLeft.zx; // 左
+  const y = topLeft.zy; // 上
+  const width = bottomRight.zx.minus(topLeft.zx); // (右 - 左)
+  const height = bottomRight.zy.minus(topLeft.zy); // (下 - 上)
 
   return {
     x,
@@ -46,49 +120,60 @@ export const convertToComplexRect = (
     width,
     height,
   };
-};
+}
 
 /**
- * 複素数平面座標のRectをピクセル座標のRectに変換する
+ * 複素数平面の Rect → ピクセル座標の Rect
+ *  - complexRect.x, complexRect.y, complexRect.width, complexRect.height
+ *    は複素数平面での左上の (x,y) + 幅 & 高さ
  */
-export const convertToPixelRect = (
+export function convertToPixelRect(
   cx: BigNumber,
   cy: BigNumber,
   complexRect: ComplexRect,
   canvasWidth: number,
   canvasHeight: number,
   r: BigNumber,
-): Rect => {
-  // 左上のピクセル座標を計算
-  const x = complexRect.x
-    .div(r)
-    .minus(cx)
-    .plus(1.0)
-    .times(canvasWidth / 2)
-    .toNumber();
-  const y = cy
-    .minus(complexRect.y.div(r))
-    .plus(1.0)
-    .times(canvasHeight / 2)
-    .toNumber();
+): Rect {
+  // 左上（x, y）をピクセルへ
+  const topLeft = complexToPixel(
+    complexRect.x,
+    complexRect.y,
+    cx,
+    cy,
+    r,
+    canvasWidth,
+    canvasHeight,
+  );
+  // 右下（x + width, y + height）をピクセルへ
+  const bottomRight = complexToPixel(
+    complexRect.x.plus(complexRect.width),
+    complexRect.y.plus(complexRect.height),
+    cx,
+    cy,
+    r,
+    canvasWidth,
+    canvasHeight,
+  );
 
-  // 幅と高さをピクセル単位で計算
-  const width = complexRect.width
-    .div(r)
-    .times(canvasWidth / 2)
-    .toNumber();
-  const height = complexRect.height
-    .div(r)
-    .times(canvasHeight / 2)
-    .toNumber();
+  // 画面上で左上が (x1, y1)、右下が (x2, y2) になるように整形する
+  const x1 = topLeft.px.toNumber();
+  const y1 = topLeft.py.toNumber();
+  const x2 = bottomRight.px.toNumber();
+  const y2 = bottomRight.py.toNumber();
+
+  const left = Math.min(x1, x2);
+  const top = Math.min(y1, y2);
+  const width = Math.abs(x2 - x1);
+  const height = Math.abs(y2 - y1);
 
   return {
-    x: Math.round(x),
-    y: Math.round(y),
-    width: Math.round(width),
-    height: Math.round(height),
+    x: left,
+    y: top,
+    width,
+    height,
   };
-};
+}
 
 export const calculateDivideArea = (
   divideCount: number,
