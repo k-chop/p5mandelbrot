@@ -2,10 +2,15 @@ import { Palette } from "@/color";
 import p5 from "p5";
 import { getCanvasSize } from "../camera/camera";
 import { Rect } from "../math/rect";
-import { IterationBuffer, Resolution } from "../types";
+import { IterationBuffer } from "../types";
 
 /** GLITCHEDな場合に設定するiteration count値 */
 export const GLITCHED_POINT_ITERATION = 4294967295;
+
+export interface Resolution {
+  width: number;
+  height: number;
+}
 
 /**
  * 指定した座標をpaletteとiterationの値に応じて塗りつぶす

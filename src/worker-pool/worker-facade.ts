@@ -4,7 +4,6 @@ import {
   CalcRefOrbitJob,
   IterationIntermediateResult,
   IterationProgress,
-  IterationResult,
   MandelbrotJob,
   MandelbrotWorkerType,
   RefOrbitProgress,
@@ -13,6 +12,12 @@ import {
 } from "@/types";
 import { refOrbitWorkerPath, workerPaths } from "@/workers";
 import { RefOrbitContext } from "@/workers/calc-ref-orbit";
+
+export interface IterationResult {
+  type: "result";
+  iterations: ArrayBuffer;
+  elapsed: number;
+}
 
 export type RefOrbitResultCallback = (
   result: RefOrbitContext,
