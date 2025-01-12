@@ -58,8 +58,6 @@ export const startCalculation = async (
 
   // ドラッグ中に描画をずらしていたのを戻す
   onTranslated();
-  resetScaleParams();
-  resetOffsetParams();
 
   // workerに分配するために描画範囲を分割
   const divideRectCount = getWorkerCount("calc-iteration");
@@ -76,6 +74,9 @@ export const startCalculation = async (
   }));
 
   const terminator = new SharedArrayBuffer(getWorkerCount());
+
+  resetScaleParams();
+  resetOffsetParams();
 
   registerBatch(currentBatchId, units, {
     onComplete,
