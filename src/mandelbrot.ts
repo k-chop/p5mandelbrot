@@ -220,7 +220,6 @@ export const startCalculation = async (
   } else {
     // 拡縮の場合は倍率を指定してキャッシュを書き換える
     const { scaleAtX, scaleAtY, scale } = getScaleParams();
-    console.log({ scaleAtX, scaleAtY, scale });
 
     const scaled = scaleIterationCacheAroundPoint(
       scaleAtX,
