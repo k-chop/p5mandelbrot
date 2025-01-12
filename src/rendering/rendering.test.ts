@@ -22,7 +22,7 @@ describe("bufferLocalLogicalIndex", () => {
     expect(result).toBe(3);
   });
 
-  it("resolutionよりrectが小さいケース", () => {
+  it("左上と右下の値が正しく取れる", () => {
     const result = bufferLocalLogicalIndex(
       50,
       50,
