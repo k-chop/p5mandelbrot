@@ -85,3 +85,40 @@ export const translateRectInIterationCache = (
     };
   });
 };
+
+export const scaleIterationCacheAroundPoint = (
+  centerX: number,
+  centerY: number,
+  scale: number,
+): void => {
+  console.log("scale!", { centerX, centerY, scale });
+
+  iterationCache = iterationCache.map((iteration) => {
+    const { x, y, width, height } = iteration.rect;
+
+    console.log("before", { x, y, width, height });
+
+    // iteration.rectの中心で拡大縮小した場合を考える
+
+    // (x, y) を (centerX, centerY) 基準に平行移動（差分を取り）→ scale 倍 → 中心へ戻す
+    const newX = centerX + (x - centerX) * scale;
+    const newY = centerY + (y - centerY) * scale;
+
+    // 幅・高さはそのまま倍率をかけるだけ
+    const newWidth = width * scale;
+    const newHeight = height * scale;
+
+    console.log("after", { newX, newY, newWidth, newHeight });
+
+    return {
+      rect: {
+        x: newX,
+        y: newY,
+        width: newWidth,
+        height: newHeight,
+      },
+      buffer: iteration.buffer,
+      resolution: iteration.resolution,
+    };
+  });
+};

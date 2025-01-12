@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import {
-  clearIterationCache,
+  scaleIterationCacheAroundPoint,
   translateRectInIterationCache,
 } from "./aggregator";
 import { clearMainBuffer, renderToMainBuffer } from "./camera/camera";
@@ -130,6 +130,14 @@ export const setOffsetParams = (params: Partial<OffsetParams>) => {
   offsetParams = { ...offsetParams, ...params };
 };
 
+let scaleParams = { scaleAtX: 0, scaleAtY: 0, scale: 1 };
+export const setScaleParams = (params: Partial<typeof scaleParams>) => {
+  scaleParams = { ...scaleParams, ...params };
+};
+export const resetScaleParams = () =>
+  setScaleParams({ scaleAtX: 0, scaleAtY: 0, scale: 1 });
+export const getScaleParams = () => scaleParams;
+
 export const resetIterationCount = () => setCurrentParams({ N: DEFAULT_N });
 export const setDeepIterationCount = () =>
   setCurrentParams({ N: DEFAULT_N * 20 });
@@ -205,7 +213,11 @@ export const startCalculation = async (
     calculationRects = divideRect(getOffsetRects(), expectedDivideCount);
   } else {
     // 移動していない場合は再利用するCacheがないので消す
-    clearIterationCache();
+    const { scaleAtX, scaleAtY, scale } = getScaleParams();
+    scaleIterationCacheAroundPoint(scaleAtX, scaleAtY, scale);
+    clearMainBuffer();
+    renderToMainBuffer();
+    resetScaleParams();
   }
 
   // ドラッグ中に描画をずらしていたのを戻す

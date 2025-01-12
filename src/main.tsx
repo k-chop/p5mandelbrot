@@ -21,6 +21,7 @@ import {
   setCurrentParams,
   setDeepIterationCount,
   setOffsetParams,
+  setScaleParams,
   startCalculation,
   togglePinReference,
   zoom,
@@ -217,6 +218,13 @@ const sketch = (p: p5) => {
 
           // ズーム適用
           zoom(1 / zoomFactor);
+
+          const { mouseX: mx, mouseY: my } = mouseClickedOn;
+          setScaleParams({
+            scaleAtX: mx,
+            scaleAtY: my,
+            scale: zoomFactor,
+          });
         }
       } else {
         // クリック時
