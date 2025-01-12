@@ -5,7 +5,11 @@ import {
   setIterationCache,
   translateRectInIterationCache,
 } from "./aggregator/aggregator";
-import { clearMainBuffer, renderToMainBuffer } from "./camera/camera";
+import {
+  clearMainBuffer,
+  getCanvasSize,
+  renderToMainBuffer,
+} from "./camera/camera";
 import {
   getCurrentParams,
   getOffsetParams,
@@ -26,13 +30,8 @@ import {
 } from "./worker-pool/worker-pool";
 
 export const DEFAULT_N = 500;
-const DEFAULT_WIDTH = 800;
-const DEFAULT_HEIGHT = 800;
 
 export const GLITCHED_POINT_ITERATION = 4294967295;
-
-export const width = DEFAULT_WIDTH;
-export const height = DEFAULT_HEIGHT;
 
 export const togglePinReference = () => {
   if (getCurrentParams().mode !== "perturbation") return;
@@ -94,9 +93,10 @@ export const startCalculation = async (
   setPrevBatchId(currentBatchId);
 
   const divideRectCount = getWorkerCount("calc-iteration");
+  const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
 
   let calculationRects = divideRect(
-    [{ x: 0, y: 0, width, height }],
+    [{ x: 0, y: 0, width: canvasWidth, height: canvasHeight }],
     divideRectCount,
   );
 
@@ -110,8 +110,8 @@ export const startCalculation = async (
     const iterationBufferTransferedRect = {
       x: offsetX >= 0 ? 0 : Math.abs(offsetX),
       y: offsetY >= 0 ? 0 : Math.abs(offsetY),
-      width: width - Math.abs(offsetX),
-      height: height - Math.abs(offsetY),
+      width: canvasWidth - Math.abs(offsetX),
+      height: canvasHeight - Math.abs(offsetY),
     } satisfies Rect;
 
     // 画面pixel位置でキャッシュを持っているのでここで移動させている
@@ -123,7 +123,10 @@ export const startCalculation = async (
     renderToMainBuffer(iterationBufferTransferedRect);
 
     const expectedDivideCount = Math.max(divideRectCount, 2);
-    calculationRects = divideRect(getOffsetRects(), expectedDivideCount);
+    calculationRects = divideRect(
+      getOffsetRects(canvasWidth, canvasHeight),
+      expectedDivideCount,
+    );
   } else {
     // 拡縮の場合は倍率を指定してキャッシュを書き換える
     const { scaleAtX, scaleAtY, scale } = getScaleParams();
@@ -132,8 +135,8 @@ export const startCalculation = async (
       scaleAtX,
       scaleAtY,
       scale,
-      width,
-      height,
+      canvasWidth,
+      canvasHeight,
     );
     setIterationCache(scaled);
     removeUnusedIterationCache();
@@ -160,8 +163,8 @@ export const startCalculation = async (
     onComplete,
     onChangeProgress: () => {},
     mandelbrotParams: currentParams,
-    pixelWidth: width,
-    pixelHeight: height,
+    pixelWidth: canvasWidth,
+    pixelHeight: canvasHeight,
     terminator,
     shouldReuseRefOrbit: getStore("shouldReuseRefOrbit"),
   });

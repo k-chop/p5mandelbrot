@@ -1,4 +1,5 @@
-import { DEFAULT_N, height, isSameParams, width } from "@/mandelbrot";
+import { getCanvasSize } from "@/camera/camera";
+import { DEFAULT_N, isSameParams } from "@/mandelbrot";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams, OffsetParams } from "@/types";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
@@ -33,8 +34,8 @@ let offsetParams: OffsetParams = {
 };
 
 let scaleParams = {
-  scaleAtX: Math.round(width / 2),
-  scaleAtY: Math.round(height / 2),
+  scaleAtX: 0,
+  scaleAtY: 0,
   scale: 1,
 };
 
@@ -76,12 +77,15 @@ export const getOffsetParams = () => offsetParams;
 export const setScaleParams = (params: Partial<typeof scaleParams>) => {
   scaleParams = { ...scaleParams, ...params };
 };
-export const resetScaleParams = () =>
+export const resetScaleParams = () => {
+  const { width, height } = getCanvasSize();
+
   setScaleParams({
     scaleAtX: Math.round(width / 2),
     scaleAtY: Math.round(height / 2),
     scale: 1,
   });
+};
 export const getScaleParams = () => scaleParams;
 export const resetIterationCount = () => setCurrentParams({ N: DEFAULT_N });
 export const setDeepIterationCount = () =>

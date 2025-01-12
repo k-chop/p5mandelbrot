@@ -1,5 +1,4 @@
 import BigNumber from "bignumber.js";
-import { height, width } from "./mandelbrot";
 import { getOffsetParams } from "./mandelbrot-state/mandelbrot-state";
 
 /** pixel単位の矩形 */
@@ -138,7 +137,11 @@ export const divideRect = (
   return result;
 };
 
-export const getOffsetRects = (offsetParams = getOffsetParams()): Rect[] => {
+export const getOffsetRects = (
+  canvasWidth: number,
+  canvasHeight: number,
+  offsetParams = getOffsetParams(),
+): Rect[] => {
   const offsetX = offsetParams.x;
   const offsetY = offsetParams.y;
 
@@ -148,18 +151,18 @@ export const getOffsetRects = (offsetParams = getOffsetParams()): Rect[] => {
     // (1) 上下の横長矩形（offsetYが0なら存在しない）
     rects.push({
       x: 0,
-      y: offsetY > 0 ? height - offsetY : 0,
-      width,
+      y: offsetY > 0 ? canvasHeight - offsetY : 0,
+      width: canvasWidth,
       height: Math.abs(offsetY),
     });
   }
   if (offsetX !== 0) {
     // (2) 1に含まれる分を除いた左右の縦長矩形（offsetXが0なら存在しない）
     rects.push({
-      x: offsetX > 0 ? width - offsetX : 0,
+      x: offsetX > 0 ? canvasWidth - offsetX : 0,
       y: offsetY > 0 ? 0 : Math.abs(offsetY),
       width: Math.abs(offsetX),
-      height: height - Math.abs(offsetY),
+      height: canvasHeight - Math.abs(offsetY),
     });
   }
 

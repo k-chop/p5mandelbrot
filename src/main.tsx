@@ -17,6 +17,7 @@ import {
   paramsChanged,
   resetIterationCount,
   resetRadius,
+  resetScaleParams,
   setCurrentParams,
   setDeepIterationCount,
   setOffsetParams,
@@ -126,6 +127,7 @@ const sketch = (p: p5) => {
       e.preventDefault(),
     );
     setupCamera(p, width, height);
+    resetScaleParams();
 
     p.colorMode(p.HSB, 360, 100, 100, 100);
 
