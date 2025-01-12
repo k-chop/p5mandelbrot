@@ -4,7 +4,7 @@ import {
   scaleIterationCacheAroundPoint,
   setIterationCache,
   translateRectInIterationCache,
-} from "./aggregator";
+} from "./aggregator/aggregator";
 import { clearMainBuffer, renderToMainBuffer } from "./camera/camera";
 import { divideRect, Rect } from "./rect";
 import { getStore, updateStore, updateStoreWith } from "./store/store";

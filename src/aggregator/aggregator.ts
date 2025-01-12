@@ -1,7 +1,7 @@
-import { getCanvasSize } from "./mandelbrot";
-import { Rect } from "./rect";
-import { bufferLocalLogicalIndex } from "./rendering";
-import { IterationBuffer, Resolution } from "./types";
+import { getCanvasSize } from "../mandelbrot";
+import { Rect } from "../rect";
+import { bufferLocalLogicalIndex } from "../rendering";
+import { IterationBuffer, Resolution } from "../types";
 
 // FIXME: 配列全部舐める必要があるのよくないので良い感じにデータを持つようにする
 let iterationCache: IterationBuffer[] = [];

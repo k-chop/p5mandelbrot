@@ -1,6 +1,6 @@
 import type { IterationBuffer } from "@/types";
 import p5 from "p5";
-import { getIterationCache } from "../aggregator";
+import { getIterationCache } from "../aggregator/aggregator";
 import { getCurrentParams } from "../mandelbrot";
 import { Rect } from "../rect";
 import { renderIterationsToPixel } from "../rendering";

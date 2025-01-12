@@ -1,4 +1,4 @@
-import { clearIterationCache } from "@/aggregator";
+import { clearIterationCache } from "@/aggregator/aggregator";
 import { getCurrentPalette, setSerializedPalette } from "@/camera/palette";
 import { getResizedCanvasImageDataURL } from "@/canvas-reference";
 import { deletePreview, savePreview } from "@/store/preview-store";

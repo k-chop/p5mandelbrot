@@ -7,7 +7,7 @@ import {
 import p5 from "p5";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
-import { getIterationTimeAt } from "./aggregator";
+import { getIterationTimeAt } from "./aggregator/aggregator";
 import { setP5 } from "./canvas-reference";
 import { extractMandelbrotParams } from "./lib/params";
 import {

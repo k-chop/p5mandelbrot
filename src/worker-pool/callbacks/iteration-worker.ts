@@ -1,4 +1,7 @@
-import { getIterationCache, upsertIterationCache } from "@/aggregator";
+import {
+  getIterationCache,
+  upsertIterationCache,
+} from "@/aggregator/aggregator";
 import { renderToMainBuffer } from "@/camera/camera";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
