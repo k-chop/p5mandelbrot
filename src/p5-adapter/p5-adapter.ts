@@ -247,16 +247,14 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
         moveTo(dragOffset);
       } else if (draggingMode === "zoom") {
         // 右クリックドラッグ(拡縮)確定時
-        const scaleFactor = calcInteractiveZoomFactor(p, mouseClickedOn);
-        scaleTo(scaleFactor, {
+        scaleTo(calcInteractiveZoomFactor(p, mouseClickedOn), {
           x: mouseClickedOn.mouseX,
           y: mouseClickedOn.mouseY,
         });
       }
     } else {
       // クリック時
-      const scaleFactor = getStore("zoomRate");
-      scaleTo(scaleFactor, { x: p.mouseX, y: p.mouseY });
+      scaleTo(getStore("zoomRate"), { x: p.mouseX, y: p.mouseY });
     }
   }
 
