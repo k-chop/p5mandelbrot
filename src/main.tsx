@@ -38,7 +38,6 @@ import {
   readSettingsFromStorage,
 } from "./store/sync-storage/settings";
 import "./style.css";
-import { checkpoint } from "./utils/debug";
 import { AppRoot } from "./view/app-root";
 import { prepareWorkerPool } from "./worker-pool/pool-instance";
 import { getProgressData } from "./worker-pool/worker-pool";
@@ -376,7 +375,6 @@ const sketch = (p: p5) => {
     } else {
       p.image(mainBuffer, 0, 0);
     }
-    checkpoint();
     drawInfo(p);
 
     if (shouldSavePOIHistoryNextRender) {

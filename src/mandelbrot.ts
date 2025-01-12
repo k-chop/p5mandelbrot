@@ -10,7 +10,6 @@ import { clearMainBuffer, renderToMainBuffer } from "./camera/camera";
 import { divideRect, Rect } from "./rect";
 import { getStore, updateStore, updateStoreWith } from "./store/store";
 import { MandelbrotParams, OffsetParams } from "./types";
-import { nextStop } from "./utils/debug";
 import { getWorkerCount, prepareWorkerPool } from "./worker-pool/pool-instance";
 import {
   cancelBatch,
@@ -228,7 +227,6 @@ export const startCalculation = async (
     getIterationCache().forEach((iteration) => {
       console.log("scaled", iteration.rect, iteration.resolution);
     });
-    nextStop(2);
 
     clearMainBuffer();
     renderToMainBuffer();
