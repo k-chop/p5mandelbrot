@@ -156,6 +156,10 @@ export const scaleIterationCacheAroundPoint = (
       scale,
     );
 
+    // クリック位置が画面中央に来るように位置調整
+    scaledRect.x = Math.round(scaledRect.x - (centerX - canvasWidth / 2));
+    scaledRect.y = Math.round(scaledRect.y - (centerY - canvasHeight / 2));
+
     return {
       rect: scaledRect,
       buffer: iteration.buffer,
