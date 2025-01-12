@@ -247,46 +247,16 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
         moveTo(dragOffset);
       } else if (draggingMode === "zoom") {
         // 右クリックドラッグ(拡縮)確定時
-        const zoomFactor = calcInteractiveZoomFactor(p, mouseClickedOn);
-
-        const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
-          mouseClickedOn.mouseX,
-          mouseClickedOn.mouseY,
-          p.width,
-          p.height,
-        );
-
-        setCurrentParams({ x: complexMouseX, y: complexMouseY });
-
-        // ズーム適用
-        radiusTimesTo(1 / zoomFactor);
-
-        const { mouseX: mx, mouseY: my } = mouseClickedOn;
-        setScaleParams({
-          scaleAtX: mx,
-          scaleAtY: my,
-          scale: zoomFactor,
+        const scaleFactor = calcInteractiveZoomFactor(p, mouseClickedOn);
+        scaleTo(scaleFactor, {
+          x: mouseClickedOn.mouseX,
+          y: mouseClickedOn.mouseY,
         });
       }
     } else {
       // クリック時
-      const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
-        p.mouseX,
-        p.mouseY,
-        p.width,
-        p.height,
-      );
-
-      setCurrentParams({ x: complexMouseX, y: complexMouseY });
-
-      const rate = getStore("zoomRate");
-      radiusTimesTo(1.0 / rate);
-
-      setScaleParams({
-        scaleAtX: p.mouseX,
-        scaleAtY: p.mouseY,
-        scale: rate,
-      });
+      const scaleFactor = getStore("zoomRate");
+      scaleTo(scaleFactor, { x: p.mouseX, y: p.mouseY });
     }
   }
 
@@ -318,7 +288,31 @@ export const moveTo = (dragOffset: {
   setOffsetParams({ x: -dragOffset.pixelDiffX, y: -dragOffset.pixelDiffY });
   setCurrentParams({ x: complexMouseX, y: complexMouseY });
 };
-export const scaleToAt = () => {};
+
+/**
+ * scaleOriginを中心にscaleFactor倍する
+ */
+export const scaleTo = (
+  scaleFactor: number,
+  scaleOrigin: { x: number; y: number },
+) => {
+  const { width, height } = getCanvasSize();
+
+  const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
+    scaleOrigin.x,
+    scaleOrigin.y,
+    width,
+    height,
+  );
+
+  setCurrentParams({ x: complexMouseX, y: complexMouseY });
+  radiusTimesTo(1 / scaleFactor);
+  setScaleParams({
+    scaleAtX: scaleOrigin.x,
+    scaleAtY: scaleOrigin.y,
+    scale: scaleFactor,
+  });
+};
 
 /**
  * ズームイン・アウトの操作を行う
