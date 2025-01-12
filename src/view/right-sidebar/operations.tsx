@@ -1,6 +1,11 @@
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/shadcn/components/ui/button";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/shadcn/components/ui/tabs";
+import { useToast } from "@/shadcn/hooks/use-toast";
 import { isGithubPages } from "@/utils/location";
 import { IconCircleCheck, IconCopy } from "@tabler/icons-react";
 import { PaletteEditor } from "./palette-editor";

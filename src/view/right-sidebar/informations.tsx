@@ -1,5 +1,5 @@
 import { Kbd } from "@/components/kbd";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/shadcn/components/ui/card";
 import { useStoreValue } from "@/store/store";
 import { IconPin } from "@tabler/icons-react";
 

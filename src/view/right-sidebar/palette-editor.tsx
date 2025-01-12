@@ -3,7 +3,7 @@ import {
   setCurrentPaletteOffset,
 } from "@/camera/palette";
 import { ValueSlider } from "@/components/slider-wrapper";
-import { Slider } from "@/components/ui/slider";
+import { Slider } from "@/shadcn/components/ui/slider";
 import { getStore, updateStore, useStoreValue } from "@/store/store";
 import { useEffect, useState } from "react";
 

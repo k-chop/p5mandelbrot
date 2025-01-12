@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shadcn/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/shadcn/components/ui/dialog";
 import { IconHelp } from "@tabler/icons-react";
 import { useModalState } from "../modal/use-modal-state";
 import { Actions } from "./actions";

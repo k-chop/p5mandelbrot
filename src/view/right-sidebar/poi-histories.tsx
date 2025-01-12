@@ -1,5 +1,5 @@
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { usePOIHistories } from "@/poi-history/poi-history";
+import { ScrollArea, ScrollBar } from "@/shadcn/components/ui/scroll-area";
 import { useMemo } from "react";
 import { usePOI } from "./use-poi";
 

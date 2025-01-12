@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
 import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
+import { Button } from "@/shadcn/components/ui/button";
+import { toast } from "@/shadcn/components/ui/use-toast";
 import { copyCurrentParamsToClipboard } from "@/utils/mandelbrot-url-params";
 import { IconCircleCheck, IconDownload, IconShare } from "@tabler/icons-react";
 
