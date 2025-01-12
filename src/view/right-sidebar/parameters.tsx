@@ -1,20 +1,20 @@
 import { Kbd } from "@/components/kbd";
-import { Card, CardContent } from "@/components/ui/card";
+import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { GLITCHED_POINT_ITERATION } from "@/rendering/rendering";
+import { Card, CardContent } from "@/shadcn/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+} from "@/shadcn/components/ui/dialog";
+import { Input } from "@/shadcn/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { GLITCHED_POINT_ITERATION } from "@/rendering/rendering";
+} from "@/shadcn/components/ui/tooltip";
 import { AlertCircleIcon } from "lucide-react";
 import { useStoreValue } from "../../store/store";
 import { useModalState } from "../modal/use-modal-state";

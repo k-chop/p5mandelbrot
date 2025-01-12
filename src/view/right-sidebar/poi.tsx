@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { Button } from "@/shadcn/components/ui/button";
+import { ScrollArea } from "@/shadcn/components/ui/scroll-area";
 import { IconCirclePlus } from "@tabler/icons-react";
 import throttle from "lodash.throttle";
 import { useEffect, useRef } from "react";

@@ -1,6 +1,6 @@
 import { ValueSlider } from "@/components/slider-wrapper";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/shadcn/components/ui/button";
+import { useToast } from "@/shadcn/hooks/use-toast";
 import { readPOIListFromClipboard } from "@/store/sync-storage/poi-list";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { IconCircleCheck } from "@tabler/icons-react";

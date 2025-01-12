@@ -1,4 +1,4 @@
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@/shadcn/components/ui/separator";
 import { ResultSpans, Span } from "@/types";
 import {
   Tooltip,

@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/shadcn/components/ui/toaster";
 import ReactDOM from "react-dom";
 import { CanvasOverlay } from "./canvas-overlay";
 import { Footer } from "./footer";

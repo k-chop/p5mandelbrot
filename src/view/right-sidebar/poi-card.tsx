@@ -1,6 +1,6 @@
 import { SimpleTooltip } from "@/components/simple-tooltip";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/shadcn/components/ui/button";
+import { Card } from "@/shadcn/components/ui/card";
 import { useStoreValue } from "@/store/store";
 import {
   IconArrowBigLeftLine,
