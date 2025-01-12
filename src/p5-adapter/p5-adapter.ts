@@ -178,34 +178,6 @@ export const getResizedCanvasImageDataURL = (height: number = 0) => {
   return img.canvas.toDataURL();
 };
 
-// ================================================================================================
-// 以下、p5.jsのcallback関数
-// ================================================================================================
-
-export const p5Setup = (p: p5) => {
-  UNSAFE_p5Instance = p;
-
-  const { width, height } = initializeCanvasSize();
-
-  const canvas = p.createCanvas(width, height);
-  // canvas上での右クリックを無効化
-  canvas.elt.addEventListener("contextmenu", (e: Event) => e.preventDefault());
-  setupCamera(p, width, height);
-  resetScaleParams();
-
-  p.colorMode(p.HSB, 360, 100, 100, 100);
-  p.cursor(p.CROSS);
-
-  initializePOIHistory();
-
-  const initialParams = extractMandelbrotParams();
-
-  if (initialParams) {
-    setCurrentParams(initialParams.mandelbrot);
-    setPalette(initialParams.palette);
-  }
-};
-
 /**
  * マウス押下時にいろいろ覚えておくやつ
  */
@@ -235,6 +207,34 @@ export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
 
   mouseDragged = true;
   isTranslatingMainBuffer = true;
+};
+
+// ================================================================================================
+// 以下、p5.jsのcallback関数
+// ================================================================================================
+
+export const p5Setup = (p: p5) => {
+  UNSAFE_p5Instance = p;
+
+  const { width, height } = initializeCanvasSize();
+
+  const canvas = p.createCanvas(width, height);
+  // canvas上での右クリックを無効化
+  canvas.elt.addEventListener("contextmenu", (e: Event) => e.preventDefault());
+  setupCamera(p, width, height);
+  resetScaleParams();
+
+  p.colorMode(p.HSB, 360, 100, 100, 100);
+  p.cursor(p.CROSS);
+
+  initializePOIHistory();
+
+  const initialParams = extractMandelbrotParams();
+
+  if (initialParams) {
+    setCurrentParams(initialParams.mandelbrot);
+    setPalette(initialParams.palette);
+  }
 };
 
 export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
