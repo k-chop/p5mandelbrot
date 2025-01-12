@@ -47,9 +47,11 @@ export const setPrevBatchId = (id: string) => {
 };
 
 export const getCurrentParams = () => currentParams;
-
 export const updateCurrentParams = () => {
   lastCalc = { ...currentParams };
+};
+export const paramsChanged = () => {
+  return !isSameParams(lastCalc, currentParams);
 };
 
 export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
@@ -72,13 +74,17 @@ export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
     setOffsetParams({ x: 0, y: 0 });
   }
 };
+
+export const getOffsetParams = () => offsetParams;
 export const setOffsetParams = (params: Partial<OffsetParams>) => {
   offsetParams = { ...offsetParams, ...params };
 };
-export const getOffsetParams = () => offsetParams;
+
+export const getScaleParams = () => scaleParams;
 export const setScaleParams = (params: Partial<typeof scaleParams>) => {
   scaleParams = { ...scaleParams, ...params };
 };
+
 export const resetScaleParams = () => {
   const { width, height } = getCanvasSize();
 
@@ -88,16 +94,20 @@ export const resetScaleParams = () => {
     scale: 1,
   });
 };
-export const getScaleParams = () => scaleParams;
+
 export const resetIterationCount = () => setCurrentParams({ N: DEFAULT_N });
+
 export const setDeepIterationCount = () =>
   setCurrentParams({ N: DEFAULT_N * 20 });
+
 export const resetRadius = () => setCurrentParams({ r: new BigNumber("2.0") });
+
 export const cycleMode = () => {
   const mode = cycleWorkerType();
   setCurrentParams({ mode });
   setOffsetParams({ x: 0, y: 0 });
 };
+
 export const zoom = (times: number) => {
   if (1 < times && currentParams.r.times(times).gte(5)) {
     return;
@@ -106,9 +116,7 @@ export const zoom = (times: number) => {
   currentParams.r = currentParams.r.times(times);
   setOffsetParams({ x: 0, y: 0 });
 };
-export const paramsChanged = () => {
-  return !isSameParams(lastCalc, currentParams);
-};
+
 export const togglePinReference = () => {
   if (getCurrentParams().mode !== "perturbation") return;
 
