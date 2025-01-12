@@ -57,8 +57,11 @@ let mouseClickStartedInside = false;
 /**
  * 開始地点からのドラッグ量を取得
  */
-const getDraggingPixelDiff = (p: p5) => {
-  const { mouseX: clickedMouseX, mouseY: clickedMouseY } = mouseClickedOn;
+const getDraggingPixelDiff = (
+  p: p5,
+  clickedOn: { mouseX: number; mouseY: number },
+) => {
+  const { mouseX: clickedMouseX, mouseY: clickedMouseY } = clickedOn;
 
   const pixelDiffX = Math.floor(p.mouseX - clickedMouseX);
   const pixelDiffY = Math.floor(p.mouseY - clickedMouseY);
@@ -69,8 +72,11 @@ const getDraggingPixelDiff = (p: p5) => {
 /**
  * 右クリックドラッグでのzoom中の倍率を計算して返す
  */
-const calcInteractiveZoomFactor = (p: p5) => {
-  const { pixelDiffY } = getDraggingPixelDiff(p);
+const calcInteractiveZoomFactor = (
+  p: p5,
+  clickedOn: { mouseX: number; mouseY: number },
+) => {
+  const { pixelDiffY } = getDraggingPixelDiff(p, clickedOn);
 
   const zoomRate = getStore("zoomRate");
   const maxPixelDiff = p.height / 2;
@@ -226,7 +232,10 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
     if (mouseDragged) {
       if (draggingMode === "move") {
         // 左クリックドラッグ(移動)確定時
-        const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
+        const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(
+          p,
+          mouseClickedOn,
+        );
         setOffsetParams({ x: -pixelDiffX, y: -pixelDiffY });
 
         const centerX = p.width / 2;
@@ -242,7 +251,7 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
         setCurrentParams({ x: complexMouseX, y: complexMouseY });
       } else if (draggingMode === "zoom") {
         // 右クリックドラッグ(拡縮)確定時
-        const zoomFactor = calcInteractiveZoomFactor(p);
+        const zoomFactor = calcInteractiveZoomFactor(p, mouseClickedOn);
 
         const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
           mouseClickedOn.mouseX,
@@ -382,12 +391,15 @@ export const p5Draw = (p: p5) => {
 
   if (isTranslatingMainBuffer) {
     if (draggingMode === "move") {
-      const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p);
+      const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(
+        p,
+        mouseClickedOn,
+      );
       p.image(mainBuffer, pixelDiffX, pixelDiffY);
       drawCrossHair(p);
     } else if (draggingMode === "zoom") {
       const { mouseX, mouseY } = mouseClickedOn;
-      const zoomFactor = calcInteractiveZoomFactor(p);
+      const zoomFactor = calcInteractiveZoomFactor(p, mouseClickedOn);
 
       // クリック位置を画面の中心に置く
       const offsetX = p.width / 2 - mouseX * zoomFactor;
