@@ -1,9 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  cloneParams,
-  getCurrentParams,
-} from "@/mandelbrot-state/mandelbrot-state";
+import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { IconCirclePlus } from "@tabler/icons-react";
 import throttle from "lodash.throttle";
 import { useEffect, useRef } from "react";
@@ -39,7 +36,7 @@ export const POI = () => {
             variant="default"
             size="sm"
             className="w-64"
-            onClick={() => addPOI(cloneParams(getCurrentParams()))}
+            onClick={() => addPOI(cloneCurrentParams())}
           >
             <IconCirclePlus className="mr-2 size-6" />
             Save POI

@@ -127,6 +127,8 @@ export const togglePinReference = () => {
 export const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
   a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.mode === b.mode;
 
+export const cloneCurrentParams = () => cloneParams(currentParams);
+
 export const cloneParams = (params: MandelbrotParams): MandelbrotParams => ({
   x: BigNumber(params.x),
   y: BigNumber(params.y),
