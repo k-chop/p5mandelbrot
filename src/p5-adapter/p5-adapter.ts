@@ -79,7 +79,7 @@ const getDraggingPixelDiff = (
 /**
  * 右クリックドラッグでのzoom中の倍率を計算して返す
  */
-const calcInteractiveZoomFactor = (
+const calcInteractiveScaleFactor = (
   p: p5,
   clickedOn: { mouseX: number; mouseY: number },
 ) => {
@@ -88,13 +88,13 @@ const calcInteractiveZoomFactor = (
   const zoomRate = getStore("zoomRate");
   const maxPixelDiff = p.height / 2;
 
-  const zoomFactor =
+  const scaleFactor =
     pixelDiffY < 0
       ? Math.pow(zoomRate, -pixelDiffY / maxPixelDiff)
       : 1 + pixelDiffY * -0.01;
 
   const minSize = 20;
-  return Math.max(zoomFactor, minSize / p.width);
+  return Math.max(scaleFactor, minSize / p.width);
 };
 
 /** カーソルの変更 */
@@ -255,7 +255,7 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
         moveTo(dragOffset);
       } else if (draggingMode === "zoom") {
         // 右クリックドラッグ(拡縮)確定時
-        scaleTo(calcInteractiveZoomFactor(p, mouseClickedOn), {
+        scaleTo(calcInteractiveScaleFactor(p, mouseClickedOn), {
           x: mouseClickedOn.mouseX,
           y: mouseClickedOn.mouseY,
         });
@@ -408,7 +408,7 @@ export const p5Draw = (p: p5) => {
       drawCrossHair(p);
     } else if (draggingMode === "zoom") {
       const { mouseX, mouseY } = mouseClickedOn;
-      const zoomFactor = calcInteractiveZoomFactor(p, mouseClickedOn);
+      const zoomFactor = calcInteractiveScaleFactor(p, mouseClickedOn);
 
       // クリック位置を画面の中心に置く
       const offsetX = p.width / 2 - mouseX * zoomFactor;
