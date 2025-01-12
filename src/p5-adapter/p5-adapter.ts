@@ -10,7 +10,6 @@ import {
   setPalette,
 } from "@/camera/palette";
 import { getIterationTimeAt } from "@/iteration-buffer/iteration-buffer";
-import { extractMandelbrotParams } from "@/lib/params";
 import { startCalculation } from "@/mandelbrot";
 import {
   cycleMode,
@@ -33,6 +32,7 @@ import {
 import { drawCrossHair, drawScaleRate } from "@/rendering/rendering";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
+import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";
 import { getProgressData } from "@/worker-pool/worker-pool";
 import BigNumber from "bignumber.js";
 import type p5 from "p5";

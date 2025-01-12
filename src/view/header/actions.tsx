@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { copyCurrentParamsToClipboard } from "@/lib/params";
 import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
+import { copyCurrentParamsToClipboard } from "@/utils/mandelbrot-url-params";
 import { IconCircleCheck, IconDownload, IconShare } from "@tabler/icons-react";
 
 export const Actions = () => {

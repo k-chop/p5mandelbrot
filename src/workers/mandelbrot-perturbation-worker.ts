@@ -1,8 +1,11 @@
 /// <reference lib="webworker" />
 
-import { decodeBLATableItems, type BLATableItem } from "@/lib/bla-table-item";
-import { decodeComplexArray } from "@/lib/xn-buffer";
 import { generateLowResDiffSequence } from "@/math/low-res-diff-sequence";
+import {
+  decodeBLATableItems,
+  type BLATableItem,
+} from "@/workers/bla-table-item";
+import { decodeComplexArray } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
   complexArbitary,

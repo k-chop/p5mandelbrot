@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { isGithubPages } from "@/lib/location";
+import { isGithubPages } from "@/utils/location";
 import { IconCircleCheck, IconCopy } from "@tabler/icons-react";
 import { PaletteEditor } from "./palette-editor";
 import { POI } from "./poi";
