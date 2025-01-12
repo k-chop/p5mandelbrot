@@ -1,10 +1,9 @@
 /// <reference lib="webworker" />
 
-import { decodeBLATableItems } from "@/lib/bla-table-item-buffer";
+import { decodeBLATableItems, type BLATableItem } from "@/lib/bla-table-item";
 import { decodeComplexArray } from "@/lib/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
-  BLATableItem,
   complexArbitary,
   dSub,
   generateLowResDiffSequence,

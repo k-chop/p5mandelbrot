@@ -12,13 +12,6 @@ export type ComplexArbitrary = {
   im: BigNumber;
 };
 
-export type BLATableItem = {
-  a: Complex;
-  b: Complex;
-  r: number;
-  l: number;
-};
-
 export function complexArbitary(
   real: BigNumber.Value,
   imaginary: BigNumber.Value,

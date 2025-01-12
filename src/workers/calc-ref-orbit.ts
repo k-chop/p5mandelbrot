@@ -1,10 +1,9 @@
 /// <reference lib="webworker" />
 
-import { encodeBlaTableItems } from "@/lib/bla-table-item-buffer";
+import { encodeBlaTableItems, type BLATableItem } from "@/lib/bla-table-item";
 import { encodeComplexArray } from "@/lib/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
-  BLATableItem,
   Complex,
   ComplexArbitrary,
   add,
