@@ -67,16 +67,17 @@ export const calcVars = (
   width: number,
   height: number,
 ) => {
+  // [-1, 1]に変換
   const normalizedMouseX = new BigNumber(2 * mouseX).div(width).minus(1);
   const normalizedMouseY = new BigNumber(2 * mouseY).div(height).minus(1);
 
   const scaleX = width / Math.min(width, height);
   const scaleY = height / Math.min(width, height);
 
-  const currentMouseX = currentParams.x.plus(
+  const complexMouseX = currentParams.x.plus(
     normalizedMouseX.times(currentParams.r).times(scaleX),
   );
-  const currentMouseY = currentParams.y.minus(
+  const complexMouseY = currentParams.y.minus(
     normalizedMouseY.times(currentParams.r).times(scaleY),
   );
 
@@ -84,8 +85,8 @@ export const calcVars = (
   const N = currentParams.N;
 
   return {
-    mouseX: currentMouseX,
-    mouseY: currentMouseY,
+    mouseX: complexMouseX,
+    mouseY: complexMouseY,
     r,
     N,
   };
