@@ -195,10 +195,6 @@ export const startCalculation = async (
     const offsetX = offsetParams.x;
     const offsetY = offsetParams.y;
 
-    // FIXME: 拡大待ち中や移動が終わる前に再度移動すると表示が壊れる
-    // 拡大開始したときに既にCacheが消えてるからそりゃそうだ
-    // なんとかせい
-
     // 移動した分の再描画範囲を計算
     const iterationBufferTransferedRect = {
       x: offsetX >= 0 ? 0 : Math.abs(offsetX),
