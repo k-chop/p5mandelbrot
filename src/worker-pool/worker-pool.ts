@@ -10,6 +10,7 @@ import {
   ResultSpans,
   mandelbrotWorkerTypes,
 } from "@/types";
+import { debugWatch } from "@/utils/debug";
 import {
   calcNormalizedWorkerIndex,
   findFreeWorkerIndex,
@@ -29,7 +30,6 @@ import {
   getRunningJobsInBatch,
   getWaitingJobs,
   hasRunningJob,
-  hasWaitingJob,
   markDoneJob,
   popWaitingExecutableJob,
   removeBatchFromRunningJobs,
@@ -184,6 +184,7 @@ export function registerBatch(
 }
 
 export function tickWorkerPool() {
+  let jobStarted = false;
   const refPool = getWorkerPool("calc-ref-orbit");
   if (
     (refPool.length > 0 && findFreeWorkerIndex("calc-ref-orbit") === -1) ||
@@ -212,6 +213,7 @@ export function tickWorkerPool() {
       break;
     }
 
+    jobStarted = true;
     start(workerIdx, job);
   }
 
@@ -235,14 +237,16 @@ export function tickWorkerPool() {
       break;
     }
 
+    jobStarted = true;
     start(workerIdx, job);
 
     deleteCompletedDoneJobs();
   }
 
-  if (hasWaitingJob() || !hasRunningJob()) {
-    console.debug(
-      `Job status: running: ${countRunningJobs()}, waiting: ${countWaitingJobs()}`,
+  if (jobStarted || !hasRunningJob()) {
+    debugWatch(
+      "jobStatus",
+      `running: ${countRunningJobs()}, waiting: ${countWaitingJobs()}`,
     );
   }
 }
