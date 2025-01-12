@@ -1,5 +1,10 @@
 import { getIterationTimeAt } from "@/aggregator/aggregator";
-import { initializeCanvasSize, nextBuffer, setupCamera } from "@/camera/camera";
+import {
+  getCanvasSize,
+  initializeCanvasSize,
+  nextBuffer,
+  setupCamera,
+} from "@/camera/camera";
 import {
   changePaletteFromPresets,
   cycleCurrentPaletteOffset,
@@ -11,6 +16,7 @@ import {
   cycleMode,
   getCurrentParams,
   needsRenderForCurrentParams,
+  radiusTimesTo,
   resetIterationCount,
   resetRadius,
   resetScaleParams,
@@ -19,7 +25,6 @@ import {
   setOffsetParams,
   setScaleParams,
   togglePinReference,
-  zoom,
 } from "@/mandelbrot-state/mandelbrot-state";
 import {
   addCurrentLocationToPOIHistory,
@@ -31,6 +36,7 @@ import type { MandelbrotParams } from "@/types";
 import { getProgressData } from "@/worker-pool/worker-pool";
 import BigNumber from "bignumber.js";
 import type p5 from "p5";
+import { isInside } from "./utils";
 
 // p5.jsのcanvas操作状態を管理したりcallbackを定義しておくファイル
 
@@ -90,10 +96,6 @@ const calcInteractiveZoomFactor = (
   const minSize = 20;
   return Math.max(zoomFactor, minSize / p.width);
 };
-
-/** 現在のマウスカーソルがcanvas内に入っているかどうか */
-const isInside = (p: p5) =>
-  0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
 
 /** カーソルの変更 */
 const changeCursor = (p: p5, cursor: string) => {
@@ -278,7 +280,7 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
         setCurrentParams({ x: complexMouseX, y: complexMouseY });
 
         // ズーム適用
-        zoom(1 / zoomFactor);
+        radiusTimesTo(1 / zoomFactor);
 
         const { mouseX: mx, mouseY: my } = mouseClickedOn;
         setScaleParams({
@@ -301,9 +303,9 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
       const rate = getStore("zoomRate");
       // shiftキーを押しながらクリックすると縮小
       if (ev.shiftKey) {
-        zoom(rate);
+        radiusTimesTo(rate);
       } else {
-        zoom(1.0 / rate);
+        radiusTimesTo(1.0 / rate);
       }
 
       setScaleParams({
@@ -324,23 +326,27 @@ export const p5MouseWheel = (p: p5, event: WheelEvent) => {
   if (!isInside(p)) return;
   if (getStore("canvasLocked")) return;
 
-  // canvas内ではスクロールしないようにする
+  // canvas内ではスクロールしないように
   event.preventDefault();
 
-  if (event) {
-    const rate = getStore("zoomRate");
-    if (event.deltaY > 0) {
-      zoom(rate);
-    } else {
-      zoom(1.0 / rate);
-    }
+  zoomTo(event.deltaY > 0);
+};
 
-    setScaleParams({
-      scaleAtX: p.width / 2,
-      scaleAtY: p.height / 2,
-      scale: rate,
-    });
+const zoomTo = (isZoomOut: boolean) => {
+  const rate = getStore("zoomRate");
+  const { width, height } = getCanvasSize();
+
+  if (isZoomOut) {
+    radiusTimesTo(rate);
+  } else {
+    radiusTimesTo(1.0 / rate);
   }
+
+  setScaleParams({
+    scaleAtX: width / 2,
+    scaleAtY: height / 2,
+    scale: rate,
+  });
 };
 
 export const p5KeyPressed = (p: p5, event: KeyboardEvent | undefined) => {
@@ -375,11 +381,11 @@ export const p5KeyPressed = (p: p5, event: KeyboardEvent | undefined) => {
     if (event.key === "9") setDeepIterationCount();
     if (event.key === "r") resetRadius();
     if (event.key === "m") cycleMode();
-    if (event.key === "ArrowDown") zoom(rate);
-    if (event.key === "s") zoom(rate);
+    if (event.key === "ArrowDown") radiusTimesTo(rate);
+    if (event.key === "s") radiusTimesTo(rate);
     if (event.key === "p") togglePinReference();
-    if (event.key === "ArrowUp") zoom(1.0 / rate);
-    if (event.key === "w") zoom(1.0 / rate);
+    if (event.key === "ArrowUp") radiusTimesTo(1.0 / rate);
+    if (event.key === "w") radiusTimesTo(1.0 / rate);
     if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
     if (event.key === "ArrowLeft") setCurrentParams({ N: params.N - diff });
 

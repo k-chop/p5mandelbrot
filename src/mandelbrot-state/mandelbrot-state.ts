@@ -110,7 +110,7 @@ export const cycleMode = () => {
   setOffsetParams({ x: 0, y: 0 });
 };
 
-export const zoom = (times: number) => {
+export const radiusTimesTo = (times: number) => {
   if (1 < times && currentParams.r.times(times).gte(5)) {
     return;
   }
