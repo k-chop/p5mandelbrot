@@ -1,5 +1,4 @@
 import { getCanvasSize } from "@/camera/camera";
-import { isSameParams } from "@/mandelbrot";
 import { getStore, updateStore, updateStoreWith } from "@/store/store";
 import type { MandelbrotParams, OffsetParams } from "@/types";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
@@ -124,3 +123,14 @@ export const togglePinReference = () => {
 
   console.debug(`Reference orbit has pinned: ${newValue}`);
 };
+
+export const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
+  a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.mode === b.mode;
+
+export const cloneParams = (params: MandelbrotParams): MandelbrotParams => ({
+  x: BigNumber(params.x),
+  y: BigNumber(params.y),
+  r: BigNumber(params.r),
+  N: params.N,
+  mode: params.mode,
+});

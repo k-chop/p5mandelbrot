@@ -1,10 +1,12 @@
 import { clearIterationCache } from "@/aggregator/aggregator";
 import { getCurrentPalette, setSerializedPalette } from "@/camera/palette";
 import { getResizedCanvasImageDataURL } from "@/canvas-reference";
-import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import {
+  cloneParams,
+  setCurrentParams,
+} from "@/mandelbrot-state/mandelbrot-state";
 import { deletePreview, savePreview } from "@/store/preview-store";
 import { useCallback } from "react";
-import { cloneParams } from "../../mandelbrot";
 import { updateStore, useStoreValue } from "../../store/store";
 import {
   createNewPOIData,
