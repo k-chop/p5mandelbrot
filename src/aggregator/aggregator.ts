@@ -140,6 +140,9 @@ export const setIterationCache = (cache: IterationBuffer[]): void => {
   iterationCache = cache;
 };
 
+/**
+ * iterationCacheを指定した点を中心にscale倍し、その点が中央に来るようにtranslateする
+ */
 export const scaleIterationCacheAroundPoint = (
   centerX: number,
   centerY: number,
@@ -149,7 +152,7 @@ export const scaleIterationCacheAroundPoint = (
   iterationCache: IterationBuffer[] = getIterationCache(),
 ) => {
   return iterationCache.map((iteration) => {
-    const scaledRect = scaleRectAroundMouse(
+    const scaledRect = scaleRectAroundPoint(
       iteration.rect,
       centerX,
       centerY,
@@ -168,7 +171,10 @@ export const scaleIterationCacheAroundPoint = (
   });
 };
 
-function scaleRectAroundMouse(
+/**
+ * Rectを指定した点を中心にscale倍する
+ */
+function scaleRectAroundPoint(
   rect: Rect,
   centerX: number,
   centerY: number,
