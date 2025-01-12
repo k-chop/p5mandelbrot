@@ -206,33 +206,26 @@ export const p5Setup = (p: p5) => {
   }
 };
 
-export const p5MousePressed = (p: p5) => {
-  if (isInside(p)) {
-    if (getStore("canvasLocked")) return;
-
-    mouseClickStartedInside = true;
-    mouseDragged = false;
-    mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
-  }
+/**
+ * マウス押下時にいろいろ覚えておくやつ
+ */
+export const storeMouseClickInfo = (p: p5) => {
+  mouseClickStartedInside = true;
+  mouseDragged = false;
+  mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
 };
 
-export const p5MouseDragged = (p: p5, ev: MouseEvent) => {
-  if (mouseClickStartedInside) {
-    ev.preventDefault();
+/**
+ * どのモードでドラッグ中かを変更する
+ */
+export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
+  if (!mouseClickStartedInside) return;
 
-    if (ev.buttons === 1) {
-      // RMB
-      draggingMode = "move";
-      changeCursor(p, "grabbing");
-    } else if (ev.buttons === 2) {
-      // LMB
-      draggingMode = "zoom";
-      changeCursor(p, "zoom-in"); // FIXME: あとで始点からどっちにいるかどうかでアイコン変える
-    }
+  draggingMode = state;
+  changeCursor(p, state === "move" ? "grabbing" : "zoom-in");
 
-    mouseDragged = true;
-    isTranslatingMainBuffer = true;
-  }
+  mouseDragged = true;
+  isTranslatingMainBuffer = true;
 };
 
 export const p5MouseReleased = (p: p5, ev: MouseEvent) => {

@@ -2,12 +2,12 @@ import p5 from "p5";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
 import {
+  changeDraggingState,
   keyInputHandler,
   p5Draw,
-  p5MouseDragged,
-  p5MousePressed,
   p5MouseReleased,
   p5Setup,
+  storeMouseClickInfo,
   zoomTo,
 } from "./p5-adapter/p5-adapter";
 import { isInside } from "./p5-adapter/utils";
@@ -28,11 +28,22 @@ const sketch = (p: p5) => {
   };
 
   p.mousePressed = () => {
-    p5MousePressed(p);
+    if (getStore("canvasLocked")) return;
+    if (isInside(p)) {
+      storeMouseClickInfo(p);
+    }
   };
 
   p.mouseDragged = (ev: MouseEvent) => {
-    p5MouseDragged(p, ev);
+    ev.preventDefault(); // 問答無用で止めて良い
+
+    if (ev.buttons === 1) {
+      // RMB
+      changeDraggingState("move", p);
+    } else if (ev.buttons === 2) {
+      // LMB
+      changeDraggingState("zoom", p);
+    }
   };
 
   p.mouseReleased = (ev: MouseEvent) => {
