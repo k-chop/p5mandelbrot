@@ -1,4 +1,4 @@
-import { repeatUntil } from "@/math";
+import { repeatUntil } from "@/math/util";
 import { interpolateRdYlBu } from "d3-scale-chromatic";
 import { describe, expect, it } from "vitest";
 import { ChromaJsPalette } from "./color-chromajs";

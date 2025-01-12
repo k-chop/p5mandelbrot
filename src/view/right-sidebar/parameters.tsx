@@ -13,8 +13,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { GLITCHED_POINT_ITERATION } from "@/rendering/rendering";
 import { AlertCircleIcon } from "lucide-react";
-import { GLITCHED_POINT_ITERATION, setCurrentParams } from "../../mandelbrot";
 import { useStoreValue } from "../../store/store";
 import { useModalState } from "../modal/use-modal-state";
 

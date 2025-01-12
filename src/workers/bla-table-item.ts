@@ -1,6 +1,13 @@
-import { BLATableItem } from "@/math";
+import type { Complex } from "@/math/complex";
 
 const ITEM_BYTE_LENGTH = 44;
+
+export type BLATableItem = {
+  a: Complex;
+  b: Complex;
+  r: number;
+  l: number;
+};
 
 // このファイルはほとんどChatGPTくんによって生成されました
 

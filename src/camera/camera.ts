@@ -1,8 +1,8 @@
+import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { IterationBuffer } from "@/types";
 import p5 from "p5";
-import { getIterationCache } from "../aggregator/aggregator";
-import { getCurrentParams } from "../mandelbrot";
-import { Rect } from "../rect";
+import { getIterationCache } from "../iteration-buffer/iteration-buffer";
+import { Rect } from "../math/rect";
 import { renderIterationsToPixel } from "../rendering/rendering";
 import { getCurrentPalette, markAsRendered, needsRerender } from "./palette";
 
@@ -13,7 +13,17 @@ let height: number;
 
 let bufferRect: Rect;
 
-export const getCanvasWidth = () => width;
+/**
+ * FIXME: responsiveにするときに任意の値で初期化できるようにする
+ */
+export const initializeCanvasSize = (w: number = 800, h: number = 800) => {
+  width = w;
+  height = h;
+
+  return { width, height };
+};
+export const getCanvasSize = () => ({ width, height });
+export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
 
 export const setupCamera = (p: p5, w: number, h: number) => {
   mainBuffer = p.createGraphics(w, h);

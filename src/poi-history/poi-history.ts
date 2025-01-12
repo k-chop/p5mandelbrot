@@ -1,6 +1,6 @@
 import { getCurrentPalette } from "@/camera/palette";
-import { getResizedCanvasImageDataURL } from "@/canvas-reference";
-import { getCurrentParams } from "@/mandelbrot";
+import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
 import { createNewPOIData } from "@/store/sync-storage/poi-list";
 import type { POIData } from "@/types";
 import { eventmit } from "eventmit";

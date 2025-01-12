@@ -1,7 +1,8 @@
-import { getCanvasSize } from "../mandelbrot";
-import { Rect } from "../rect";
+import { getCanvasSize } from "@/camera/camera";
+import { Resolution } from "@/rendering/rendering";
+import { Rect } from "../math/rect";
 import { bufferLocalLogicalIndex } from "../rendering/rendering";
-import { IterationBuffer, Resolution } from "../types";
+import { IterationBuffer } from "../types";
 
 // FIXME: 配列全部舐める必要があるのよくないので良い感じにデータを持つようにする
 let iterationCache: IterationBuffer[] = [];
@@ -183,7 +184,7 @@ export const scaleIterationCacheAroundPoint = (
 /**
  * Rectを指定した点を中心にscale倍する
  */
-function scaleRectAroundPoint(
+export function scaleRectAroundPoint(
   rect: Rect,
   centerX: number,
   centerY: number,

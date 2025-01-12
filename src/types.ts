@@ -1,20 +1,12 @@
 import { BigNumber } from "bignumber.js";
-import { Rect } from "./rect";
+import { Rect } from "./math/rect";
+import type { Resolution } from "./rendering/rendering";
 import {
   BatchCompleteCallback,
   BatchProgressChangedCallback,
 } from "./worker-pool/worker-facade";
 
-export interface Resolution {
-  width: number;
-  height: number;
-}
-
-export interface IterationResult {
-  type: "result";
-  iterations: ArrayBuffer;
-  elapsed: number;
-}
+// FIXME: このファイルは破壊しろ
 
 export interface IterationIntermediateResult {
   type: "intermediateResult";

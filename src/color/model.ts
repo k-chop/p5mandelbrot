@@ -1,4 +1,4 @@
-import { clamp } from "@/math";
+import { clamp } from "@/math/util";
 
 export type RGB = [number, number, number];
 

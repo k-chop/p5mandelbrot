@@ -1,4 +1,4 @@
-import { safeParseInt } from "@/math";
+import { safeParseInt } from "@/math/util";
 import { Hsv, convertHsvToRgb, samples } from "culori";
 import { BasePalette } from "./color";
 import { Palette, RGB, buildRGB32Byte, clampedPaletteParams } from "./model";

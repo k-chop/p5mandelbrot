@@ -1,19 +1,21 @@
 /// <reference lib="webworker" />
 
-import { decodeBLATableItems } from "@/lib/bla-table-item-buffer";
-import { decodeComplexArray } from "@/lib/xn-buffer";
+import { generateLowResDiffSequence } from "@/math/low-res-diff-sequence";
+import {
+  decodeBLATableItems,
+  type BLATableItem,
+} from "@/workers/bla-table-item";
+import { decodeComplexArray } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
-  BLATableItem,
   complexArbitary,
   dSub,
-  generateLowResDiffSequence,
   mulIm,
   mulRe,
   nNorm,
+  pixelToComplexCoordinateComplexArbitrary,
   toComplex,
-} from "../math";
-import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
+} from "../math/complex";
 import { IterationWorkerParams } from "../types";
 import { RefOrbitContextPopulated } from "./calc-ref-orbit";
 

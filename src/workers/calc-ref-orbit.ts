@@ -1,10 +1,12 @@
 /// <reference lib="webworker" />
 
-import { encodeBlaTableItems } from "@/lib/bla-table-item-buffer";
-import { encodeComplexArray } from "@/lib/xn-buffer";
+import {
+  encodeBlaTableItems,
+  type BLATableItem,
+} from "@/workers/bla-table-item";
+import { encodeComplexArray } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
-  BLATableItem,
   Complex,
   ComplexArbitrary,
   add,
@@ -17,9 +19,9 @@ import {
   mul,
   mulN,
   norm,
+  pixelToComplexCoordinateComplexArbitrary,
   toComplex,
-} from "../math";
-import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
+} from "../math/complex";
 import { BLATableBuffer, RefOrbitWorkerParams, XnBuffer } from "../types";
 
 export type RefOrbitContext = {
