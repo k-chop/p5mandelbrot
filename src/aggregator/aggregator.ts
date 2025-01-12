@@ -156,9 +156,6 @@ export const scaleIterationCacheAroundPoint = (
       scale,
     );
 
-    scaledRect.x -= centerX - canvasWidth / 2;
-    scaledRect.y -= centerY - canvasHeight / 2;
-
     return {
       rect: scaledRect,
       buffer: iteration.buffer,
@@ -167,25 +164,20 @@ export const scaleIterationCacheAroundPoint = (
   });
 };
 
-// マウス座標 (mouseX, mouseY) と rect 座標 (x, y, width, height) があるとします。
-// rect 内部のローカル座標にマウス位置を変換してから拡大縮小し、再度グローバル座標に戻す例です。
 function scaleRectAroundMouse(
   rect: Rect,
-  mouseX: number,
-  mouseY: number,
+  centerX: number,
+  centerY: number,
   scale: number,
 ) {
-  // マウス座標を rect 原点基準に変換（ローカル座標系へ）
-  const localMouseX = mouseX - rect.x;
-  const localMouseY = mouseY - rect.y;
+  const localX = rect.x - centerX;
+  const localY = rect.y - centerY;
 
-  // 幅・高さをスケール
   const newWidth = rect.width * scale;
   const newHeight = rect.height * scale;
 
-  // rect.x, y を「マウス座標を中心に」スケールした分だけずらす
-  const newX = rect.x + localMouseX - localMouseX * scale;
-  const newY = rect.y + localMouseY - localMouseY * scale;
+  const newX = centerX + localX * scale;
+  const newY = centerY + localY * scale;
 
   return {
     x: newX,
