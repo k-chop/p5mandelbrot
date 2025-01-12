@@ -244,6 +244,12 @@ const sketch = (p: p5) => {
         } else {
           zoom(1.0 / rate);
         }
+
+        setScaleParams({
+          scaleAtX: p.mouseX,
+          scaleAtY: p.mouseY,
+          scale: 1 / rate,
+        });
       }
     }
 
@@ -267,6 +273,12 @@ const sketch = (p: p5) => {
       } else {
         zoom(1.0 / rate);
       }
+
+      setScaleParams({
+        scaleAtX: p.width / 2,
+        scaleAtY: p.height / 2,
+        scale: 1 / rate,
+      });
     }
   };
 
