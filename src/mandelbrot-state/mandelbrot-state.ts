@@ -69,10 +69,10 @@ export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
   if (needModeChange) {
     const workerCount = getStore("workerCount");
     prepareWorkerPool(workerCount, currentParams.mode);
-    setOffsetParams({ x: 0, y: 0 });
+    resetOffsetParams();
   }
   if (needResetOffset) {
-    setOffsetParams({ x: 0, y: 0 });
+    resetOffsetParams();
   }
 };
 
@@ -80,6 +80,7 @@ export const getOffsetParams = () => offsetParams;
 export const setOffsetParams = (params: Partial<OffsetParams>) => {
   offsetParams = { ...offsetParams, ...params };
 };
+export const resetOffsetParams = () => setOffsetParams({ x: 0, y: 0 });
 
 export const getScaleParams = () => scaleParams;
 export const setScaleParams = (params: Partial<typeof scaleParams>) => {

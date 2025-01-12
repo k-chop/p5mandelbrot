@@ -16,6 +16,7 @@ import {
   getPrevBatchId,
   getScaleParams,
   markAsRenderedWithCurrentParams,
+  resetOffsetParams,
   resetScaleParams,
   setPrevBatchId,
 } from "./mandelbrot-state/mandelbrot-state";
@@ -58,6 +59,7 @@ export const startCalculation = async (
   // ドラッグ中に描画をずらしていたのを戻す
   onTranslated();
   resetScaleParams();
+  resetOffsetParams();
 
   const divideRectCount = getWorkerCount("calc-iteration");
   const calculationRects = getCalculationTargetRects(
