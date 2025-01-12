@@ -2,7 +2,7 @@
 
 import { decodeBLATableItems, type BLATableItem } from "@/lib/bla-table-item";
 import { decodeComplexArray } from "@/lib/xn-buffer";
-import { generateLowResDiffSequence } from "@/math";
+import { generateLowResDiffSequence } from "@/math/low-res-diff-sequence";
 import BigNumber from "bignumber.js";
 import {
   complexArbitary,
