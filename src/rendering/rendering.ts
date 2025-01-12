@@ -5,6 +5,11 @@ import { GLITCHED_POINT_ITERATION } from "../mandelbrot";
 import { Rect } from "../rect";
 import { IterationBuffer, Resolution } from "../types";
 
+/**
+ * 指定した座標をpaletteとiterationの値に応じて塗りつぶす
+ *
+ * retina対応
+ */
 export const fillColor = (
   x: number,
   y: number,
@@ -84,7 +89,7 @@ export const renderIterationsToPixel = (
   for (const iteration of iterationsResult) {
     const { rect, buffer, resolution } = iteration;
 
-    // worldRectとiterationのrectが一致する箇所だけ描画する
+    // worldRectとiterationのrectが重なっている部分だけ描画する
     const startY = Math.max(rect.y, worldRect.y);
     const startX = Math.max(rect.x, worldRect.x);
     const endY = Math.min(rect.y + rect.height, worldRect.y + worldRect.height);
