@@ -209,66 +209,6 @@ export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
   isTranslatingMainBuffer = true;
 };
 
-// ================================================================================================
-// 以下、p5.jsのcallback関数
-// ================================================================================================
-
-export const p5Setup = (p: p5) => {
-  UNSAFE_p5Instance = p;
-
-  const { width, height } = initializeCanvasSize();
-
-  const canvas = p.createCanvas(width, height);
-  // canvas上での右クリックを無効化
-  canvas.elt.addEventListener("contextmenu", (e: Event) => e.preventDefault());
-  setupCamera(p, width, height);
-  resetScaleParams();
-
-  p.colorMode(p.HSB, 360, 100, 100, 100);
-  p.cursor(p.CROSS);
-
-  initializePOIHistory();
-
-  const initialParams = extractMandelbrotParams();
-
-  if (initialParams) {
-    setCurrentParams(initialParams.mandelbrot);
-    setPalette(initialParams.palette);
-  }
-};
-
-export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
-  if (!ev) return;
-  if (getStore("canvasLocked")) return;
-
-  ev.preventDefault();
-
-  // canvas内でクリックして、canvas内で離した場合のみクリック時の処理を行う
-  // これで外からcanvas内に流れてきた場合の誤クリックを防げる
-  if (!mouseClickStartedInside) return;
-
-  if (mouseDragged) {
-    if (draggingMode === "move") {
-      // 左クリックドラッグ(移動)確定時
-      const dragOffset = getDraggingPixelDiff(p, mouseClickedOn);
-
-      moveTo(dragOffset);
-    } else if (draggingMode === "zoom") {
-      // 右クリックドラッグ(拡縮)確定時
-      scaleTo(calcInteractiveScaleFactor(p, mouseClickedOn), {
-        x: mouseClickedOn.mouseX,
-        y: mouseClickedOn.mouseY,
-      });
-    }
-  } else {
-    // クリック時
-    scaleTo(getStore("zoomRate"), { x: p.mouseX, y: p.mouseY });
-  }
-
-  changeCursor(p, p.CROSS);
-  changeToMouseReleasedState();
-};
-
 /**
  * ドラッグした分だけ位置を移動する
  */
@@ -337,6 +277,66 @@ export const zoomTo = (isZoomOut: boolean) => {
     scaleAtY: height / 2,
     scale: rate,
   });
+};
+
+// ================================================================================================
+// 以下、p5.jsのcallback関数
+// ================================================================================================
+
+export const p5Setup = (p: p5) => {
+  UNSAFE_p5Instance = p;
+
+  const { width, height } = initializeCanvasSize();
+
+  const canvas = p.createCanvas(width, height);
+  // canvas上での右クリックを無効化
+  canvas.elt.addEventListener("contextmenu", (e: Event) => e.preventDefault());
+  setupCamera(p, width, height);
+  resetScaleParams();
+
+  p.colorMode(p.HSB, 360, 100, 100, 100);
+  p.cursor(p.CROSS);
+
+  initializePOIHistory();
+
+  const initialParams = extractMandelbrotParams();
+
+  if (initialParams) {
+    setCurrentParams(initialParams.mandelbrot);
+    setPalette(initialParams.palette);
+  }
+};
+
+export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
+  if (!ev) return;
+  if (getStore("canvasLocked")) return;
+
+  ev.preventDefault();
+
+  // canvas内でクリックして、canvas内で離した場合のみクリック時の処理を行う
+  // これで外からcanvas内に流れてきた場合の誤クリックを防げる
+  if (!mouseClickStartedInside) return;
+
+  if (mouseDragged) {
+    if (draggingMode === "move") {
+      // 左クリックドラッグ(移動)確定時
+      const dragOffset = getDraggingPixelDiff(p, mouseClickedOn);
+
+      moveTo(dragOffset);
+    } else if (draggingMode === "zoom") {
+      // 右クリックドラッグ(拡縮)確定時
+      scaleTo(calcInteractiveScaleFactor(p, mouseClickedOn), {
+        x: mouseClickedOn.mouseX,
+        y: mouseClickedOn.mouseY,
+      });
+    }
+  } else {
+    // クリック時
+    scaleTo(getStore("zoomRate"), { x: p.mouseX, y: p.mouseY });
+  }
+
+  changeCursor(p, p.CROSS);
+  changeToMouseReleasedState();
 };
 
 /**
