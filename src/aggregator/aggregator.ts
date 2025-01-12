@@ -183,7 +183,7 @@ export const scaleIterationCacheAroundPoint = (
 /**
  * Rectを指定した点を中心にscale倍する
  */
-function scaleRectAroundPoint(
+export function scaleRectAroundPoint(
   rect: Rect,
   centerX: number,
   centerY: number,
