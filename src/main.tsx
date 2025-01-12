@@ -7,9 +7,10 @@ import {
   p5MouseDragged,
   p5MousePressed,
   p5MouseReleased,
-  p5MouseWheel,
   p5Setup,
+  zoomTo,
 } from "./p5-adapter/p5-adapter";
+import { isInside } from "./p5-adapter/utils";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
 import {
@@ -39,7 +40,12 @@ const sketch = (p: p5) => {
   };
 
   p.mouseWheel = (event: WheelEvent) => {
-    p5MouseWheel(p, event);
+    if (!isInside(p)) return;
+    if (getStore("canvasLocked")) return;
+
+    event.preventDefault(); // canvas内ではスクロールしないように
+
+    zoomTo(event.deltaY > 0);
   };
 
   p.keyPressed = (event: KeyboardEvent | undefined) => {

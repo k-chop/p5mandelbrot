@@ -322,17 +322,7 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
   draggingMode = undefined;
 };
 
-export const p5MouseWheel = (p: p5, event: WheelEvent) => {
-  if (!isInside(p)) return;
-  if (getStore("canvasLocked")) return;
-
-  // canvas内ではスクロールしないように
-  event.preventDefault();
-
-  zoomTo(event.deltaY > 0);
-};
-
-const zoomTo = (isZoomOut: boolean) => {
+export const zoomTo = (isZoomOut: boolean) => {
   const rate = getStore("zoomRate");
   const { width, height } = getCanvasSize();
 
