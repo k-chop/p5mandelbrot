@@ -280,12 +280,7 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
       setCurrentParams({ x: complexMouseX, y: complexMouseY });
 
       const rate = getStore("zoomRate");
-      // shiftキーを押しながらクリックすると縮小
-      if (ev.shiftKey) {
-        radiusTimesTo(rate);
-      } else {
-        radiusTimesTo(1.0 / rate);
-      }
+      radiusTimesTo(1.0 / rate);
 
       setScaleParams({
         scaleAtX: p.mouseX,
