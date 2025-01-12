@@ -97,12 +97,7 @@ const changeCursor = (p: p5, cursor: string) => {
 
 /** canvasの状態をstoreに反映する */
 const syncStoreValues = (p: p5) => {
-  const { mouseX, mouseY, r, N } = calcVars(
-    p.mouseX,
-    p.mouseY,
-    p.width,
-    p.height,
-  );
+  const { mouseX, mouseY } = calcVars(p.mouseX, p.mouseY, p.width, p.height);
 
   const iteration = getIterationTimeAt(p.mouseX, p.mouseY);
 
@@ -117,8 +112,8 @@ const syncStoreValues = (p: p5) => {
   updateStore("centerY", params.y);
   updateStore("mouseX", mouseX);
   updateStore("mouseY", mouseY);
-  updateStore("r", r);
-  updateStore("N", N);
+  updateStore("r", params.r);
+  updateStore("N", params.N);
   if (iteration !== -1) {
     updateStore("iteration", ifInside(iteration));
   }
@@ -147,14 +142,9 @@ const calcVars = (
     normalizedMouseY.times(currentParams.r).times(scaleY),
   );
 
-  const r = currentParams.r;
-  const N = currentParams.N;
-
   return {
     mouseX: complexMouseX,
     mouseY: complexMouseY,
-    r,
-    N,
   };
 };
 
