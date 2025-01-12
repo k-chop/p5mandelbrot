@@ -144,7 +144,6 @@ export const scaleIterationCacheAroundPoint = (
   canvasHeight: number,
 ): void => {
   iterationCache = iterationCache.map((iteration) => {
-    // iteration.rectの中心で拡大縮小した場合を考える
     const scaledRect = scaleRectAroundMouse(
       iteration.rect,
       centerX,
