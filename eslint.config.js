@@ -18,7 +18,7 @@ export default tseslint.config(
       ...pluginReactHooks.configs.recommended.rules,
     },
   },
-  { ignores: ["dist/", "src/components/ui/"] },
+  { ignores: ["dist/", "src/shadcn/"] },
   eslint.configs.recommended,
   tseslint.configs.recommended,
   reactPlugin.configs.flat?.recommended,
