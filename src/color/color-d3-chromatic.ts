@@ -1,4 +1,4 @@
-import { safeParseInt } from "@/math";
+import { safeParseInt } from "@/math/util";
 import { samples } from "culori";
 import { color } from "d3-color";
 import {
