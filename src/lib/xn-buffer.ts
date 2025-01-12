@@ -1,4 +1,4 @@
-import { Complex } from "@/math";
+import type { Complex } from "@/math/complex";
 
 const COMPLEX_BYTE_LENGTH = 16;
 

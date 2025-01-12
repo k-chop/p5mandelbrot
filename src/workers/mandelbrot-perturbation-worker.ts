@@ -2,17 +2,17 @@
 
 import { decodeBLATableItems, type BLATableItem } from "@/lib/bla-table-item";
 import { decodeComplexArray } from "@/lib/xn-buffer";
+import { generateLowResDiffSequence } from "@/math";
 import BigNumber from "bignumber.js";
 import {
   complexArbitary,
   dSub,
-  generateLowResDiffSequence,
   mulIm,
   mulRe,
   nNorm,
+  pixelToComplexCoordinateComplexArbitrary,
   toComplex,
-} from "../math";
-import { pixelToComplexCoordinateComplexArbitrary } from "../math/complex-plane";
+} from "../math/complex";
 import { IterationWorkerParams } from "../types";
 import { RefOrbitContextPopulated } from "./calc-ref-orbit";
 
