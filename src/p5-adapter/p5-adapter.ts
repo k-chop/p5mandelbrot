@@ -322,6 +322,11 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
   draggingMode = undefined;
 };
 
+/**
+ * ズームイン・アウトの操作を行う
+ *
+ * rとscaleParamsを更新する
+ */
 export const zoomTo = (isZoomOut: boolean) => {
   const rate = getStore("zoomRate");
   const { width, height } = getCanvasSize();
@@ -339,48 +344,45 @@ export const zoomTo = (isZoomOut: boolean) => {
   });
 };
 
-export const p5KeyPressed = (p: p5, event: KeyboardEvent | undefined) => {
-  if (getStore("canvasLocked")) return;
+/**
+ * 各種キーボード入力に対する処理
+ */
+export const keyInputHandler = (event: KeyboardEvent) => {
+  let diff = 100;
+  const params = getCurrentParams();
+  const rate = getStore("zoomRate");
 
-  if (event) {
-    let diff = 100;
-    const params = getCurrentParams();
-    const rate = getStore("zoomRate");
-
-    if (event.shiftKey) {
-      const N = params.N;
-      if (N < 1000) {
-        diff = 100;
-      } else if (N < 10000) {
-        diff = 1000;
-      } else if (N < 100000) {
-        diff = 10000;
-      } else {
-        diff = 100000;
-      }
+  if (event.shiftKey) {
+    const N = params.N;
+    if (N < 1000) {
+      diff = 100;
+    } else if (N < 10000) {
+      diff = 1000;
+    } else if (N < 100000) {
+      diff = 10000;
+    } else {
+      diff = 100000;
     }
-    if (event.key === "1") changePaletteFromPresets(0);
-    if (event.key === "2") changePaletteFromPresets(1);
-    if (event.key === "3") changePaletteFromPresets(2);
-    if (event.key === "4") changePaletteFromPresets(3);
-    if (event.key === "5") changePaletteFromPresets(4);
-    if (event.key === "6") changePaletteFromPresets(5);
-    if (event.key === "7") changePaletteFromPresets(6);
-    if (event.key === "8") changePaletteFromPresets(7);
-    if (event.key === "0") resetIterationCount();
-    if (event.key === "9") setDeepIterationCount();
-    if (event.key === "r") resetRadius();
-    if (event.key === "m") cycleMode();
-    if (event.key === "ArrowDown") radiusTimesTo(rate);
-    if (event.key === "s") radiusTimesTo(rate);
-    if (event.key === "p") togglePinReference();
-    if (event.key === "ArrowUp") radiusTimesTo(1.0 / rate);
-    if (event.key === "w") radiusTimesTo(1.0 / rate);
-    if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
-    if (event.key === "ArrowLeft") setCurrentParams({ N: params.N - diff });
-
-    event.preventDefault();
   }
+  if (event.key === "1") changePaletteFromPresets(0);
+  if (event.key === "2") changePaletteFromPresets(1);
+  if (event.key === "3") changePaletteFromPresets(2);
+  if (event.key === "4") changePaletteFromPresets(3);
+  if (event.key === "5") changePaletteFromPresets(4);
+  if (event.key === "6") changePaletteFromPresets(5);
+  if (event.key === "7") changePaletteFromPresets(6);
+  if (event.key === "8") changePaletteFromPresets(7);
+  if (event.key === "0") resetIterationCount();
+  if (event.key === "9") setDeepIterationCount();
+  if (event.key === "r") resetRadius();
+  if (event.key === "m") cycleMode();
+  if (event.key === "ArrowDown") radiusTimesTo(rate);
+  if (event.key === "s") radiusTimesTo(rate);
+  if (event.key === "p") togglePinReference();
+  if (event.key === "ArrowUp") radiusTimesTo(1.0 / rate);
+  if (event.key === "w") radiusTimesTo(1.0 / rate);
+  if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
+  if (event.key === "ArrowLeft") setCurrentParams({ N: params.N - diff });
 };
 
 export const p5Draw = (p: p5) => {

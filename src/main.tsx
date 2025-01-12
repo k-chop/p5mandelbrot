@@ -2,8 +2,8 @@ import p5 from "p5";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
 import {
+  keyInputHandler,
   p5Draw,
-  p5KeyPressed,
   p5MouseDragged,
   p5MousePressed,
   p5MouseReleased,
@@ -49,7 +49,12 @@ const sketch = (p: p5) => {
   };
 
   p.keyPressed = (event: KeyboardEvent | undefined) => {
-    p5KeyPressed(p, event);
+    if (getStore("canvasLocked")) return;
+
+    if (event) {
+      event.preventDefault();
+      keyInputHandler(event);
+    }
   };
 
   p.draw = () => {
