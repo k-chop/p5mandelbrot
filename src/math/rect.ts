@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
-import { getOffsetParams } from "./mandelbrot-state/mandelbrot-state";
-import type { OffsetParams } from "./types";
+import { getOffsetParams } from "../mandelbrot-state/mandelbrot-state";
+import type { OffsetParams } from "../types";
 
 /** pixel単位の矩形 */
 export interface Rect {

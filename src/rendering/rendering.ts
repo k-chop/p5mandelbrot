@@ -1,7 +1,7 @@
 import { Palette } from "@/color";
 import p5 from "p5";
 import { getCanvasSize } from "../camera/camera";
-import { Rect } from "../rect";
+import { Rect } from "../math/rect";
 import { IterationBuffer, Resolution } from "../types";
 
 /** GLITCHEDな場合に設定するiteration count値 */

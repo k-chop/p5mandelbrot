@@ -2,7 +2,7 @@ import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { IterationBuffer } from "@/types";
 import p5 from "p5";
 import { getIterationCache } from "../aggregator/aggregator";
-import { Rect } from "../rect";
+import { Rect } from "../math/rect";
 import { renderIterationsToPixel } from "../rendering/rendering";
 import { getCurrentPalette, markAsRendered, needsRerender } from "./palette";
 

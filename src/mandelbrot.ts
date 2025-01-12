@@ -20,7 +20,7 @@ import {
   resetScaleParams,
   setPrevBatchId,
 } from "./mandelbrot-state/mandelbrot-state";
-import { getCalculationTargetRects, Rect } from "./rect";
+import { getCalculationTargetRects, Rect } from "./math/rect";
 import { getStore } from "./store/store";
 import { getWorkerCount } from "./worker-pool/pool-instance";
 import {

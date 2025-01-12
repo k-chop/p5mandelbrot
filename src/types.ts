@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import { Rect } from "./rect";
+import { Rect } from "./math/rect";
 import {
   BatchCompleteCallback,
   BatchProgressChangedCallback,
