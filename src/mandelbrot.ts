@@ -132,12 +132,20 @@ export const setOffsetParams = (params: Partial<OffsetParams>) => {
   offsetParams = { ...offsetParams, ...params };
 };
 
-let scaleParams = { scaleAtX: 0, scaleAtY: 0, scale: 1 };
+let scaleParams = {
+  scaleAtX: Math.round(width / 2),
+  scaleAtY: Math.round(height / 2),
+  scale: 1,
+};
 export const setScaleParams = (params: Partial<typeof scaleParams>) => {
   scaleParams = { ...scaleParams, ...params };
 };
 export const resetScaleParams = () =>
-  setScaleParams({ scaleAtX: 0, scaleAtY: 0, scale: 1 });
+  setScaleParams({
+    scaleAtX: Math.round(width / 2),
+    scaleAtY: Math.round(height / 2),
+    scale: 1,
+  });
 export const getScaleParams = () => scaleParams;
 
 export const resetIterationCount = () => setCurrentParams({ N: DEFAULT_N });
@@ -212,6 +220,7 @@ export const startCalculation = async (
   } else {
     // 拡縮の場合は倍率を指定してキャッシュを書き換える
     const { scaleAtX, scaleAtY, scale } = getScaleParams();
+    console.log({ scaleAtX, scaleAtY, scale });
 
     const scaled = scaleIterationCacheAroundPoint(
       scaleAtX,
