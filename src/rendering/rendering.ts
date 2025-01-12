@@ -1,9 +1,9 @@
 import { Palette } from "@/color";
 import p5 from "p5";
-import { getCanvasWidth } from "./camera/camera";
-import { GLITCHED_POINT_ITERATION } from "./mandelbrot";
-import { Rect } from "./rect";
-import { IterationBuffer, Resolution } from "./types";
+import { getCanvasWidth } from "../camera/camera";
+import { GLITCHED_POINT_ITERATION } from "../mandelbrot";
+import { Rect } from "../rect";
+import { IterationBuffer, Resolution } from "../types";
 
 export const fillColor = (
   x: number,

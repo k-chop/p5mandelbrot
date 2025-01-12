@@ -1,5 +1,7 @@
 // デバッグ時に使う関数
 
+import { getIterationCache } from "@/aggregator/aggregator";
+
 const watchMap = new Map<string, string>();
 
 /**
@@ -35,4 +37,18 @@ export const logInterval = (
     console.debug(`[${name}]`, value);
     logMap.set(name, now);
   }
+};
+
+let willStop = -1;
+export const checkpoint = () => {
+  if (willStop > 0) {
+    willStop--;
+  } else if (willStop === 0) {
+    const iter = getIterationCache();
+    debugger;
+    willStop = -1;
+  }
+};
+export const nextStop = (count: number) => {
+  willStop = count;
 };

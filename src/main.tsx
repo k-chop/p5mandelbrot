@@ -30,7 +30,7 @@ import {
   addCurrentLocationToPOIHistory,
   initializePOIHistory,
 } from "./poi-history/poi-history";
-import { drawCrossHair } from "./rendering";
+import { drawCrossHair } from "./rendering/rendering";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
 import {
@@ -38,6 +38,7 @@ import {
   readSettingsFromStorage,
 } from "./store/sync-storage/settings";
 import "./style.css";
+import { checkpoint } from "./utils/debug";
 import { AppRoot } from "./view/app-root";
 import { prepareWorkerPool } from "./worker-pool/pool-instance";
 import { getProgressData } from "./worker-pool/worker-pool";
@@ -375,7 +376,7 @@ const sketch = (p: p5) => {
     } else {
       p.image(mainBuffer, 0, 0);
     }
-
+    checkpoint();
     drawInfo(p);
 
     if (shouldSavePOIHistoryNextRender) {
