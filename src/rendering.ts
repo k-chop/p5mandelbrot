@@ -17,8 +17,9 @@ export const fillColor = (
 ) => {
   for (let i = 0; i < density; i++) {
     for (let j = 0; j < density; j++) {
-      const pixelIndex =
-        4 * ((y * density + j) * canvasWidth * density + (x * density + i));
+      const pixelIndex = Math.floor(
+        4 * ((y * density + j) * canvasWidth * density + (x * density + i)),
+      );
 
       // iterationが-1のときはglitchが起きているので白で塗りつぶす
       if (iteration === GLITCHED_POINT_ITERATION) {
