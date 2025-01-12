@@ -214,7 +214,7 @@ export const startCalculation = async (
   } else {
     // 移動していない場合は再利用するCacheがないので消す
     const { scaleAtX, scaleAtY, scale } = getScaleParams();
-    scaleIterationCacheAroundPoint(scaleAtX, scaleAtY, scale);
+    scaleIterationCacheAroundPoint(scaleAtX, scaleAtY, scale, width, height);
     clearMainBuffer();
     renderToMainBuffer();
     resetScaleParams();
