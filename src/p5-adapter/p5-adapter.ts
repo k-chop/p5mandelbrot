@@ -230,15 +230,14 @@ export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
 
 export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
   if (!ev) return;
+  if (getStore("canvasLocked")) return;
+
+  ev.preventDefault();
 
   // canvas内でクリックして、canvas内で離した場合のみクリック時の処理を行う
   // これで外からcanvas内に流れてきた場合の誤クリックを防げる
 
   if (mouseClickStartedInside) {
-    if (getStore("canvasLocked")) return;
-
-    ev.preventDefault();
-
     if (mouseDragged) {
       if (draggingMode === "move") {
         // 左クリックドラッグ(移動)確定時
