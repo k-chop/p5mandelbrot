@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
 import { getOffsetParams } from "./mandelbrot-state/mandelbrot-state";
+import type { OffsetParams } from "./types";
 
 /** pixel単位の矩形 */
 export interface Rect {
@@ -167,4 +168,30 @@ export const getOffsetRects = (
   }
 
   return rects;
+};
+
+/**
+ * 描画対象のRectを計算する
+ *
+ * offsetがある場合は描画範囲を狭くできる
+ */
+export const getCalculationTargetRects = (
+  canvasWidth: number,
+  canvasHeight: number,
+  divideRectCount: number,
+  offsetParams: OffsetParams,
+) => {
+  if (offsetParams.x !== 0 || offsetParams.y !== 0) {
+    const expectedDivideCount = Math.max(divideRectCount, 2);
+    return divideRect(
+      getOffsetRects(canvasWidth, canvasHeight),
+      expectedDivideCount,
+    );
+  } else {
+    // FIXME: 縮小する場合にもっと小さくできる
+    return divideRect(
+      [{ x: 0, y: 0, width: canvasWidth, height: canvasHeight }],
+      divideRectCount,
+    );
+  }
 };

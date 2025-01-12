@@ -20,9 +20,8 @@ import {
   resetScaleParams,
   setPrevBatchId,
 } from "./mandelbrot-state/mandelbrot-state";
-import { divideRect, getOffsetRects, Rect } from "./rect";
+import { getCalculationTargetRects, Rect } from "./rect";
 import { getStore } from "./store/store";
-import type { OffsetParams } from "./types";
 import { getWorkerCount } from "./worker-pool/pool-instance";
 import {
   cancelBatch,
@@ -52,6 +51,7 @@ export const startCalculation = async (
     getOffsetParams(),
   );
 
+  // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
   removeUnusedIterationCache();
   clearMainBuffer();
   renderToMainBuffer(rect);
@@ -61,15 +61,15 @@ export const startCalculation = async (
   resetScaleParams();
   resetOffsetParams();
 
+  // workerに分配するために描画範囲を分割
   const divideRectCount = getWorkerCount("calc-iteration");
+  const currentParams = getCurrentParams();
   const calculationRects = getCalculationTargetRects(
     canvasWidth,
     canvasHeight,
     divideRectCount,
     getOffsetParams(),
   );
-
-  const currentParams = getCurrentParams();
   const units = calculationRects.map((rect) => ({
     rect,
     mandelbrotParams: currentParams,
@@ -127,31 +127,5 @@ const translateIterationCache = (
     setIterationCache(scaled);
 
     return getWholeCanvasRect();
-  }
-};
-
-/**
- * 描画対象のRectを計算する
- *
- * offsetがある場合は描画範囲を狭くできる
- */
-const getCalculationTargetRects = (
-  canvasWidth: number,
-  canvasHeight: number,
-  divideRectCount: number,
-  offsetParams: OffsetParams = getOffsetParams(),
-) => {
-  if (offsetParams.x !== 0 || offsetParams.y !== 0) {
-    const expectedDivideCount = Math.max(divideRectCount, 2);
-    return divideRect(
-      getOffsetRects(canvasWidth, canvasHeight),
-      expectedDivideCount,
-    );
-  } else {
-    // FIXME: 縮小する場合にもっと小さくできる
-    return divideRect(
-      [{ x: 0, y: 0, width: canvasWidth, height: canvasHeight }],
-      divideRectCount,
-    );
   }
 };
