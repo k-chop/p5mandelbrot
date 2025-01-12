@@ -180,8 +180,8 @@ function scaleRectAroundMouse(
   const newY = centerY + localY * scale;
 
   return {
-    x: newX,
-    y: newY,
+    x: Math.round(newX),
+    y: Math.round(newY),
     width: newWidth,
     height: newHeight,
   };
