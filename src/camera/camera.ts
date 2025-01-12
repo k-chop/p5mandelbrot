@@ -23,6 +23,7 @@ export const initializeCanvasSize = (w: number = 800, h: number = 800) => {
   return { width, height };
 };
 export const getCanvasSize = () => ({ width, height });
+export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
 
 export const setupCamera = (p: p5, w: number, h: number) => {
   mainBuffer = p.createGraphics(w, h);
