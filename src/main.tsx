@@ -10,8 +10,8 @@ import ReactDOMClient from "react-dom/client";
 import { getIterationTimeAt } from "./aggregator/aggregator";
 import { setP5 } from "./canvas-reference";
 import { extractMandelbrotParams } from "./lib/params";
+import { calcVars, startCalculation, togglePinReference } from "./mandelbrot";
 import {
-  calcVars,
   cycleMode,
   getCanvasSize,
   getCurrentParams,
@@ -22,10 +22,8 @@ import {
   setDeepIterationCount,
   setOffsetParams,
   setScaleParams,
-  startCalculation,
-  togglePinReference,
   zoom,
-} from "./mandelbrot";
+} from "./mandelbrot-state/mandelbrot-state";
 import {
   addCurrentLocationToPOIHistory,
   initializePOIHistory,

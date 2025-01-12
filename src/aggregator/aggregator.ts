@@ -1,4 +1,4 @@
-import { getCanvasSize } from "../mandelbrot";
+import { getCanvasSize } from "@/mandelbrot-state/mandelbrot-state";
 import { Rect } from "../rect";
 import { bufferLocalLogicalIndex } from "../rendering/rendering";
 import { IterationBuffer, Resolution } from "../types";
