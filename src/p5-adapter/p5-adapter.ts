@@ -242,23 +242,9 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
     if (mouseDragged) {
       if (draggingMode === "move") {
         // 左クリックドラッグ(移動)確定時
-        const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(
-          p,
-          mouseClickedOn,
-        );
-        setOffsetParams({ x: -pixelDiffX, y: -pixelDiffY });
+        const dragOffset = getDraggingPixelDiff(p, mouseClickedOn);
 
-        const centerX = p.width / 2;
-        const centerY = p.height / 2;
-
-        const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
-          centerX - pixelDiffX,
-          centerY - pixelDiffY,
-          p.width,
-          p.height,
-        );
-
-        setCurrentParams({ x: complexMouseX, y: complexMouseY });
+        moveTo(dragOffset);
       } else if (draggingMode === "zoom") {
         // 右クリックドラッグ(拡縮)確定時
         const zoomFactor = calcInteractiveZoomFactor(p, mouseClickedOn);
@@ -314,6 +300,30 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
   mouseDragged = false;
   draggingMode = undefined;
 };
+
+/**
+ * ドラッグした分だけ位置を移動する
+ */
+export const moveTo = (dragOffset: {
+  pixelDiffX: number;
+  pixelDiffY: number;
+}) => {
+  const { width, height } = getCanvasSize();
+
+  const centerX = width / 2;
+  const centerY = height / 2;
+
+  const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
+    centerX - dragOffset.pixelDiffX,
+    centerY - dragOffset.pixelDiffY,
+    width,
+    height,
+  );
+
+  setOffsetParams({ x: -dragOffset.pixelDiffX, y: -dragOffset.pixelDiffY });
+  setCurrentParams({ x: complexMouseX, y: complexMouseY });
+};
+export const scaleToAt = () => {};
 
 /**
  * ズームイン・アウトの操作を行う
