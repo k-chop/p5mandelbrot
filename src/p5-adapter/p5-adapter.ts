@@ -245,25 +245,24 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
 
   // canvas内でクリックして、canvas内で離した場合のみクリック時の処理を行う
   // これで外からcanvas内に流れてきた場合の誤クリックを防げる
+  if (!mouseClickStartedInside) return;
 
-  if (mouseClickStartedInside) {
-    if (mouseDragged) {
-      if (draggingMode === "move") {
-        // 左クリックドラッグ(移動)確定時
-        const dragOffset = getDraggingPixelDiff(p, mouseClickedOn);
+  if (mouseDragged) {
+    if (draggingMode === "move") {
+      // 左クリックドラッグ(移動)確定時
+      const dragOffset = getDraggingPixelDiff(p, mouseClickedOn);
 
-        moveTo(dragOffset);
-      } else if (draggingMode === "zoom") {
-        // 右クリックドラッグ(拡縮)確定時
-        scaleTo(calcInteractiveScaleFactor(p, mouseClickedOn), {
-          x: mouseClickedOn.mouseX,
-          y: mouseClickedOn.mouseY,
-        });
-      }
-    } else {
-      // クリック時
-      scaleTo(getStore("zoomRate"), { x: p.mouseX, y: p.mouseY });
+      moveTo(dragOffset);
+    } else if (draggingMode === "zoom") {
+      // 右クリックドラッグ(拡縮)確定時
+      scaleTo(calcInteractiveScaleFactor(p, mouseClickedOn), {
+        x: mouseClickedOn.mouseX,
+        y: mouseClickedOn.mouseY,
+      });
     }
+  } else {
+    // クリック時
+    scaleTo(getStore("zoomRate"), { x: p.mouseX, y: p.mouseY });
   }
 
   changeCursor(p, p.CROSS);
