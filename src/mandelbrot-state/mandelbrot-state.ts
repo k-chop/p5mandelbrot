@@ -44,7 +44,6 @@ export const setPrevBatchId = (id: string) => {
 };
 
 export const getCurrentParams = () => currentParams;
-export const getCanvasSize = () => ({ width, height });
 
 export const updateCurrentParams = () => {
   lastCalc = { ...currentParams };

@@ -1,6 +1,6 @@
 import { Palette } from "@/color";
 import p5 from "p5";
-import { getCanvasWidth } from "../camera/camera";
+import { getCanvasSize } from "../camera/camera";
 import { GLITCHED_POINT_ITERATION } from "../mandelbrot";
 import { Rect } from "../rect";
 import { IterationBuffer, Resolution } from "../types";
@@ -81,7 +81,7 @@ export const renderIterationsToPixel = (
   iterationsResult: IterationBuffer[],
   palette: Palette,
 ) => {
-  const canvasWidth = getCanvasWidth();
+  const { width: canvasWidth } = getCanvasSize();
 
   graphics.loadPixels();
   const density = graphics.pixelDensity();

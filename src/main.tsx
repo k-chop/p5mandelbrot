@@ -1,4 +1,4 @@
-import { nextBuffer, setupCamera } from "@/camera/camera";
+import { initializeCanvasSize, nextBuffer, setupCamera } from "@/camera/camera";
 import {
   changePaletteFromPresets,
   cycleCurrentPaletteOffset,
@@ -13,7 +13,6 @@ import { extractMandelbrotParams } from "./lib/params";
 import { calcVars, startCalculation, togglePinReference } from "./mandelbrot";
 import {
   cycleMode,
-  getCanvasSize,
   getCurrentParams,
   paramsChanged,
   resetIterationCount,
@@ -119,7 +118,7 @@ const sketch = (p: p5) => {
   let mouseClickStartedInside = false;
 
   p.setup = () => {
-    const { width, height } = getCanvasSize();
+    const { width, height } = initializeCanvasSize();
 
     const canvas = p.createCanvas(width, height);
     // canvas上での右クリックを無効化

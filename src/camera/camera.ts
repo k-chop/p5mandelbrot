@@ -13,7 +13,16 @@ let height: number;
 
 let bufferRect: Rect;
 
-export const getCanvasWidth = () => width;
+/**
+ * FIXME: responsiveにするときに任意の値で初期化できるようにする
+ */
+export const initializeCanvasSize = (w: number = 800, h: number = 800) => {
+  width = w;
+  height = h;
+
+  return { width, height };
+};
+export const getCanvasSize = () => ({ width, height });
 
 export const setupCamera = (p: p5, w: number, h: number) => {
   mainBuffer = p.createGraphics(w, h);
