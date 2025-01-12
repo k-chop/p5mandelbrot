@@ -200,6 +200,7 @@ export const startCalculation = async (
 
     // 画面pixel位置でキャッシュを持っているのでここで移動させている
     translateRectInIterationCache(offsetX, offsetY);
+    removeUnusedIterationCache();
 
     // 新しく計算しない部分を先に描画
     clearMainBuffer();
@@ -215,15 +216,16 @@ export const startCalculation = async (
     // 拡縮の場合は倍率を指定してキャッシュを書き換える
     const { scaleAtX, scaleAtY, scale } = getScaleParams();
     scaleIterationCacheAroundPoint(scaleAtX, scaleAtY, scale, width, height);
+    removeUnusedIterationCache();
 
     clearMainBuffer();
     renderToMainBuffer();
+
     resetScaleParams();
   }
 
   // ドラッグ中に描画をずらしていたのを戻す
   onTranslated();
-  removeUnusedIterationCache();
 
   const units = calculationRects.map((rect) => ({
     rect,
