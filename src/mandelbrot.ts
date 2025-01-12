@@ -223,7 +223,7 @@ export const startCalculation = async (
 
   // ドラッグ中に描画をずらしていたのを戻す
   onTranslated();
-  removeUnusedIterationCache(width, height);
+  removeUnusedIterationCache();
 
   const units = calculationRects.map((rect) => ({
     rect,

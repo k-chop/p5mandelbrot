@@ -1,3 +1,4 @@
+import { getCanvasSize } from "./mandelbrot";
 import { Rect } from "./rect";
 import { bufferLocalLogicalIndex } from "./rendering";
 import { IterationBuffer, Resolution } from "./types";
@@ -42,12 +43,11 @@ export const getIterationCache = (): IterationBuffer[] => {
  * 2. 小さすぎて描画に使えない
  * 3. でかすぎて描画に使えるピクセルが少ない
  */
-export const removeUnusedIterationCache = (
-  canvasWidth: number,
-  canvasHeight: number,
-): void => {
+export const removeUnusedIterationCache = (): void => {
   const minSize = 10; // 小さすぎる判定
   const maxArea = 10_000_000; // 大きすぎる判定
+
+  const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
 
   const beforeCount = iterationCache.length;
 
@@ -78,9 +78,17 @@ export const removeUnusedIterationCache = (
   });
 
   const afterCount = iterationCache.length;
-  console.log(
+  console.debug(
     `${beforeCount - afterCount} iteration cache removed. Remaining: ${afterCount}`,
   );
+};
+
+/**
+ * iterationキャッシュを全部クリアする
+ */
+export const clearIterationCache = (): void => {
+  iterationCache = [];
+  console.debug("Iteration cache cleared");
 };
 
 /**
