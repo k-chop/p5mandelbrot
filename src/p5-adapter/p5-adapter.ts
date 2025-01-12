@@ -97,7 +97,12 @@ const changeCursor = (p: p5, cursor: string) => {
 
 /** canvasの状態をstoreに反映する */
 const syncStoreValues = (p: p5) => {
-  const { mouseX, mouseY } = calcVars(p.mouseX, p.mouseY, p.width, p.height);
+  const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
+    p.mouseX,
+    p.mouseY,
+    p.width,
+    p.height,
+  );
 
   const iteration = getIterationTimeAt(p.mouseX, p.mouseY);
 
@@ -110,8 +115,8 @@ const syncStoreValues = (p: p5) => {
 
   updateStore("centerX", params.x);
   updateStore("centerY", params.y);
-  updateStore("mouseX", mouseX);
-  updateStore("mouseY", mouseY);
+  updateStore("mouseX", complexMouseX);
+  updateStore("mouseY", complexMouseY);
   updateStore("r", params.r);
   updateStore("N", params.N);
   if (iteration !== -1) {
@@ -121,7 +126,8 @@ const syncStoreValues = (p: p5) => {
   updateStore("progress", progress);
 };
 
-const calcVars = (
+/** canvas上のxyピクセル座標から複素数平面上の座標を取り出す */
+const calculateComplexMouseXY = (
   mouseX: number,
   mouseY: number,
   width: number,
@@ -143,8 +149,8 @@ const calcVars = (
   );
 
   return {
-    mouseX: complexMouseX,
-    mouseY: complexMouseY,
+    complexMouseX,
+    complexMouseY,
   };
 };
 
@@ -222,26 +228,26 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
         const centerX = p.width / 2;
         const centerY = p.height / 2;
 
-        const { mouseX, mouseY } = calcVars(
+        const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
           centerX - pixelDiffX,
           centerY - pixelDiffY,
           p.width,
           p.height,
         );
 
-        setCurrentParams({ x: mouseX, y: mouseY });
+        setCurrentParams({ x: complexMouseX, y: complexMouseY });
       } else if (draggingMode === "zoom") {
         // 右クリックドラッグ(拡縮)確定時
         const zoomFactor = calcInteractiveZoomFactor(p);
 
-        const { mouseX, mouseY } = calcVars(
+        const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
           mouseClickedOn.mouseX,
           mouseClickedOn.mouseY,
           p.width,
           p.height,
         );
 
-        setCurrentParams({ x: mouseX, y: mouseY });
+        setCurrentParams({ x: complexMouseX, y: complexMouseY });
 
         // ズーム適用
         zoom(1 / zoomFactor);
@@ -255,14 +261,14 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
       }
     } else {
       // クリック時
-      const { mouseX, mouseY } = calcVars(
+      const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
         p.mouseX,
         p.mouseY,
         p.width,
         p.height,
       );
 
-      setCurrentParams({ x: mouseX, y: mouseY });
+      setCurrentParams({ x: complexMouseX, y: complexMouseY });
 
       const rate = getStore("zoomRate");
       // shiftキーを押しながらクリックすると縮小
