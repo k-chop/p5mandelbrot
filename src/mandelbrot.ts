@@ -197,8 +197,7 @@ export const startCalculation = async (
       height: height - Math.abs(offsetY),
     } satisfies Rect;
 
-    // FIXME: 画面pixel位置でキャッシュを持っているのでここで移動させている
-    // 複素平面座標で持った方がいいのではないだろうかたぶん
+    // 画面pixel位置でキャッシュを持っているのでここで移動させている
     translateRectInIterationCache(offsetX, offsetY);
 
     // 新しく計算しない部分を先に描画
@@ -212,9 +211,10 @@ export const startCalculation = async (
     const expectedDivideCount = Math.max(divideRectCount, 2);
     calculationRects = divideRect(getOffsetRects(), expectedDivideCount);
   } else {
-    // 移動していない場合は再利用するCacheがないので消す
+    // 拡縮の場合は倍率を指定してキャッシュを書き換える
     const { scaleAtX, scaleAtY, scale } = getScaleParams();
     scaleIterationCacheAroundPoint(scaleAtX, scaleAtY, scale, width, height);
+
     clearMainBuffer();
     renderToMainBuffer();
     resetScaleParams();

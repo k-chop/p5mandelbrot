@@ -2,12 +2,7 @@ import { Rect } from "./rect";
 import { bufferLocalLogicalIndex } from "./rendering";
 import { IterationBuffer, Resolution } from "./types";
 
-// FIXME: たぶんIterationBufferは複素数平面座標に対するキャッシュを持つべき
-// それならrがどうであれ使い回せるはず
-// 一方でちゃんとピクセル座標と誤差なく対応させられるかわからない
-// BigNumberだし比較重いかも
-
-// FIXME: もっと賢くデータを持つ
+// FIXME: 配列全部舐める必要があるのよくないので良い感じにデータを持つようにする
 let iterationCache: IterationBuffer[] = [];
 
 export const upsertIterationCache = (
