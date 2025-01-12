@@ -76,10 +76,7 @@ export const renderIterationsToPixel = (
   graphics.loadPixels();
   const density = graphics.pixelDensity();
 
-  const i = iterationsResult;
-  const a = i.length >= 4 ? iterationsResult : i;
-
-  for (const iteration of a) {
+  for (const iteration of iterationsResult) {
     const { rect, buffer, resolution } = iteration;
 
     // worldRectとiterationのrectが一致する箇所だけ描画する
@@ -87,8 +84,6 @@ export const renderIterationsToPixel = (
     const startX = Math.max(rect.x, worldRect.x);
     const endY = Math.min(rect.y + rect.height, worldRect.y + worldRect.height);
     const endX = Math.min(rect.x + rect.width, worldRect.x + worldRect.width);
-
-    console.log("start", startX, startY, "end", endX, endY);
 
     for (let worldY = startY; worldY < endY; worldY++) {
       for (let worldX = startX; worldX < endX; worldX++) {

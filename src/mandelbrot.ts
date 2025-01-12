@@ -1,6 +1,5 @@
 import BigNumber from "bignumber.js";
 import {
-  getIterationCache,
   removeUnusedIterationCache,
   scaleIterationCacheAroundPoint,
   setIterationCache,
@@ -223,10 +222,6 @@ export const startCalculation = async (
     );
     setIterationCache(scaled);
     removeUnusedIterationCache();
-
-    getIterationCache().forEach((iteration) => {
-      console.log("scaled", iteration.rect, iteration.resolution);
-    });
 
     clearMainBuffer();
     renderToMainBuffer();
