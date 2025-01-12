@@ -15,9 +15,9 @@ import {
   getOffsetParams,
   getPrevBatchId,
   getScaleParams,
+  markAsRenderedWithCurrentParams,
   resetScaleParams,
   setPrevBatchId,
-  updateCurrentParams,
 } from "./mandelbrot-state/mandelbrot-state";
 import { divideRect, getOffsetRects, Rect } from "./rect";
 import { getStore } from "./store/store";
@@ -65,7 +65,7 @@ export const startCalculation = async (
   onComplete: (elapsed: number) => void,
   onTranslated: () => void,
 ) => {
-  updateCurrentParams();
+  markAsRenderedWithCurrentParams();
 
   const currentBatchId = crypto.randomUUID();
   startBatch(currentBatchId);

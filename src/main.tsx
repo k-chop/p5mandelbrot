@@ -14,7 +14,7 @@ import { calcVars, startCalculation } from "./mandelbrot";
 import {
   cycleMode,
   getCurrentParams,
-  paramsChanged,
+  needsRenderForCurrentParams,
   resetIterationCount,
   resetRadius,
   resetScaleParams,
@@ -382,7 +382,7 @@ const sketch = (p: p5) => {
       addCurrentLocationToPOIHistory();
     }
 
-    if (paramsChanged()) {
+    if (needsRenderForCurrentParams()) {
       startCalculation(
         (elapsed: number) => {
           // elapsed=0は中断時なのでなにもしない

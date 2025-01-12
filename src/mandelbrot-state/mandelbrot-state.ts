@@ -46,12 +46,14 @@ export const setPrevBatchId = (id: string) => {
 };
 
 export const getCurrentParams = () => currentParams;
-export const updateCurrentParams = () => {
+export const markAsRenderedWithCurrentParams = () => {
   lastCalc = { ...currentParams };
 };
-export const paramsChanged = () => {
+export const needsRenderForCurrentParams = () => {
   return !isSameParams(lastCalc, currentParams);
 };
+const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
+  a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.mode === b.mode;
 
 export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
   const needModeChange =
@@ -123,9 +125,6 @@ export const togglePinReference = () => {
 
   console.debug(`Reference orbit has pinned: ${newValue}`);
 };
-
-export const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
-  a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.mode === b.mode;
 
 export const cloneCurrentParams = () => cloneParams(currentParams);
 
