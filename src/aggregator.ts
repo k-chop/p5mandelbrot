@@ -9,7 +9,9 @@ export const upsertIterationCache = (
   rect: Rect,
   buffer: Uint32Array,
   resolution: Resolution,
-): void => {
+): IterationBuffer => {
+  const item = { rect, buffer, resolution };
+
   const idx = iterationCache.findIndex(
     (i) => i.rect.x === rect.x && i.rect.y === rect.y,
   );
@@ -21,11 +23,13 @@ export const upsertIterationCache = (
       resolution.width * resolution.height
     ) {
       // 解像度が大きい方を採用
-      iterationCache[idx] = { rect, buffer, resolution };
+      iterationCache[idx] = item;
     }
   } else {
-    iterationCache.push({ rect, buffer, resolution });
+    iterationCache.push(item);
   }
+
+  return item;
 };
 
 export const getIterationCache = (): IterationBuffer[] => {

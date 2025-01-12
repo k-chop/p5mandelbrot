@@ -38,7 +38,7 @@ export const onIterationWorkerResult: IterationResultCallback = (
   }
 
   const iterationsResult = new Uint32Array(iterations);
-  upsertIterationCache(rect, iterationsResult, {
+  const iterBuffer = upsertIterationCache(rect, iterationsResult, {
     width: rect.width,
     height: rect.height,
   });
@@ -56,7 +56,7 @@ export const onIterationWorkerResult: IterationResultCallback = (
 
   batchContext.onChangeProgress();
 
-  renderToMainBuffer(rect);
+  renderToMainBuffer(rect, [iterBuffer]);
 
   // バッチ全体が完了していたらonComplete callbackを呼ぶ
   if (isBatchCompleted(job.batchId)) {
@@ -84,6 +84,10 @@ export const onIterationWorkerIntermediateResult = (
 
   batchContext.onChangeProgress();
 
-  upsertIterationCache(rect, new Uint32Array(iterations), resolution);
-  renderToMainBuffer(rect);
+  const iterBuffer = upsertIterationCache(
+    rect,
+    new Uint32Array(iterations),
+    resolution,
+  );
+  renderToMainBuffer(rect, [iterBuffer]);
 };
