@@ -44,10 +44,16 @@ export const getIterationCache = (): IterationBuffer[] => {
  * 3. でかすぎて描画に使えるピクセルが少ない
  */
 export const removeUnusedIterationCache = (): void => {
-  const minSize = 10; // 小さすぎる判定
-  const maxArea = 10_000_000; // 大きすぎる判定
-
   const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
+
+  // 10pixel以下のcacheは消す
+  const minSizePixel = 10;
+  // rect内の1pixelがcanvas上で何pixelに相当するかで上限を設ける
+  // ここでは3pixelより荒いときに消す
+  // そんなに超拡大してたらほぼ画面外判定の方で消えるので、これは荒くてもよい
+  const maxResolutionPerPixel = Math.floor(
+    Math.min(canvasWidth, canvasHeight) / 3,
+  );
 
   const beforeCount = iterationCache.length;
 
@@ -64,13 +70,16 @@ export const removeUnusedIterationCache = (): void => {
       return false;
     }
 
-    // 2. 小さすぎる
-    if (width < minSize || height < minSize) {
+    // 2. 細かすぎる
+    if (width < minSizePixel || height < minSizePixel) {
       return false;
     }
 
-    // 3. でかすぎる
-    if (width * height > maxArea) {
+    // 3. 荒すぎる
+    if (
+      maxResolutionPerPixel < width / iterCache.resolution.width ||
+      maxResolutionPerPixel < height / iterCache.resolution.height
+    ) {
       return false;
     }
 
