@@ -52,8 +52,8 @@ let draggingMode: "move" | "zoom" | undefined = undefined;
 let elapsed = 0;
 /** canvas内でマウスクリックが開始されたかどうか */
 let mouseClickStartedInside = false;
-/**  */
-let p5Instance: p5;
+/** p5のインスタンス。基本的には直に使わない */
+let UNSAFE_p5Instance: p5;
 
 /**
  * 開始地点からのドラッグ量を取得
@@ -167,7 +167,9 @@ const calculateComplexMouseXY = (
  */
 export const getResizedCanvasImageDataURL = (height: number = 0) => {
   // p5.Imageはcanvas持っているのに型定義にはなぜか存在しない
-  const img = p5Instance.get() as p5.Image & { canvas: HTMLCanvasElement };
+  const img = UNSAFE_p5Instance.get() as p5.Image & {
+    canvas: HTMLCanvasElement;
+  };
   // 0にしておくと指定した方の高さに合わせてリサイズしてくれる
   img.resize(0, height);
 
@@ -179,7 +181,7 @@ export const getResizedCanvasImageDataURL = (height: number = 0) => {
 // ================================================================================================
 
 export const p5Setup = (p: p5) => {
-  p5Instance = p;
+  UNSAFE_p5Instance = p;
 
   const { width, height } = initializeCanvasSize();
 
