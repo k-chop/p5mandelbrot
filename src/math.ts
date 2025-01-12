@@ -1,4 +1,5 @@
-export function* seqGenerator(n: number) {
+/** 与えられたnを、1になるまで2で割り続けた値を返すジェネレータ */
+function* seqGenerator(n: number) {
   let i = n;
   while (i > 1) {
     yield i;
@@ -7,7 +8,8 @@ export function* seqGenerator(n: number) {
   yield 1;
 }
 
-export function dividerSequence(n: number) {
+/** 長さnに対してよい感じの分割数を得るための関数 */
+function dividerSequence(n: number) {
   const result = [];
   for (const i of seqGenerator(n)) {
     result.push(i);
@@ -17,9 +19,9 @@ export function dividerSequence(n: number) {
 }
 
 /**
- * できるだけ等間隔に要素を取りつつ指定した長さに縮める
+ * できるだけ等間隔に要素を取りつつ指定した長さに縮める関数
  */
-export function thin<T>(arr: T[], length: number): T[] {
+function thin<T>(arr: T[], length: number): T[] {
   if (length >= arr.length || length < 3) {
     return arr;
   }
@@ -36,6 +38,11 @@ export function thin<T>(arr: T[], length: number): T[] {
   return result;
 }
 
+/**
+ * 領域を `resolutionCount` 段階の低解像度で描画するための差分シーケンスを生成する
+ *
+ * 各要素に入っているdiff分飛ばしながら描画することで、低解像度で描画できるやつ
+ */
 export function generateLowResDiffSequence(
   resolutionCount: number,
   areaWidth: number,
