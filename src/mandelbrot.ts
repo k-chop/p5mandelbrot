@@ -20,7 +20,7 @@ import {
   updateCurrentParams,
 } from "./mandelbrot-state/mandelbrot-state";
 import { divideRect, getOffsetRects, Rect } from "./rect";
-import { getStore, updateStoreWith } from "./store/store";
+import { getStore } from "./store/store";
 import { MandelbrotParams } from "./types";
 import { getWorkerCount } from "./worker-pool/pool-instance";
 import {
@@ -28,14 +28,6 @@ import {
   registerBatch,
   startBatch,
 } from "./worker-pool/worker-pool";
-
-export const togglePinReference = () => {
-  if (getCurrentParams().mode !== "perturbation") return;
-
-  const newValue = updateStoreWith("shouldReuseRefOrbit", (t) => !t);
-
-  console.debug(`Reference orbit has pinned: ${newValue}`);
-};
 
 export const calcVars = (
   mouseX: number,

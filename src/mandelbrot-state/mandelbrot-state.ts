@@ -1,6 +1,6 @@
 import { getCanvasSize } from "@/camera/camera";
 import { isSameParams } from "@/mandelbrot";
-import { getStore, updateStore } from "@/store/store";
+import { getStore, updateStore, updateStoreWith } from "@/store/store";
 import type { MandelbrotParams, OffsetParams } from "@/types";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { cycleWorkerType } from "@/worker-pool/worker-pool";
@@ -108,4 +108,11 @@ export const zoom = (times: number) => {
 };
 export const paramsChanged = () => {
   return !isSameParams(lastCalc, currentParams);
+};
+export const togglePinReference = () => {
+  if (getCurrentParams().mode !== "perturbation") return;
+
+  const newValue = updateStoreWith("shouldReuseRefOrbit", (t) => !t);
+
+  console.debug(`Reference orbit has pinned: ${newValue}`);
 };
