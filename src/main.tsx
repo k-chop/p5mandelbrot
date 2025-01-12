@@ -3,11 +3,11 @@ import React from "react";
 import ReactDOMClient from "react-dom/client";
 import {
   changeDraggingState,
+  changeToMousePressedState,
   keyInputHandler,
   p5Draw,
   p5MouseReleased,
   p5Setup,
-  storeMouseClickInfo,
   zoomTo,
 } from "./p5-adapter/p5-adapter";
 import { isInside } from "./p5-adapter/utils";
@@ -30,7 +30,7 @@ const sketch = (p: p5) => {
   p.mousePressed = () => {
     if (getStore("canvasLocked")) return;
     if (isInside(p)) {
-      storeMouseClickInfo(p);
+      changeToMousePressedState(p);
     }
   };
 

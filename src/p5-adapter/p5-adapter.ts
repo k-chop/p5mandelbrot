@@ -209,10 +209,19 @@ export const p5Setup = (p: p5) => {
 /**
  * マウス押下時にいろいろ覚えておくやつ
  */
-export const storeMouseClickInfo = (p: p5) => {
+export const changeToMousePressedState = (p: p5) => {
   mouseClickStartedInside = true;
   mouseDragged = false;
   mouseClickedOn = { mouseX: p.mouseX, mouseY: p.mouseY };
+};
+
+/**
+ * マウスのドラッグ終了時にいろいろリセットするやつ
+ */
+export const changeToMouseReleasedState = () => {
+  mouseClickStartedInside = false;
+  mouseDragged = false;
+  draggingMode = undefined;
 };
 
 /**
@@ -258,9 +267,7 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
   }
 
   changeCursor(p, p.CROSS);
-  mouseClickStartedInside = false;
-  mouseDragged = false;
-  draggingMode = undefined;
+  changeToMouseReleasedState();
 };
 
 /**
