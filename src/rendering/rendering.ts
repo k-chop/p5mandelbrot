@@ -122,6 +122,9 @@ export const renderIterationsToPixel = (
   graphics.updatePixels();
 };
 
+/**
+ * ドラッグ中のクロスヘア描画
+ */
 export const drawCrossHair = (p: p5) => {
   const length = 10;
 
@@ -130,6 +133,8 @@ export const drawCrossHair = (p: p5) => {
 
   // FIXME: たぶんカラーパレットを見て目立つ色を選ぶべき
 
+  p.strokeWeight(2);
+
   p.stroke(p.color(0, 0, 100));
   p.line(centerX - length, centerY, centerX + length, centerY);
   p.line(centerX, centerY - length, centerX, centerY + length);
@@ -137,4 +142,18 @@ export const drawCrossHair = (p: p5) => {
   p.stroke(p.color(0, 0, 0));
   p.line(centerX - length / 2, centerY, centerX + length / 2, centerY);
   p.line(centerX, centerY - length / 2, centerX, centerY + length / 2);
+};
+
+/**
+ * カーソル位置に倍率を表示
+ *
+ * interactive zoom中に表示する
+ */
+export const drawScaleRate = (p: p5, scaleFactor: number) => {
+  p.fill(255);
+  p.stroke(0);
+  p.strokeWeight(4);
+  p.textSize(14);
+
+  p.text(`x${scaleFactor.toFixed(2)}`, p.mouseX + 10, p.mouseY);
 };

@@ -30,7 +30,7 @@ import {
   addCurrentLocationToPOIHistory,
   initializePOIHistory,
 } from "@/poi-history/poi-history";
-import { drawCrossHair } from "@/rendering/rendering";
+import { drawCrossHair, drawScaleRate } from "@/rendering/rendering";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
 import { getProgressData } from "@/worker-pool/worker-pool";
@@ -408,27 +408,22 @@ export const p5Draw = (p: p5) => {
       drawCrossHair(p);
     } else if (draggingMode === "zoom") {
       const { mouseX, mouseY } = mouseClickedOn;
-      const zoomFactor = calcInteractiveScaleFactor(p, mouseClickedOn);
+      const scaleFactor = calcInteractiveScaleFactor(p, mouseClickedOn);
 
       // クリック位置を画面の中心に置く
-      const offsetX = p.width / 2 - mouseX * zoomFactor;
-      const offsetY = p.height / 2 - mouseY * zoomFactor;
+      const offsetX = p.width / 2 - mouseX * scaleFactor;
+      const offsetY = p.height / 2 - mouseY * scaleFactor;
 
       // ズーム適用
       p.image(
         mainBuffer,
         offsetX,
         offsetY,
-        p.width * zoomFactor,
-        p.height * zoomFactor,
+        p.width * scaleFactor,
+        p.height * scaleFactor,
       );
 
-      // 拡大率表示
-      p.fill(255);
-      p.stroke(0);
-      p.strokeWeight(4);
-      p.textSize(14);
-      p.text(`x${zoomFactor.toFixed(2)}`, p.mouseX + 10, p.mouseY);
+      drawScaleRate(p, scaleFactor);
     }
   } else {
     p.image(mainBuffer, 0, 0);
