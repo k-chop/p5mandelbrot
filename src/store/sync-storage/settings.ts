@@ -7,7 +7,8 @@ export type Settings = {
   animationCycleStep?: number;
 };
 
-export const DEFAULT_WORKER_COUNT = navigator.hardwareConcurrency;
+export const DEFAULT_WORKER_COUNT =
+  process.env.NODE_ENV === "test" ? 1 : navigator.hardwareConcurrency;
 
 const defaultSettings = {
   zoomRate: 2.0,
