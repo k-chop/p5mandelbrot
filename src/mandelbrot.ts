@@ -2,6 +2,7 @@ import BigNumber from "bignumber.js";
 import {
   removeUnusedIterationCache,
   scaleIterationCacheAroundPoint,
+  setIterationCache,
   translateRectInIterationCache,
 } from "./aggregator";
 import { clearMainBuffer, renderToMainBuffer } from "./camera/camera";
@@ -212,7 +213,14 @@ export const startCalculation = async (
     // 拡縮の場合は倍率を指定してキャッシュを書き換える
     const { scaleAtX, scaleAtY, scale } = getScaleParams();
 
-    scaleIterationCacheAroundPoint(scaleAtX, scaleAtY, scale, width, height);
+    const scaled = scaleIterationCacheAroundPoint(
+      scaleAtX,
+      scaleAtY,
+      scale,
+      width,
+      height,
+    );
+    setIterationCache(scaled);
     removeUnusedIterationCache();
 
     clearMainBuffer();

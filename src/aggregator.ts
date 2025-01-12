@@ -136,14 +136,19 @@ export const translateRectInIterationCache = (
   });
 };
 
+export const setIterationCache = (cache: IterationBuffer[]): void => {
+  iterationCache = cache;
+};
+
 export const scaleIterationCacheAroundPoint = (
   centerX: number,
   centerY: number,
   scale: number,
   canvasWidth: number,
   canvasHeight: number,
-): void => {
-  iterationCache = iterationCache.map((iteration) => {
+  iterationCache: IterationBuffer[] = getIterationCache(),
+) => {
+  return iterationCache.map((iteration) => {
     const scaledRect = scaleRectAroundMouse(
       iteration.rect,
       centerX,
