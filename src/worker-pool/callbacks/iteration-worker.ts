@@ -1,4 +1,4 @@
-import { upsertIterationCache } from "@/aggregator";
+import { getIterationCache, upsertIterationCache } from "@/aggregator";
 import { renderToMainBuffer } from "@/camera/camera";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
@@ -63,6 +63,8 @@ export const onIterationWorkerResult: IterationResultCallback = (
     const finishedAt = performance.now();
     batchContext.finishedAt = finishedAt;
     const elapsed = finishedAt - batchContext.startedAt;
+
+    console.log("Iteration Buffer length: ", getIterationCache().length);
 
     batchContext.onComplete(elapsed);
   }
