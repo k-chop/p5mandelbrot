@@ -1,15 +1,15 @@
 import {
-  removeUnusedIterationCache,
-  scaleIterationCacheAroundPoint,
-  setIterationCache,
-  translateRectInIterationCache,
-} from "./aggregator/aggregator";
-import {
   clearMainBuffer,
   getCanvasSize,
   getWholeCanvasRect,
   renderToMainBuffer,
 } from "./camera/camera";
+import {
+  removeUnusedIterationCache,
+  scaleIterationCacheAroundPoint,
+  setIterationCache,
+  translateRectInIterationCache,
+} from "./iteration-buffer/iteration-buffer";
 import {
   getCurrentParams,
   getOffsetParams,

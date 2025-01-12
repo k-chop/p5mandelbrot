@@ -1,5 +1,5 @@
-import { clearIterationCache } from "@/aggregator/aggregator";
 import { getCurrentPalette, setSerializedPalette } from "@/camera/palette";
+import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
 import {
   cloneParams,
   setCurrentParams,

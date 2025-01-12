@@ -1,4 +1,3 @@
-import { getIterationTimeAt } from "@/aggregator/aggregator";
 import {
   getCanvasSize,
   initializeCanvasSize,
@@ -10,6 +9,7 @@ import {
   cycleCurrentPaletteOffset,
   setPalette,
 } from "@/camera/palette";
+import { getIterationTimeAt } from "@/iteration-buffer/iteration-buffer";
 import { extractMandelbrotParams } from "@/lib/params";
 import { startCalculation } from "@/mandelbrot";
 import {
