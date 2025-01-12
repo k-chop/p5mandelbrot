@@ -1,8 +1,9 @@
+import type { IterationBuffer } from "@/types";
 import p5 from "p5";
-import { getIterationCache } from "../aggregator";
+import { getIterationCache } from "../aggregator/aggregator";
 import { getCurrentParams } from "../mandelbrot";
 import { Rect } from "../rect";
-import { renderIterationsToPixel } from "../rendering";
+import { renderIterationsToPixel } from "../rendering/rendering";
 import { getCurrentPalette, markAsRendered, needsRerender } from "./palette";
 
 let mainBuffer: p5.Graphics;
@@ -33,14 +34,17 @@ export const nextBuffer = (_p: p5): p5.Graphics => {
   return mainBuffer;
 };
 
-export const renderToMainBuffer = (rect: Rect = bufferRect) => {
+export const renderToMainBuffer = (
+  rect: Rect = bufferRect,
+  iterBuffer?: IterationBuffer[],
+) => {
   const params = getCurrentParams();
 
   renderIterationsToPixel(
     rect,
     mainBuffer,
     params.N,
-    getIterationCache(),
+    iterBuffer ?? getIterationCache(),
     getCurrentPalette(),
   );
 };

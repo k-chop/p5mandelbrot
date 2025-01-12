@@ -1,4 +1,7 @@
-import { upsertIterationCache } from "@/aggregator";
+import {
+  getIterationCache,
+  upsertIterationCache,
+} from "@/aggregator/aggregator";
 import { renderToMainBuffer } from "@/camera/camera";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
@@ -38,7 +41,7 @@ export const onIterationWorkerResult: IterationResultCallback = (
   }
 
   const iterationsResult = new Uint32Array(iterations);
-  upsertIterationCache(rect, iterationsResult, {
+  const iterBuffer = upsertIterationCache(rect, iterationsResult, {
     width: rect.width,
     height: rect.height,
   });
@@ -56,13 +59,15 @@ export const onIterationWorkerResult: IterationResultCallback = (
 
   batchContext.onChangeProgress();
 
-  renderToMainBuffer(rect);
+  renderToMainBuffer(rect, [iterBuffer]);
 
   // バッチ全体が完了していたらonComplete callbackを呼ぶ
   if (isBatchCompleted(job.batchId)) {
     const finishedAt = performance.now();
     batchContext.finishedAt = finishedAt;
     const elapsed = finishedAt - batchContext.startedAt;
+
+    console.log("Iteration Buffer length: ", getIterationCache().length);
 
     batchContext.onComplete(elapsed);
   }
@@ -84,6 +89,10 @@ export const onIterationWorkerIntermediateResult = (
 
   batchContext.onChangeProgress();
 
-  upsertIterationCache(rect, new Uint32Array(iterations), resolution);
-  renderToMainBuffer(rect);
+  const iterBuffer = upsertIterationCache(
+    rect,
+    new Uint32Array(iterations),
+    resolution,
+  );
+  renderToMainBuffer(rect, [iterBuffer]);
 };

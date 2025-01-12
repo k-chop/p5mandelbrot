@@ -1,3 +1,4 @@
+import { clearIterationCache } from "@/aggregator/aggregator";
 import { getCurrentPalette, setSerializedPalette } from "@/camera/palette";
 import { getResizedCanvasImageDataURL } from "@/canvas-reference";
 import { deletePreview, savePreview } from "@/store/preview-store";
@@ -56,6 +57,7 @@ export const usePOI = () => {
 
   const applyPOI = useCallback((poi: POIData) => {
     setCurrentParams(cloneParams(poi));
+    clearIterationCache();
     setSerializedPalette(poi.serializedPalette);
   }, []);
 

@@ -1,10 +1,15 @@
 import { Palette } from "@/color";
 import p5 from "p5";
-import { getCanvasWidth } from "./camera/camera";
-import { GLITCHED_POINT_ITERATION } from "./mandelbrot";
-import { Rect } from "./rect";
-import { IterationBuffer, Resolution } from "./types";
+import { getCanvasWidth } from "../camera/camera";
+import { GLITCHED_POINT_ITERATION } from "../mandelbrot";
+import { Rect } from "../rect";
+import { IterationBuffer, Resolution } from "../types";
 
+/**
+ * 指定した座標をpaletteとiterationの値に応じて塗りつぶす
+ *
+ * retina対応
+ */
 export const fillColor = (
   x: number,
   y: number,
@@ -17,8 +22,9 @@ export const fillColor = (
 ) => {
   for (let i = 0; i < density; i++) {
     for (let j = 0; j < density; j++) {
-      const pixelIndex =
-        4 * ((y * density + j) * canvasWidth * density + (x * density + i));
+      const pixelIndex = Math.floor(
+        4 * ((y * density + j) * canvasWidth * density + (x * density + i)),
+      );
 
       // iterationが-1のときはglitchが起きているので白で塗りつぶす
       if (iteration === GLITCHED_POINT_ITERATION) {
@@ -45,6 +51,11 @@ export const fillColor = (
   }
 };
 
+/**
+ * rect内のローカル座標系(resolution)でのindexを取得する
+ *
+ * worldX,Yはrectの中に収まっている前提
+ */
 export const bufferLocalLogicalIndex = (
   worldX: number,
   worldY: number,
@@ -78,7 +89,7 @@ export const renderIterationsToPixel = (
   for (const iteration of iterationsResult) {
     const { rect, buffer, resolution } = iteration;
 
-    // worldRectとiterationのrectが一致する箇所だけ描画する
+    // worldRectとiterationのrectが重なっている部分だけ描画する
     const startY = Math.max(rect.y, worldRect.y);
     const startX = Math.max(rect.x, worldRect.x);
     const endY = Math.min(rect.y + rect.height, worldRect.y + worldRect.height);

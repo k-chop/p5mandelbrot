@@ -7,7 +7,7 @@ import {
 import p5 from "p5";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
-import { getIterationTimeAt } from "./aggregator";
+import { getIterationTimeAt } from "./aggregator/aggregator";
 import { setP5 } from "./canvas-reference";
 import { extractMandelbrotParams } from "./lib/params";
 import {
@@ -21,6 +21,7 @@ import {
   setCurrentParams,
   setDeepIterationCount,
   setOffsetParams,
+  setScaleParams,
   startCalculation,
   togglePinReference,
   zoom,
@@ -29,7 +30,7 @@ import {
   addCurrentLocationToPOIHistory,
   initializePOIHistory,
 } from "./poi-history/poi-history";
-import { drawCrossHair } from "./rendering";
+import { drawCrossHair } from "./rendering/rendering";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
 import {
@@ -217,6 +218,13 @@ const sketch = (p: p5) => {
 
           // ズーム適用
           zoom(1 / zoomFactor);
+
+          const { mouseX: mx, mouseY: my } = mouseClickedOn;
+          setScaleParams({
+            scaleAtX: mx,
+            scaleAtY: my,
+            scale: zoomFactor,
+          });
         }
       } else {
         // クリック時
@@ -236,6 +244,12 @@ const sketch = (p: p5) => {
         } else {
           zoom(1.0 / rate);
         }
+
+        setScaleParams({
+          scaleAtX: p.mouseX,
+          scaleAtY: p.mouseY,
+          scale: rate,
+        });
       }
     }
 
@@ -259,6 +273,12 @@ const sketch = (p: p5) => {
       } else {
         zoom(1.0 / rate);
       }
+
+      setScaleParams({
+        scaleAtX: p.width / 2,
+        scaleAtY: p.height / 2,
+        scale: rate,
+      });
     }
   };
 
@@ -355,7 +375,6 @@ const sketch = (p: p5) => {
     } else {
       p.image(mainBuffer, 0, 0);
     }
-
     drawInfo(p);
 
     if (shouldSavePOIHistoryNextRender) {

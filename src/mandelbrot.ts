@@ -1,8 +1,10 @@
 import BigNumber from "bignumber.js";
 import {
-  clearIterationCache,
+  removeUnusedIterationCache,
+  scaleIterationCacheAroundPoint,
+  setIterationCache,
   translateRectInIterationCache,
-} from "./aggregator";
+} from "./aggregator/aggregator";
 import { clearMainBuffer, renderToMainBuffer } from "./camera/camera";
 import { divideRect, Rect } from "./rect";
 import { getStore, updateStore, updateStoreWith } from "./store/store";
@@ -130,6 +132,22 @@ export const setOffsetParams = (params: Partial<OffsetParams>) => {
   offsetParams = { ...offsetParams, ...params };
 };
 
+let scaleParams = {
+  scaleAtX: Math.round(width / 2),
+  scaleAtY: Math.round(height / 2),
+  scale: 1,
+};
+export const setScaleParams = (params: Partial<typeof scaleParams>) => {
+  scaleParams = { ...scaleParams, ...params };
+};
+export const resetScaleParams = () =>
+  setScaleParams({
+    scaleAtX: Math.round(width / 2),
+    scaleAtY: Math.round(height / 2),
+    scale: 1,
+  });
+export const getScaleParams = () => scaleParams;
+
 export const resetIterationCount = () => setCurrentParams({ N: DEFAULT_N });
 export const setDeepIterationCount = () =>
   setCurrentParams({ N: DEFAULT_N * 20 });
@@ -177,10 +195,6 @@ export const startCalculation = async (
     const offsetX = offsetParams.x;
     const offsetY = offsetParams.y;
 
-    // FIXME: 拡大待ち中や移動が終わる前に再度移動すると表示が壊れる
-    // 拡大開始したときに既にCacheが消えてるからそりゃそうだ
-    // なんとかせい
-
     // 移動した分の再描画範囲を計算
     const iterationBufferTransferedRect = {
       x: offsetX >= 0 ? 0 : Math.abs(offsetX),
@@ -189,23 +203,34 @@ export const startCalculation = async (
       height: height - Math.abs(offsetY),
     } satisfies Rect;
 
-    // FIXME: 画面pixel位置でキャッシュを持っているのでここで移動させている
-    // 複素平面座標で持った方がいいのではないだろうかたぶん
+    // 画面pixel位置でキャッシュを持っているのでここで移動させている
     translateRectInIterationCache(offsetX, offsetY);
+    removeUnusedIterationCache();
 
     // 新しく計算しない部分を先に描画
     clearMainBuffer();
     renderToMainBuffer(iterationBufferTransferedRect);
 
-    // TODO:
-    // perturbation時はreference orbitの値を取っておけば移動がかなり高速化できる気がする
-    // ただしどのくらいの距離まで有効なのか、有効でなくなったことをどう検知したらいいのかわからん
-
     const expectedDivideCount = Math.max(divideRectCount, 2);
     calculationRects = divideRect(getOffsetRects(), expectedDivideCount);
   } else {
-    // 移動していない場合は再利用するCacheがないので消す
-    clearIterationCache();
+    // 拡縮の場合は倍率を指定してキャッシュを書き換える
+    const { scaleAtX, scaleAtY, scale } = getScaleParams();
+
+    const scaled = scaleIterationCacheAroundPoint(
+      scaleAtX,
+      scaleAtY,
+      scale,
+      width,
+      height,
+    );
+    setIterationCache(scaled);
+    removeUnusedIterationCache();
+
+    clearMainBuffer();
+    renderToMainBuffer();
+
+    resetScaleParams();
   }
 
   // ドラッグ中に描画をずらしていたのを戻す
