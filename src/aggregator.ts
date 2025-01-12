@@ -36,8 +36,51 @@ export const getIterationCache = (): IterationBuffer[] => {
   return iterationCache;
 };
 
-export const clearIterationCache = (): void => {
-  iterationCache = [];
+/**
+ * 以下の条件でもはや描画に使用できないiterationキャッシュを削除する
+ * 1. 完全に画面外にいる
+ * 2. 小さすぎて描画に使えない
+ * 3. でかすぎて描画に使えるピクセルが少ない
+ */
+export const removeUnusedIterationCache = (
+  canvasWidth: number,
+  canvasHeight: number,
+): void => {
+  const minSize = 10; // 小さすぎる判定
+  const maxArea = 10_000_000; // 大きすぎる判定
+
+  const beforeCount = iterationCache.length;
+
+  iterationCache = iterationCache.filter((iterCache) => {
+    const { x, y, width, height } = iterCache.rect;
+
+    // 1. 完全に画面外にいる
+    if (
+      x + width < 0 ||
+      y + height < 0 ||
+      x > canvasWidth ||
+      y > canvasHeight
+    ) {
+      return false;
+    }
+
+    // 2. 小さすぎる
+    if (width < minSize || height < minSize) {
+      return false;
+    }
+
+    // 3. でかすぎる
+    if (width * height > maxArea) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const afterCount = iterationCache.length;
+  console.log(
+    `${beforeCount - afterCount} iteration cache removed. Remaining: ${afterCount}`,
+  );
 };
 
 /**

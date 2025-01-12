@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
 import {
+  removeUnusedIterationCache,
   scaleIterationCacheAroundPoint,
   translateRectInIterationCache,
 } from "./aggregator";
@@ -222,6 +223,7 @@ export const startCalculation = async (
 
   // ドラッグ中に描画をずらしていたのを戻す
   onTranslated();
+  removeUnusedIterationCache(width, height);
 
   const units = calculationRects.map((rect) => ({
     rect,
