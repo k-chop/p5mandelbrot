@@ -5,7 +5,6 @@ import {
   cycleCurrentPaletteOffset,
   setPalette,
 } from "@/camera/palette";
-import { setP5 } from "@/canvas-reference";
 import { extractMandelbrotParams } from "@/lib/params";
 import { startCalculation } from "@/mandelbrot";
 import {
@@ -53,6 +52,8 @@ let draggingMode: "move" | "zoom" | undefined = undefined;
 let elapsed = 0;
 /** canvas内でマウスクリックが開始されたかどうか */
 let mouseClickStartedInside = false;
+/**  */
+let p5Instance: p5;
 
 /**
  * 開始地点からのドラッグ量を取得
@@ -160,11 +161,26 @@ const calculateComplexMouseXY = (
   };
 };
 
+/*
+ * canvasの画像をリサイズした後にDataURLを返す
+ * 0を指定すると元のサイズで保存する
+ */
+export const getResizedCanvasImageDataURL = (height: number = 0) => {
+  // p5.Imageはcanvas持っているのに型定義にはなぜか存在しない
+  const img = p5Instance.get() as p5.Image & { canvas: HTMLCanvasElement };
+  // 0にしておくと指定した方の高さに合わせてリサイズしてくれる
+  img.resize(0, height);
+
+  return img.canvas.toDataURL();
+};
+
 // ================================================================================================
 // 以下、p5.jsのcallback関数
 // ================================================================================================
 
 export const p5Setup = (p: p5) => {
+  p5Instance = p;
+
   const { width, height } = initializeCanvasSize();
 
   const canvas = p.createCanvas(width, height);
@@ -174,10 +190,7 @@ export const p5Setup = (p: p5) => {
   resetScaleParams();
 
   p.colorMode(p.HSB, 360, 100, 100, 100);
-
   p.cursor(p.CROSS);
-
-  setP5(p);
 
   initializePOIHistory();
 
