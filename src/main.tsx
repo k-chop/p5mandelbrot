@@ -43,7 +43,7 @@ import { AppRoot } from "./view/app-root";
 import { prepareWorkerPool } from "./worker-pool/pool-instance";
 import { getProgressData } from "./worker-pool/worker-pool";
 
-const drawInfo = (p: p5) => {
+const syncStoreValues = (p: p5) => {
   const { mouseX, mouseY, r, N } = calcVars(
     p.mouseX,
     p.mouseY,
@@ -409,7 +409,7 @@ const sketch = (p: p5) => {
     } else {
       p.image(mainBuffer, 0, 0);
     }
-    drawInfo(p);
+    syncStoreValues(p);
 
     if (shouldSavePOIHistoryNextRender) {
       shouldSavePOIHistoryNextRender = false;
