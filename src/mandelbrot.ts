@@ -29,10 +29,6 @@ import {
   startBatch,
 } from "./worker-pool/worker-pool";
 
-export const DEFAULT_N = 500;
-
-export const GLITCHED_POINT_ITERATION = 4294967295;
-
 export const togglePinReference = () => {
   if (getCurrentParams().mode !== "perturbation") return;
 

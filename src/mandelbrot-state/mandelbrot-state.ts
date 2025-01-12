@@ -1,10 +1,12 @@
 import { getCanvasSize } from "@/camera/camera";
-import { DEFAULT_N, isSameParams } from "@/mandelbrot";
+import { isSameParams } from "@/mandelbrot";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams, OffsetParams } from "@/types";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { cycleWorkerType } from "@/worker-pool/worker-pool";
 import BigNumber from "bignumber.js";
+
+const DEFAULT_N = 500;
 
 let lastCalc: MandelbrotParams = {
   x: new BigNumber(0),

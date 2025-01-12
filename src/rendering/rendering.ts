@@ -1,9 +1,11 @@
 import { Palette } from "@/color";
 import p5 from "p5";
 import { getCanvasSize } from "../camera/camera";
-import { GLITCHED_POINT_ITERATION } from "../mandelbrot";
 import { Rect } from "../rect";
 import { IterationBuffer, Resolution } from "../types";
+
+/** GLITCHEDな場合に設定するiteration count値 */
+export const GLITCHED_POINT_ITERATION = 4294967295;
 
 /**
  * 指定した座標をpaletteとiterationの値に応じて塗りつぶす
