@@ -46,6 +46,11 @@ export const fillColor = (
   }
 };
 
+/**
+ * rect内のローカル座標系(resolution)でのindexを取得する
+ *
+ * worldX,Yはrectの中に収まっている前提
+ */
 export const bufferLocalLogicalIndex = (
   worldX: number,
   worldY: number,
