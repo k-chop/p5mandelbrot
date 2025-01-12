@@ -1,4 +1,3 @@
-import BigNumber from "bignumber.js";
 import {
   removeUnusedIterationCache,
   scaleIterationCacheAroundPoint,
@@ -21,45 +20,12 @@ import {
 } from "./mandelbrot-state/mandelbrot-state";
 import { divideRect, getOffsetRects, Rect } from "./rect";
 import { getStore } from "./store/store";
-import { MandelbrotParams } from "./types";
 import { getWorkerCount } from "./worker-pool/pool-instance";
 import {
   cancelBatch,
   registerBatch,
   startBatch,
 } from "./worker-pool/worker-pool";
-
-export const calcVars = (
-  mouseX: number,
-  mouseY: number,
-  width: number,
-  height: number,
-  currentParams: MandelbrotParams = getCurrentParams(),
-) => {
-  // [-1, 1]に変換
-  const normalizedMouseX = new BigNumber(2 * mouseX).div(width).minus(1);
-  const normalizedMouseY = new BigNumber(2 * mouseY).div(height).minus(1);
-
-  const scaleX = width / Math.min(width, height);
-  const scaleY = height / Math.min(width, height);
-
-  const complexMouseX = currentParams.x.plus(
-    normalizedMouseX.times(currentParams.r).times(scaleX),
-  );
-  const complexMouseY = currentParams.y.minus(
-    normalizedMouseY.times(currentParams.r).times(scaleY),
-  );
-
-  const r = currentParams.r;
-  const N = currentParams.N;
-
-  return {
-    mouseX: complexMouseX,
-    mouseY: complexMouseY,
-    r,
-    N,
-  };
-};
 
 export const startCalculation = async (
   onComplete: (elapsed: number) => void,
