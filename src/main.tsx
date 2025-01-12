@@ -73,7 +73,6 @@ const syncStoreValues = (p: p5) => {
   updateStore("progress", progress);
 };
 
-const currentCursor: "cross" | "grab" = "cross";
 let mouseDragged = false;
 let mouseClickedOn = { mouseX: 0, mouseY: 0 };
 let shouldSavePOIHistoryNextRender = false;
@@ -88,7 +87,6 @@ const isInside = (p: p5) =>
   0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
 
 const changeCursor = (p: p5, cursor: string) => {
-  if (currentCursor === cursor) return;
   if (isInside(p)) {
     p.cursor(cursor);
   }
