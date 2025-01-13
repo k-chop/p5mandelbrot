@@ -4,7 +4,12 @@ import p5 from "p5";
 import { getIterationCache } from "../iteration-buffer/iteration-buffer";
 import { Rect } from "../math/rect";
 import { renderIterationsToPixel } from "../rendering/rendering";
-import { getCurrentPalette, markAsRendered, needsRerender } from "./palette";
+import {
+  getCurrentPalette,
+  markAsRendered,
+  markNeedsRerender,
+  needsRerender,
+} from "./palette";
 
 let mainBuffer: p5.Graphics;
 
@@ -32,6 +37,34 @@ export const setupCamera = (p: p5, w: number, h: number) => {
   bufferRect = { x: 0, y: 0, width: w, height: h };
 
   console.log("Camera setup done", { width, height });
+};
+
+/**
+ * 画面サイズが変わったときに呼ぶ
+ *
+ * やること
+ * - canvasのリサイズ
+ * - mainBufferのリサイズ
+ * - cacheの位置変更（できれば）
+ */
+export const resizeCamera = (p: p5, w: number, h: number) => {
+  const from = getCanvasSize();
+  console.log(
+    `Resize canvas to x=${w} y=${h}, from x=${from.width} y=${from.height}`,
+  );
+
+  p.resizeCanvas(w, h);
+
+  width = w;
+  height = h;
+  bufferRect = { x: 0, y: 0, width: w, height: h };
+
+  mainBuffer.resizeCanvas(w, h);
+
+  clearMainBuffer();
+  renderToMainBuffer();
+
+  markNeedsRerender();
 };
 
 export const nextBuffer = (_p: p5): p5.Graphics => {

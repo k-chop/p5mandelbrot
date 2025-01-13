@@ -1,3 +1,4 @@
+import { debounce } from "es-toolkit";
 import p5 from "p5";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
@@ -8,6 +9,7 @@ import {
   p5Draw,
   p5MouseReleased,
   p5Setup,
+  resizeTo,
   zoomTo,
 } from "./p5-adapter/p5-adapter";
 import { isInside } from "./p5-adapter/utils";
@@ -70,6 +72,11 @@ const sketch = (p: p5) => {
 
   p.draw = () => {
     p5Draw(p);
+  };
+
+  const debouncedResizeFunc = debounce(() => resizeTo(p), 500);
+  p.windowResized = () => {
+    debouncedResizeFunc();
   };
 };
 

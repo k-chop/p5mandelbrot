@@ -24,7 +24,7 @@ let renderNext = true;
 /**
  * 次に再renderするようマークする
  */
-const markNeedsRerender = () => {
+export const markNeedsRerender = () => {
   renderNext = true;
 };
 
