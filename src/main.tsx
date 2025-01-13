@@ -74,7 +74,7 @@ const sketch = (p: p5) => {
     p5Draw(p);
   };
 
-  const debouncedResizeFunc = debounce(() => resizeTo(p), 500);
+  const debouncedResizeFunc = debounce(() => resizeTo(p), 250);
   p.windowResized = () => {
     debouncedResizeFunc();
   };
