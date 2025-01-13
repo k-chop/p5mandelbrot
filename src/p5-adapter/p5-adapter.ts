@@ -102,9 +102,7 @@ const calcInteractiveScaleFactor = (
 
 /** カーソルの変更 */
 const changeCursor = (p: p5, cursor: string) => {
-  if (isInside(p)) {
-    p.cursor(cursor);
-  }
+  p.cursor(cursor);
 };
 
 /** canvasの状態をstoreに反映する */
