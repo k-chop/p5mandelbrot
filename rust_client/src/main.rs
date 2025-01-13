@@ -1,7 +1,9 @@
+use anyhow::{anyhow, Result};
 use futures_util::{SinkExt, StreamExt};
 use rug::{Complex, Float};
 use serde::{Deserialize, Serialize};
-use std::time;
+use std::time::{self, Duration};
+use tokio::time::sleep;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
@@ -33,9 +35,33 @@ struct RegisterMessage {
 const CALCULATION_RESULT: u8 = 0x03;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let url = "ws://localhost:8080".into_client_request()?;
-    let (ws_stream, _) = connect_async(url).await?;
+
+    // リトライ用の設定
+    let max_retries = 5;
+    let mut attempt = 0;
+
+    let ws_stream = loop {
+        match connect_async(url.clone()).await {
+            Ok((ws_stream, _)) => {
+                println!("Connected to WebSocket server");
+                break ws_stream;
+            }
+            Err(e) => {
+                attempt += 1;
+                eprintln!("Failed to connect: {}. Attempt = {}", e, attempt);
+
+                if attempt >= max_retries {
+                    eprintln!("Reached maximum number of retries. Exiting.");
+                    return Err(anyhow!(e));
+                }
+
+                sleep(Duration::from_secs(3)).await;
+            }
+        }
+    };
+
     let (mut write, mut read) = ws_stream.split(); // ここで WebSocketStream を使う
 
     println!("Connected to WebSocket server");
