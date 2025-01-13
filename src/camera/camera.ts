@@ -1,15 +1,16 @@
-import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import {
+  getCurrentParams,
+  requireNextRender,
+} from "@/mandelbrot-state/mandelbrot-state";
 import type { IterationBuffer } from "@/types";
 import p5 from "p5";
-import { getIterationCache } from "../iteration-buffer/iteration-buffer";
+import {
+  clearIterationCache,
+  getIterationCache,
+} from "../iteration-buffer/iteration-buffer";
 import { Rect } from "../math/rect";
 import { renderIterationsToPixel } from "../rendering/rendering";
-import {
-  getCurrentPalette,
-  markAsRendered,
-  markNeedsRerender,
-  needsRerender,
-} from "./palette";
+import { getCurrentPalette, markAsRendered, needsRerender } from "./palette";
 
 let mainBuffer: p5.Graphics;
 
@@ -59,12 +60,18 @@ export const resizeCamera = (p: p5, w: number, h: number) => {
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
 
-  mainBuffer.resizeCanvas(w, h);
+  // const offsetX = Math.round((w - from.width) / 2);
+  // const offsetY = Math.round((h - from.height) / 2);
 
+  mainBuffer.resizeCanvas(w, h);
   clearMainBuffer();
+
+  // translateRectInIterationCache(-offsetX, -offsetY);
+  // removeUnusedIterationCache();
+  clearIterationCache();
   renderToMainBuffer();
 
-  markNeedsRerender();
+  requireNextRender();
 };
 
 export const nextBuffer = (_p: p5): p5.Graphics => {
