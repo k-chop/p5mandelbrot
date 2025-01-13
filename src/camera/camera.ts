@@ -25,20 +25,22 @@ let height: number;
 let bufferRect: Rect;
 
 /**
- * FIXME: responsiveにするときに任意の値で初期化できるようにする
+ * canvasのサイズをcontainerのサイズと最大サイズ設定見て初期化する
  */
 export const initializeCanvasSize = () => {
   const elm = document.getElementById("canvas-wrapper");
   let w = 800;
   let h = 800;
 
+  const maxCanvasSize = getStore("maxCanvasSize");
+
   if (elm) {
     w = elm.clientWidth;
     h = elm.clientHeight;
   }
 
-  width = w;
-  height = h;
+  width = Math.min(w, maxCanvasSize);
+  height = Math.min(h, maxCanvasSize);
 
   return { width, height };
 };

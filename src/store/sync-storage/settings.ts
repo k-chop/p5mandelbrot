@@ -4,8 +4,8 @@ export type Settings = {
   zoomRate: number;
   workerCount: number;
   animationTime: number;
-  animationCycleStep?: number;
-  maxCanvasSize?: number;
+  animationCycleStep: number;
+  maxCanvasSize: number;
 };
 
 export const DEFAULT_WORKER_COUNT =
@@ -28,6 +28,7 @@ export const writeSettingsToStorage = () => {
     workerCount: getStore("workerCount"),
     animationTime: getStore("animationTime"),
     animationCycleStep: getStore("animationCycleStep"),
+    maxCanvasSize: getStore("maxCanvasSize"),
   } satisfies Settings;
 
   const serialized = JSON.stringify(settings);

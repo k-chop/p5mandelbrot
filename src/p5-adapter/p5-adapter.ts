@@ -59,6 +59,8 @@ let draggingMode: "move" | "zoom" | undefined = undefined;
 let elapsed = 0;
 /** canvas内でマウスクリックが開始されたかどうか */
 let mouseClickStartedInside = false;
+/** 次回のcontextmenu表示を妨害する。右クリックドラッグではみ出たときに使う */
+let willBlockNextContextMenu = false;
 /** p5のインスタンス。基本的には直に使わない */
 let UNSAFE_p5Instance: p5;
 
@@ -100,9 +102,7 @@ const calcInteractiveScaleFactor = (
 
 /** カーソルの変更 */
 const changeCursor = (p: p5, cursor: string) => {
-  if (isInside(p)) {
-    p.cursor(cursor);
-  }
+  p.cursor(cursor);
 };
 
 /** canvasの状態をstoreに反映する */
@@ -307,6 +307,14 @@ export const p5Setup = (p: p5) => {
   p.colorMode(p.HSB, 360, 100, 100, 100);
   p.cursor(p.CROSS);
 
+  window.oncontextmenu = () => {
+    if (willBlockNextContextMenu) {
+      willBlockNextContextMenu = false;
+      return false;
+    }
+    return true;
+  };
+
   initializePOIHistory();
 
   const initialParams = extractMandelbrotParams();
@@ -339,6 +347,7 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
         x: mouseClickedOn.mouseX,
         y: mouseClickedOn.mouseY,
       });
+      willBlockNextContextMenu = true;
     }
   } else {
     // クリック時
