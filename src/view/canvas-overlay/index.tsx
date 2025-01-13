@@ -5,7 +5,7 @@ export const CanvasOverlay = () => {
   const progress = useStoreValue("progress");
 
   return (
-    <div className="size-[800px] p-1">
+    <div className="p-1">
       {typeof progress === "string" && <LoadingSpinner />}
     </div>
   );

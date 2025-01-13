@@ -66,6 +66,7 @@
     "culori": "4.0.1",
     "d3-color": "3.1.0",
     "d3-scale-chromatic": "3.1.0",
+    "es-toolkit": "1.31.0",
     "eventmit": "2.0.4",
     "idb-keyval": "6.2.1",
     "lodash.throttle": "4.1.1",

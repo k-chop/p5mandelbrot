@@ -21,6 +21,8 @@ type Store = {
   workerCount: number;
   animationTime: number;
   refOrbitWorkerCount: number;
+  /** -1なら無制限。値があればcanvasの縦横幅はこの値以上にならない */
+  maxCanvasSize: number;
   canvasLocked: boolean;
   shouldReuseRefOrbit: boolean;
   paletteLength: number;
@@ -46,6 +48,7 @@ const store: Store = {
   workerCount: 2,
   animationTime: 0,
   refOrbitWorkerCount: 1, // 仮
+  maxCanvasSize: -1,
   // UI state
   canvasLocked: false,
   // mandelbrot state

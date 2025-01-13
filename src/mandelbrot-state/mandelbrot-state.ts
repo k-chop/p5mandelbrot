@@ -52,6 +52,9 @@ export const markAsRenderedWithCurrentParams = () => {
 export const needsRenderForCurrentParams = () => {
   return !isSameParams(lastCalc, currentParams);
 };
+export const requireNextRender = () => {
+  lastCalc = { ...currentParams, N: 0 };
+};
 const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
   a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.mode === b.mode;
 

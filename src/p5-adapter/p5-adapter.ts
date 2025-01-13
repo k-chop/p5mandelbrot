@@ -2,6 +2,7 @@ import {
   getCanvasSize,
   initializeCanvasSize,
   nextBuffer,
+  resizeCamera,
   setupCamera,
 } from "@/camera/camera";
 import {
@@ -277,6 +278,15 @@ export const zoomTo = (isZoomOut: boolean) => {
     scaleAtY: height / 2,
     scale: rate,
   });
+};
+
+/** wrapper elementの高さを取得してcameraのサイズを変える */
+export const resizeTo = (p: p5 = UNSAFE_p5Instance) => {
+  const elm = document.getElementById("canvas-wrapper");
+
+  if (elm) {
+    resizeCamera(p, elm.clientWidth, elm.clientHeight);
+  }
 };
 
 // ================================================================================================

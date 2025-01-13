@@ -1,10 +1,21 @@
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { getStore } from "@/store/store";
 import type { IterationBuffer } from "@/types";
 import p5 from "p5";
-import { getIterationCache } from "../iteration-buffer/iteration-buffer";
+import {
+  getIterationCache,
+  scaleIterationCacheAroundPoint,
+  setIterationCache,
+  translateRectInIterationCache,
+} from "../iteration-buffer/iteration-buffer";
 import { Rect } from "../math/rect";
 import { renderIterationsToPixel } from "../rendering/rendering";
-import { getCurrentPalette, markAsRendered, needsRerender } from "./palette";
+import {
+  getCurrentPalette,
+  markAsRendered,
+  markNeedsRerender,
+  needsRerender,
+} from "./palette";
 
 let mainBuffer: p5.Graphics;
 
@@ -16,7 +27,16 @@ let bufferRect: Rect;
 /**
  * FIXME: responsiveにするときに任意の値で初期化できるようにする
  */
-export const initializeCanvasSize = (w: number = 800, h: number = 800) => {
+export const initializeCanvasSize = () => {
+  const elm = document.getElementById("canvas-wrapper");
+  let w = 800;
+  let h = 800;
+
+  if (elm) {
+    w = elm.clientWidth;
+    h = elm.clientHeight;
+  }
+
   width = w;
   height = h;
 
@@ -32,6 +52,64 @@ export const setupCamera = (p: p5, w: number, h: number) => {
   bufferRect = { x: 0, y: 0, width: w, height: h };
 
   console.log("Camera setup done", { width, height });
+};
+
+/**
+ * 画面サイズが変わったときに呼ぶ
+ *
+ * やること
+ * - canvasのリサイズ
+ * - mainBufferのリサイズ
+ * - cacheの位置変更（できれば）
+ */
+export const resizeCamera = (
+  p: p5,
+  requestWidth: number,
+  requestHeight: number,
+) => {
+  const from = getCanvasSize();
+  console.debug(
+    `Request resize canvas to w=${requestWidth} h=${requestHeight}, from w=${from.width} h=${from.height}`,
+  );
+
+  const maxSize = getStore("maxCanvasSize");
+
+  const w = maxSize === -1 ? requestWidth : Math.min(requestWidth, maxSize);
+  const h = maxSize === -1 ? requestHeight : Math.min(requestHeight, maxSize);
+
+  console.debug(`Resize to: w=${w}, h=${h} (maxCanvasSize=${maxSize})`);
+
+  p.resizeCanvas(w, h);
+
+  width = w;
+  height = h;
+  bufferRect = { x: 0, y: 0, width: w, height: h };
+
+  mainBuffer.resizeCanvas(width, height);
+  clearMainBuffer();
+
+  const scaleFactor =
+    Math.min(width, height) / Math.min(from.width, from.height);
+
+  console.debug("Resize scale factor", scaleFactor);
+
+  // サイズ差の分trasnlateしてからscale
+
+  const offsetX = Math.round((width - from.width) / 2);
+  const offsetY = Math.round((height - from.height) / 2);
+  translateRectInIterationCache(-offsetX, -offsetY);
+
+  const translated = scaleIterationCacheAroundPoint(
+    width / 2,
+    height / 2,
+    scaleFactor,
+    width,
+    height,
+  );
+  setIterationCache(translated);
+  renderToMainBuffer();
+
+  markNeedsRerender();
 };
 
 export const nextBuffer = (_p: p5): p5.Graphics => {

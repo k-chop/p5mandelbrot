@@ -5,6 +5,7 @@ export type Settings = {
   workerCount: number;
   animationTime: number;
   animationCycleStep?: number;
+  maxCanvasSize?: number;
 };
 
 export const DEFAULT_WORKER_COUNT =
@@ -15,6 +16,7 @@ const defaultSettings = {
   workerCount: DEFAULT_WORKER_COUNT,
   animationTime: 0,
   animationCycleStep: 1,
+  maxCanvasSize: -1,
 } satisfies Settings;
 
 export const isSettingField = (key: string): key is keyof Settings =>
