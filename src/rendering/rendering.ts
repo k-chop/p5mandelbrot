@@ -1,4 +1,5 @@
 import { Palette } from "@/color";
+import { clamp } from "@/math/util";
 import p5 from "p5";
 import { getCanvasSize } from "../camera/camera";
 import { Rect } from "../math/rect";
@@ -160,5 +161,22 @@ export const drawScaleRate = (p: p5, scaleFactor: number) => {
   p.strokeWeight(4);
   p.textSize(14);
 
-  p.text(`x${scaleFactor.toFixed(2)}`, p.mouseX + 10, p.mouseY);
+  const { text, size } = scaleRateText(scaleFactor);
+
+  const x = clamp(p.mouseX, 0, p.width - size);
+  const y = clamp(p.mouseY, 0, p.height - 25);
+
+  p.text(`${text}`, x + 10, y + 20);
+};
+
+const scaleRateText = (scaleFactor: number) => {
+  if (scaleFactor < 10) {
+    return { text: `x${scaleFactor.toFixed(2)}`, size: 60 };
+  } else if (scaleFactor < 100) {
+    return { text: `x${scaleFactor.toFixed(1)}`, size: 60 };
+  } else {
+    // 100~
+    const text = `x${Math.round(scaleFactor)}`;
+    return { text, size: text.length * 10 + 8 };
+  }
 };
