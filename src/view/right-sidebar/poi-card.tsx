@@ -29,7 +29,7 @@ export const POICard = ({
   const canRegenerate = useIsInSamePlace(poi);
 
   return (
-    <Card className="w-64 p-2">
+    <Card className="p-2">
       <div className="flex">
         <div className="">
           <Suspense fallback={"loading..."}>
@@ -38,21 +38,16 @@ export const POICard = ({
         </div>
         <div className="ml-2 flex grow flex-col">
           <div className="flex justify-between">
-            <div>r</div>
-            <div>{r.toPrecision(5)}</div>
+            <div className="mr-2">r</div>
+            <div>{r.toPrecision(3)}</div>
           </div>
           <div className="flex justify-between">
             <div>N</div>
             <div>{N.toFixed(0)}</div>
           </div>
 
-          <div className="mt-2 flex justify-between">
-            <SimpleTooltip content="Apply params">
-              <Button variant="default" size="icon" onClick={onApply}>
-                <IconArrowBigLeftLine />
-              </Button>
-            </SimpleTooltip>
-            {canRegenerate && (
+          <div className="mt-2 flex justify-between gap-2">
+            {canRegenerate ? (
               <SimpleTooltip content="Regenerate thumbnail">
                 <Button
                   variant="secondary"
@@ -60,6 +55,12 @@ export const POICard = ({
                   onClick={onRegenerateThumbnail}
                 >
                   <IconRefresh />
+                </Button>
+              </SimpleTooltip>
+            ) : (
+              <SimpleTooltip content="Apply params">
+                <Button variant="default" size="icon" onClick={onApply}>
+                  <IconArrowBigLeftLine />
                 </Button>
               </SimpleTooltip>
             )}
