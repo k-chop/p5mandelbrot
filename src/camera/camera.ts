@@ -26,7 +26,16 @@ let bufferRect: Rect;
 /**
  * FIXME: responsiveにするときに任意の値で初期化できるようにする
  */
-export const initializeCanvasSize = (w: number = 800, h: number = 800) => {
+export const initializeCanvasSize = () => {
+  const elm = document.getElementById("canvas-wrapper");
+  let w = 800;
+  let h = 800;
+
+  if (elm) {
+    w = elm.clientWidth;
+    h = elm.clientHeight;
+  }
+
   width = w;
   height = h;
 
