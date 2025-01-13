@@ -39,8 +39,8 @@ export const initializeCanvasSize = () => {
     h = elm.clientHeight;
   }
 
-  width = Math.min(w, maxCanvasSize);
-  height = Math.min(h, maxCanvasSize);
+  width = maxCanvasSize === -1 ? w : Math.min(w, maxCanvasSize);
+  height = maxCanvasSize === -1 ? h : Math.min(h, maxCanvasSize);
 
   return { width, height };
 };
