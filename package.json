@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "test": "vitest",
     "lint": "eslint .",
-    "server": "tsx src/server/index.ts"
+    "server": "tsx src/server/index.ts",
+    "rust-client": "cd rust_client && cargo run && cd ../",
+    "dev-all": "run-p dev server rust-client"
   },
   "devDependencies": {
     "@eslint/compat": "1.2.4",
@@ -32,6 +34,7 @@
     "eslint-plugin-react": "7.37.3",
     "eslint-plugin-react-hooks": "5.1.0",
     "eslint-plugin-tailwindcss": "3.17.5",
+    "npm-run-all2": "7.0.2",
     "postcss": "8.4.38",
     "prettier": "3.2.5",
     "prettier-plugin-tailwindcss": "0.5.14",
