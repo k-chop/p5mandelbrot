@@ -47,6 +47,8 @@ export const usePOI = () => {
 
   const deletePOIAt = useCallback(
     (index: number) => {
+      if (!confirm("Are you sure you want to delete this POI?")) return;
+
       const del = poiList[index];
       const newPOIList = poiList.filter((_, i) => i !== index);
       writePOIListToStorage(newPOIList);
