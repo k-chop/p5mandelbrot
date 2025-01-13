@@ -1,16 +1,20 @@
-import {
-  getCurrentParams,
-  requireNextRender,
-} from "@/mandelbrot-state/mandelbrot-state";
+import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { IterationBuffer } from "@/types";
 import p5 from "p5";
 import {
-  clearIterationCache,
   getIterationCache,
+  scaleIterationCacheAroundPoint,
+  setIterationCache,
+  translateRectInIterationCache,
 } from "../iteration-buffer/iteration-buffer";
 import { Rect } from "../math/rect";
 import { renderIterationsToPixel } from "../rendering/rendering";
-import { getCurrentPalette, markAsRendered, needsRerender } from "./palette";
+import {
+  getCurrentPalette,
+  markAsRendered,
+  markNeedsRerender,
+  needsRerender,
+} from "./palette";
 
 let mainBuffer: p5.Graphics;
 
@@ -50,7 +54,7 @@ export const setupCamera = (p: p5, w: number, h: number) => {
  */
 export const resizeCamera = (p: p5, w: number, h: number) => {
   const from = getCanvasSize();
-  console.log(
+  console.debug(
     `Resize canvas to x=${w} y=${h}, from x=${from.width} y=${from.height}`,
   );
 
@@ -60,18 +64,31 @@ export const resizeCamera = (p: p5, w: number, h: number) => {
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
 
-  // const offsetX = Math.round((w - from.width) / 2);
-  // const offsetY = Math.round((h - from.height) / 2);
-
-  mainBuffer.resizeCanvas(w, h);
+  mainBuffer.resizeCanvas(width, height);
   clearMainBuffer();
 
-  // translateRectInIterationCache(-offsetX, -offsetY);
-  // removeUnusedIterationCache();
-  clearIterationCache();
+  const scaleFactor =
+    Math.min(width, height) / Math.min(from.width, from.height);
+
+  console.debug("Resize scale factor", scaleFactor);
+
+  // サイズ差の分trasnlateしてからscale
+
+  const offsetX = Math.round((width - from.width) / 2);
+  const offsetY = Math.round((height - from.height) / 2);
+  translateRectInIterationCache(-offsetX, -offsetY);
+
+  const translated = scaleIterationCacheAroundPoint(
+    width / 2,
+    height / 2,
+    scaleFactor,
+    width,
+    height,
+  );
+  setIterationCache(translated);
   renderToMainBuffer();
 
-  requireNextRender();
+  markNeedsRerender();
 };
 
 export const nextBuffer = (_p: p5): p5.Graphics => {
