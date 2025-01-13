@@ -42,7 +42,7 @@ export const POICard = ({
             <div>{r.toPrecision(3)}</div>
           </div>
           <div className="flex justify-between">
-            <div>N</div>
+            <div className="mr-2">N</div>
             <div>{N.toFixed(0)}</div>
           </div>
 
