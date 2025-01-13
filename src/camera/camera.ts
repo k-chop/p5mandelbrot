@@ -1,4 +1,5 @@
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { getStore } from "@/store/store";
 import type { IterationBuffer } from "@/types";
 import p5 from "p5";
 import {
@@ -61,11 +62,22 @@ export const setupCamera = (p: p5, w: number, h: number) => {
  * - mainBufferのリサイズ
  * - cacheの位置変更（できれば）
  */
-export const resizeCamera = (p: p5, w: number, h: number) => {
+export const resizeCamera = (
+  p: p5,
+  requestWidth: number,
+  requestHeight: number,
+) => {
   const from = getCanvasSize();
   console.debug(
-    `Resize canvas to x=${w} y=${h}, from x=${from.width} y=${from.height}`,
+    `Request resize canvas to w=${requestWidth} h=${requestHeight}, from w=${from.width} h=${from.height}`,
   );
+
+  const maxSize = getStore("maxCanvasSize");
+
+  const w = maxSize === -1 ? requestWidth : Math.min(requestWidth, maxSize);
+  const h = maxSize === -1 ? requestHeight : Math.min(requestHeight, maxSize);
+
+  console.debug(`Resize to: w=${w}, h=${h} (maxCanvasSize=${maxSize})`);
 
   p.resizeCanvas(w, h);
 
