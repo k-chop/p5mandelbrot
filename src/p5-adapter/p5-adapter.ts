@@ -281,7 +281,7 @@ export const zoomTo = (isZoomOut: boolean) => {
 };
 
 /** wrapper elementの高さを取得してcameraのサイズを変える */
-export const resizeTo = (p: p5) => {
+export const resizeTo = (p: p5 = UNSAFE_p5Instance) => {
   const elm = document.getElementById("canvas-wrapper");
 
   if (elm) {

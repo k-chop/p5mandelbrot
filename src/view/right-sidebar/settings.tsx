@@ -1,4 +1,5 @@
 import { ValueSlider } from "@/components/slider-wrapper";
+import { resizeTo } from "@/p5-adapter/p5-adapter";
 import { Button } from "@/shadcn/components/ui/button";
 import { useToast } from "@/shadcn/hooks/use-toast";
 import { readPOIListFromClipboard } from "@/store/sync-storage/poi-list";
@@ -30,6 +31,7 @@ export const Settings = () => {
 
   const zoomRate = useStoreValue("zoomRate");
   const workerCount = useStoreValue("workerCount");
+  const maxCanvasSize = useStoreValue("maxCanvasSize");
 
   const zoomRateValues = ["1.2", "1.5", "2.0", "4.0", "6.0", "10", "50", "100"];
   const workerCountValues = createWorkerCountValues();
@@ -62,6 +64,15 @@ export const Settings = () => {
     "43",
     "47",
   ];
+  const maxCanvasSizeValues = [
+    "-1",
+    "128",
+    "256",
+    "512",
+    "800",
+    "1024",
+    "2048",
+  ];
 
   const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
   const [workerCountPreview, setWorkerCountPreview] = useState(workerCount);
@@ -71,6 +82,8 @@ export const Settings = () => {
   const [animationCycleStep, setAnimationCycleStep] = useState(() =>
     getStore("animationCycleStep"),
   );
+  const [maxCanvasSizePreview, setMaxCanvasSizePreview] =
+    useState(maxCanvasSize);
 
   return (
     <div className="flex max-w-80 flex-col gap-6">
@@ -125,6 +138,21 @@ export const Settings = () => {
           valueConverter={(value) => parseInt(value)}
           onValueChange={(value) => setAnimationCycleStep(value)}
           onValueCommit={(value) => updateStore("animationCycleStep", value)}
+        />
+      </div>
+      <div>
+        <div className="mb-1 ml-2">Max Canvas Size: {maxCanvasSizePreview}</div>
+        <ValueSlider<number>
+          values={maxCanvasSizeValues}
+          defaultValue={maxCanvasSize}
+          valueConverter={(value) => parseInt(value)}
+          onValueChange={(value) => {
+            setMaxCanvasSizePreview(value);
+          }}
+          onValueCommit={(value) => {
+            updateStore("maxCanvasSize", value);
+            resizeTo();
+          }}
         />
       </div>
       <div>
