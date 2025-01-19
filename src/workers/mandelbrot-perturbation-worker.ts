@@ -177,10 +177,10 @@ const calcHandler = (data: IterationWorkerParams) => {
     const xDiff = xDiffs[i];
     const yDiff = yDiffs[i];
 
-    const lowResAreaWidth = Math.floor(areaWidth / xDiff);
-    const lowResAreaHeight = Math.floor(areaHeight / yDiff);
-    const lowResIterations = new Uint32Array(
-      lowResAreaWidth * lowResAreaHeight,
+    const scaledAreaWidth = Math.floor(areaWidth / xDiff);
+    const scaledAreaHeight = Math.floor(areaHeight / yDiff);
+    const scaledIterations = new Uint32Array(
+      scaledAreaWidth * scaledAreaHeight,
     );
 
     let roughY = 0;
@@ -189,11 +189,11 @@ const calcHandler = (data: IterationWorkerParams) => {
 
       for (let x = startX; x < endX; x = x + xDiff, roughX++) {
         const index = x - startX + (y - startY) * areaWidth;
-        const indexRough = roughX + roughY * lowResAreaWidth;
+        const scaledIndex = roughX + roughY * scaledAreaWidth;
 
         if (!isSuperSampling) {
           if (iterations[index] !== 0) {
-            lowResIterations[indexRough] = iterations[index];
+            scaledIterations[scaledIndex] = iterations[index];
             continue;
           }
         }
@@ -202,7 +202,7 @@ const calcHandler = (data: IterationWorkerParams) => {
 
         calculatedCount++;
         iterations[index] = n;
-        lowResIterations[indexRough] = n;
+        scaledIterations[scaledIndex] = n;
       }
 
       if (terminateChecker[workerIdx] !== 0) break;
@@ -218,17 +218,17 @@ const calcHandler = (data: IterationWorkerParams) => {
     if (isSuperSampling) {
       const elapsed = performance.now() - startedAt;
       self.postMessage(
-        { type: "result", iterations: lowResIterations, elapsed },
-        [lowResIterations.buffer],
+        { type: "result", iterations: scaledIterations, elapsed },
+        [scaledIterations.buffer],
       );
     } else {
       self.postMessage(
         {
           type: "intermediateResult",
-          iterations: lowResIterations,
-          resolution: { width: lowResAreaWidth, height: lowResAreaHeight },
+          iterations: scaledIterations,
+          resolution: { width: scaledAreaWidth, height: scaledAreaHeight },
         },
-        [lowResIterations.buffer],
+        [scaledIterations.buffer],
       );
     }
   }
