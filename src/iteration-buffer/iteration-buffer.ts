@@ -11,8 +11,9 @@ export const upsertIterationCache = (
   rect: Rect,
   buffer: Uint32Array,
   resolution: Resolution,
+  isSuperSampled = false,
 ): IterationBuffer => {
-  const item = { rect, buffer, resolution };
+  const item = { rect, buffer, resolution, isSuperSampled };
 
   const idx = iterationCache.findIndex(
     (i) => i.rect.x === rect.x && i.rect.y === rect.y,

@@ -40,12 +40,18 @@ export const onIterationWorkerResult: IterationResultCallback = (
     return;
   }
 
-  const scale = batchContext.mandelbrotParams.isSuperSampling ? 2 : 1;
+  const isSuperSampled = batchContext.mandelbrotParams.isSuperSampling;
+  const scale = isSuperSampled ? 2 : 1;
   const iterationsResult = new Uint32Array(iterations);
-  const iterBuffer = upsertIterationCache(rect, iterationsResult, {
-    width: rect.width * scale,
-    height: rect.height * scale,
-  });
+  const iterBuffer = upsertIterationCache(
+    rect,
+    iterationsResult,
+    {
+      width: rect.width * scale,
+      height: rect.height * scale,
+    },
+    isSuperSampled,
+  );
 
   // jobを完了させる
   batchContext.progressMap.set(job.id, 1.0);

@@ -97,6 +97,7 @@ export interface IterationBuffer {
   rect: Rect;
   buffer: Uint32Array;
   resolution: Resolution;
+  isSuperSampled?: boolean;
 }
 
 export interface MandelbrotRenderingUnit {
