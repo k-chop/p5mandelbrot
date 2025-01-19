@@ -65,9 +65,9 @@ export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
     params.mode != null && currentParams.mode !== params.mode;
   const needResetOffset = params.r != null && !currentParams.r.eq(params.r);
 
-  if (!params.isSuperSampling && currentParams.isSuperSampling) {
+  if (!params.isSuperSampling) {
     // supersamplingは次の描画で解除される
-    currentParams = { ...currentParams, isSuperSampling: false };
+    currentParams = { ...currentParams, ...params, isSuperSampling: false };
   } else {
     currentParams = { ...currentParams, ...params };
   }
