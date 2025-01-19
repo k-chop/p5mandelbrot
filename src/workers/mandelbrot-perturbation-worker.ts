@@ -183,13 +183,13 @@ const calcHandler = (data: IterationWorkerParams) => {
       scaledAreaWidth * scaledAreaHeight,
     );
 
-    let roughY = 0;
-    for (let y = startY; y < endY; y = y + yDiff, roughY++) {
-      let roughX = 0;
+    let scaledY = 0;
+    for (let y = startY; y < endY; y = y + yDiff, scaledY++) {
+      let scaledX = 0;
 
-      for (let x = startX; x < endX; x = x + xDiff, roughX++) {
-        const index = x - startX + (y - startY) * areaWidth;
-        const scaledIndex = roughX + roughY * scaledAreaWidth;
+      for (let x = startX; x < endX; x = x + xDiff, scaledX++) {
+        const index = Math.floor(x - startX + (y - startY) * areaWidth);
+        const scaledIndex = scaledX + scaledY * scaledAreaWidth;
 
         if (!isSuperSampling) {
           if (iterations[index] !== 0) {
