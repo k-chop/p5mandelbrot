@@ -46,6 +46,7 @@ export interface MandelbrotParams {
   r: BigNumber;
   N: number;
   mode: MandelbrotWorkerType;
+  isSuperSampling?: boolean;
 }
 
 export interface POIData extends MandelbrotParams {

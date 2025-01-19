@@ -391,10 +391,9 @@ export const keyInputHandler = (event: KeyboardEvent) => {
   if (event.key === "r") resetRadius();
   if (event.key === "m") cycleMode();
   if (event.key === "ArrowDown") radiusTimesTo(rate);
-  if (event.key === "s") radiusTimesTo(rate);
   if (event.key === "p") togglePinReference();
   if (event.key === "ArrowUp") radiusTimesTo(1.0 / rate);
-  if (event.key === "w") radiusTimesTo(1.0 / rate);
+  if (event.key === "s") setCurrentParams({ isSuperSampling: true });
   if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
   if (event.key === "ArrowLeft") setCurrentParams({ N: params.N - diff });
 };
