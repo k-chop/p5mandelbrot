@@ -117,7 +117,7 @@ export const getIterationTimeAt = (worldX: number, worldY: number) => {
       iteration.rect.y + iteration.rect.height < worldY
     )
       continue;
-    const idx = bufferLocalLogicalIndex(
+    const [idx] = bufferLocalLogicalIndex(
       Math.floor(worldX),
       Math.floor(worldY),
       iteration.rect,

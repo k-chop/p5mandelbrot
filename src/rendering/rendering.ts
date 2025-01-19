@@ -24,7 +24,8 @@ export const fillColor = (
   canvasWidth: number,
   pixels: Uint8ClampedArray,
   palette: Palette,
-  iteration: number,
+  buffer: Uint32Array,
+  indexes: number[],
   maxIteration: number,
   density: number,
 ) => {
@@ -34,17 +35,33 @@ export const fillColor = (
         4 * ((y * density + j) * canvasWidth * density + (x * density + i)),
       );
 
-      // iterationが-1のときはglitchが起きているので白で塗りつぶす
-      if (iteration === GLITCHED_POINT_ITERATION) {
-        pixels[pixelIndex + 0] = 255;
-        pixels[pixelIndex + 1] = 255;
-        pixels[pixelIndex + 2] = 255;
-        pixels[pixelIndex + 3] = 255;
-      } else if (iteration !== maxIteration) {
-        const r = palette.r(iteration);
-        const g = palette.g(iteration);
-        const b = palette.b(iteration);
+      let r = 0;
+      let g = 0;
+      let b = 0;
 
+      if (indexes.length === 1) {
+        r = palette.r(buffer[indexes[0]]);
+        g = palette.g(buffer[indexes[0]]);
+        b = palette.b(buffer[indexes[0]]);
+      } else {
+        // yo
+        const colors = indexes.map((idx) => [
+          palette.r(buffer[idx]),
+          palette.g(buffer[idx]),
+          palette.b(buffer[idx]),
+        ]);
+        [r, g, b] = colors
+          .reduce(
+            (acc, [r, g, b]) => [acc[0] + r, acc[1] + g, acc[2] + b],
+            [0, 0, 0],
+          )
+          .map((c) => Math.round(c / indexes.length));
+      }
+
+      const iterations = indexes.map((idx) => buffer[idx]);
+      const iteration = Math.max(...iterations);
+
+      if (iteration !== maxIteration) {
         pixels[pixelIndex + 0] = r;
         pixels[pixelIndex + 1] = g;
         pixels[pixelIndex + 2] = b;
@@ -69,7 +86,8 @@ export const bufferLocalLogicalIndex = (
   worldY: number,
   rect: Rect,
   resolution: Resolution,
-): number => {
+  isSuperSampled = false,
+): number[] => {
   const localX = worldX - rect.x;
   const localY = worldY - rect.y;
 
@@ -79,7 +97,15 @@ export const bufferLocalLogicalIndex = (
   const scaledX = Math.floor(localX * ratioX);
   const scaledY = Math.floor(localY * ratioY);
 
-  return scaledX + scaledY * resolution.width;
+  if (!isSuperSampled) {
+    return [scaledX + scaledY * resolution.width];
+  } else {
+    const idx00 = scaledX + scaledY * resolution.width;
+    const idx10 = scaledX + 1 + scaledY * resolution.width;
+    const idx01 = scaledX + (scaledY + 1) * resolution.width;
+    const idx11 = scaledX + 1 + (scaledY + 1) * resolution.width;
+    return [idx00, idx10, idx01, idx11];
+  }
 };
 
 export const renderIterationsToPixel = (
@@ -95,7 +121,7 @@ export const renderIterationsToPixel = (
   const density = graphics.pixelDensity();
 
   for (const iteration of iterationsResult) {
-    const { rect, buffer, resolution } = iteration;
+    const { rect, buffer, resolution, isSuperSampled } = iteration;
 
     // worldRectとiterationのrectが重なっている部分だけ描画する
     const startY = Math.max(rect.y, worldRect.y);
@@ -103,12 +129,23 @@ export const renderIterationsToPixel = (
     const endY = Math.min(rect.y + rect.height, worldRect.y + worldRect.height);
     const endX = Math.min(rect.x + rect.width, worldRect.x + worldRect.width);
 
+    console.log({ worldRect, rect, startX, startY, endX, endY });
+
     for (let worldY = startY; worldY < endY; worldY++) {
       for (let worldX = startX; worldX < endX; worldX++) {
         // バッファ内で対応する点のiterationを取得
 
-        const idx = bufferLocalLogicalIndex(worldX, worldY, rect, resolution);
-        const n = buffer[idx];
+        const indexes = bufferLocalLogicalIndex(
+          worldX,
+          worldY,
+          rect,
+          resolution,
+          isSuperSampled,
+        );
+
+        if (worldX > 639 && worldY > 769) {
+          console.log({ worldX, worldY, indexes, resolution });
+        }
 
         const pixels = graphics.pixels as unknown as Uint8ClampedArray;
         fillColor(
@@ -117,7 +154,8 @@ export const renderIterationsToPixel = (
           canvasWidth,
           pixels,
           palette,
-          n,
+          buffer,
+          indexes,
           maxIteration,
           density,
         );
