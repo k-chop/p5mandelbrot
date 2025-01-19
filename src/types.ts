@@ -61,6 +61,7 @@ export interface IterationWorkerParams {
   cy: string;
   r: string;
   N: number;
+  isSuperSampling: boolean;
   startX: number;
   endX: number;
   startY: number;

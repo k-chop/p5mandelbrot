@@ -150,6 +150,7 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
       cy: mandelbrotParams.y.toString(),
       r: mandelbrotParams.r.toString(),
       N: mandelbrotParams.N,
+      isSuperSampling: mandelbrotParams.isSuperSampling ?? false,
       pixelHeight,
       pixelWidth,
       startX: rect.x,

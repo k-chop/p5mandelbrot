@@ -40,10 +40,11 @@ export const onIterationWorkerResult: IterationResultCallback = (
     return;
   }
 
+  const scale = batchContext.mandelbrotParams.isSuperSampling ? 2 : 1;
   const iterationsResult = new Uint32Array(iterations);
   const iterBuffer = upsertIterationCache(rect, iterationsResult, {
-    width: rect.width,
-    height: rect.height,
+    width: rect.width * scale,
+    height: rect.height * scale,
   });
 
   // jobを完了させる

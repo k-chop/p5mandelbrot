@@ -27,6 +27,7 @@ const calcHandler = (data: IterationWorkerParams) => {
     cy: cyStr,
     r: rStr,
     N: maxIteration,
+    isSuperSampling,
     startX,
     endX,
     startY,
@@ -41,7 +42,7 @@ const calcHandler = (data: IterationWorkerParams) => {
   } = data;
 
   const startedAt = performance.now();
-  console.debug(`${jobId}: start`);
+  // console.debug(`${jobId}: start`);
 
   const terminateChecker = new Uint8Array(terminator);
 
@@ -163,11 +164,12 @@ const calcHandler = (data: IterationWorkerParams) => {
 
   const context = { xn, blaTable };
 
-  const { xDiffs, yDiffs } = generateLowResDiffSequence(
-    6,
-    areaWidth,
-    areaHeight,
-  );
+  let { xDiffs, yDiffs } = generateLowResDiffSequence(6, areaWidth, areaHeight);
+
+  if (isSuperSampling) {
+    xDiffs = [0.5];
+    yDiffs = [0.5];
+  }
 
   let calculatedCount = 0;
 
@@ -223,7 +225,7 @@ const calcHandler = (data: IterationWorkerParams) => {
   if (terminateChecker[workerIdx] !== 0) {
     console.debug(`${jobId}: terminated`);
   } else {
-    console.debug(`${jobId}: completed`);
+    // console.debug(`${jobId}: completed`);
   }
 
   const elapsed = performance.now() - startedAt;
