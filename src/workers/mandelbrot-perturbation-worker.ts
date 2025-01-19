@@ -53,7 +53,7 @@ const calcHandler = (data: IterationWorkerParams) => {
   const areaHeight = endY - startY;
   const pixelNum = areaHeight * areaWidth;
   const iterations = new Uint32Array(pixelNum);
-  const totalPixelCount = pixelNum * (isSuperSampling ? 4 : 1);
+  const totalPixelCount = pixelNum * (isSuperSampling ? 4 : 1); // FIXME: supersamplingの倍率が固定値になっている
 
   const c = complexArbitary(cxStr, cyStr);
   const ref = complexArbitary(refX, refY);
@@ -168,6 +168,7 @@ const calcHandler = (data: IterationWorkerParams) => {
   let { xDiffs, yDiffs } = generateLowResDiffSequence(6, areaWidth, areaHeight);
 
   if (isSuperSampling) {
+    // FIXME: 2倍決め打ちになってしまっている
     xDiffs = [0.5];
     yDiffs = [0.5];
   }
