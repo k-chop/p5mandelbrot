@@ -57,8 +57,11 @@ export const fillColor = (
           .map((c) => Math.round(c / indexes.length));
       }
 
+      // iterationの平均がmaxIterationのときに黒にする
       const iterations = indexes.map((idx) => buffer[idx]);
-      const iteration = Math.max(...iterations);
+      const iteration = Math.round(
+        iterations.reduce((acc, cur) => acc + cur, 0) / iterations.length,
+      );
 
       if (iteration !== maxIteration) {
         pixels[pixelIndex + 0] = r;
