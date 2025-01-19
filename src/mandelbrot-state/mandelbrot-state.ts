@@ -65,7 +65,12 @@ export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
     params.mode != null && currentParams.mode !== params.mode;
   const needResetOffset = params.r != null && !currentParams.r.eq(params.r);
 
-  currentParams = { ...currentParams, ...params };
+  if (!params.isSuperSampling && currentParams.isSuperSampling) {
+    // supersamplingは次の描画で解除される
+    currentParams = { ...currentParams, isSuperSampling: false };
+  } else {
+    currentParams = { ...currentParams, ...params };
+  }
 
   updateStore("r", currentParams.r);
   updateStore("N", currentParams.N);
@@ -120,7 +125,7 @@ export const radiusTimesTo = (times: number) => {
     return;
   }
 
-  currentParams.r = currentParams.r.times(times);
+  setCurrentParams({ r: currentParams.r.times(times) });
   setOffsetParams({ x: 0, y: 0 });
 };
 
