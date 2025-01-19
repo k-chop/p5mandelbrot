@@ -2,7 +2,6 @@ import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
 import { Button } from "@/shadcn/components/ui/button";
 import { toast } from "@/shadcn/hooks/use-toast";
-import { useStoreValue } from "@/store/store";
 import { copyCurrentParamsToClipboard } from "@/utils/mandelbrot-url-params";
 import { IconCircleCheck, IconDownload, IconShare } from "@tabler/icons-react";
 import { Expand } from "lucide-react";
@@ -74,8 +73,6 @@ const SaveImageButton = () => {
 };
 
 const SupersamplingButton = () => {
-  const mode = useStoreValue("mode");
-
   return (
     <Button
       variant="outline"
@@ -83,7 +80,6 @@ const SupersamplingButton = () => {
       onClick={() => {
         setCurrentParams({ isSuperSampling: true });
       }}
-      disabled={mode === "normal"}
     >
       <Expand className="mr-1 size-6" />
       Supersampling x2

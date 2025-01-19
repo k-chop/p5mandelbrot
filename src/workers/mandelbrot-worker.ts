@@ -11,6 +11,7 @@ self.addEventListener("message", (event) => {
     cy: cyStr,
     r: rStr,
     N,
+    isSuperSampling,
     startX,
     endX,
     startY,
@@ -19,7 +20,13 @@ self.addEventListener("message", (event) => {
 
   const startedAt = performance.now();
 
-  const iterations = new Uint32Array((endY - startY) * (endX - startX));
+  const sampleScale = isSuperSampling ? 2 : 1;
+  const areaPixelWidth = (endX - startX) * sampleScale;
+  const areaPixelHeight = (endY - startY) * sampleScale;
+
+  const pixelNum = areaPixelHeight * areaPixelWidth;
+
+  const iterations = new Uint32Array(pixelNum);
 
   const cx = parseFloat(cxStr);
   const cy = parseFloat(cyStr);
@@ -29,8 +36,13 @@ self.addEventListener("message", (event) => {
   const scaleX = pixelWidth / Math.min(pixelWidth, pixelHeight);
   const scaleY = pixelHeight / Math.min(pixelWidth, pixelHeight);
 
-  for (let y = startY; y < endY; y++) {
-    for (let x = startX; x < endX; x++) {
+  const diffX = isSuperSampling ? 0.5 : 1;
+  const diffY = isSuperSampling ? 0.5 : 1;
+
+  let scaledY = 0;
+  for (let y = startY; y < endY; y = y + diffY, scaledY++) {
+    let scaledX = 0;
+    for (let x = startX; x < endX; x = x + diffX, scaledX++) {
       let zr = 0.0;
       let zi = 0.0;
       const cr = cx + ((x * 2) / pixelWidth - 1.0) * r * scaleX;
@@ -48,12 +60,17 @@ self.addEventListener("message", (event) => {
         n++;
       }
 
-      const index = x - startX + (y - startY) * (endX - startX);
-      iterations[index] = n;
+      if (isSuperSampling) {
+        const scaledIndex = scaledX + scaledY * areaPixelWidth;
+        iterations[scaledIndex] = n;
+      } else {
+        const index = Math.floor(x - startX + (y - startY) * areaPixelWidth);
+        iterations[index] = n;
+      }
     }
     self.postMessage({
       type: "progress",
-      progress: (y - startY) / (endY - startY),
+      progress: (y - startY) / areaPixelHeight,
     });
   }
 

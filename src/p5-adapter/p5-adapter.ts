@@ -393,8 +393,7 @@ export const keyInputHandler = (event: KeyboardEvent) => {
   if (event.key === "ArrowDown") radiusTimesTo(rate);
   if (event.key === "p") togglePinReference();
   if (event.key === "ArrowUp") radiusTimesTo(1.0 / rate);
-  if (event.key === "s" && params.mode === "perturbation") {
-    // FIXME: 通常モードはまだ未対応
+  if (event.key === "s") {
     setCurrentParams({ isSuperSampling: true });
   }
   if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
