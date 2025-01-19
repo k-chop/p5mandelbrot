@@ -27,6 +27,7 @@ const calcHandler = (data: IterationWorkerParams) => {
     cy: cyStr,
     r: rStr,
     N: maxIteration,
+    isSuperSampling,
     startX,
     endX,
     startY,
@@ -41,7 +42,7 @@ const calcHandler = (data: IterationWorkerParams) => {
   } = data;
 
   const startedAt = performance.now();
-  console.debug(`${jobId}: start`);
+  // console.debug(`${jobId}: start`);
 
   const terminateChecker = new Uint8Array(terminator);
 
@@ -52,6 +53,7 @@ const calcHandler = (data: IterationWorkerParams) => {
   const areaHeight = endY - startY;
   const pixelNum = areaHeight * areaWidth;
   const iterations = new Uint32Array(pixelNum);
+  const totalPixelCount = pixelNum * (isSuperSampling ? 4 : 1); // FIXME: supersamplingの倍率が固定値になっている
 
   const c = complexArbitary(cxStr, cyStr);
   const ref = complexArbitary(refX, refY);
@@ -163,11 +165,13 @@ const calcHandler = (data: IterationWorkerParams) => {
 
   const context = { xn, blaTable };
 
-  const { xDiffs, yDiffs } = generateLowResDiffSequence(
-    6,
-    areaWidth,
-    areaHeight,
-  );
+  let { xDiffs, yDiffs } = generateLowResDiffSequence(6, areaWidth, areaHeight);
+
+  if (isSuperSampling) {
+    // FIXME: 2倍決め打ちになってしまっている
+    xDiffs = [0.5];
+    yDiffs = [0.5];
+  }
 
   let calculatedCount = 0;
 
@@ -175,61 +179,72 @@ const calcHandler = (data: IterationWorkerParams) => {
     const xDiff = xDiffs[i];
     const yDiff = yDiffs[i];
 
-    const lowResAreaWidth = Math.floor(areaWidth / xDiff);
-    const lowResAreaHeight = Math.floor(areaHeight / yDiff);
-    const lowResIterations = new Uint32Array(
-      lowResAreaWidth * lowResAreaHeight,
+    const scaledAreaWidth = Math.floor(areaWidth / xDiff);
+    const scaledAreaHeight = Math.floor(areaHeight / yDiff);
+    const scaledIterations = new Uint32Array(
+      scaledAreaWidth * scaledAreaHeight,
     );
 
-    let roughY = 0;
-    for (let y = startY; y < endY; y = y + yDiff, roughY++) {
-      let roughX = 0;
+    let scaledY = 0;
+    for (let y = startY; y < endY; y = y + yDiff, scaledY++) {
+      let scaledX = 0;
 
-      for (let x = startX; x < endX; x = x + xDiff, roughX++) {
-        const index = x - startX + (y - startY) * areaWidth;
-        const indexRough = roughX + roughY * lowResAreaWidth;
+      for (let x = startX; x < endX; x = x + xDiff, scaledX++) {
+        const index = Math.floor(x - startX + (y - startY) * areaWidth);
+        const scaledIndex = scaledX + scaledY * scaledAreaWidth;
 
-        if (iterations[index] !== 0) {
-          lowResIterations[indexRough] = iterations[index];
-          continue;
+        if (!isSuperSampling) {
+          if (iterations[index] !== 0) {
+            scaledIterations[scaledIndex] = iterations[index];
+            continue;
+          }
         }
 
         const n = calcIterationAt(x, y, context);
 
         calculatedCount++;
         iterations[index] = n;
-        lowResIterations[indexRough] = n;
+        scaledIterations[scaledIndex] = n;
       }
 
       if (terminateChecker[workerIdx] !== 0) break;
 
       self.postMessage({
         type: "progress",
-        progress: calculatedCount / pixelNum,
+        progress: calculatedCount / totalPixelCount,
       });
     }
 
     if (terminateChecker[workerIdx] !== 0) break;
 
-    self.postMessage(
-      {
-        type: "intermediateResult",
-        iterations: lowResIterations,
-        resolution: { width: lowResAreaWidth, height: lowResAreaHeight },
-      },
-      [lowResIterations.buffer],
-    );
+    if (isSuperSampling) {
+      const elapsed = performance.now() - startedAt;
+      self.postMessage(
+        { type: "result", iterations: scaledIterations, elapsed },
+        [scaledIterations.buffer],
+      );
+    } else {
+      self.postMessage(
+        {
+          type: "intermediateResult",
+          iterations: scaledIterations,
+          resolution: { width: scaledAreaWidth, height: scaledAreaHeight },
+        },
+        [scaledIterations.buffer],
+      );
+    }
   }
   if (terminateChecker[workerIdx] !== 0) {
     console.debug(`${jobId}: terminated`);
   } else {
-    console.debug(`${jobId}: completed`);
+    // console.debug(`${jobId}: completed`);
   }
-
-  const elapsed = performance.now() - startedAt;
-  self.postMessage({ type: "result", iterations, elapsed }, [
-    iterations.buffer,
-  ]);
+  if (!isSuperSampling) {
+    const elapsed = performance.now() - startedAt;
+    self.postMessage({ type: "result", iterations, elapsed }, [
+      iterations.buffer,
+    ]);
+  }
 };
 
 self.addEventListener("message", (event) => {

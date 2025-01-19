@@ -49,6 +49,11 @@ export const Instructions = () => {
         <div>Reset r to 2.0</div>
 
         <div>
+          <Kbd>s</Kbd>
+        </div>
+        <div>Supersampling(x2) current location</div>
+
+        <div>
           <Kbd>←</Kbd>
           <Kbd>→</Kbd>
         </div>

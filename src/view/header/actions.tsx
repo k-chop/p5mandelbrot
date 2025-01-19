@@ -1,14 +1,17 @@
+import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
 import { Button } from "@/shadcn/components/ui/button";
 import { toast } from "@/shadcn/hooks/use-toast";
 import { copyCurrentParamsToClipboard } from "@/utils/mandelbrot-url-params";
 import { IconCircleCheck, IconDownload, IconShare } from "@tabler/icons-react";
+import { Expand } from "lucide-react";
 
 export const Actions = () => {
   return (
     <div className="flex gap-x-2">
       <ShareButton />
       <SaveImageButton />
+      <SupersamplingButton />
     </div>
   );
 };
@@ -65,6 +68,21 @@ const SaveImageButton = () => {
     >
       <IconDownload className="mr-1 size-6" />
       Save Image
+    </Button>
+  );
+};
+
+const SupersamplingButton = () => {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => {
+        setCurrentParams({ isSuperSampling: true });
+      }}
+    >
+      <Expand className="mr-1 size-6" />
+      Supersampling x2
     </Button>
   );
 };

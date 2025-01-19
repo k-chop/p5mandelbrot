@@ -11,8 +11,9 @@ export const upsertIterationCache = (
   rect: Rect,
   buffer: Uint32Array,
   resolution: Resolution,
+  isSuperSampled = false,
 ): IterationBuffer => {
-  const item = { rect, buffer, resolution };
+  const item = { rect, buffer, resolution, isSuperSampled };
 
   const idx = iterationCache.findIndex(
     (i) => i.rect.x === rect.x && i.rect.y === rect.y,
@@ -116,7 +117,7 @@ export const getIterationTimeAt = (worldX: number, worldY: number) => {
       iteration.rect.y + iteration.rect.height < worldY
     )
       continue;
-    const idx = bufferLocalLogicalIndex(
+    const [idx] = bufferLocalLogicalIndex(
       Math.floor(worldX),
       Math.floor(worldY),
       iteration.rect,

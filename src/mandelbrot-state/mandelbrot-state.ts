@@ -52,18 +52,25 @@ export const markAsRenderedWithCurrentParams = () => {
 export const needsRenderForCurrentParams = () => {
   return !isSameParams(lastCalc, currentParams);
 };
-export const requireNextRender = () => {
-  lastCalc = { ...currentParams, N: 0 };
-};
 const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
-  a.x === b.x && a.y === b.y && a.r === b.r && a.N === b.N && a.mode === b.mode;
+  a.x === b.x &&
+  a.y === b.y &&
+  a.r === b.r &&
+  a.N === b.N &&
+  a.mode === b.mode &&
+  a.isSuperSampling === b.isSuperSampling;
 
 export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
   const needModeChange =
     params.mode != null && currentParams.mode !== params.mode;
   const needResetOffset = params.r != null && !currentParams.r.eq(params.r);
 
-  currentParams = { ...currentParams, ...params };
+  if (!params.isSuperSampling) {
+    // supersamplingは次の描画で解除される
+    currentParams = { ...currentParams, ...params, isSuperSampling: false };
+  } else {
+    currentParams = { ...currentParams, ...params };
+  }
 
   updateStore("r", currentParams.r);
   updateStore("N", currentParams.N);
@@ -118,7 +125,7 @@ export const radiusTimesTo = (times: number) => {
     return;
   }
 
-  currentParams.r = currentParams.r.times(times);
+  setCurrentParams({ r: currentParams.r.times(times) });
   setOffsetParams({ x: 0, y: 0 });
 };
 

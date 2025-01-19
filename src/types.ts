@@ -46,6 +46,7 @@ export interface MandelbrotParams {
   r: BigNumber;
   N: number;
   mode: MandelbrotWorkerType;
+  isSuperSampling?: boolean;
 }
 
 export interface POIData extends MandelbrotParams {
@@ -60,6 +61,7 @@ export interface IterationWorkerParams {
   cy: string;
   r: string;
   N: number;
+  isSuperSampling: boolean;
   startX: number;
   endX: number;
   startY: number;
@@ -95,6 +97,7 @@ export interface IterationBuffer {
   rect: Rect;
   buffer: Uint32Array;
   resolution: Resolution;
+  isSuperSampled?: boolean;
 }
 
 export interface MandelbrotRenderingUnit {
