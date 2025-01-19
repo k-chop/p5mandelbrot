@@ -121,8 +121,6 @@ export const renderIterationsToPixel = (
 
   graphics.loadPixels();
   const density = graphics.pixelDensity();
-  console.log({ density });
-  console.log(iterationsResult);
 
   for (const iteration of iterationsResult) {
     const { rect, buffer, resolution, isSuperSampled } = iteration;
@@ -132,8 +130,6 @@ export const renderIterationsToPixel = (
     const startX = Math.max(rect.x, worldRect.x);
     const endY = Math.min(rect.y + rect.height, worldRect.y + worldRect.height);
     const endX = Math.min(rect.x + rect.width, worldRect.x + worldRect.width);
-
-    console.log({ worldRect, rect, startX, startY, endX, endY });
 
     for (let worldY = startY; worldY < endY; worldY++) {
       for (let worldX = startX; worldX < endX; worldX++) {
@@ -146,10 +142,6 @@ export const renderIterationsToPixel = (
           resolution,
           isSuperSampled,
         );
-
-        if (worldX > 639 && worldY > 769) {
-          console.log({ worldX, worldY, indexes, resolution });
-        }
 
         const pixels = graphics.pixels as unknown as Uint8ClampedArray;
         fillColor(
