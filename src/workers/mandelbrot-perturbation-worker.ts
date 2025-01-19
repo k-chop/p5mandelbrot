@@ -191,9 +191,11 @@ const calcHandler = (data: IterationWorkerParams) => {
         const index = x - startX + (y - startY) * areaWidth;
         const indexRough = roughX + roughY * lowResAreaWidth;
 
-        if (iterations[index] !== 0) {
-          lowResIterations[indexRough] = iterations[index];
-          continue;
+        if (!isSuperSampling) {
+          if (iterations[index] !== 0) {
+            lowResIterations[indexRough] = iterations[index];
+            continue;
+          }
         }
 
         const n = calcIterationAt(x, y, context);
@@ -213,25 +215,34 @@ const calcHandler = (data: IterationWorkerParams) => {
 
     if (terminateChecker[workerIdx] !== 0) break;
 
-    self.postMessage(
-      {
-        type: "intermediateResult",
-        iterations: lowResIterations,
-        resolution: { width: lowResAreaWidth, height: lowResAreaHeight },
-      },
-      [lowResIterations.buffer],
-    );
+    if (isSuperSampling) {
+      const elapsed = performance.now() - startedAt;
+      self.postMessage(
+        { type: "result", iterations: lowResIterations, elapsed },
+        [lowResIterations.buffer],
+      );
+    } else {
+      self.postMessage(
+        {
+          type: "intermediateResult",
+          iterations: lowResIterations,
+          resolution: { width: lowResAreaWidth, height: lowResAreaHeight },
+        },
+        [lowResIterations.buffer],
+      );
+    }
   }
   if (terminateChecker[workerIdx] !== 0) {
     console.debug(`${jobId}: terminated`);
   } else {
     // console.debug(`${jobId}: completed`);
   }
-
-  const elapsed = performance.now() - startedAt;
-  self.postMessage({ type: "result", iterations, elapsed }, [
-    iterations.buffer,
-  ]);
+  if (!isSuperSampling) {
+    const elapsed = performance.now() - startedAt;
+    self.postMessage({ type: "result", iterations, elapsed }, [
+      iterations.buffer,
+    ]);
+  }
 };
 
 self.addEventListener("message", (event) => {
