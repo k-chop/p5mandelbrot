@@ -53,6 +53,7 @@ const calcHandler = (data: IterationWorkerParams) => {
   const areaHeight = endY - startY;
   const pixelNum = areaHeight * areaWidth;
   const iterations = new Uint32Array(pixelNum);
+  const totalPixelCount = pixelNum * (isSuperSampling ? 4 : 1);
 
   const c = complexArbitary(cxStr, cyStr);
   const ref = complexArbitary(refX, refY);
@@ -209,7 +210,7 @@ const calcHandler = (data: IterationWorkerParams) => {
 
       self.postMessage({
         type: "progress",
-        progress: calculatedCount / pixelNum,
+        progress: calculatedCount / totalPixelCount,
       });
     }
 
