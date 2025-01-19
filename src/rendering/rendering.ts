@@ -44,18 +44,21 @@ export const fillColor = (
         g = palette.g(buffer[indexes[0]]);
         b = palette.b(buffer[indexes[0]]);
       } else {
-        // yo
-        const colors = indexes.map((idx) => [
-          palette.r(buffer[idx]),
-          palette.g(buffer[idx]),
-          palette.b(buffer[idx]),
-        ]);
-        [r, g, b] = colors
-          .reduce(
-            (acc, [r, g, b]) => [acc[0] + r, acc[1] + g, acc[2] + b],
-            [0, 0, 0],
-          )
-          .map((c) => Math.round(c / indexes.length));
+        r = palette.r(buffer[indexes[0]]);
+        g = palette.g(buffer[indexes[0]]);
+        b = palette.b(buffer[indexes[0]]);
+        // // yo
+        // const colors = indexes.map((idx) => [
+        //   palette.r(buffer[idx]),
+        //   palette.g(buffer[idx]),
+        //   palette.b(buffer[idx]),
+        // ]);
+        // [r, g, b] = colors
+        //   .reduce(
+        //     (acc, [r, g, b]) => [acc[0] + r, acc[1] + g, acc[2] + b],
+        //     [0, 0, 0],
+        //   )
+        //   .map((c) => Math.round(c / indexes.length));
       }
 
       const iterations = indexes.map((idx) => buffer[idx]);
@@ -119,6 +122,8 @@ export const renderIterationsToPixel = (
 
   graphics.loadPixels();
   const density = graphics.pixelDensity();
+  console.log({ density });
+  console.log(iterationsResult);
 
   for (const iteration of iterationsResult) {
     const { rect, buffer, resolution, isSuperSampled } = iteration;
