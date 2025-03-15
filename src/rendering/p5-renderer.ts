@@ -399,29 +399,32 @@ export const resizeCamera = (
     height,
   );
   setIterationCache(translated);
-  renderToMainBuffer();
+  renderToUnifiedBuffer();
 
   markNeedsRerender();
 };
 
-export const renderToMainBuffer = (
+export const renderToUnifiedBuffer = (
   rect: Rect = bufferRect,
   iterBuffer?: IterationBuffer[],
-  moved = false,
 ) => {
-  const params = getCurrentParams();
-
   renderIterationsToUnifiedBuffer(
     rect,
     unifiedIterationBuffer,
     iterBuffer ?? getIterationCache(),
   );
+  markNeedsRerender();
+};
+
+export const renderToMainBuffer = (rect: Rect = bufferRect) => {
+  const params = getCurrentParams();
+
   renderIterationsToPixel(
     rect,
     mainBuffer,
     params.N,
     unifiedIterationBuffer,
-    !moved ? params.isSuperSampling : false, // すごい苦し紛れ感がある
+    params.isSuperSampling,
     getCurrentPalette(),
   );
 };

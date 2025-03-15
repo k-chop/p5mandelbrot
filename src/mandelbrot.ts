@@ -20,6 +20,7 @@ import {
   getCanvasSize,
   getWholeCanvasRect,
   renderToMainBuffer,
+  renderToUnifiedBuffer,
 } from "./rendering/p5-renderer";
 import { getStore } from "./store/store";
 import { getWorkerCount } from "./worker-pool/pool-instance";
@@ -54,7 +55,8 @@ export const startCalculation = async (
   // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
   removeUnusedIterationCache();
   clearMainBuffer();
-  renderToMainBuffer(rect, undefined, true);
+  renderToUnifiedBuffer(rect);
+  renderToMainBuffer(rect);
 
   // ドラッグ中に描画をずらしていたのを戻す
   onTranslated();
