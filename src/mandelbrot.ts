@@ -1,10 +1,4 @@
 import {
-  clearMainBuffer,
-  getCanvasSize,
-  getWholeCanvasRect,
-  renderToMainBuffer,
-} from "./camera/camera";
-import {
   removeUnusedIterationCache,
   scaleIterationCacheAroundPoint,
   setIterationCache,
@@ -21,6 +15,12 @@ import {
   setPrevBatchId,
 } from "./mandelbrot-state/mandelbrot-state";
 import { getCalculationTargetRects, Rect } from "./math/rect";
+import {
+  clearMainBuffer,
+  getCanvasSize,
+  getWholeCanvasRect,
+  renderToMainBuffer,
+} from "./rendering/rendering";
 import { getStore } from "./store/store";
 import { getWorkerCount } from "./worker-pool/pool-instance";
 import {

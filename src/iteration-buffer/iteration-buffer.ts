@@ -1,5 +1,4 @@
-import { getCanvasSize } from "@/camera/camera";
-import { Resolution } from "@/rendering/rendering";
+import { getCanvasSize, Resolution } from "@/rendering/rendering";
 import { Rect } from "../math/rect";
 import { bufferLocalLogicalIndex } from "../rendering/rendering";
 import { IterationBuffer } from "../types";

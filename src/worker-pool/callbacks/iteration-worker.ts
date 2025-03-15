@@ -1,8 +1,8 @@
-import { renderToMainBuffer } from "@/camera/camera";
 import {
   getIterationCache,
   upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
+import { renderToMainBuffer } from "@/rendering/rendering";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
 import {
