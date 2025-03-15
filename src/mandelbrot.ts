@@ -20,7 +20,7 @@ import {
   getCanvasSize,
   getWholeCanvasRect,
   renderToMainBuffer,
-} from "./rendering/rendering";
+} from "./rendering/p5-renderer";
 import { getStore } from "./store/store";
 import { getWorkerCount } from "./worker-pool/pool-instance";
 import {

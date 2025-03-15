@@ -1,4 +1,4 @@
-import { getCanvasSize } from "@/rendering/rendering";
+import { getCanvasSize } from "@/rendering/p5-renderer";
 import { getStore, updateStore, updateStoreWith } from "@/store/store";
 import type { MandelbrotParams, OffsetParams } from "@/types";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";

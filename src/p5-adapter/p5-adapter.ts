@@ -31,7 +31,7 @@ import {
   nextBuffer,
   resizeCamera,
   setupCamera,
-} from "@/rendering/rendering";
+} from "@/rendering/p5-renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
 import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";

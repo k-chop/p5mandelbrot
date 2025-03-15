@@ -2,7 +2,7 @@ import {
   getIterationCache,
   upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
-import { renderToMainBuffer } from "@/rendering/rendering";
+import { renderToMainBuffer } from "@/rendering/p5-renderer";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
 import {

@@ -1,6 +1,6 @@
 import { Kbd } from "@/components/kbd";
 import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { GLITCHED_POINT_ITERATION } from "@/rendering/rendering";
+import { GLITCHED_POINT_ITERATION } from "@/rendering/p5-renderer";
 import { Card, CardContent } from "@/shadcn/components/ui/card";
 import {
   Dialog,
