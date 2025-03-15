@@ -33,6 +33,8 @@ let height: number;
 
 let bufferRect: Rect;
 
+let unifiedIterationBuffer: Uint32Array;
+
 /**
  * 指定した座標をpaletteとiterationの値に応じて塗りつぶす
  *
@@ -45,7 +47,7 @@ export const fillColor = (
   pixels: Uint8ClampedArray,
   palette: Palette,
   buffer: Uint32Array,
-  indexes: number[],
+  isSuperSampled: boolean,
   maxIteration: number,
   density: number,
 ) => {
@@ -59,29 +61,49 @@ export const fillColor = (
       let g = 0;
       let b = 0;
 
-      if (indexes.length === 1) {
-        r = palette.r(buffer[indexes[0]]);
-        g = palette.g(buffer[indexes[0]]);
-        b = palette.b(buffer[indexes[0]]);
-      } else {
-        const colors = indexes.map((idx) => [
-          palette.r(buffer[idx]),
-          palette.g(buffer[idx]),
-          palette.b(buffer[idx]),
-        ]);
-        [r, g, b] = colors
-          .reduce(
-            (acc, [r, g, b]) => [acc[0] + r, acc[1] + g, acc[2] + b],
-            [0, 0, 0],
-          )
-          .map((c) => Math.round(c / indexes.length));
-      }
+      let iteration = 0;
 
-      // iterationの平均がmaxIterationのときに黒にする
-      const iterations = indexes.map((idx) => buffer[idx]);
-      const iteration = Math.round(
-        iterations.reduce((acc, cur) => acc + cur, 0) / iterations.length,
-      );
+      if (!isSuperSampled) {
+        const idx = x * density + i + (y * density + j) * canvasWidth * density;
+        iteration = buffer[idx];
+
+        r = palette.r(buffer[idx]);
+        g = palette.g(buffer[idx]);
+        b = palette.b(buffer[idx]);
+      } else {
+        const doubleCanvasWidth = canvasWidth * 2;
+        const y2 = y * 2;
+        const x2 = x * 2;
+
+        const idx00 = x2 + i + (y2 + j) * doubleCanvasWidth;
+        const idx10 = x2 + i + 1 + (y2 + j) * doubleCanvasWidth;
+        const idx01 = x2 + i + (y2 + j + 1) * doubleCanvasWidth;
+        const idx11 = x2 + i + 1 + (y2 + j + 1) * doubleCanvasWidth;
+
+        iteration = Math.round(
+          (buffer[idx00] + buffer[idx10] + buffer[idx01] + buffer[idx11]) / 4,
+        );
+
+        const r00 = palette.r(buffer[idx00]);
+        const g00 = palette.g(buffer[idx00]);
+        const b00 = palette.b(buffer[idx00]);
+
+        const r10 = palette.r(buffer[idx10]);
+        const g10 = palette.g(buffer[idx10]);
+        const b10 = palette.b(buffer[idx10]);
+
+        const r01 = palette.r(buffer[idx01]);
+        const g01 = palette.g(buffer[idx01]);
+        const b01 = palette.b(buffer[idx01]);
+
+        const r11 = palette.r(buffer[idx11]);
+        const g11 = palette.g(buffer[idx11]);
+        const b11 = palette.b(buffer[idx11]);
+
+        r = (r00 + r10 + r01 + r11) / 4;
+        g = (g00 + g10 + g01 + g11) / 4;
+        b = (b00 + b10 + b01 + b11) / 4;
+      }
 
       if (iteration !== maxIteration) {
         pixels[pixelIndex + 0] = r;
@@ -134,13 +156,53 @@ export const renderIterationsToPixel = (
   worldRect: Rect,
   graphics: p5.Graphics,
   maxIteration: number,
-  iterationsResult: IterationBuffer[],
+  unifiedIterationBuffer: Uint32Array,
+  isSuperSampled: boolean = false,
   palette: Palette,
 ) => {
   const { width: canvasWidth } = getCanvasSize();
 
   graphics.loadPixels();
   const density = graphics.pixelDensity();
+
+  // worldRectとiterationのrectが重なっている部分だけ描画する
+  const startY = worldRect.y;
+  const startX = worldRect.x;
+  const endY = worldRect.y + worldRect.height;
+  const endX = worldRect.x + worldRect.width;
+
+  for (let worldY = startY; worldY < endY; worldY++) {
+    for (let worldX = startX; worldX < endX; worldX++) {
+      const pixels = graphics.pixels as unknown as Uint8ClampedArray;
+
+      fillColor(
+        worldX,
+        worldY,
+        canvasWidth,
+        pixels,
+        palette,
+        unifiedIterationBuffer,
+        isSuperSampled,
+        maxIteration,
+        density,
+      );
+    }
+  }
+
+  graphics.updatePixels();
+};
+
+/**
+ * canvasのpixelサイズと同サイズのBufferにiteration数を書き込む
+ *
+ * supersamplingされている場合もある
+ */
+export const renderIterationsToUnifiedBuffer = (
+  worldRect: Rect,
+  unifiedIterationBuffer: Uint32Array,
+  iterationsResult: IterationBuffer[],
+) => {
+  const { width: canvasWidth } = getCanvasSize();
 
   for (const iteration of iterationsResult) {
     const { rect, buffer, resolution, isSuperSampled } = iteration;
@@ -154,32 +216,48 @@ export const renderIterationsToPixel = (
     for (let worldY = startY; worldY < endY; worldY++) {
       for (let worldX = startX; worldX < endX; worldX++) {
         // バッファ内で対応する点のiterationを取得
+        const localX = worldX - rect.x;
+        const localY = worldY - rect.y;
 
-        const indexes = bufferLocalLogicalIndex(
-          worldX,
-          worldY,
-          rect,
-          resolution,
-          isSuperSampled,
-        );
+        const ratioX = resolution.width / rect.width;
+        const ratioY = resolution.height / rect.height;
 
-        const pixels = graphics.pixels as unknown as Uint8ClampedArray;
-        fillColor(
-          worldX,
-          worldY,
-          canvasWidth,
-          pixels,
-          palette,
-          buffer,
-          indexes,
-          maxIteration,
-          density,
-        );
+        const scaledX = Math.floor(localX * ratioX);
+        const scaledY = Math.floor(localY * ratioY);
+
+        const worldIdx = worldY * canvasWidth + worldX;
+
+        if (!isSuperSampled) {
+          const idx = scaledX + scaledY * resolution.width;
+
+          unifiedIterationBuffer[worldIdx] = buffer[idx];
+        } else {
+          const idx00 = scaledX + scaledY * resolution.width;
+          const idx10 = scaledX + 1 + scaledY * resolution.width;
+          const idx01 = scaledX + (scaledY + 1) * resolution.width;
+          const idx11 = scaledX + 1 + (scaledY + 1) * resolution.width;
+
+          // unifiedIterationBufferは幅・高さともに2倍のサイズを想定
+          const doubleCanvasWidth = canvasWidth * 2;
+          const worldY2x = worldY * 2;
+          const worldX2x = worldX * 2;
+
+          // 4点のデータを対応する位置にそのまま格納
+          unifiedIterationBuffer[worldY2x * doubleCanvasWidth + worldX2x] =
+            buffer[idx00];
+          unifiedIterationBuffer[
+            worldY2x * doubleCanvasWidth + (worldX2x + 1)
+          ] = buffer[idx10];
+          unifiedIterationBuffer[
+            (worldY2x + 1) * doubleCanvasWidth + worldX2x
+          ] = buffer[idx01];
+          unifiedIterationBuffer[
+            (worldY2x + 1) * doubleCanvasWidth + (worldX2x + 1)
+          ] = buffer[idx11];
+        }
       }
     }
   }
-
-  graphics.updatePixels();
 };
 
 /**
@@ -242,6 +320,7 @@ export const setupCamera = (p: p5, w: number, h: number) => {
   width = w;
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
+  unifiedIterationBuffer = new Uint32Array(w * h * 4);
 
   console.log("Camera setup done", { width, height });
 };
@@ -298,6 +377,7 @@ export const resizeCamera = (
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
 
+  unifiedIterationBuffer = new Uint32Array(w * h * 4);
   mainBuffer.resizeCanvas(width, height);
   clearMainBuffer();
 
@@ -327,14 +407,21 @@ export const resizeCamera = (
 export const renderToMainBuffer = (
   rect: Rect = bufferRect,
   iterBuffer?: IterationBuffer[],
+  moved = false,
 ) => {
   const params = getCurrentParams();
 
+  renderIterationsToUnifiedBuffer(
+    rect,
+    unifiedIterationBuffer,
+    iterBuffer ?? getIterationCache(),
+  );
   renderIterationsToPixel(
     rect,
     mainBuffer,
     params.N,
-    iterBuffer ?? getIterationCache(),
+    unifiedIterationBuffer,
+    !moved ? params.isSuperSampling : false, // すごい苦し紛れ感がある
     getCurrentPalette(),
   );
 };

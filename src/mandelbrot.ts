@@ -54,7 +54,7 @@ export const startCalculation = async (
   // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
   removeUnusedIterationCache();
   clearMainBuffer();
-  renderToMainBuffer(rect);
+  renderToMainBuffer(rect, undefined, true);
 
   // ドラッグ中に描画をずらしていたのを戻す
   onTranslated();
