@@ -56,7 +56,7 @@ export const startCalculation = async (
   removeUnusedIterationCache();
   clearMainBuffer();
   renderToUnifiedBuffer(rect);
-  renderToMainBuffer(rect);
+  renderToMainBuffer();
 
   // ドラッグ中に描画をずらしていたのを戻す
   onTranslated();
