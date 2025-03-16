@@ -262,8 +262,8 @@ const initializeGPU = async () => {
     },
   });
 
-  setPalette();
-
   gpuInitialized = true;
   console.log("WebGPU initialized!");
+
+  setPalette();
 };
