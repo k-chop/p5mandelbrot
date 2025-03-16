@@ -23,11 +23,11 @@ import {
   addCurrentLocationToPOIHistory,
   initializePOIHistory,
 } from "@/poi-history/poi-history";
+import { initializeCanvasSize } from "@/rendering/common";
 import {
   drawCrossHair,
   drawScaleRate,
   getCanvasSize,
-  initializeCanvasSize,
   nextBuffer,
   resizeCamera,
   setupCamera,
