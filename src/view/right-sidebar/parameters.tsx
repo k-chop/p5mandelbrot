@@ -1,6 +1,5 @@
 import { Kbd } from "@/components/kbd";
 import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { GLITCHED_POINT_ITERATION } from "@/rendering/p5-renderer";
 import { Card, CardContent } from "@/shadcn/components/ui/card";
 import {
   Dialog,
@@ -31,10 +30,7 @@ export const Parameters = () => {
   const iteration = useStoreValue("iteration");
   const mode = useStoreValue("mode");
 
-  const iterationString =
-    iteration === GLITCHED_POINT_ITERATION.toString()
-      ? "<<glitched>>"
-      : iteration?.toString();
+  const iterationString = iteration?.toString();
 
   const isNotEnoughPrecision = mode === "normal" && r.isLessThan(1e-13);
 

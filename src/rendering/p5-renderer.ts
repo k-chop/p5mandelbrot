@@ -18,9 +18,6 @@ import p5 from "p5";
 import { Rect } from "../math/rect";
 import { IterationBuffer } from "../types";
 
-/** GLITCHEDな場合に設定するiteration count値 */
-export const GLITCHED_POINT_ITERATION = 4294967295;
-
 export interface Resolution {
   width: number;
   height: number;
