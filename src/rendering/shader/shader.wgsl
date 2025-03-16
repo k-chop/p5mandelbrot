@@ -4,6 +4,10 @@ struct Uniforms {
   canvasHeight: u32,
   paletteOffset: u32,
   paletteSize: u32,
+  offsetX: u32,
+  offsetY: u32,
+  renderWidth: u32,
+  renderHeight: u32,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;

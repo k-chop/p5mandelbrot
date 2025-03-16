@@ -73,6 +73,10 @@ export const renderToCanvas = (
     canvasHeight, // canvasHeight
     palette.offset, // paletteOffset
     palette.length, // paletteSize
+    x, // offsetX
+    y, // offsetY
+    width ?? canvasWidth, // renderWidth
+    height ?? canvasHeight, // renderHeight
   ]);
   device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
@@ -183,7 +187,7 @@ const initializeGPU = async () => {
 
   uniformBuffer = device.createBuffer({
     label: "uniform buffer",
-    size: 32, // uint32 * 5 だけど16の倍数にしとく
+    size: 48, // uint32 * 9 = 36 だけど16の倍数にしとく
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
@@ -205,7 +209,7 @@ const initializeGPU = async () => {
       {
         // uniform
         binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
+        visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
         buffer: { type: "uniform" },
       },
       {
