@@ -19,7 +19,7 @@ let vertexBuffer: GPUBuffer;
 let vertices: Float32Array;
 
 let uniformBuffer: GPUBuffer;
-let uniformData: Uint32Array;
+let uniformData: Float32Array;
 let iterationBuffer: GPUBuffer;
 let paletteBuffer: GPUBuffer;
 let paletteData: Float32Array;
@@ -67,7 +67,7 @@ export const renderToCanvas = (
   const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
   const palette = getCurrentPalette();
 
-  const uniformData = new Uint32Array([
+  const uniformData = new Float32Array([
     params.N, // maxIteration
     canvasWidth, // canvasWidth
     canvasHeight, // canvasHeight

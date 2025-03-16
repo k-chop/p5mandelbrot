@@ -1,13 +1,13 @@
 struct Uniforms {
-  maxIterations: u32,
-  canvasWidth: u32,
-  canvasHeight: u32,
-  paletteOffset: u32,
-  paletteSize: u32,
-  offsetX: u32,
-  offsetY: u32,
-  width: u32,
-  height: u32,
+  maxIterations: f32,
+  canvasWidth: f32,
+  canvasHeight: f32,
+  paletteOffset: f32,
+  paletteSize: f32,
+  offsetX: f32,
+  offsetY: f32,
+  width: f32,
+  height: f32,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -21,27 +21,27 @@ fn vertexMain(@location(0) pos: vec2f) -> @builtin(position) vec4f {
 
 @fragment
 fn fragmentMain(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
-  let dx = u32(fragCoord.x) - uniforms.offsetX;
-  let dy = u32(fragCoord.y) - uniforms.offsetY;
+  let dx = i32(fragCoord.x) - i32(uniforms.offsetX);
+  let dy = i32(fragCoord.y) - i32(uniforms.offsetY);
 
-  let x = u32(f32(dx) * (f32(uniforms.canvasWidth) / f32(uniforms.width)));
-  let y = u32(f32(dy) * (f32(uniforms.canvasHeight) / f32(uniforms.height)));
+  let x = f32(dx) * (uniforms.canvasWidth / uniforms.width);
+  let y = f32(dy) * (uniforms.canvasHeight / uniforms.height);
 
   if (x < 0 || uniforms.width <= x || y < 0 || uniforms.height <= y) {
     return vec4f(0.0, 0.0, 0.0, 1.0);
   }
 
-  let index = y * uniforms.canvasWidth + x;
+  let index = i32(y) * i32(uniforms.canvasWidth) + i32(x);
   let iteration = iterations[index];
   
-  if (iteration >= uniforms.maxIterations) {
+  if (iteration >= u32(uniforms.maxIterations)) {
     return vec4f(0.0, 0.0, 0.0, 1.0);
   }
 
-  let paletteLength = uniforms.paletteSize * 2 - 2;
-  let offsettedIndex = (iteration + uniforms.paletteOffset) % paletteLength;
+  let paletteLength = u32(uniforms.paletteSize) * 2 - 2;
+  let offsettedIndex = (iteration + u32(uniforms.paletteOffset)) % paletteLength;
   
-  if (offsettedIndex < uniforms.paletteSize) {
+  if (offsettedIndex < u32(uniforms.paletteSize)) {
     return palette[offsettedIndex];
   } else {
     return palette[paletteLength - offsettedIndex];
