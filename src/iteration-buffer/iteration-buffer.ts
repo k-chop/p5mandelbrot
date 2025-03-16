@@ -1,6 +1,6 @@
+import { bufferLocalLogicalIndex } from "@/rendering/common";
 import { getCanvasSize, Resolution } from "@/rendering/p5-renderer";
 import { Rect } from "../math/rect";
-import { bufferLocalLogicalIndex } from "../rendering/p5-renderer";
 import { IterationBuffer } from "../types";
 
 // FIXME: 配列全部舐める必要があるのよくないので良い感じにデータを持つようにする

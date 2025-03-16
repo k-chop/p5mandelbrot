@@ -18,13 +18,12 @@ import p5 from "p5";
 import { Rect } from "../math/rect";
 import { IterationBuffer } from "../types";
 
-/** GLITCHEDな場合に設定するiteration count値 */
-export const GLITCHED_POINT_ITERATION = 4294967295;
-
 export interface Resolution {
   width: number;
   height: number;
 }
+
+let p5Instance: p5;
 
 let mainBuffer: p5.Graphics;
 
@@ -35,12 +34,151 @@ let bufferRect: Rect;
 
 let unifiedIterationBuffer: Uint32Array;
 
+export const getCanvasSize = () => ({ width, height });
+export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
+
+export const initRenderer = (w: number, h: number, p5: p5) => {
+  p5Instance = p5;
+
+  mainBuffer = p5.createGraphics(w, h);
+  width = w;
+  height = h;
+  bufferRect = { x: 0, y: 0, width: w, height: h };
+  unifiedIterationBuffer = new Uint32Array(w * h * 4);
+
+  console.log("Camera setup done", { width, height });
+};
+
+export const renderToCanvas = (
+  x: number,
+  y: number,
+  width?: number,
+  height?: number,
+) => {
+  if (needsRerender()) {
+    markAsRendered();
+
+    renderToMainBuffer();
+  }
+
+  const buffer = mainBuffer;
+
+  p5Instance.background(0);
+  p5Instance.image(buffer, x, y, width, height);
+};
+
+export const addIterationBuffer = (
+  rect: Rect = bufferRect,
+  iterBuffer?: IterationBuffer[],
+) => {
+  renderIterationsToUnifiedBuffer(
+    rect,
+    unifiedIterationBuffer,
+    iterBuffer ?? getIterationCache(),
+  );
+  markNeedsRerender();
+};
+
+/**
+ * 画面サイズが変わったときに呼ぶ
+ *
+ * やること
+ * - canvasのリサイズ
+ * - mainBufferのリサイズ
+ * - cacheの位置変更（できれば）
+ */
+export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
+  const from = getCanvasSize();
+  console.debug(
+    `Request resize canvas to w=${requestWidth} h=${requestHeight}, from w=${from.width} h=${from.height}`,
+  );
+
+  const maxSize = getStore("maxCanvasSize");
+
+  const w = maxSize === -1 ? requestWidth : Math.min(requestWidth, maxSize);
+  const h = maxSize === -1 ? requestHeight : Math.min(requestHeight, maxSize);
+
+  console.debug(`Resize to: w=${w}, h=${h} (maxCanvasSize=${maxSize})`);
+
+  p5Instance.resizeCanvas(w, h);
+
+  width = w;
+  height = h;
+  bufferRect = { x: 0, y: 0, width: w, height: h };
+
+  unifiedIterationBuffer = new Uint32Array(w * h * 4);
+  mainBuffer.resizeCanvas(width, height);
+
+  const scaleFactor =
+    Math.min(width, height) / Math.min(from.width, from.height);
+
+  console.debug("Resize scale factor", scaleFactor);
+
+  // サイズ差の分trasnlateしてからscale
+  const offsetX = Math.round((width - from.width) / 2);
+  const offsetY = Math.round((height - from.height) / 2);
+  translateRectInIterationCache(-offsetX, -offsetY);
+
+  const translated = scaleIterationCacheAroundPoint(
+    width / 2,
+    height / 2,
+    scaleFactor,
+    width,
+    height,
+  );
+  setIterationCache(translated);
+  addIterationBuffer();
+
+  markNeedsRerender();
+};
+
+/**
+ * ドラッグ中のクロスヘア描画
+ */
+export const drawCrossHair = (p: p5) => {
+  const length = 10;
+
+  const centerX = Math.floor(p.width / 2);
+  const centerY = Math.floor(p.height / 2);
+
+  // FIXME: たぶんカラーパレットを見て目立つ色を選ぶべき
+
+  p.strokeWeight(2);
+
+  p.stroke(p.color(0, 0, 100));
+  p.line(centerX - length, centerY, centerX + length, centerY);
+  p.line(centerX, centerY - length, centerX, centerY + length);
+
+  p.stroke(p.color(0, 0, 0));
+  p.line(centerX - length / 2, centerY, centerX + length / 2, centerY);
+  p.line(centerX, centerY - length / 2, centerX, centerY + length / 2);
+};
+
+/**
+ * カーソル位置に倍率を表示
+ *
+ * interactive zoom中に表示する
+ */
+export const drawScaleRate = (p: p5, scaleFactor: number) => {
+  p.fill(255);
+  p.stroke(0);
+  p.strokeWeight(4);
+  p.textSize(14);
+
+  const { text, size } = scaleRateText(scaleFactor);
+
+  const x = clamp(p.mouseX, 0, p.width - size);
+  const y = clamp(p.mouseY, 0, p.height - 25);
+
+  p.text(`${text}`, x + 10, y + 20);
+};
+
 /**
  * 指定した座標をpaletteとiterationの値に応じて塗りつぶす
  *
  * retina対応
  */
-export const fillColor = (
+const fillColor = (
   x: number,
   y: number,
   canvasWidth: number,
@@ -120,39 +258,7 @@ export const fillColor = (
   }
 };
 
-/**
- * rect内のローカル座標系(resolution)でのindexを取得する
- *
- * worldX,Yはrectの中に収まっている前提
- */
-export const bufferLocalLogicalIndex = (
-  worldX: number,
-  worldY: number,
-  rect: Rect,
-  resolution: Resolution,
-  isSuperSampled = false,
-): number[] => {
-  const localX = worldX - rect.x;
-  const localY = worldY - rect.y;
-
-  const ratioX = resolution.width / rect.width;
-  const ratioY = resolution.height / rect.height;
-
-  const scaledX = Math.floor(localX * ratioX);
-  const scaledY = Math.floor(localY * ratioY);
-
-  if (!isSuperSampled) {
-    return [scaledX + scaledY * resolution.width];
-  } else {
-    const idx00 = scaledX + scaledY * resolution.width;
-    const idx10 = scaledX + 1 + scaledY * resolution.width;
-    const idx01 = scaledX + (scaledY + 1) * resolution.width;
-    const idx11 = scaledX + 1 + (scaledY + 1) * resolution.width;
-    return [idx00, idx10, idx01, idx11];
-  }
-};
-
-export const renderIterationsToPixel = (
+const renderIterationsToPixel = (
   worldRect: Rect,
   graphics: p5.Graphics,
   maxIteration: number,
@@ -197,7 +303,7 @@ export const renderIterationsToPixel = (
  *
  * supersamplingされている場合もある
  */
-export const renderIterationsToUnifiedBuffer = (
+const renderIterationsToUnifiedBuffer = (
   worldRect: Rect,
   unifiedIterationBuffer: Uint32Array,
   iterationsResult: IterationBuffer[],
@@ -260,163 +366,7 @@ export const renderIterationsToUnifiedBuffer = (
   }
 };
 
-/**
- * ドラッグ中のクロスヘア描画
- */
-export const drawCrossHair = (p: p5) => {
-  const length = 10;
-
-  const centerX = Math.floor(p.width / 2);
-  const centerY = Math.floor(p.height / 2);
-
-  // FIXME: たぶんカラーパレットを見て目立つ色を選ぶべき
-
-  p.strokeWeight(2);
-
-  p.stroke(p.color(0, 0, 100));
-  p.line(centerX - length, centerY, centerX + length, centerY);
-  p.line(centerX, centerY - length, centerX, centerY + length);
-
-  p.stroke(p.color(0, 0, 0));
-  p.line(centerX - length / 2, centerY, centerX + length / 2, centerY);
-  p.line(centerX, centerY - length / 2, centerX, centerY + length / 2);
-};
-
-/**
- * カーソル位置に倍率を表示
- *
- * interactive zoom中に表示する
- */
-export const drawScaleRate = (p: p5, scaleFactor: number) => {
-  p.fill(255);
-  p.stroke(0);
-  p.strokeWeight(4);
-  p.textSize(14);
-
-  const { text, size } = scaleRateText(scaleFactor);
-
-  const x = clamp(p.mouseX, 0, p.width - size);
-  const y = clamp(p.mouseY, 0, p.height - 25);
-
-  p.text(`${text}`, x + 10, y + 20);
-};
-
-const scaleRateText = (scaleFactor: number) => {
-  if (scaleFactor < 10) {
-    return { text: `x${scaleFactor.toFixed(2)}`, size: 60 };
-  } else if (scaleFactor < 100) {
-    return { text: `x${scaleFactor.toFixed(1)}`, size: 60 };
-  } else {
-    // 100~
-    const text = `x${Math.round(scaleFactor)}`;
-    return { text, size: text.length * 10 + 8 };
-  }
-};
-
-export const getCanvasSize = () => ({ width, height });
-export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
-export const setupCamera = (p: p5, w: number, h: number) => {
-  mainBuffer = p.createGraphics(w, h);
-  width = w;
-  height = h;
-  bufferRect = { x: 0, y: 0, width: w, height: h };
-  unifiedIterationBuffer = new Uint32Array(w * h * 4);
-
-  console.log("Camera setup done", { width, height });
-};
-
-/**
- * canvasのサイズをcontainerのサイズと最大サイズ設定見て初期化する
- */
-export const initializeCanvasSize = () => {
-  const elm = document.getElementById("canvas-wrapper");
-  let w = 800;
-  let h = 800;
-
-  const maxCanvasSize = getStore("maxCanvasSize");
-
-  if (elm) {
-    w = elm.clientWidth;
-    h = elm.clientHeight;
-  }
-
-  width = maxCanvasSize === -1 ? w : Math.min(w, maxCanvasSize);
-  height = maxCanvasSize === -1 ? h : Math.min(h, maxCanvasSize);
-
-  return { width, height };
-};
-
-/**
- * 画面サイズが変わったときに呼ぶ
- *
- * やること
- * - canvasのリサイズ
- * - mainBufferのリサイズ
- * - cacheの位置変更（できれば）
- */
-export const resizeCamera = (
-  p: p5,
-  requestWidth: number,
-  requestHeight: number,
-) => {
-  const from = getCanvasSize();
-  console.debug(
-    `Request resize canvas to w=${requestWidth} h=${requestHeight}, from w=${from.width} h=${from.height}`,
-  );
-
-  const maxSize = getStore("maxCanvasSize");
-
-  const w = maxSize === -1 ? requestWidth : Math.min(requestWidth, maxSize);
-  const h = maxSize === -1 ? requestHeight : Math.min(requestHeight, maxSize);
-
-  console.debug(`Resize to: w=${w}, h=${h} (maxCanvasSize=${maxSize})`);
-
-  p.resizeCanvas(w, h);
-
-  width = w;
-  height = h;
-  bufferRect = { x: 0, y: 0, width: w, height: h };
-
-  unifiedIterationBuffer = new Uint32Array(w * h * 4);
-  mainBuffer.resizeCanvas(width, height);
-  clearMainBuffer();
-
-  const scaleFactor =
-    Math.min(width, height) / Math.min(from.width, from.height);
-
-  console.debug("Resize scale factor", scaleFactor);
-
-  // サイズ差の分trasnlateしてからscale
-  const offsetX = Math.round((width - from.width) / 2);
-  const offsetY = Math.round((height - from.height) / 2);
-  translateRectInIterationCache(-offsetX, -offsetY);
-
-  const translated = scaleIterationCacheAroundPoint(
-    width / 2,
-    height / 2,
-    scaleFactor,
-    width,
-    height,
-  );
-  setIterationCache(translated);
-  renderToUnifiedBuffer();
-
-  markNeedsRerender();
-};
-
-export const renderToUnifiedBuffer = (
-  rect: Rect = bufferRect,
-  iterBuffer?: IterationBuffer[],
-) => {
-  renderIterationsToUnifiedBuffer(
-    rect,
-    unifiedIterationBuffer,
-    iterBuffer ?? getIterationCache(),
-  );
-  markNeedsRerender();
-};
-
-export const renderToMainBuffer = (rect: Rect = bufferRect) => {
+const renderToMainBuffer = (rect: Rect = bufferRect) => {
   const params = getCurrentParams();
 
   renderIterationsToPixel(
@@ -429,16 +379,14 @@ export const renderToMainBuffer = (rect: Rect = bufferRect) => {
   );
 };
 
-export const clearMainBuffer = () => {
-  mainBuffer.clear();
-};
-
-export const nextBuffer = (_p: p5): p5.Graphics => {
-  if (needsRerender()) {
-    markAsRendered();
-
-    renderToMainBuffer();
+const scaleRateText = (scaleFactor: number) => {
+  if (scaleFactor < 10) {
+    return { text: `x${scaleFactor.toFixed(2)}`, size: 60 };
+  } else if (scaleFactor < 100) {
+    return { text: `x${scaleFactor.toFixed(1)}`, size: 60 };
+  } else {
+    // 100~
+    const text = `x${Math.round(scaleFactor)}`;
+    return { text, size: text.length * 10 + 8 };
   }
-
-  return mainBuffer;
 };
