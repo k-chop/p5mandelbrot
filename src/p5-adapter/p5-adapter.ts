@@ -31,7 +31,6 @@ import {
   initRenderer,
   renderToCanvas,
   resizeCanvas,
-  setupCamera,
 } from "@/rendering/p5-renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
@@ -299,12 +298,11 @@ export const p5Setup = (p: p5) => {
   UNSAFE_p5Instance = p;
 
   const { width, height } = initializeCanvasSize();
-  initRenderer(p);
+  initRenderer(p, width, height);
 
   const canvas = p.createCanvas(width, height);
   // canvas上での右クリックを無効化
   canvas.elt.addEventListener("contextmenu", (e: Event) => e.preventDefault());
-  setupCamera(p, width, height);
   resetScaleParams();
 
   p.colorMode(p.HSB, 360, 100, 100, 100);

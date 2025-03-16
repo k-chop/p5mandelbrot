@@ -34,8 +34,19 @@ let bufferRect: Rect;
 
 let unifiedIterationBuffer: Uint32Array;
 
-export const initRenderer = (p5: p5) => {
+export const getCanvasSize = () => ({ width, height });
+export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
+
+export const initRenderer = (p5: p5, w: number, h: number) => {
   p5Instance = p5;
+
+  mainBuffer = p5.createGraphics(w, h);
+  width = w;
+  height = h;
+  bufferRect = { x: 0, y: 0, width: w, height: h };
+  unifiedIterationBuffer = new Uint32Array(w * h * 4);
+
+  console.log("Camera setup done", { width, height });
 };
 
 export const renderToCanvas = (
@@ -119,18 +130,6 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
   addIterationBuffer();
 
   markNeedsRerender();
-};
-
-export const getCanvasSize = () => ({ width, height });
-export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
-export const setupCamera = (p: p5, w: number, h: number) => {
-  mainBuffer = p.createGraphics(w, h);
-  width = w;
-  height = h;
-  bufferRect = { x: 0, y: 0, width: w, height: h };
-  unifiedIterationBuffer = new Uint32Array(w * h * 4);
-
-  console.log("Camera setup done", { width, height });
 };
 
 /**
