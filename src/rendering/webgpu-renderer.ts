@@ -69,8 +69,8 @@ export const renderToCanvas = (
 
   const uniformData = new Uint32Array([
     params.N, // maxIteration
-    canvasWidth, // width
-    canvasHeight, // height
+    canvasWidth, // canvasWidth
+    canvasHeight, // canvasHeight
     palette.offset, // paletteOffset
     palette.length, // paletteSize
   ]);

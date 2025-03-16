@@ -1,7 +1,7 @@
 struct Uniforms {
   maxIterations: u32,
-  width: u32,
-  height: u32,
+  canvasWidth: u32,
+  canvasHeight: u32,
   paletteOffset: u32,
   paletteSize: u32,
 }
@@ -20,7 +20,7 @@ fn fragmentMain(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
   let x = u32(fragCoord.x);
   let y = u32(fragCoord.y);
  
-  let index = y * uniforms.width + x;
+  let index = y * uniforms.canvasWidth + x;
   let iteration = iterations[index];
   
   if (iteration >= uniforms.maxIterations) {
