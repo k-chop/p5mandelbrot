@@ -19,17 +19,20 @@ fn vertexMain(@location(0) pos: vec2f) -> @builtin(position) vec4f {
 fn fragmentMain(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
   let x = u32(fragCoord.x);
   let y = u32(fragCoord.y);
-  
-  if (x >= uniforms.width || y >= uniforms.height) {
-    return vec4f(0.0, 0.0, 0.0, 1.0);
-  }
-  
+ 
   let index = y * uniforms.width + x;
   let iteration = iterations[index];
   
   if (iteration >= uniforms.maxIterations) {
     return vec4f(0.0, 0.0, 0.0, 1.0);
   }
+
+  let paletteLength = uniforms.paletteSize * 2 - 2;
+  let offsettedIndex = (iteration + uniforms.paletteOffset) % paletteLength;
   
-  return palette[((iteration + uniforms.paletteOffset) % uniforms.paletteSize) * 4];
+  if (offsettedIndex < uniforms.paletteSize) {
+    return palette[offsettedIndex];
+  } else {
+    return palette[paletteLength - offsettedIndex];
+  }
 }
