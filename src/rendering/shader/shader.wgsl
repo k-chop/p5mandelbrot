@@ -6,8 +6,8 @@ struct Uniforms {
   paletteSize: u32,
   offsetX: u32,
   offsetY: u32,
-  renderWidth: u32,
-  renderHeight: u32,
+  width: u32,
+  height: u32,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -21,9 +21,13 @@ fn vertexMain(@location(0) pos: vec2f) -> @builtin(position) vec4f {
 
 @fragment
 fn fragmentMain(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
-  let x = u32(fragCoord.x);
-  let y = u32(fragCoord.y);
+  let x = u32(fragCoord.x) - uniforms.offsetX;
+  let y = u32(fragCoord.y) - uniforms.offsetY;
  
+  if (x < 0 || uniforms.width <= x || y < 0 || uniforms.height <= y) {
+    return vec4f(0.0, 0.0, 0.0, 1.0);
+  }
+
   let index = y * uniforms.canvasWidth + x;
   let iteration = iterations[index];
   
