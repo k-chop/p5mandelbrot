@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import { Rect } from "./math/rect";
-import type { Resolution } from "./rendering/rendering";
+import type { Resolution } from "./rendering/p5-renderer";
 import {
   BatchCompleteCallback,
   BatchProgressChangedCallback,

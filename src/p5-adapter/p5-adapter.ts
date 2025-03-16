@@ -1,11 +1,4 @@
 import {
-  getCanvasSize,
-  initializeCanvasSize,
-  nextBuffer,
-  resizeCamera,
-  setupCamera,
-} from "@/camera/camera";
-import {
   changePaletteFromPresets,
   cycleCurrentPaletteOffset,
   setPalette,
@@ -30,7 +23,15 @@ import {
   addCurrentLocationToPOIHistory,
   initializePOIHistory,
 } from "@/poi-history/poi-history";
-import { drawCrossHair, drawScaleRate } from "@/rendering/rendering";
+import {
+  drawCrossHair,
+  drawScaleRate,
+  getCanvasSize,
+  initializeCanvasSize,
+  nextBuffer,
+  resizeCamera,
+  setupCamera,
+} from "@/rendering/p5-renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
 import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";

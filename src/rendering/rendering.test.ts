@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bufferLocalLogicalIndex } from "./rendering";
+import { bufferLocalLogicalIndex } from "./p5-renderer";
 
 describe("bufferLocalLogicalIndex", () => {
   it("resolutionが1の場合、どこを指定しても0", () => {
