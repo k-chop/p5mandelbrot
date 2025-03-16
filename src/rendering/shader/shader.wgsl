@@ -27,7 +27,7 @@ fn fragmentMain(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
   let x = f32(dx) * (uniforms.canvasWidth / uniforms.width);
   let y = f32(dy) * (uniforms.canvasHeight / uniforms.height);
 
-  if (x < 0 || uniforms.width <= x || y < 0 || uniforms.height <= y) {
+  if (x < 0 || uniforms.canvasWidth <= x || y < 0 || uniforms.canvasHeight <= y) {
     return vec4f(0.0, 0.0, 0.0, 1.0);
   }
 
