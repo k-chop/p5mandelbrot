@@ -17,6 +17,7 @@ import { getStore } from "@/store/store";
 import p5 from "p5";
 import { Rect } from "../math/rect";
 import { IterationBuffer } from "../types";
+import { renderToCanvas as renderToWebGPUCanvas } from "./webgpu-renderer";
 
 export interface Resolution {
   width: number;
@@ -61,10 +62,13 @@ export const renderToCanvas = (
     renderToMainBuffer();
   }
 
-  const buffer = mainBuffer;
+  // FIXME: めちゃくちゃ手抜きだよこのままコミットするなよ
+  renderToWebGPUCanvas(x, y, width, height, unifiedIterationBuffer);
+
+  // const buffer = mainBuffer;
 
   p5Instance.clear();
-  p5Instance.image(buffer, x, y, width, height);
+  // p5Instance.image(buffer, x, y, width, height);
 };
 
 export const addIterationBuffer = (

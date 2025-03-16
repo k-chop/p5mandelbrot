@@ -32,10 +32,7 @@ import {
   renderToCanvas,
   resizeCanvas,
 } from "@/rendering/p5-renderer";
-import {
-  initRenderer as initWebGPURenderer,
-  renderToCanvas as renderToWebGPUCanvas,
-} from "@/rendering/webgpu-renderer";
+import { initRenderer as initWebGPURenderer } from "@/rendering/webgpu-renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
 import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";
@@ -473,7 +470,6 @@ export const p5Draw = (p: p5) => {
     }
   }
 
-  renderToWebGPUCanvas(x, y, width, height);
   renderToCanvas(x, y, width, height);
 
   switch (draggingMode) {
