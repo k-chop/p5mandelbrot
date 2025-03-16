@@ -2,7 +2,7 @@ import {
   getIterationCache,
   upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
-import { renderToUnifiedBuffer } from "@/rendering/p5-renderer";
+import { addIterationBuffer } from "@/rendering/p5-renderer";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
 import {
@@ -66,7 +66,7 @@ export const onIterationWorkerResult: IterationResultCallback = (
 
   batchContext.onChangeProgress();
 
-  renderToUnifiedBuffer(rect, [iterBuffer]);
+  addIterationBuffer(rect, [iterBuffer]);
 
   // バッチ全体が完了していたらonComplete callbackを呼ぶ
   if (isBatchCompleted(job.batchId)) {
@@ -101,5 +101,5 @@ export const onIterationWorkerIntermediateResult = (
     new Uint32Array(iterations),
     resolution,
   );
-  renderToUnifiedBuffer(rect, [iterBuffer]);
+  addIterationBuffer(rect, [iterBuffer]);
 };

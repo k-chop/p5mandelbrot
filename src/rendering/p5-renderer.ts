@@ -23,6 +23,8 @@ export interface Resolution {
   height: number;
 }
 
+let p5Instance: p5;
+
 let mainBuffer: p5.Graphics;
 
 let width: number;
@@ -37,7 +39,7 @@ let unifiedIterationBuffer: Uint32Array;
  *
  * retina対応
  */
-export const fillColor = (
+const fillColor = (
   x: number,
   y: number,
   canvasWidth: number,
@@ -117,7 +119,7 @@ export const fillColor = (
   }
 };
 
-export const renderIterationsToPixel = (
+const renderIterationsToPixel = (
   worldRect: Rect,
   graphics: p5.Graphics,
   maxIteration: number,
@@ -162,7 +164,7 @@ export const renderIterationsToPixel = (
  *
  * supersamplingされている場合もある
  */
-export const renderIterationsToUnifiedBuffer = (
+const renderIterationsToUnifiedBuffer = (
   worldRect: Rect,
   unifiedIterationBuffer: Uint32Array,
   iterationsResult: IterationBuffer[],
@@ -298,11 +300,7 @@ export const setupCamera = (p: p5, w: number, h: number) => {
  * - mainBufferのリサイズ
  * - cacheの位置変更（できれば）
  */
-export const resizeCamera = (
-  p: p5,
-  requestWidth: number,
-  requestHeight: number,
-) => {
+export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
   const from = getCanvasSize();
   console.debug(
     `Request resize canvas to w=${requestWidth} h=${requestHeight}, from w=${from.width} h=${from.height}`,
@@ -315,7 +313,7 @@ export const resizeCamera = (
 
   console.debug(`Resize to: w=${w}, h=${h} (maxCanvasSize=${maxSize})`);
 
-  p.resizeCanvas(w, h);
+  p5Instance.resizeCanvas(w, h);
 
   width = w;
   height = h;
@@ -342,12 +340,12 @@ export const resizeCamera = (
     height,
   );
   setIterationCache(translated);
-  renderToUnifiedBuffer();
+  addIterationBuffer();
 
   markNeedsRerender();
 };
 
-export const renderToUnifiedBuffer = (
+export const addIterationBuffer = (
   rect: Rect = bufferRect,
   iterBuffer?: IterationBuffer[],
 ) => {
@@ -359,7 +357,7 @@ export const renderToUnifiedBuffer = (
   markNeedsRerender();
 };
 
-export const renderToMainBuffer = (rect: Rect = bufferRect) => {
+const renderToMainBuffer = (rect: Rect = bufferRect) => {
   const params = getCurrentParams();
 
   renderIterationsToPixel(
@@ -372,7 +370,7 @@ export const renderToMainBuffer = (rect: Rect = bufferRect) => {
   );
 };
 
-export const nextBuffer = (_p: p5): p5.Graphics => {
+const nextBuffer = (): p5.Graphics => {
   if (needsRerender()) {
     markAsRendered();
 
@@ -380,4 +378,20 @@ export const nextBuffer = (_p: p5): p5.Graphics => {
   }
 
   return mainBuffer;
+};
+
+export const initRenderer = (p5: p5) => {
+  p5Instance = p5;
+};
+
+export const renderToCanvas = (
+  x: number,
+  y: number,
+  width?: number,
+  height?: number,
+) => {
+  const buffer = nextBuffer();
+
+  p5Instance.background(0);
+  p5Instance.image(buffer, x, y, width, height);
 };

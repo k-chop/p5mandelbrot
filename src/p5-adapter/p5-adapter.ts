@@ -28,8 +28,9 @@ import {
   drawCrossHair,
   drawScaleRate,
   getCanvasSize,
-  nextBuffer,
-  resizeCamera,
+  initRenderer,
+  renderToCanvas,
+  resizeCanvas,
   setupCamera,
 } from "@/rendering/p5-renderer";
 import { getStore, updateStore } from "@/store/store";
@@ -282,11 +283,11 @@ export const zoomTo = (isZoomOut: boolean) => {
 };
 
 /** wrapper elementの高さを取得してcameraのサイズを変える */
-export const resizeTo = (p: p5 = UNSAFE_p5Instance) => {
+export const resizeTo = (_p: p5 = UNSAFE_p5Instance) => {
   const elm = document.getElementById("canvas-wrapper");
 
   if (elm) {
-    resizeCamera(p, elm.clientWidth, elm.clientHeight);
+    resizeCanvas(elm.clientWidth, elm.clientHeight);
   }
 };
 
@@ -298,6 +299,7 @@ export const p5Setup = (p: p5) => {
   UNSAFE_p5Instance = p;
 
   const { width, height } = initializeCanvasSize();
+  initRenderer(p);
 
   const canvas = p.createCanvas(width, height);
   // canvas上での右クリックを無効化
@@ -444,9 +446,8 @@ export const p5Draw = (p: p5) => {
     }
   }
 
-  const mainBuffer = nextBuffer(p);
-  p.background(0);
-  p.image(mainBuffer, x, y, width, height);
+  renderToCanvas(x, y, width, height);
+
   switch (draggingMode) {
     case "move":
       drawCrossHair(p);
