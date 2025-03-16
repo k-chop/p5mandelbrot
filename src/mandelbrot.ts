@@ -16,7 +16,6 @@ import {
 } from "./mandelbrot-state/mandelbrot-state";
 import { getCalculationTargetRects, Rect } from "./math/rect";
 import {
-  clearMainBuffer,
   getCanvasSize,
   getWholeCanvasRect,
   renderToMainBuffer,
@@ -54,7 +53,6 @@ export const startCalculation = async (
 
   // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
   removeUnusedIterationCache();
-  clearMainBuffer();
   renderToUnifiedBuffer(rect);
   renderToMainBuffer();
 

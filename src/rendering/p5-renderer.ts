@@ -323,7 +323,6 @@ export const resizeCamera = (
 
   unifiedIterationBuffer = new Uint32Array(w * h * 4);
   mainBuffer.resizeCanvas(width, height);
-  clearMainBuffer();
 
   const scaleFactor =
     Math.min(width, height) / Math.min(from.width, from.height);
@@ -371,10 +370,6 @@ export const renderToMainBuffer = (rect: Rect = bufferRect) => {
     params.isSuperSampling,
     getCurrentPalette(),
   );
-};
-
-export const clearMainBuffer = () => {
-  mainBuffer.clear();
 };
 
 export const nextBuffer = (_p: p5): p5.Graphics => {
