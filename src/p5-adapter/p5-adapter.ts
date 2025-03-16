@@ -414,9 +414,11 @@ export const p5Draw = (p: p5) => {
     }
   }
 
-  const mainBuffer = nextBuffer(p);
-
-  p.background(0);
+  let x = 0;
+  let y = 0;
+  let width = undefined;
+  let height = undefined;
+  let scaleFactor = 1;
 
   if (isTranslatingMainBuffer) {
     if (draggingMode === "move") {
@@ -424,30 +426,36 @@ export const p5Draw = (p: p5) => {
         p,
         mouseClickedOn,
       );
-      p.image(mainBuffer, pixelDiffX, pixelDiffY);
-      drawCrossHair(p);
+      x = pixelDiffX;
+      y = pixelDiffY;
     } else if (draggingMode === "zoom") {
       const { mouseX, mouseY } = mouseClickedOn;
-      const scaleFactor = calcInteractiveScaleFactor(p, mouseClickedOn);
+      scaleFactor = calcInteractiveScaleFactor(p, mouseClickedOn);
 
       // クリック位置を画面の中心に置く
       const offsetX = p.width / 2 - mouseX * scaleFactor;
       const offsetY = p.height / 2 - mouseY * scaleFactor;
 
       // ズーム適用
-      p.image(
-        mainBuffer,
-        offsetX,
-        offsetY,
-        p.width * scaleFactor,
-        p.height * scaleFactor,
-      );
-
-      drawScaleRate(p, scaleFactor);
+      x = offsetX;
+      y = offsetY;
+      width = p.width * scaleFactor;
+      height = p.height * scaleFactor;
     }
-  } else {
-    p.image(mainBuffer, 0, 0);
   }
+
+  const mainBuffer = nextBuffer(p);
+  p.background(0);
+  p.image(mainBuffer, x, y, width, height);
+  switch (draggingMode) {
+    case "move":
+      drawCrossHair(p);
+      break;
+    case "zoom":
+      drawScaleRate(p, scaleFactor);
+      break;
+  }
+
   syncStoreValues(p);
 
   if (shouldSavePOIHistoryNextRender) {
