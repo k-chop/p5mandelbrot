@@ -63,7 +63,7 @@ export const renderToCanvas = (
 
   const buffer = mainBuffer;
 
-  p5Instance.background(0);
+  p5Instance.clear();
   p5Instance.image(buffer, x, y, width, height);
 };
 

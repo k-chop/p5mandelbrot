@@ -32,6 +32,10 @@ import {
   renderToCanvas,
   resizeCanvas,
 } from "@/rendering/p5-renderer";
+import {
+  initRenderer as initWebGPURenderer,
+  renderToCanvas as renderToWebGPUCanvas,
+} from "@/rendering/webgpu-renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
 import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";
@@ -299,6 +303,7 @@ export const p5Setup = (p: p5) => {
 
   const { width, height } = initializeCanvasSize();
   initRenderer(width, height, p);
+  initWebGPURenderer(width, height);
 
   const canvas = p.createCanvas(width, height);
   // canvas上での右クリックを無効化
@@ -307,6 +312,30 @@ export const p5Setup = (p: p5) => {
 
   p.colorMode(p.HSB, 360, 100, 100, 100);
   p.cursor(p.CROSS);
+
+  // FIXME: 中央表示じゃなくなったので適当に直す
+
+  // p5.jsのキャンバスを透明にして、イベント処理だけを受け付けるように設定
+  canvas.elt.style.position = "absolute";
+  canvas.elt.style.top = "0";
+  canvas.elt.style.left = "0";
+  canvas.elt.style.pointerEvents = "auto"; // マウス操作を受け付ける
+  canvas.elt.style.background = "transparent"; // 背景を透明に
+  canvas.elt.style.zIndex = "10"; // 上に表示
+
+  // WebGPU用のキャンバスを作成して下に配置
+  const gpuCanvas = document.createElement("canvas");
+  gpuCanvas.id = "gpu-canvas";
+  gpuCanvas.width = width;
+  gpuCanvas.height = height;
+  gpuCanvas.style.position = "absolute";
+  gpuCanvas.style.top = "0";
+  gpuCanvas.style.left = "0";
+  gpuCanvas.style.zIndex = "5"; // p5.jsキャンバスの下に
+
+  // キャンバスラッパーに追加
+  const wrapper = document.getElementById("canvas-wrapper");
+  wrapper?.appendChild(gpuCanvas);
 
   window.oncontextmenu = () => {
     if (willBlockNextContextMenu) {
@@ -444,6 +473,7 @@ export const p5Draw = (p: p5) => {
     }
   }
 
+  renderToWebGPUCanvas(x, y, width, height);
   renderToCanvas(x, y, width, height);
 
   switch (draggingMode) {
