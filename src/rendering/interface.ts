@@ -5,7 +5,7 @@ import type { IterationBuffer } from "@/types";
  *
  */
 export interface MandelbrotRenderer {
-  initRenderer(): void;
+  initRenderer(w: number, h: number, ...args: unknown[]): void;
   renderToCanvas: (
     x: number,
     y: number,

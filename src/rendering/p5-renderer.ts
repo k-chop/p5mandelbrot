@@ -37,7 +37,7 @@ let unifiedIterationBuffer: Uint32Array;
 export const getCanvasSize = () => ({ width, height });
 export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
 
-export const initRenderer = (p5: p5, w: number, h: number) => {
+export const initRenderer = (w: number, h: number, p5: p5) => {
   p5Instance = p5;
 
   mainBuffer = p5.createGraphics(w, h);

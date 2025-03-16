@@ -298,7 +298,7 @@ export const p5Setup = (p: p5) => {
   UNSAFE_p5Instance = p;
 
   const { width, height } = initializeCanvasSize();
-  initRenderer(p, width, height);
+  initRenderer(width, height, p);
 
   const canvas = p.createCanvas(width, height);
   // canvas上での右クリックを無効化
