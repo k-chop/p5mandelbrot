@@ -83,6 +83,7 @@ export const renderToCanvas = (
   device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
   if (unifiedIterationBuffer) {
+    // TODO: 毎回このクソデカバッファを書き込む必要はないはず
     device.queue.writeBuffer(iterationBuffer, 0, unifiedIterationBuffer);
   }
 
@@ -112,6 +113,8 @@ export const addIterationBuffer = (
   iterBuffer?: IterationBuffer[],
 ) => {
   if (!gpuInitialized) return;
+
+  // TODO: storage bufferに書き込むのをcompute shaderに任せて良いのではないか？
 };
 
 export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
