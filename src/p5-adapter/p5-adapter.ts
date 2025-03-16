@@ -32,7 +32,10 @@ import {
   renderToCanvas,
   resizeCanvas,
 } from "@/rendering/p5-renderer";
-import { initRenderer as initWebGPURenderer } from "@/rendering/webgpu-renderer";
+import {
+  initRenderer as initWebGPURenderer,
+  resizeCanvas as resizeCanvasWebGPU,
+} from "@/rendering/webgpu-renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
 import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";
@@ -288,6 +291,7 @@ export const resizeTo = (_p: p5 = UNSAFE_p5Instance) => {
 
   if (elm) {
     resizeCanvas(elm.clientWidth, elm.clientHeight);
+    resizeCanvasWebGPU(elm.clientWidth, elm.clientHeight);
   }
 };
 

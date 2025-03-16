@@ -2,6 +2,7 @@ import { getCurrentPalette, setPalette } from "@/camera/palette";
 import type { Palette } from "@/color";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { Rect } from "@/math/rect";
+import { getStore } from "@/store/store";
 import type { IterationBuffer } from "@/types";
 import shaderCode from "./shader/shader.wgsl?raw";
 
@@ -14,6 +15,7 @@ let unifiedIterationBuffer: Uint32Array;
 
 let device: GPUDevice;
 let context: GPUCanvasContext;
+let bindGroupLayout: GPUBindGroupLayout;
 let pipeline: GPURenderPipeline;
 let vertexBuffer: GPUBuffer;
 let vertices: Float32Array;
@@ -117,10 +119,37 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
 
   const gpuCanvas = document.getElementById("gpu-canvas")! as HTMLCanvasElement;
 
-  gpuCanvas.width = requestWidth;
-  gpuCanvas.height = requestHeight;
+  const maxSize = getStore("maxCanvasSize");
 
-  // TODO: ここでcontextの再設定とか
+  const w = maxSize === -1 ? requestWidth : Math.min(requestWidth, maxSize);
+  const h = maxSize === -1 ? requestHeight : Math.min(requestHeight, maxSize);
+
+  console.debug(`Resize to: w=${w}, h=${h} (maxCanvasSize=${maxSize})`);
+
+  gpuCanvas.width = w;
+  gpuCanvas.height = h;
+
+  width = w;
+  height = h;
+  bufferRect = { x: 0, y: 0, width: w, height: h };
+
+  unifiedIterationBuffer = new Uint32Array(w * h * 4);
+
+  context = gpuCanvas.getContext("webgpu")!;
+  const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
+  context.configure({
+    device: device,
+    format: canvasFormat,
+  });
+
+  iterationBuffer.destroy();
+  iterationBuffer = device.createBuffer({
+    label: "iteration buffer",
+    size: unifiedIterationBuffer.byteLength,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+  });
+
+  createBindGroup();
 };
 
 export const updatePaletteDataForGPU = (palette: Palette) => {
@@ -203,7 +232,7 @@ const initializeGPU = async () => {
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
   });
 
-  const bindGroupLayout = device.createBindGroupLayout({
+  bindGroupLayout = device.createBindGroupLayout({
     label: "Mandelbrot BindGroupLayout",
     entries: [
       {
@@ -227,24 +256,7 @@ const initializeGPU = async () => {
     ],
   });
 
-  bindGroup = device.createBindGroup({
-    label: "Mandelbrot BindGroup",
-    layout: bindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: { buffer: uniformBuffer },
-      },
-      {
-        binding: 1,
-        resource: { buffer: iterationBuffer },
-      },
-      {
-        binding: 2,
-        resource: { buffer: paletteBuffer },
-      },
-    ],
-  });
+  createBindGroup();
 
   const pipelineLayout = device.createPipelineLayout({
     label: "Mandelbrot Pipeline Layout",
@@ -270,4 +282,25 @@ const initializeGPU = async () => {
   console.log("WebGPU initialized!");
 
   setPalette();
+};
+
+const createBindGroup = () => {
+  bindGroup = device.createBindGroup({
+    label: "Mandelbrot BindGroup",
+    layout: bindGroupLayout,
+    entries: [
+      {
+        binding: 0,
+        resource: { buffer: uniformBuffer },
+      },
+      {
+        binding: 1,
+        resource: { buffer: iterationBuffer },
+      },
+      {
+        binding: 2,
+        resource: { buffer: paletteBuffer },
+      },
+    ],
+  });
 };
