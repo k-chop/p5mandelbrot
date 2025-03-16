@@ -21,9 +21,12 @@ fn vertexMain(@location(0) pos: vec2f) -> @builtin(position) vec4f {
 
 @fragment
 fn fragmentMain(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
-  let x = u32(fragCoord.x) - uniforms.offsetX;
-  let y = u32(fragCoord.y) - uniforms.offsetY;
- 
+  let dx = u32(fragCoord.x) - uniforms.offsetX;
+  let dy = u32(fragCoord.y) - uniforms.offsetY;
+
+  let x = u32(f32(dx) * (f32(uniforms.canvasWidth) / f32(uniforms.width)));
+  let y = u32(f32(dy) * (f32(uniforms.canvasHeight) / f32(uniforms.height)));
+
   if (x < 0 || uniforms.width <= x || y < 0 || uniforms.height <= y) {
     return vec4f(0.0, 0.0, 0.0, 1.0);
   }
