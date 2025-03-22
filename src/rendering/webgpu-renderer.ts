@@ -4,7 +4,8 @@ import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { Rect } from "@/math/rect";
 import { getStore } from "@/store/store";
 import type { IterationBuffer } from "@/types";
-import shaderCode from "./shader/shader.wgsl?raw";
+import computeShaderCode from "./shader/compute.wgsl?raw";
+import renderShaderCode from "./shader/shader.wgsl?raw";
 
 let width: number;
 let height: number;
@@ -16,7 +17,8 @@ let unifiedIterationBuffer: Uint32Array;
 let device: GPUDevice;
 let context: GPUCanvasContext;
 let bindGroupLayout: GPUBindGroupLayout;
-let pipeline: GPURenderPipeline;
+let renderPipeline: GPURenderPipeline;
+let computePipeline: GPUComputePipeline;
 let vertexBuffer: GPUBuffer;
 let vertices: Float32Array;
 
@@ -88,7 +90,14 @@ export const renderToCanvas = (
   }
 
   const encoder = device.createCommandEncoder();
-  const pass = encoder.beginRenderPass({
+
+  const computePass = encoder.beginComputePass();
+  computePass.setPipeline(computePipeline);
+  computePass.setBindGroup(0, bindGroup);
+  computePass.dispatchWorkgroups(width ?? canvasWidth, height ?? canvasHeight);
+  computePass.end();
+
+  const renderPass = encoder.beginRenderPass({
     colorAttachments: [
       {
         view: context.getCurrentTexture().createView(),
@@ -99,11 +108,11 @@ export const renderToCanvas = (
     ],
   });
 
-  pass.setPipeline(pipeline);
-  pass.setBindGroup(0, bindGroup);
-  pass.setVertexBuffer(0, vertexBuffer);
-  pass.draw(vertices.length / 2);
-  pass.end();
+  renderPass.setPipeline(renderPipeline);
+  renderPass.setBindGroup(0, bindGroup);
+  renderPass.setVertexBuffer(0, vertexBuffer);
+  renderPass.draw(vertices.length / 2);
+  renderPass.end();
 
   device.queue.submit([encoder.finish()]);
 };
@@ -212,9 +221,14 @@ const initializeGPU = async () => {
     ],
   };
 
-  const shaderModule = device.createShaderModule({
+  const renderShaderModule = device.createShaderModule({
     label: "Mandelbrot set shader",
-    code: shaderCode,
+    code: renderShaderCode,
+  });
+
+  const computeShaderModule = device.createShaderModule({
+    label: "Mandelbrot set compute shader",
+    code: computeShaderCode,
   });
 
   uniformBuffer = device.createBuffer({
@@ -241,13 +255,16 @@ const initializeGPU = async () => {
       {
         // uniform
         binding: 0,
-        visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
+        visibility:
+          GPUShaderStage.FRAGMENT |
+          GPUShaderStage.VERTEX |
+          GPUShaderStage.COMPUTE,
         buffer: { type: "uniform" },
       },
       {
         // iterations
         binding: 1,
-        visibility: GPUShaderStage.FRAGMENT,
+        visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
         buffer: { type: "read-only-storage" },
       },
       {
@@ -266,18 +283,27 @@ const initializeGPU = async () => {
     bindGroupLayouts: [bindGroupLayout],
   });
 
-  pipeline = device.createRenderPipeline({
+  renderPipeline = device.createRenderPipeline({
     label: "Mandelbrot set pipeline",
     layout: pipelineLayout,
     vertex: {
-      module: shaderModule,
+      module: renderShaderModule,
       entryPoint: "vertexMain",
       buffers: [vertexBufferLayout],
     },
     fragment: {
-      module: shaderModule,
+      module: renderShaderModule,
       entryPoint: "fragmentMain",
       targets: [{ format: canvasFormat }],
+    },
+  });
+
+  computePipeline = device.createComputePipeline({
+    label: "Mandelbrot set compute pipeline",
+    layout: pipelineLayout,
+    compute: {
+      module: computeShaderModule,
+      entryPoint: "computeMain",
     },
   });
 
