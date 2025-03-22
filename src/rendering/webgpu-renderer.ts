@@ -35,7 +35,7 @@ export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
 
 export const initRenderer = (w: number, h: number) => {
   // TODO: あとでmaxSizeを変えられるようにする
-  const resolutionLimit = 134217728 / 32 / 4; // default storage buffer maximum size = 128MiB, iteration = Uint32, For x2 super sampling = 4
+  const resolutionLimit = 134217728 / 32; // default storage buffer maximum size = 128MiB, iteration = Uint32
   if (w * h > resolutionLimit) {
     const msg = `Resolution is too high: ${w}x${h}`;
     window.alert(msg);
@@ -45,7 +45,7 @@ export const initRenderer = (w: number, h: number) => {
   width = w;
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
-  unifiedIterationBuffer = new Uint32Array(w * h * 4);
+  unifiedIterationBuffer = new Uint32Array(w * h);
   paletteData = new Float32Array(8192 * 4); // 先に最大サイズ分確保しておく（手抜き）
 
   try {
@@ -136,7 +136,7 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
 
-  unifiedIterationBuffer = new Uint32Array(w * h * 4);
+  unifiedIterationBuffer = new Uint32Array(w * h);
 
   context = gpuCanvas.getContext("webgpu")!;
   const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
