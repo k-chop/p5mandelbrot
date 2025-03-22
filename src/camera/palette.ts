@@ -5,6 +5,7 @@ import {
   othersPalettes,
   type Palette,
 } from "@/color";
+import { updatePaletteDataForGPU } from "@/rendering/webgpu-renderer";
 import { updateStore } from "@/store/store";
 
 // 描画時に使うpaletteの状態に関するファイル
@@ -65,9 +66,11 @@ export const changePaletteFromPresets = (index: number) => {
 /**
  * Paletteを指定して変更する
  */
-export const setPalette = (palette: Palette) => {
+export const setPalette = (palette: Palette = currentPalette) => {
   currentPalette = palette;
   markNeedsRerender();
+
+  updatePaletteDataForGPU(palette);
 
   updateStore("paletteLength", palette.length);
   updateStore("paletteOffset", palette.offset);

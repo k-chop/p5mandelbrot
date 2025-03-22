@@ -17,6 +17,7 @@ import { getStore } from "@/store/store";
 import p5 from "p5";
 import { Rect } from "../math/rect";
 import { IterationBuffer } from "../types";
+import { renderToCanvas as renderToWebGPUCanvas } from "./webgpu-renderer";
 
 export interface Resolution {
   width: number;
@@ -44,7 +45,7 @@ export const initRenderer = (w: number, h: number, p5: p5) => {
   width = w;
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
-  unifiedIterationBuffer = new Uint32Array(w * h * 4);
+  unifiedIterationBuffer = new Uint32Array(w * h);
 
   console.log("Camera setup done", { width, height });
 };
@@ -61,10 +62,13 @@ export const renderToCanvas = (
     renderToMainBuffer();
   }
 
-  const buffer = mainBuffer;
+  // FIXME: めちゃくちゃ手抜きだよこのままコミットするなよ
+  renderToWebGPUCanvas(x, y, width, height, unifiedIterationBuffer);
 
-  p5Instance.background(0);
-  p5Instance.image(buffer, x, y, width, height);
+  // const buffer = mainBuffer;
+
+  p5Instance.clear();
+  // p5Instance.image(buffer, x, y, width, height);
 };
 
 export const addIterationBuffer = (

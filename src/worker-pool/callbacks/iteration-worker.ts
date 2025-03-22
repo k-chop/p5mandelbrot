@@ -3,6 +3,7 @@ import {
   upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
 import { addIterationBuffer } from "@/rendering/p5-renderer";
+import { addIterationBuffer as addWebGPUIterationBuffer } from "@/rendering/webgpu-renderer";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { completeJob, isBatchCompleted } from "../task-queue";
 import {
@@ -67,6 +68,7 @@ export const onIterationWorkerResult: IterationResultCallback = (
   batchContext.onChangeProgress();
 
   addIterationBuffer(rect, [iterBuffer]);
+  addWebGPUIterationBuffer(rect, [iterBuffer]);
 
   // バッチ全体が完了していたらonComplete callbackを呼ぶ
   if (isBatchCompleted(job.batchId)) {
@@ -102,4 +104,5 @@ export const onIterationWorkerIntermediateResult = (
     resolution,
   );
   addIterationBuffer(rect, [iterBuffer]);
+  addWebGPUIterationBuffer(rect, [iterBuffer]);
 };
