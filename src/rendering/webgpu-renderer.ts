@@ -17,6 +17,7 @@ let unifiedIterationBuffer: Uint32Array;
 let device: GPUDevice;
 let context: GPUCanvasContext;
 let bindGroupLayout: GPUBindGroupLayout;
+let bindGroup: GPUBindGroup;
 let renderPipeline: GPURenderPipeline;
 let computePipeline: GPUComputePipeline;
 let vertexBuffer: GPUBuffer;
@@ -27,8 +28,11 @@ let uniformData: Float32Array;
 let iterationBuffer: GPUBuffer;
 let paletteBuffer: GPUBuffer;
 let paletteData: Float32Array;
+let iterationInputBuffer: GPUBuffer;
+let iterationInputData: Uint32Array;
+let iterationInputMetadataBuffer: GPUBuffer;
 
-let bindGroup: GPUBindGroup;
+const iterationBufferQueue: IterationBuffer[] = [];
 
 let gpuInitialized = false;
 
@@ -48,7 +52,8 @@ export const initRenderer = (w: number, h: number) => {
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
   unifiedIterationBuffer = new Uint32Array(w * h);
-  paletteData = new Float32Array(8192 * 4); // 先に最大サイズ分確保しておく（手抜き）
+  paletteData = new Float32Array(8192 * 4); // FIXME: paletteの最大サイズ分で確保している（手抜き）
+  iterationInputData = new Uint32Array(w * h); // FIXME: 分割数に関わらず最大サイズで確保している
 
   try {
     initializeGPU();
@@ -81,8 +86,49 @@ export const renderToCanvas = (
     y, // offsetY
     width ?? canvasWidth, // renderWidth
     height ?? canvasHeight, // renderHeight
+    iterationBufferQueue.length, // iterationBufferCount
   ]);
   device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+  // queueに積まれたiteration bufferをGPUBufferに書き込む
+  let bufferByteOffset = 0;
+  if (0 < iterationBufferQueue.length) {
+    console.log(
+      "write iteration buffer queue size: ",
+      iterationBufferQueue.length,
+    );
+    const length = iterationBufferQueue.length;
+    // TODO: たぶんiterationInputBufferの長さに足りない場合は次回に回すとか必要そう
+    for (let idx = 0; idx < length; idx++) {
+      const { rect, buffer, resolution } = iterationBufferQueue.shift()!;
+      // TODO: resolutionも渡す必要がある気がしてきた
+
+      // metadata
+      const metadata = new Uint32Array([
+        rect.x,
+        rect.y,
+        rect.width,
+        rect.height,
+        idx * 6,
+        buffer.length,
+      ]);
+      device.queue.writeBuffer(
+        iterationInputMetadataBuffer,
+        idx * 6 * 32, //byteOffset
+        metadata,
+      );
+
+      device.queue.writeBuffer(
+        iterationInputBuffer,
+        bufferByteOffset,
+        buffer,
+        0,
+        buffer.length,
+      );
+
+      bufferByteOffset += buffer.byteLength;
+    }
+  }
 
   if (unifiedIterationBuffer) {
     // TODO: 毎回このクソデカバッファを書き込む必要はないはず
@@ -94,7 +140,7 @@ export const renderToCanvas = (
   const computePass = encoder.beginComputePass();
   computePass.setPipeline(computePipeline);
   computePass.setBindGroup(0, bindGroup);
-  computePass.dispatchWorkgroups(width ?? canvasWidth, height ?? canvasHeight);
+  computePass.dispatchWorkgroups(64);
   computePass.end();
 
   const renderPass = encoder.beginRenderPass({
@@ -118,12 +164,12 @@ export const renderToCanvas = (
 };
 
 export const addIterationBuffer = (
-  rect: Rect = bufferRect,
-  iterBuffer?: IterationBuffer[],
+  _rect: Rect = bufferRect,
+  iterBuffer: IterationBuffer[] = [],
 ) => {
   if (!gpuInitialized) return;
 
-  // TODO: storage bufferに書き込むのをcompute shaderに任せて良いのではないか？
+  iterationBufferQueue.push(...iterBuffer);
 };
 
 export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
@@ -249,6 +295,18 @@ const initializeGPU = async () => {
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
   });
 
+  iterationInputBuffer = device.createBuffer({
+    label: "iteration input buffer",
+    size: iterationInputData.byteLength,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+  });
+
+  iterationInputMetadataBuffer = device.createBuffer({
+    label: "iteration input metadata buffer",
+    size: 32 * 6 * 1024, // uint32 * 6要素 * 1024分割までサポート
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+  });
+
   bindGroupLayout = device.createBindGroupLayout({
     label: "Mandelbrot BindGroupLayout",
     entries: [
@@ -265,12 +323,24 @@ const initializeGPU = async () => {
         // iterations
         binding: 1,
         visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
-        buffer: { type: "read-only-storage" },
+        buffer: { type: "storage" },
       },
       {
         // palette
         binding: 2,
         visibility: GPUShaderStage.FRAGMENT,
+        buffer: { type: "read-only-storage" },
+      },
+      {
+        // iteration buffer input
+        binding: 3,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "read-only-storage" },
+      },
+      {
+        // iteration buffer metadata
+        binding: 4,
+        visibility: GPUShaderStage.COMPUTE,
         buffer: { type: "read-only-storage" },
       },
     ],
@@ -329,6 +399,14 @@ const createBindGroup = () => {
       {
         binding: 2,
         resource: { buffer: paletteBuffer },
+      },
+      {
+        binding: 3,
+        resource: { buffer: iterationInputBuffer },
+      },
+      {
+        binding: 4,
+        resource: { buffer: iterationInputMetadataBuffer },
       },
     ],
   });

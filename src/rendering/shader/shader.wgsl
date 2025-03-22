@@ -8,11 +8,14 @@ struct Uniforms {
   offsetY: f32,
   width: f32,
   height: f32,
+  iterationBufferCount: f32,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-@group(0) @binding(1) var<storage> iterations: array<u32>;
+@group(0) @binding(1) var<storage, read_write> iterations: array<u32>;
 @group(0) @binding(2) var<storage> palette: array<vec4f>;
+// @group(0) @binding(3) var<storage> iterInput: array<u32>;
+// @group(0) @binding(4) var<storage> iterInputMeta: array<u32>;
 
 @vertex
 fn vertexMain(@location(0) pos: vec2f) -> @builtin(position) vec4f {
