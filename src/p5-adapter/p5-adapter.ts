@@ -181,13 +181,37 @@ const calculateComplexMouseXY = (
 /*
  * canvasの画像をリサイズした後にDataURLを返す
  * 0を指定すると元のサイズで保存する
+ * WebGPUレンダリング時はWebGPUキャンバスから画像を取得する
  */
 export const getResizedCanvasImageDataURL = (height: number = 0) => {
-  // p5.Imageはcanvas持っているのに型定義にはなぜか存在しない
+  const renderer = getRenderer();
+  const isWebGPU = renderer === "webgpu" && isWebGPUInitialized();
+  
+  if (isWebGPU) {
+    const gpuCanvas = document.getElementById("gpu-canvas") as HTMLCanvasElement;
+    if (gpuCanvas) {
+      const tempCanvas = document.createElement("canvas");
+      const tempContext = tempCanvas.getContext("2d");
+      
+      if (tempContext) {
+        const targetHeight = height || gpuCanvas.height;
+        const aspectRatio = gpuCanvas.width / gpuCanvas.height;
+        const targetWidth = Math.floor(targetHeight * aspectRatio);
+        
+        tempCanvas.width = targetWidth;
+        tempCanvas.height = targetHeight;
+        tempContext.drawImage(gpuCanvas, 0, 0, targetWidth, targetHeight);
+        
+        return tempCanvas.toDataURL();
+      }
+    }
+    
+    console.warn("Failed to get image from WebGPU canvas, falling back to p5.js canvas");
+  }
+  
   const img = UNSAFE_p5Instance.get() as p5.Image & {
     canvas: HTMLCanvasElement;
   };
-  // 0にしておくと指定した方の高さに合わせてリサイズしてくれる
   img.resize(0, height);
 
   return img.canvas.toDataURL();

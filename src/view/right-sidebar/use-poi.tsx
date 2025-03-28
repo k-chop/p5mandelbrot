@@ -2,8 +2,10 @@ import { getCurrentPalette, setSerializedPalette } from "@/camera/palette";
 import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
 import {
   cloneParams,
+  getCurrentParams,
   setCurrentParams,
 } from "@/mandelbrot-state/mandelbrot-state";
+import { getMatchingHistoryThumbnail } from "@/poi-history/poi-history";
 import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
 import { deletePreview, savePreview } from "@/store/preview-store";
 import { useCallback } from "react";
@@ -14,6 +16,30 @@ import {
 } from "../../store/sync-storage/poi-list";
 import { MandelbrotParams, POIData } from "../../types";
 
+/**
+ * パラメータに合わせたサムネイル画像を取得する共通関数
+ * 履歴から一致するものがあれば使用し、なければ直接キャプチャ
+ */
+function getThumbnailForParams(
+  params: MandelbrotParams = getCurrentParams()
+): string {
+  const matchingThumbnail = getMatchingHistoryThumbnail(params);
+  
+  if (matchingThumbnail) {
+    console.log("Using existing thumbnail from history");
+    return matchingThumbnail;
+  }
+  
+  console.log("Capturing new thumbnail");
+  
+  try {
+    return getResizedCanvasImageDataURL(100);
+  } catch (e) {
+    console.error("Failed to capture thumbnail:", e);
+    return "";
+  }
+}
+
 export const usePOI = () => {
   const poiList: POIData[] = useStoreValue("poi");
 
@@ -23,9 +49,8 @@ export const usePOI = () => {
       const newPOIList = [newPOI, ...poiList];
       writePOIListToStorage(newPOIList);
 
-      const imageDataURL = getResizedCanvasImageDataURL(100);
+      const imageDataURL = getThumbnailForParams(newParams);
       savePreview(newPOI.id, imageDataURL);
-
       updateStore("poi", newPOIList);
     },
     [poiList],
@@ -37,9 +62,8 @@ export const usePOI = () => {
       poi.serializedPalette = getCurrentPalette().serialize();
       writePOIListToStorage(poiList);
 
-      const imageDataURL = getResizedCanvasImageDataURL(100);
+      const imageDataURL = getThumbnailForParams();
       savePreview(poi.id, imageDataURL);
-
       updateStore("poi", poiList);
     },
     [poiList],
