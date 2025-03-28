@@ -23,7 +23,14 @@ import {
   addCurrentLocationToPOIHistory,
   initializePOIHistory,
 } from "@/poi-history/poi-history";
-import { initializeCanvasSize } from "@/rendering/common";
+import { 
+  initializeCanvasSize, 
+  getRenderer, 
+  isWebGPUInitialized, 
+  isWebGPUSupported, 
+  setRenderer, 
+  setWebGPUInitialized 
+} from "@/rendering/common";
 import {
   drawCrossHair,
   drawScaleRate,
@@ -31,10 +38,12 @@ import {
   initRenderer,
   renderToCanvas,
   resizeCanvas,
+  unifiedIterationBuffer,
 } from "@/rendering/p5-renderer";
 import {
   initRenderer as initWebGPURenderer,
   resizeCanvas as resizeCanvasWebGPU,
+  renderToCanvas as renderToWebGPU,
 } from "@/rendering/webgpu-renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
@@ -299,12 +308,13 @@ export const resizeTo = (_p: p5 = UNSAFE_p5Instance) => {
 // 以下、p5.jsのcallback関数
 // ================================================================================================
 
-export const p5Setup = (p: p5) => {
+export const p5Setup = async (p: p5) => {
   UNSAFE_p5Instance = p;
 
   const { width, height } = initializeCanvasSize();
+  
+  // p5レンダラーの初期化
   initRenderer(width, height, p);
-  initWebGPURenderer(width, height);
 
   const canvas = p.createCanvas(width, height);
   // canvas上での右クリックを無効化
@@ -313,8 +323,6 @@ export const p5Setup = (p: p5) => {
 
   p.colorMode(p.HSB, 360, 100, 100, 100);
   p.cursor(p.CROSS);
-
-  // FIXME: 中央表示じゃなくなったので適当に直す
 
   // p5.jsのキャンバスを透明にして、イベント処理だけを受け付けるように設定
   canvas.elt.style.position = "absolute";
@@ -337,6 +345,35 @@ export const p5Setup = (p: p5) => {
   // キャンバスラッパーに追加
   const wrapper = document.getElementById("canvas-wrapper");
   wrapper?.appendChild(gpuCanvas);
+
+  // WebGPUサポートの確認と初期化
+  try {
+    if (isWebGPUSupported()) {
+      // WebGPU対応ブラウザなので初期化を試みる
+      const webGPUInitialized = await initWebGPURenderer(width, height);
+      if (webGPUInitialized) {
+        // 初期化成功
+        console.log("Using WebGPU renderer");
+        setRenderer("webgpu");
+        setWebGPUInitialized(true);
+      } else {
+        // 初期化失敗
+        console.log("WebGPU initialization failed, falling back to p5js renderer");
+        setRenderer("p5js");
+        setWebGPUInitialized(false);
+      }
+    } else {
+      // WebGPU非対応ブラウザ
+      console.log("WebGPU is not supported in this browser, using p5js renderer");
+      setRenderer("p5js");
+      setWebGPUInitialized(false);
+    }
+  } catch (e) {
+    console.error("Error during renderer initialization:", e);
+    // エラーが発生した場合はp5jsにフォールバック
+    setRenderer("p5js");
+    setWebGPUInitialized(false);
+  }
 
   window.oncontextmenu = () => {
     if (willBlockNextContextMenu) {
@@ -474,7 +511,17 @@ export const p5Draw = (p: p5) => {
     }
   }
 
-  renderToCanvas(x, y, width, height);
+  // 現在使用中のレンダラーで描画
+  const renderer = getRenderer();
+  if (renderer === "webgpu" && isWebGPUInitialized()) {
+    // WebGPUレンダラーを使用
+    renderToWebGPU(x, y, width, height, unifiedIterationBuffer);
+    // WebGPUは透明な背景を持つp5キャンバスを上に置く (UIのみを描画)
+    p.clear();
+  } else {
+    // p5レンダラーを使用
+    renderToCanvas(x, y, width, height);
+  }
 
   switch (draggingMode) {
     case "move":

@@ -1,6 +1,62 @@
 import type { Rect } from "@/math/rect";
-import { getStore } from "@/store/store";
+import { getStore, updateStore } from "@/store/store";
 import type { Resolution } from "./p5-renderer";
+
+/**
+ * 使用するレンダラーの種類
+ */
+export type RendererType = "webgpu" | "p5js";
+
+/**
+ * 現在使用中のレンダラータイプ
+ */
+let currentRenderer: RendererType = "p5js";
+
+/**
+ * WebGPUが初期化済みかどうか
+ */
+let webGPUInitialized = false;
+
+/**
+ * WebGPUがサポートされているか確認する
+ */
+export const isWebGPUSupported = (): boolean => {
+  if (!navigator.gpu) {
+    console.log("WebGPU is not supported in this browser");
+    return false;
+  }
+  return true;
+};
+
+/**
+ * WebGPUの初期化状態を設定する
+ */
+export const setWebGPUInitialized = (value: boolean): void => {
+  webGPUInitialized = value;
+};
+
+/**
+ * WebGPUの初期化状態を取得する
+ */
+export const isWebGPUInitialized = (): boolean => {
+  return webGPUInitialized;
+};
+
+/**
+ * 現在のレンダラーを設定する
+ */
+export const setRenderer = (renderer: RendererType): void => {
+  currentRenderer = renderer;
+  updateStore("rendererType", renderer);
+  console.log(`Using ${renderer} renderer`);
+};
+
+/**
+ * 現在のレンダラータイプを取得する
+ */
+export const getRenderer = (): RendererType => {
+  return currentRenderer;
+};
 
 /**
  * rect内のローカル座標系(resolution)でのindexを取得する
