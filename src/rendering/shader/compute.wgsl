@@ -16,8 +16,10 @@ struct IterationInputMeta {
   y: u32,
   width: u32,
   height: u32,
-  offset: u32, // index (not byte)
+  resolutionWidth: u32,
+  resolutionHeight: u32,
   length: u32, // element length (not byte)
+  isSuperSampled: u32, // 0 or 1
 };
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -26,8 +28,11 @@ struct IterationInputMeta {
 @group(0) @binding(3) var<storage> iterInput: array<u32>;
 @group(0) @binding(4) var<storage> iterInputMeta: array<u32>;
 
+fn isValidIdx(idx: i32, length: i32) -> bool {
+  return idx >= 0 && idx < length;
+}
+
 @compute @workgroup_size(64)
 fn computeMain(@builtin(global_invocation_id) global_id: vec3u) {
-  // do nothing currently
-  let bufferCount = i32(uniforms.iterationBufferCount);
+  // 
 };

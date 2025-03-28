@@ -539,7 +539,7 @@ export const p5Draw = (p: p5) => {
   const renderer = getRenderer();
   if (renderer === "webgpu" && isWebGPUInitialized()) {
     // WebGPUレンダラーを使用
-    renderToWebGPU(x, y, width, height, unifiedIterationBuffer);
+    renderToWebGPU(x, y, width, height);
     // WebGPUは透明な背景を持つp5キャンバスを上に置く (UIのみを描画)
     p.clear();
   } else {

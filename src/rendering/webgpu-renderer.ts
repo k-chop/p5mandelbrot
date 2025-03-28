@@ -12,8 +12,6 @@ let height: number;
 
 let bufferRect: Rect;
 
-let unifiedIterationBuffer: Uint32Array;
-
 let device: GPUDevice;
 let context: GPUCanvasContext;
 let bindGroupLayout: GPUBindGroupLayout;
@@ -57,7 +55,6 @@ export const initRenderer = async (w: number, h: number): Promise<boolean> => {
   width = w;
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
-  unifiedIterationBuffer = new Uint32Array(w * h);
   paletteData = new Float32Array(8192 * 4); // FIXME: paletteの最大サイズ分で確保している（手抜き）
   iterationInputData = new Uint32Array(w * h); // FIXME: 分割数に関わらず最大サイズで確保している
 
@@ -76,7 +73,6 @@ export const renderToCanvas = (
   y: number,
   width?: number,
   height?: number,
-  unifiedIterationBuffer?: Uint32Array,
 ) => {
   if (!gpuInitialized) return;
 
@@ -101,14 +97,12 @@ export const renderToCanvas = (
   // queueに積まれたiteration bufferをGPUBufferに書き込む
   let bufferByteOffset = 0;
   if (0 < iterationBufferQueue.length) {
-    console.log(
-      "write iteration buffer queue size: ",
-      iterationBufferQueue.length,
-    );
     const length = iterationBufferQueue.length;
     // TODO: たぶんiterationInputBufferの長さに足りない場合は次回に回すとか必要そう
+
     for (let idx = 0; idx < length; idx++) {
-      const { rect, buffer, resolution } = iterationBufferQueue.shift()!;
+      const iteration = iterationBufferQueue.shift()!;
+      const { rect, buffer, resolution, isSuperSampled } = iteration;
       // TODO: resolutionも渡す必要がある気がしてきた
 
       // metadata
@@ -117,12 +111,14 @@ export const renderToCanvas = (
         rect.y,
         rect.width,
         rect.height,
-        idx * 6,
+        resolution.width,
+        resolution.height,
         buffer.length,
+        isSuperSampled ? 1 : 0, // isSuperSampled情報も追加
       ]);
       device.queue.writeBuffer(
         iterationInputMetadataBuffer,
-        idx * 6 * 32, //byteOffset
+        idx * 8 * 4, // 8要素 × 4バイト (Uint32Array)
         metadata,
       );
 
@@ -138,10 +134,8 @@ export const renderToCanvas = (
     }
   }
 
-  if (unifiedIterationBuffer) {
-    // TODO: 毎回このクソデカバッファを書き込む必要はないはず
-    device.queue.writeBuffer(iterationBuffer, 0, unifiedIterationBuffer);
-  }
+  // 毎フレームのunifiedIterationBufferの転送は不要
+  // GPUのcompute shaderによってiterationInputBufferからiterationBufferに直接書き込まれる
 
   const encoder = device.createCommandEncoder();
 
@@ -199,8 +193,6 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
 
-  unifiedIterationBuffer = new Uint32Array(w * h);
-
   context = gpuCanvas.getContext("webgpu")!;
   const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
   context.configure({
@@ -211,7 +203,7 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
   iterationBuffer.destroy();
   iterationBuffer = device.createBuffer({
     label: "iteration buffer",
-    size: unifiedIterationBuffer.byteLength,
+    size: width * height * 4, // Uint32Array
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
   });
 
@@ -247,7 +239,9 @@ const initializeGPU = async (): Promise<boolean> => {
 
   try {
     device = await adapter.requestDevice();
-    const gpuCanvas = document.getElementById("gpu-canvas") as HTMLCanvasElement;
+    const gpuCanvas = document.getElementById(
+      "gpu-canvas",
+    ) as HTMLCanvasElement;
     if (!gpuCanvas) {
       console.error("WebGPU canvas element not found");
       return false;
@@ -306,7 +300,7 @@ const initializeGPU = async (): Promise<boolean> => {
 
     iterationBuffer = device.createBuffer({
       label: "iteration buffer",
-      size: unifiedIterationBuffer.byteLength,
+      size: width * height * 4, // Uint32Array,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
 
@@ -324,7 +318,7 @@ const initializeGPU = async (): Promise<boolean> => {
 
     iterationInputMetadataBuffer = device.createBuffer({
       label: "iteration input metadata buffer",
-      size: 32 * 6 * 1024, // uint32 * 6要素 * 1024分割までサポート
+      size: 4 * 8 * 1024, // uint32(4バイト) * 8要素 * 1024分割までサポート
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
 
