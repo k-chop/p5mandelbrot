@@ -80,6 +80,34 @@ export const renderToCanvas = (
   const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
   const palette = getCurrentPalette();
 
+  // queueに積まれたiteration bufferをGPUBufferに書き込む
+  let bufferByteOffset = 0;
+  const maxBufferSize = iterationInputBuffer.size;
+  const maxMetadataEntries = Math.floor(
+    iterationInputMetadataBuffer.size / (8 * 4),
+  ); // 8つのメタデータ要素 × 4バイト
+
+  // 一度に処理できる最大数を計算
+  let processableCount = 0;
+  let tempBufferByteOffset = 0;
+
+  for (
+    let i = 0;
+    i < iterationBufferQueue.length && processableCount < maxMetadataEntries;
+    i++
+  ) {
+    const nextSize = iterationBufferQueue[i].buffer.byteLength;
+
+    // バッファサイズオーバーチェック
+    if (tempBufferByteOffset + nextSize > maxBufferSize) {
+      console.error("Buffer size exceeds maximum limit");
+      break;
+    }
+
+    tempBufferByteOffset += nextSize;
+    processableCount++;
+  }
+
   const uniformData = new Float32Array([
     params.N, // maxIteration
     canvasWidth, // canvasWidth
@@ -90,17 +118,13 @@ export const renderToCanvas = (
     y, // offsetY
     width ?? canvasWidth, // renderWidth
     height ?? canvasHeight, // renderHeight
-    iterationBufferQueue.length, // iterationBufferCount
+    processableCount, // iterationBufferCount：実際に処理する数
   ]);
   device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
-  // queueに積まれたiteration bufferをGPUBufferに書き込む
-  let bufferByteOffset = 0;
-  if (0 < iterationBufferQueue.length) {
-    const length = iterationBufferQueue.length;
-    // TODO: たぶんiterationInputBufferの長さに足りない場合は次回に回すとか必要そう
-
-    for (let idx = 0; idx < length; idx++) {
+  if (0 < processableCount) {
+    // 処理可能な数だけ処理
+    for (let idx = 0; idx < processableCount; idx++) {
       const iteration = iterationBufferQueue.shift()!;
       const { rect, buffer, resolution, isSuperSampled } = iteration;
 
@@ -113,7 +137,7 @@ export const renderToCanvas = (
         resolution.width,
         resolution.height,
         buffer.length,
-        isSuperSampled ? 1 : 0, // isSuperSampled情報も追加
+        isSuperSampled ? 1 : 0,
       ]);
       device.queue.writeBuffer(
         iterationInputMetadataBuffer,
