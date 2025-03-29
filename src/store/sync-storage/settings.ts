@@ -1,11 +1,14 @@
 import { getStore } from "../store";
 
+import type { RendererType } from "@/rendering/common";
+
 export type Settings = {
   zoomRate: number;
   workerCount: number;
   animationTime: number;
   animationCycleStep: number;
   maxCanvasSize: number;
+  rendererType: RendererType;
 };
 
 export const DEFAULT_WORKER_COUNT =
@@ -17,6 +20,7 @@ const defaultSettings = {
   animationTime: 0,
   animationCycleStep: 1,
   maxCanvasSize: -1,
+  rendererType: "p5js" as RendererType,
 } satisfies Settings;
 
 export const isSettingField = (key: string): key is keyof Settings =>
@@ -29,6 +33,7 @@ export const writeSettingsToStorage = () => {
     animationTime: getStore("animationTime"),
     animationCycleStep: getStore("animationCycleStep"),
     maxCanvasSize: getStore("maxCanvasSize"),
+    rendererType: getStore("rendererType"),
   } satisfies Settings;
 
   const serialized = JSON.stringify(settings);
