@@ -1,5 +1,15 @@
-import { getCurrentPalette, setPalette } from "@/camera/palette";
+import {
+  getCurrentPalette,
+  markNeedsRerender,
+  setPalette,
+} from "@/camera/palette";
 import type { Palette } from "@/color";
+import {
+  getIterationCache,
+  scaleIterationCacheAroundPoint,
+  setIterationCache,
+  translateRectInIterationCache,
+} from "@/iteration-buffer/iteration-buffer";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { Rect } from "@/math/rect";
 import { getStore } from "@/store/store";
@@ -216,15 +226,17 @@ export const renderToCanvas = (
 
 export const addIterationBuffer = (
   _rect: Rect = bufferRect,
-  iterBuffer: IterationBuffer[] = [],
+  iterBuffer: IterationBuffer[],
 ) => {
   if (!gpuInitialized) return;
 
-  iterationBufferQueue.push(...iterBuffer);
+  iterationBufferQueue.push(...(iterBuffer ?? getIterationCache()));
 };
 
 export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
   if (!gpuInitialized) return;
+
+  const from = getCanvasSize();
 
   const gpuCanvas = document.getElementById("gpu-canvas")! as HTMLCanvasElement;
 
@@ -257,6 +269,28 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
   });
 
   createBindGroup();
+
+  const scaleFactor =
+    Math.min(width, height) / Math.min(from.width, from.height);
+
+  console.debug("Resize scale factor", scaleFactor);
+
+  // サイズ差の分trasnlateしてからscale
+  const offsetX = Math.round((width - from.width) / 2);
+  const offsetY = Math.round((height - from.height) / 2);
+  translateRectInIterationCache(-offsetX, -offsetY);
+
+  const translated = scaleIterationCacheAroundPoint(
+    width / 2,
+    height / 2,
+    scaleFactor,
+    width,
+    height,
+  );
+  setIterationCache(translated);
+  addIterationBuffer();
+
+  markNeedsRerender();
 };
 
 export const updatePaletteDataForGPU = (palette: Palette) => {
