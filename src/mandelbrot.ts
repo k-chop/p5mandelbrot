@@ -1,5 +1,6 @@
 import { markNeedsRerender } from "./camera/palette";
 import {
+  getIterationCache,
   removeUnusedIterationCache,
   scaleIterationCacheAroundPoint,
   setIterationCache,
@@ -51,7 +52,11 @@ export const startCalculation = async (
   // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
   removeUnusedIterationCache();
   // addIterationBuffer(rect);
-  addWebGPUIterationBuffer(rect);
+  console.log("iterationCacheLength", getIterationCache().length);
+  getIterationCache().forEach((cache) => {
+    console.log("cache", cache.rect, cache.resolution);
+  });
+  addWebGPUIterationBuffer(rect, getIterationCache());
   markNeedsRerender();
 
   // ドラッグ中に描画をずらしていたのを戻す

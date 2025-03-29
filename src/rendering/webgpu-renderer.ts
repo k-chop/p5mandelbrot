@@ -123,13 +123,16 @@ export const renderToCanvas = (
   device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
   if (0 < processableCount) {
+    console.log(
+      `Processing ${processableCount} iteration buffers (total: ${iterationBufferQueue.length}, remaining: ${iterationBufferQueue.length - processableCount})`,
+    );
     // 処理可能な数だけ処理
     for (let idx = 0; idx < processableCount; idx++) {
       const iteration = iterationBufferQueue.shift()!;
       const { rect, buffer, resolution, isSuperSampled } = iteration;
 
       // metadata
-      const metadata = new Uint32Array([
+      const metadata = new Float32Array([
         rect.x,
         rect.y,
         rect.width,
@@ -141,7 +144,7 @@ export const renderToCanvas = (
       ]);
       device.queue.writeBuffer(
         iterationInputMetadataBuffer,
-        idx * 8 * 4, // 8要素 × 4バイト (Uint32Array)
+        idx * 8 * 4, // 8要素 × 4バイト (Float32Array)
         metadata,
       );
 
