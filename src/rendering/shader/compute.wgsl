@@ -58,14 +58,15 @@ fn computeMain(@builtin(global_invocation_id) global_id: vec3u) {
   }
   
   let canvas_width = i32(uniforms.canvasWidth);
+  let canvas_height = i32(uniforms.canvasHeight);
+
+  let start_x = clamp(rect_x, 0, canvas_width);
+  let start_y = clamp(rect_y, 0, canvas_height);
+  let end_x = clamp(rect_x + rect_width, 0, canvas_width);
+  let end_y = clamp(rect_y + rect_height, 0, canvas_height);
   
-  for (var world_y = rect_y; world_y < rect_y + rect_height; world_y++) {
-    for (var world_x = rect_x; world_x < rect_x + rect_width; world_x++) {
-      // キャンバス境界チェック
-      if (world_x < 0 || world_x >= canvas_width || world_y < 0 || world_y >= i32(uniforms.canvasHeight)) {
-        continue;
-      }
-      
+  for (var world_y = start_y; world_y < end_y; world_y++) {
+    for (var world_x = start_x; world_x < end_x; world_x++) {
       let local_x = world_x - rect_x;
       let local_y = world_y - rect_y;
       
