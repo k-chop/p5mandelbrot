@@ -23,13 +23,13 @@ import {
   addCurrentLocationToPOIHistory,
   initializePOIHistory,
 } from "@/poi-history/poi-history";
-import { 
-  initializeCanvasSize, 
-  getRenderer, 
-  isWebGPUInitialized, 
-  isWebGPUSupported, 
-  setRenderer, 
-  setWebGPUInitialized 
+import {
+  getRenderer,
+  initializeCanvasSize,
+  isWebGPUInitialized,
+  isWebGPUSupported,
+  setRenderer,
+  setWebGPUInitialized,
 } from "@/rendering/common";
 import {
   drawCrossHair,
@@ -38,12 +38,11 @@ import {
   initRenderer,
   renderToCanvas,
   resizeCanvas,
-  unifiedIterationBuffer,
 } from "@/rendering/p5-renderer";
 import {
   initRenderer as initWebGPURenderer,
-  resizeCanvas as resizeCanvasWebGPU,
   renderToCanvas as renderToWebGPU,
+  resizeCanvas as resizeCanvasWebGPU,
 } from "@/rendering/webgpu-renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
@@ -61,6 +60,8 @@ let mouseDragged = false;
 let mouseClickedOn = { mouseX: 0, mouseY: 0 };
 /** 次のrenderingが終わったタイミングでhistoryを保存したいときにtrueにする */
 let shouldSavePOIHistoryNextRender = false;
+/** 次のrenderingのタイミングで動かしている状態を解除したいときにtrueにする */
+let shouldResetTranslatingNextRender = false;
 /**
  * mainBufferの表示位置変えているかどうか
  *
@@ -186,29 +187,33 @@ const calculateComplexMouseXY = (
 export const getResizedCanvasImageDataURL = (height: number = 0) => {
   const renderer = getRenderer();
   const isWebGPU = renderer === "webgpu" && isWebGPUInitialized();
-  
+
   if (isWebGPU) {
-    const gpuCanvas = document.getElementById("gpu-canvas") as HTMLCanvasElement;
+    const gpuCanvas = document.getElementById(
+      "gpu-canvas",
+    ) as HTMLCanvasElement;
     if (gpuCanvas) {
       const tempCanvas = document.createElement("canvas");
       const tempContext = tempCanvas.getContext("2d");
-      
+
       if (tempContext) {
         const targetHeight = height || gpuCanvas.height;
         const aspectRatio = gpuCanvas.width / gpuCanvas.height;
         const targetWidth = Math.floor(targetHeight * aspectRatio);
-        
+
         tempCanvas.width = targetWidth;
         tempCanvas.height = targetHeight;
         tempContext.drawImage(gpuCanvas, 0, 0, targetWidth, targetHeight);
-        
+
         return tempCanvas.toDataURL();
       }
     }
-    
-    console.warn("Failed to get image from WebGPU canvas, falling back to p5.js canvas");
+
+    console.warn(
+      "Failed to get image from WebGPU canvas, falling back to p5.js canvas",
+    );
   }
-  
+
   const img = UNSAFE_p5Instance.get() as p5.Image & {
     canvas: HTMLCanvasElement;
   };
@@ -336,7 +341,7 @@ export const p5Setup = async (p: p5) => {
   UNSAFE_p5Instance = p;
 
   const { width, height } = initializeCanvasSize();
-  
+
   // p5レンダラーの初期化
   initRenderer(width, height, p);
 
@@ -382,13 +387,17 @@ export const p5Setup = async (p: p5) => {
         setWebGPUInitialized(true);
       } else {
         // 初期化失敗
-        console.log("WebGPU initialization failed, falling back to p5js renderer");
+        console.log(
+          "WebGPU initialization failed, falling back to p5js renderer",
+        );
         setRenderer("p5js");
         setWebGPUInitialized(false);
       }
     } else {
       // WebGPU非対応ブラウザ
-      console.log("WebGPU is not supported in this browser, using p5js renderer");
+      console.log(
+        "WebGPU is not supported in this browser, using p5js renderer",
+      );
       setRenderer("p5js");
       setWebGPUInitialized(false);
     }
@@ -563,6 +572,11 @@ export const p5Draw = (p: p5) => {
     addCurrentLocationToPOIHistory();
   }
 
+  if (shouldResetTranslatingNextRender) {
+    isTranslatingMainBuffer = false;
+    shouldResetTranslatingNextRender = false;
+  }
+
   if (needsRenderForCurrentParams()) {
     startCalculation(
       (elapsed: number) => {
@@ -573,7 +587,7 @@ export const p5Draw = (p: p5) => {
         }
       },
       // onTranslated - cacheのtranslateとmainBufferへの書き込みが済んでから描画位置を戻す
-      () => (isTranslatingMainBuffer = false),
+      () => (shouldResetTranslatingNextRender = true),
     );
   }
 };
