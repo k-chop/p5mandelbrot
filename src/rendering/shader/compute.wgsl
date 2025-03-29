@@ -61,6 +61,11 @@ fn computeMain(@builtin(global_invocation_id) global_id: vec3u) {
   
   for (var world_y = rect_y; world_y < rect_y + rect_height; world_y++) {
     for (var world_x = rect_x; world_x < rect_x + rect_width; world_x++) {
+      // キャンバス境界チェック
+      if (world_x < 0 || world_x >= canvas_width || world_y < 0 || world_y >= i32(uniforms.canvasHeight)) {
+        continue;
+      }
+      
       let local_x = world_x - rect_x;
       let local_y = world_y - rect_y;
       
