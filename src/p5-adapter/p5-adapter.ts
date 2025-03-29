@@ -348,11 +348,12 @@ export const p5Setup = async (p: p5) => {
 
   // p5.jsのキャンバスを透明にして、イベント処理だけを受け付けるように設定
   canvas.elt.style.position = "absolute";
-  canvas.elt.style.top = "0";
-  canvas.elt.style.left = "0";
   canvas.elt.style.pointerEvents = "auto"; // マウス操作を受け付ける
   canvas.elt.style.background = "transparent"; // 背景を透明に
   canvas.elt.style.zIndex = "10"; // 上に表示
+  canvas.elt.style.top = "50%";
+  canvas.elt.style.left = "50%";
+  canvas.elt.style.transform = "translate(-50%, -50%)"; // 中央に配置
 
   // WebGPU用のキャンバスを作成して下に配置
   const gpuCanvas = document.createElement("canvas");
@@ -360,9 +361,10 @@ export const p5Setup = async (p: p5) => {
   gpuCanvas.width = width;
   gpuCanvas.height = height;
   gpuCanvas.style.position = "absolute";
-  gpuCanvas.style.top = "0";
-  gpuCanvas.style.left = "0";
   gpuCanvas.style.zIndex = "5"; // p5.jsキャンバスの下に
+  gpuCanvas.style.top = "50%";
+  gpuCanvas.style.left = "50%";
+  gpuCanvas.style.transform = "translate(-50%, -50%)"; // 中央に配置
 
   // キャンバスラッパーに追加
   const wrapper = document.getElementById("canvas-wrapper");
