@@ -34,17 +34,14 @@ fn isValidIdx(idx: i32, length: i32) -> bool {
 
 @compute @workgroup_size(64)
 fn computeMain(@builtin(global_invocation_id) global_id: vec3u) {
-  // 現在のスレッドID
   let thread_id = global_id.x;
   
-  // スレッド数の上限を確認
   let thread_count = u32(uniforms.iterationBufferCount);
   if (thread_id >= thread_count) {
     return;
   }
   
-  // 処理するイテレーションバッファのメタデータを取得
-  let meta_offset = thread_id * 8; // 各メタデータは8つのu32値からなる
+  let meta_offset = thread_id * 8;
   let rect_x = i32(iterInputMeta[meta_offset]);
   let rect_y = i32(iterInputMeta[meta_offset + 1]);
   let rect_width = i32(iterInputMeta[meta_offset + 2]);
@@ -54,20 +51,16 @@ fn computeMain(@builtin(global_invocation_id) global_id: vec3u) {
   let buffer_length = i32(iterInputMeta[meta_offset + 6]);
   let is_super_sampled = i32(iterInputMeta[meta_offset + 7]);
   
-  // データの開始位置を計算（あるスレッドのデータがどこから始まるか）
   var data_start = 0;
   for (var i = 0; i < i32(thread_id); i++) {
     let prev_length = i32(iterInputMeta[i * 8 + 6]);
     data_start += prev_length;
   }
   
-  // キャンバスの幅（出力バッファのサイズ計算に使用）
   let canvas_width = i32(uniforms.canvasWidth);
   
-  // バッファを処理する
   for (var world_y = rect_y; world_y < rect_y + rect_height; world_y++) {
     for (var world_x = rect_x; world_x < rect_x + rect_width; world_x++) {
-      // バッファ内で対応する点の反復回数を取得
       let local_x = world_x - rect_x;
       let local_y = world_y - rect_y;
       
