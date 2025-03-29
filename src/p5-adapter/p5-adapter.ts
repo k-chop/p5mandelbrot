@@ -27,9 +27,11 @@ import {
   getRenderer,
   initializeCanvasSize,
   isWebGPUInitialized,
+  isWebGPUInitializing,
   isWebGPUSupported,
   setRenderer,
   setWebGPUInitialized,
+  setWebGPUInitializing,
 } from "@/rendering/common";
 import { drawCrossHair, drawScaleRate } from "@/rendering/p5-renderer";
 import {
@@ -375,11 +377,24 @@ export const p5Setup = async (p: p5) => {
     if (isWebGPUSupported()) {
       // WebGPU対応ブラウザなので初期化を試みる
       setRenderer("webgpu");
+      // 初期化中フラグを設定
+      setWebGPUInitializing(true);
+      
+      // 非同期初期化
       const initialized = await initRenderer(width, height);
       if (initialized) {
         // 初期化成功
         console.log("Using WebGPU renderer");
         setWebGPUInitialized(true);
+        
+        // 初期化完了後、強制的にレンダリングをトリガー
+        setTimeout(() => {
+          console.log("Triggering initial render after WebGPU initialization");
+          startCalculation(
+            () => {}, // onComplete - 何もしない
+            () => {}, // onTranslated - 何もしない
+          );
+        }, 0);
       } else {
         // 初期化失敗
         console.log(
@@ -387,6 +402,7 @@ export const p5Setup = async (p: p5) => {
         );
         setRenderer("p5js");
         setWebGPUInitialized(false);
+        setWebGPUInitializing(false);
       }
     } else {
       // WebGPU非対応ブラウザ
@@ -395,12 +411,14 @@ export const p5Setup = async (p: p5) => {
       );
       setRenderer("p5js");
       setWebGPUInitialized(false);
+      setWebGPUInitializing(false);
     }
   } catch (e) {
     console.error("Error during renderer initialization:", e);
     // エラーが発生した場合はp5jsにフォールバック
     setRenderer("p5js");
     setWebGPUInitialized(false);
+    setWebGPUInitializing(false);
   }
 
   window.oncontextmenu = () => {
@@ -541,13 +559,20 @@ export const p5Draw = (p: p5) => {
 
   // 現在使用中のレンダラーで描画
   const renderer = getRenderer();
+  
+  // WebGPUが初期化中なら描画をスキップ
+  if (renderer === "webgpu" && isWebGPUInitializing()) {
+    // 初期化中は何も描画しない
+    return;
+  } 
+  
   if (renderer === "webgpu" && isWebGPUInitialized()) {
     // WebGPUレンダラーを使用
     renderToCanvas(x, y, width, height);
     // WebGPUは透明な背景を持つp5キャンバスを上に置く (UIのみを描画)
     p.clear();
   } else {
-    // p5レンダラーを使用
+    // p5レンダラーを使用 (WebGPU非対応またはWebGPU初期化失敗時)
     renderToCanvas(x, y, width, height);
   }
 

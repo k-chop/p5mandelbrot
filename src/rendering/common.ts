@@ -18,6 +18,11 @@ let currentRenderer: RendererType = "p5js";
 let webGPUInitialized = false;
 
 /**
+ * WebGPUの初期化が進行中かどうか
+ */
+let webGPUInitializing = false;
+
+/**
  * WebGPUがサポートされているか確認する
  */
 export const isWebGPUSupported = (): boolean => {
@@ -33,6 +38,14 @@ export const isWebGPUSupported = (): boolean => {
  */
 export const setWebGPUInitialized = (value: boolean): void => {
   webGPUInitialized = value;
+  webGPUInitializing = false;
+};
+
+/**
+ * WebGPUの初期化が進行中かどうかを設定する
+ */
+export const setWebGPUInitializing = (value: boolean): void => {
+  webGPUInitializing = value;
 };
 
 /**
@@ -40,6 +53,13 @@ export const setWebGPUInitialized = (value: boolean): void => {
  */
 export const isWebGPUInitialized = (): boolean => {
   return webGPUInitialized;
+};
+
+/**
+ * WebGPUの初期化が進行中かどうかを取得する
+ */
+export const isWebGPUInitializing = (): boolean => {
+  return webGPUInitializing;
 };
 
 /**

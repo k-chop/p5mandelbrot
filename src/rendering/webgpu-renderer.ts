@@ -84,7 +84,10 @@ export const renderToCanvas = (
   width?: number,
   height?: number,
 ) => {
-  if (!gpuInitialized) return;
+  if (!gpuInitialized) {
+    console.warn("WebGPU not yet initialized, skipping render");
+    return;
+  }
 
   const params = getCurrentParams();
   const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
