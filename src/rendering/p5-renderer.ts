@@ -32,7 +32,7 @@ let height: number;
 
 let bufferRect: Rect;
 
-export let unifiedIterationBuffer: Uint32Array;
+let unifiedIterationBuffer: Uint32Array;
 
 export const getCanvasSize = () => ({ width, height });
 export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });

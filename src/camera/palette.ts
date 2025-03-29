@@ -5,7 +5,7 @@ import {
   othersPalettes,
   type Palette,
 } from "@/color";
-import { updatePaletteDataForGPU } from "@/rendering/webgpu-renderer";
+import { updatePaletteDataForGPU } from "@/rendering/renderer";
 import { updateStore } from "@/store/store";
 
 // 描画時に使うpaletteの状態に関するファイル

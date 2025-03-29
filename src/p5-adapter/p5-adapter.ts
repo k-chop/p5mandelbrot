@@ -34,16 +34,13 @@ import {
 import {
   drawCrossHair,
   drawScaleRate,
+} from "@/rendering/p5-renderer";
+import {
   getCanvasSize,
   initRenderer,
   renderToCanvas,
   resizeCanvas,
-} from "@/rendering/p5-renderer";
-import {
-  initRenderer as initWebGPURenderer,
-  renderToCanvas as renderToWebGPU,
-  resizeCanvas as resizeCanvasWebGPU,
-} from "@/rendering/webgpu-renderer";
+} from "@/rendering/renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
 import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";
@@ -329,7 +326,6 @@ export const resizeTo = (_p: p5 = UNSAFE_p5Instance) => {
 
   if (elm) {
     resizeCanvas(elm.clientWidth, elm.clientHeight);
-    resizeCanvasWebGPU(elm.clientWidth, elm.clientHeight);
   }
 };
 
@@ -379,11 +375,11 @@ export const p5Setup = async (p: p5) => {
   try {
     if (isWebGPUSupported()) {
       // WebGPU対応ブラウザなので初期化を試みる
-      const webGPUInitialized = await initWebGPURenderer(width, height);
-      if (webGPUInitialized) {
+      setRenderer("webgpu");
+      const initialized = await initRenderer(width, height);
+      if (initialized) {
         // 初期化成功
         console.log("Using WebGPU renderer");
-        setRenderer("webgpu");
         setWebGPUInitialized(true);
       } else {
         // 初期化失敗
@@ -548,7 +544,7 @@ export const p5Draw = (p: p5) => {
   const renderer = getRenderer();
   if (renderer === "webgpu" && isWebGPUInitialized()) {
     // WebGPUレンダラーを使用
-    renderToWebGPU(x, y, width, height);
+    renderToCanvas(x, y, width, height);
     // WebGPUは透明な背景を持つp5キャンバスを上に置く (UIのみを描画)
     p.clear();
   } else {
