@@ -90,13 +90,31 @@ export const renderToCanvas = (
 
   // TODO: "荒い" cacheを先に処理する必要がある
 
+  let prevResolution = Number.MAX_SAFE_INTEGER;
   for (let i = 0; i < iterationBufferQueue.length; i++) {
-    const nextSize = iterationBufferQueue[i].buffer.byteLength;
+    const iterBuffer = iterationBufferQueue[i];
+    const nextSize = iterBuffer.buffer.byteLength;
 
     // バッファサイズオーバーチェック
     if (tempBufferByteOffset + nextSize > maxBufferSize) {
       console.error("Buffer size exceeds maximum limit");
       break;
+    }
+
+    const resolution = Math.floor(
+      iterBuffer.rect.width / iterBuffer.resolution.width,
+    );
+    if (
+      prevResolution !== Number.MAX_SAFE_INTEGER &&
+      resolution < prevResolution
+    ) {
+      // 解像度が切り替わったので残りは次に回す
+      console.log(
+        `Resolution changed: ${prevResolution} -> ${resolution}, remaining: ${iterationBufferQueue.length - processableCount}`,
+      );
+      break;
+    } else {
+      prevResolution = resolution;
     }
 
     tempBufferByteOffset += nextSize;
