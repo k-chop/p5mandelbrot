@@ -17,10 +17,10 @@ import {
   setPrevBatchId,
 } from "./mandelbrot-state/mandelbrot-state";
 import { getCalculationTargetRects, Rect } from "./math/rect";
-import { 
-  getCanvasSize, 
+import {
+  addIterationBuffer,
+  getCanvasSize,
   getWholeCanvasRect,
-  addIterationBuffer 
 } from "./rendering/renderer";
 import { getStore } from "./store/store";
 import { getWorkerCount } from "./worker-pool/pool-instance";
@@ -55,7 +55,7 @@ export const startCalculation = async (
   // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
   removeUnusedIterationCache();
   console.log("iterationCacheLength", getIterationCache().length);
-  addIterationBuffer(rect, getIterationCache());
+  addIterationBuffer(rect);
   markNeedsRerender();
 
   // ドラッグ中に描画をずらしていたのを戻す

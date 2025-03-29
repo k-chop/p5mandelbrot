@@ -229,7 +229,7 @@ export const renderToCanvas = (
 
 export const addIterationBuffer = (
   _rect: Rect = bufferRect,
-  iterBuffer: IterationBuffer[],
+  iterBuffer?: IterationBuffer[],
 ) => {
   if (!gpuInitialized) return;
 
