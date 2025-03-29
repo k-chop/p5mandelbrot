@@ -84,13 +84,22 @@ export const renderToCanvas = (
   let bufferByteOffset = 0;
   const maxBufferSize = iterationInputBuffer.size;
 
+  // 解像度（rect.width/resolution.width）が荒い順にソートする
+  // 値が大きいほど1ピクセルあたりの解像度が荒い
+  if (iterationBufferQueue.length > 1) {
+    iterationBufferQueue.sort((a, b) => {
+      const resolutionA = a.rect.width / a.resolution.width;
+      const resolutionB = b.rect.width / b.resolution.width;
+      return resolutionB - resolutionA; // 降順（荒い順）
+    });
+  }
+
   // 一度に処理できる最大数を計算
   let processableCount = 0;
   let tempBufferByteOffset = 0;
+  let currentResolution = -1; // 現在処理中の解像度
 
-  // TODO: "荒い" cacheを先に処理する必要がある
-
-  let prevResolution = Number.MAX_SAFE_INTEGER;
+  // ソートされたキューから同じ解像度のバッファのみを処理
   for (let i = 0; i < iterationBufferQueue.length; i++) {
     const iterBuffer = iterationBufferQueue[i];
     const nextSize = iterBuffer.buffer.byteLength;
@@ -101,20 +110,17 @@ export const renderToCanvas = (
       break;
     }
 
-    const resolution = Math.floor(
-      iterBuffer.rect.width / iterBuffer.resolution.width,
-    );
-    if (
-      prevResolution !== Number.MAX_SAFE_INTEGER &&
-      resolution < prevResolution
-    ) {
-      // 解像度が切り替わったので残りは次に回す
+    const resolution = iterBuffer.rect.width / iterBuffer.resolution.width;
+
+    // 初回または同じ解像度のみ処理
+    if (currentResolution === -1) {
+      currentResolution = resolution;
+    } else if (Math.abs(resolution - currentResolution) > 0.001) {
+      // 解像度が変わったら処理を中断
       console.log(
-        `Resolution changed: ${prevResolution} -> ${resolution}, remaining: ${iterationBufferQueue.length - processableCount}`,
+        `Resolution changed: ${currentResolution} -> ${resolution}, remaining: ${iterationBufferQueue.length - processableCount}`,
       );
       break;
-    } else {
-      prevResolution = resolution;
     }
 
     tempBufferByteOffset += nextSize;

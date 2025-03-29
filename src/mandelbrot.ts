@@ -53,9 +53,6 @@ export const startCalculation = async (
   removeUnusedIterationCache();
   // addIterationBuffer(rect);
   console.log("iterationCacheLength", getIterationCache().length);
-  getIterationCache().forEach((cache) => {
-    console.log("cache", cache.rect, cache.resolution);
-  });
   addWebGPUIterationBuffer(rect, getIterationCache());
   markNeedsRerender();
 
