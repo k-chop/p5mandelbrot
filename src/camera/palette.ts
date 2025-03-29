@@ -101,16 +101,26 @@ export const setSerializedPalette = (serialized?: string) => {
  * 現在描画に使用しているPaletteのオフセットを設定する
  */
 export const setCurrentPaletteOffset = (offset: number) => {
-  getCurrentPalette().setOffset(offset);
+  const palette = getCurrentPalette();
+  palette.setOffset(offset);
   markNeedsRerender();
+
+  updatePaletteDataForGPU(palette);
+
+  updateStore("paletteOffset", palette.offset);
 };
 
 /**
  * 現在描画に使用しているPaletteの長さを設定する
  */
 export const setCurrentPaletteLength = (length: number) => {
-  getCurrentPalette().setLength(length);
+  const palette = getCurrentPalette();
+  palette.setLength(length);
   markNeedsRerender();
+
+  updatePaletteDataForGPU(palette);
+
+  updateStore("paletteLength", palette.length);
 };
 
 /**
