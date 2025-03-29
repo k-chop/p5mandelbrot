@@ -106,7 +106,11 @@ export const renderToCanvas = (
 
     // バッファサイズオーバーチェック
     if (tempBufferByteOffset + nextSize > maxBufferSize) {
-      console.error("Buffer size exceeds maximum limit");
+      console.log(
+        `Buffer size exceeded: ${tempBufferByteOffset} + ${nextSize} > ${maxBufferSize}, remaining: ${
+          iterationBufferQueue.length - processableCount
+        }`,
+      );
       break;
     }
 
@@ -138,7 +142,7 @@ export const renderToCanvas = (
   uniformData[7] = width ?? canvasWidth; // renderWidth
   uniformData[8] = height ?? canvasHeight; // renderHeight
   uniformData[9] = processableCount; // iterationBufferCount：実際に処理する数
-  
+
   device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
   if (0 < processableCount) {
@@ -342,7 +346,7 @@ const initializeGPU = async (): Promise<boolean> => {
       size: 48, // uint32 * 10 = 40 だけど16の倍数にしとく
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
-    
+
     uniformData = new Float32Array(12); // 余裕をもって12要素分確保
 
     iterationBuffer = device.createBuffer({
