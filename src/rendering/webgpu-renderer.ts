@@ -127,18 +127,18 @@ export const renderToCanvas = (
     processableCount++;
   }
 
-  const uniformData = new Float32Array([
-    params.N, // maxIteration
-    canvasWidth, // canvasWidth
-    canvasHeight, // canvasHeight
-    palette.offset, // paletteOffset
-    palette.length, // paletteSize
-    x, // offsetX
-    y, // offsetY
-    width ?? canvasWidth, // renderWidth
-    height ?? canvasHeight, // renderHeight
-    processableCount, // iterationBufferCount：実際に処理する数
-  ]);
+  // トップレベルで定義済みのuniformDataを使い回す
+  uniformData[0] = params.N; // maxIteration
+  uniformData[1] = canvasWidth; // canvasWidth
+  uniformData[2] = canvasHeight; // canvasHeight
+  uniformData[3] = palette.offset; // paletteOffset
+  uniformData[4] = palette.length; // paletteSize
+  uniformData[5] = x; // offsetX
+  uniformData[6] = y; // offsetY
+  uniformData[7] = width ?? canvasWidth; // renderWidth
+  uniformData[8] = height ?? canvasHeight; // renderHeight
+  uniformData[9] = processableCount; // iterationBufferCount：実際に処理する数
+  
   device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
   if (0 < processableCount) {
@@ -339,9 +339,11 @@ const initializeGPU = async (): Promise<boolean> => {
 
     uniformBuffer = device.createBuffer({
       label: "uniform buffer",
-      size: 48, // uint32 * 9 = 36 だけど16の倍数にしとく
+      size: 48, // uint32 * 10 = 40 だけど16の倍数にしとく
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
+    
+    uniformData = new Float32Array(12); // 余裕をもって12要素分確保
 
     iterationBuffer = device.createBuffer({
       label: "iteration buffer",
