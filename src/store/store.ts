@@ -29,6 +29,8 @@ type Store = {
   paletteOffset: number;
   animationCycleStep: number;
   progress: string | ResultSpans;
+  /** 現在使用中のレンダラー */
+  rendererType: "webgpu" | "p5js";
 };
 
 const store: Store = {
@@ -59,6 +61,8 @@ const store: Store = {
   animationCycleStep: 1,
   // state
   progress: "",
+  // renderer
+  rendererType: "p5js",
 };
 
 const event = eventmit<string>();

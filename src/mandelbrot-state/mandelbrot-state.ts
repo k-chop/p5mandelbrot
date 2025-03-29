@@ -1,4 +1,4 @@
-import { getCanvasSize } from "@/rendering/p5-renderer";
+import { getCanvasSize } from "@/rendering/renderer";
 import { getStore, updateStore, updateStoreWith } from "@/store/store";
 import type { MandelbrotParams, OffsetParams } from "@/types";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
@@ -69,7 +69,8 @@ export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
     // supersamplingは次の描画で解除される
     currentParams = { ...currentParams, ...params, isSuperSampling: false };
   } else {
-    currentParams = { ...currentParams, ...params };
+    // FIXME: 一時的にsupersamplingは無効にしている
+    currentParams = { ...currentParams, ...params, isSuperSampling: false };
   }
 
   updateStore("r", currentParams.r);

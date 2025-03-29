@@ -5,6 +5,7 @@ import {
   othersPalettes,
   type Palette,
 } from "@/color";
+import { updatePaletteDataForGPU } from "@/rendering/renderer";
 import { updateStore } from "@/store/store";
 
 // 描画時に使うpaletteの状態に関するファイル
@@ -65,9 +66,11 @@ export const changePaletteFromPresets = (index: number) => {
 /**
  * Paletteを指定して変更する
  */
-export const setPalette = (palette: Palette) => {
+export const setPalette = (palette: Palette = currentPalette) => {
   currentPalette = palette;
   markNeedsRerender();
+
+  updatePaletteDataForGPU(palette);
 
   updateStore("paletteLength", palette.length);
   updateStore("paletteOffset", palette.offset);
@@ -98,16 +101,26 @@ export const setSerializedPalette = (serialized?: string) => {
  * 現在描画に使用しているPaletteのオフセットを設定する
  */
 export const setCurrentPaletteOffset = (offset: number) => {
-  getCurrentPalette().setOffset(offset);
+  const palette = getCurrentPalette();
+  palette.setOffset(offset);
   markNeedsRerender();
+
+  updatePaletteDataForGPU(palette);
+
+  updateStore("paletteOffset", palette.offset);
 };
 
 /**
  * 現在描画に使用しているPaletteの長さを設定する
  */
 export const setCurrentPaletteLength = (length: number) => {
-  getCurrentPalette().setLength(length);
+  const palette = getCurrentPalette();
+  palette.setLength(length);
   markNeedsRerender();
+
+  updatePaletteDataForGPU(palette);
+
+  updateStore("paletteLength", palette.length);
 };
 
 /**

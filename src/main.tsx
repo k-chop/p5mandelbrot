@@ -25,8 +25,9 @@ import { prepareWorkerPool } from "./worker-pool/pool-instance";
 
 // p5 object
 const sketch = (p: p5) => {
-  p.setup = () => {
-    p5Setup(p);
+  p.setup = async () => {
+    // 非同期関数として実行
+    await p5Setup(p);
   };
 
   p.mousePressed = () => {

@@ -5,7 +5,7 @@ import {
   decodeBLATableItems,
   type BLATableItem,
 } from "@/workers/bla-table-item";
-import { decodeComplexArray } from "@/workers/xn-buffer";
+import { ComplexArrayView } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
   complexArbitary,
@@ -46,7 +46,7 @@ const calcHandler = (data: IterationWorkerParams) => {
 
   const terminateChecker = new Uint8Array(terminator);
 
-  const xn = decodeComplexArray(xnBuffer);
+  const xnView = new ComplexArrayView(xnBuffer);
   const blaTable = decodeBLATableItems(blaTableBuffer);
 
   const areaWidth = endX - startX;
@@ -64,8 +64,8 @@ const calcHandler = (data: IterationWorkerParams) => {
     pixelY: number,
     context: RefOrbitContextPopulated,
   ): number {
-    const { xn, blaTable } = context;
-    const maxRefIteration = xn.length - 1;
+    const { xnView, blaTable } = context;
+    const maxRefIteration = xnView.length - 1;
 
     // Δn
     let deltaNRe = 0.0;
@@ -88,8 +88,8 @@ const calcHandler = (data: IterationWorkerParams) => {
     const bailoutRadius = 4.0;
 
     while (iteration < maxIteration) {
-      const zRe = xn[refIteration].re + deltaNRe;
-      const zIm = xn[refIteration].im + deltaNIm;
+      const zRe = xnView.getRe(refIteration) + deltaNRe;
+      const zIm = xnView.getIm(refIteration) + deltaNIm;
       const zNorm = nNorm(zRe, zIm);
       if (zNorm > bailoutRadius) break;
 
@@ -149,8 +149,8 @@ const calcHandler = (data: IterationWorkerParams) => {
         const _deltaNIm = deltaNIm;
 
         // (2 * Xn + Δn) * Δn に展開して計算
-        const dzrT = xn[refIteration].re * 2 + _deltaNRe;
-        const dziT = xn[refIteration].im * 2 + _deltaNIm;
+        const dzrT = xnView.getRe(refIteration) * 2 + _deltaNRe;
+        const dziT = xnView.getIm(refIteration) * 2 + _deltaNIm;
 
         deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.re;
         deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.im;
@@ -163,7 +163,7 @@ const calcHandler = (data: IterationWorkerParams) => {
     return Math.min(iteration, maxIteration);
   }
 
-  const context = { xn, blaTable };
+  const context = { xnView, blaTable };
 
   let { xDiffs, yDiffs } = generateLowResDiffSequence(6, areaWidth, areaHeight);
 

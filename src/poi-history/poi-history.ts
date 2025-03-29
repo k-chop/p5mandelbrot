@@ -20,6 +20,33 @@ const POI_HISTORY_CHANGED = "poi-history-changed";
 const MAX_HISTORY = 25;
 
 /**
+ * 指定パラメータと一致する最新の履歴からサムネイル画像を取得
+ *
+ * @param mandelbrotParams 一致を確認するパラメータ（デフォルトは現在の状態）
+ */
+export const getMatchingHistoryThumbnail = (
+  mandelbrotParams = getCurrentParams(),
+): string | null => {
+  if (!initialized || poiHistory.length === 0) {
+    return null;
+  }
+
+  const historyItem = poiHistory[poiHistory.length - 1];
+
+  if (
+    historyItem.x.eq(mandelbrotParams.x) &&
+    historyItem.y.eq(mandelbrotParams.y) &&
+    historyItem.r.eq(mandelbrotParams.r) &&
+    historyItem.N === mandelbrotParams.N &&
+    historyItem.mode === mandelbrotParams.mode
+  ) {
+    return historyItem.imageDataUrl;
+  }
+
+  return null;
+};
+
+/**
  * 末尾に履歴データを追加する
  */
 export const addPOIToHistory = (poi: POIHistory) => {

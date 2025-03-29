@@ -23,15 +23,23 @@ import {
   addCurrentLocationToPOIHistory,
   initializePOIHistory,
 } from "@/poi-history/poi-history";
-import { initializeCanvasSize } from "@/rendering/common";
 import {
-  drawCrossHair,
-  drawScaleRate,
+  getRenderer,
+  initializeCanvasSize,
+  isWebGPUInitialized,
+  isWebGPUInitializing,
+  isWebGPUSupported,
+  setRenderer,
+  setWebGPUInitialized,
+  setWebGPUInitializing,
+} from "@/rendering/common";
+import { drawCrossHair, drawScaleRate } from "@/rendering/p5-renderer";
+import {
   getCanvasSize,
   initRenderer,
   renderToCanvas,
   resizeCanvas,
-} from "@/rendering/p5-renderer";
+} from "@/rendering/renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
 import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";
@@ -48,6 +56,8 @@ let mouseDragged = false;
 let mouseClickedOn = { mouseX: 0, mouseY: 0 };
 /** 次のrenderingが終わったタイミングでhistoryを保存したいときにtrueにする */
 let shouldSavePOIHistoryNextRender = false;
+/** 次のrenderingのタイミングで動かしている状態を解除したいときにtrueにする */
+let shouldResetTranslatingNextRender = false;
 /**
  * mainBufferの表示位置変えているかどうか
  *
@@ -168,13 +178,41 @@ const calculateComplexMouseXY = (
 /*
  * canvasの画像をリサイズした後にDataURLを返す
  * 0を指定すると元のサイズで保存する
+ * WebGPUレンダリング時はWebGPUキャンバスから画像を取得する
  */
 export const getResizedCanvasImageDataURL = (height: number = 0) => {
-  // p5.Imageはcanvas持っているのに型定義にはなぜか存在しない
+  const renderer = getRenderer();
+  const isWebGPU = renderer === "webgpu" && isWebGPUInitialized();
+
+  if (isWebGPU) {
+    const gpuCanvas = document.getElementById(
+      "gpu-canvas",
+    ) as HTMLCanvasElement;
+    if (gpuCanvas) {
+      const tempCanvas = document.createElement("canvas");
+      const tempContext = tempCanvas.getContext("2d");
+
+      if (tempContext) {
+        const targetHeight = height || gpuCanvas.height;
+        const aspectRatio = gpuCanvas.width / gpuCanvas.height;
+        const targetWidth = Math.floor(targetHeight * aspectRatio);
+
+        tempCanvas.width = targetWidth;
+        tempCanvas.height = targetHeight;
+        tempContext.drawImage(gpuCanvas, 0, 0, targetWidth, targetHeight);
+
+        return tempCanvas.toDataURL();
+      }
+    }
+
+    console.warn(
+      "Failed to get image from WebGPU canvas, falling back to p5.js canvas",
+    );
+  }
+
   const img = UNSAFE_p5Instance.get() as p5.Image & {
     canvas: HTMLCanvasElement;
   };
-  // 0にしておくと指定した方の高さに合わせてリサイズしてくれる
   img.resize(0, height);
 
   return img.canvas.toDataURL();
@@ -294,10 +332,12 @@ export const resizeTo = (_p: p5 = UNSAFE_p5Instance) => {
 // 以下、p5.jsのcallback関数
 // ================================================================================================
 
-export const p5Setup = (p: p5) => {
+export const p5Setup = async (p: p5) => {
   UNSAFE_p5Instance = p;
 
   const { width, height } = initializeCanvasSize();
+
+  // p5レンダラーの初期化
   initRenderer(width, height, p);
 
   const canvas = p.createCanvas(width, height);
@@ -307,6 +347,79 @@ export const p5Setup = (p: p5) => {
 
   p.colorMode(p.HSB, 360, 100, 100, 100);
   p.cursor(p.CROSS);
+
+  // p5.jsのキャンバスを透明にして、イベント処理だけを受け付けるように設定
+  canvas.elt.style.position = "absolute";
+  canvas.elt.style.pointerEvents = "auto"; // マウス操作を受け付ける
+  canvas.elt.style.background = "transparent"; // 背景を透明に
+  canvas.elt.style.zIndex = "10"; // 上に表示
+  canvas.elt.style.top = "50%";
+  canvas.elt.style.left = "50%";
+  canvas.elt.style.transform = "translate(-50%, -50%)"; // 中央に配置
+
+  // WebGPU用のキャンバスを作成して下に配置
+  const gpuCanvas = document.createElement("canvas");
+  gpuCanvas.id = "gpu-canvas";
+  gpuCanvas.width = width;
+  gpuCanvas.height = height;
+  gpuCanvas.style.position = "absolute";
+  gpuCanvas.style.zIndex = "5"; // p5.jsキャンバスの下に
+  gpuCanvas.style.top = "50%";
+  gpuCanvas.style.left = "50%";
+  gpuCanvas.style.transform = "translate(-50%, -50%)"; // 中央に配置
+
+  // キャンバスラッパーに追加
+  const wrapper = document.getElementById("canvas-wrapper");
+  wrapper?.appendChild(gpuCanvas);
+
+  // WebGPUサポートの確認と初期化
+  try {
+    if (isWebGPUSupported()) {
+      // WebGPU対応ブラウザなので初期化を試みる
+      setRenderer("webgpu");
+      // 初期化中フラグを設定
+      setWebGPUInitializing(true);
+      
+      // 非同期初期化
+      const initialized = await initRenderer(width, height);
+      if (initialized) {
+        // 初期化成功
+        console.log("Using WebGPU renderer");
+        setWebGPUInitialized(true);
+        
+        // 初期化完了後、強制的にレンダリングをトリガー
+        setTimeout(() => {
+          console.log("Triggering initial render after WebGPU initialization");
+          startCalculation(
+            () => {}, // onComplete - 何もしない
+            () => {}, // onTranslated - 何もしない
+          );
+        }, 0);
+      } else {
+        // 初期化失敗
+        console.log(
+          "WebGPU initialization failed, falling back to p5js renderer",
+        );
+        setRenderer("p5js");
+        setWebGPUInitialized(false);
+        setWebGPUInitializing(false);
+      }
+    } else {
+      // WebGPU非対応ブラウザ
+      console.log(
+        "WebGPU is not supported in this browser, using p5js renderer",
+      );
+      setRenderer("p5js");
+      setWebGPUInitialized(false);
+      setWebGPUInitializing(false);
+    }
+  } catch (e) {
+    console.error("Error during renderer initialization:", e);
+    // エラーが発生した場合はp5jsにフォールバック
+    setRenderer("p5js");
+    setWebGPUInitialized(false);
+    setWebGPUInitializing(false);
+  }
 
   window.oncontextmenu = () => {
     if (willBlockNextContextMenu) {
@@ -444,7 +557,24 @@ export const p5Draw = (p: p5) => {
     }
   }
 
-  renderToCanvas(x, y, width, height);
+  // 現在使用中のレンダラーで描画
+  const renderer = getRenderer();
+  
+  // WebGPUが初期化中なら描画をスキップ
+  if (renderer === "webgpu" && isWebGPUInitializing()) {
+    // 初期化中は何も描画しない
+    return;
+  } 
+  
+  if (renderer === "webgpu" && isWebGPUInitialized()) {
+    // WebGPUレンダラーを使用
+    renderToCanvas(x, y, width, height);
+    // WebGPUは透明な背景を持つp5キャンバスを上に置く (UIのみを描画)
+    p.clear();
+  } else {
+    // p5レンダラーを使用 (WebGPU非対応またはWebGPU初期化失敗時)
+    renderToCanvas(x, y, width, height);
+  }
 
   switch (draggingMode) {
     case "move":
@@ -462,6 +592,11 @@ export const p5Draw = (p: p5) => {
     addCurrentLocationToPOIHistory();
   }
 
+  if (shouldResetTranslatingNextRender) {
+    isTranslatingMainBuffer = false;
+    shouldResetTranslatingNextRender = false;
+  }
+
   if (needsRenderForCurrentParams()) {
     startCalculation(
       (elapsed: number) => {
@@ -472,7 +607,7 @@ export const p5Draw = (p: p5) => {
         }
       },
       // onTranslated - cacheのtranslateとmainBufferへの書き込みが済んでから描画位置を戻す
-      () => (isTranslatingMainBuffer = false),
+      () => (shouldResetTranslatingNextRender = true),
     );
   }
 };

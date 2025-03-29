@@ -4,7 +4,7 @@ import {
   encodeBlaTableItems,
   type BLATableItem,
 } from "@/workers/bla-table-item";
-import { encodeComplexArray } from "@/workers/xn-buffer";
+import { ComplexArrayView, encodeComplexArray } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
   Complex,
@@ -31,7 +31,7 @@ export type RefOrbitContext = {
 };
 
 export type RefOrbitContextPopulated = {
-  xn: Complex[];
+  xnView: ComplexArrayView;
   blaTable: BLATableItem[][];
 };
 

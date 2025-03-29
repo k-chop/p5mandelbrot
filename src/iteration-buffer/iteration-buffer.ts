@@ -1,5 +1,6 @@
 import { bufferLocalLogicalIndex } from "@/rendering/common";
-import { getCanvasSize, Resolution } from "@/rendering/p5-renderer";
+import { getCanvasSize } from "@/rendering/renderer";
+import type { Resolution } from "@/rendering/p5-renderer";
 import { Rect } from "../math/rect";
 import { IterationBuffer } from "../types";
 

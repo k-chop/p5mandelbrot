@@ -1,11 +1,15 @@
 import { ValueSlider } from "@/components/slider-wrapper";
+import { getRenderer, isWebGPUInitialized, isWebGPUSupported, setRenderer } from "@/rendering/common";
+import type { RendererType } from "@/rendering/common";
 import { resizeTo } from "@/p5-adapter/p5-adapter";
 import { Button } from "@/shadcn/components/ui/button";
+import { Label } from "@/shadcn/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
 import { useToast } from "@/shadcn/hooks/use-toast";
 import { readPOIListFromClipboard } from "@/store/sync-storage/poi-list";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { IconCircleCheck } from "@tabler/icons-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getStore, updateStore, useStoreValue } from "../../store/store";
 import { DEFAULT_WORKER_COUNT } from "../../store/sync-storage/settings";
 
@@ -32,6 +36,16 @@ export const Settings = () => {
   const zoomRate = useStoreValue("zoomRate");
   const workerCount = useStoreValue("workerCount");
   const maxCanvasSize = useStoreValue("maxCanvasSize");
+  
+  // WebGPUサポート状態の確認
+  const [webGPUSupported, setWebGPUSupported] = useState(false);
+  const [rendererType, setRendererType] = useState<RendererType>("p5js");
+  
+  useEffect(() => {
+    // コンポーネントマウント時にWebGPUサポート状態を確認
+    setWebGPUSupported(isWebGPUSupported() && isWebGPUInitialized());
+    setRendererType(getRenderer());
+  }, []);
 
   const zoomRateValues = ["1.2", "1.5", "2.0", "4.0", "6.0", "10", "50", "100"];
   const workerCountValues = createWorkerCountValues();
@@ -87,6 +101,40 @@ export const Settings = () => {
 
   return (
     <div className="flex max-w-80 flex-col gap-6">
+      {webGPUSupported && (
+        <div>
+          <div className="mb-2 ml-2">Renderer Type</div>
+          <RadioGroup 
+            value={rendererType} 
+            onValueChange={(value: RendererType) => {
+              setRendererType(value);
+              setRenderer(value);
+              // レンダリングエンジン切り替え通知
+              toast({
+                description: (
+                  <div className="flex items-center justify-center gap-2">
+                    <IconCircleCheck />
+                    Switched to {value === "webgpu" ? "WebGPU" : "P5.js"} renderer
+                  </div>
+                ),
+                variant: "primary",
+                duration: 3000,
+              });
+            }}
+            className="flex flex-col space-y-1"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="webgpu" id="webgpu" />
+              <Label htmlFor="webgpu" className="cursor-pointer">WebGPU (Faster)</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="p5js" id="p5js" />
+              <Label htmlFor="p5js" className="cursor-pointer">P5.js (Compatible)</Label>
+            </div>
+          </RadioGroup>
+        </div>
+      )}
+      
       <div>
         <div className="mb-1 ml-2">Zoom Rate: x{zoomRatePreview}</div>
         <ValueSlider<number>
