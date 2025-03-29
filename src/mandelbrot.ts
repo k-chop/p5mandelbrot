@@ -50,6 +50,7 @@ export const startCalculation = async (
   // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
   removeUnusedIterationCache();
   // addIterationBuffer(rect);
+  // addWebGPUIterationBuffer(rect);
   markNeedsRerender();
 
   // ドラッグ中に描画をずらしていたのを戻す

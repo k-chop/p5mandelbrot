@@ -103,7 +103,6 @@ export const renderToCanvas = (
     for (let idx = 0; idx < length; idx++) {
       const iteration = iterationBufferQueue.shift()!;
       const { rect, buffer, resolution, isSuperSampled } = iteration;
-      // TODO: resolutionも渡す必要がある気がしてきた
 
       // metadata
       const metadata = new Uint32Array([
