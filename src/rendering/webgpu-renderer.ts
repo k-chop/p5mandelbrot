@@ -83,19 +83,14 @@ export const renderToCanvas = (
   // queueに積まれたiteration bufferをGPUBufferに書き込む
   let bufferByteOffset = 0;
   const maxBufferSize = iterationInputBuffer.size;
-  const maxMetadataEntries = Math.floor(
-    iterationInputMetadataBuffer.size / (8 * 4),
-  ); // 8つのメタデータ要素 × 4バイト
 
   // 一度に処理できる最大数を計算
   let processableCount = 0;
   let tempBufferByteOffset = 0;
 
-  for (
-    let i = 0;
-    i < iterationBufferQueue.length && processableCount < maxMetadataEntries;
-    i++
-  ) {
+  // TODO: "荒い" cacheを先に処理する必要がある
+
+  for (let i = 0; i < iterationBufferQueue.length; i++) {
     const nextSize = iterationBufferQueue[i].buffer.byteLength;
 
     // バッファサイズオーバーチェック
