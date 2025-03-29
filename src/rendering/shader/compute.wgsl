@@ -34,5 +34,55 @@ fn isValidIdx(idx: i32, length: i32) -> bool {
 
 @compute @workgroup_size(64)
 fn computeMain(@builtin(global_invocation_id) global_id: vec3u) {
-  // 
+  // 現在のスレッドID
+  let thread_id = global_id.x;
+  
+  // スレッド数の上限を確認
+  let thread_count = u32(uniforms.iterationBufferCount);
+  if (thread_id >= thread_count) {
+    return;
+  }
+  
+  // 処理するイテレーションバッファのメタデータを取得
+  let meta_offset = thread_id * 8; // 各メタデータは8つのu32値からなる
+  let rect_x = i32(iterInputMeta[meta_offset]);
+  let rect_y = i32(iterInputMeta[meta_offset + 1]);
+  let rect_width = i32(iterInputMeta[meta_offset + 2]);
+  let rect_height = i32(iterInputMeta[meta_offset + 3]);
+  let resolution_width = i32(iterInputMeta[meta_offset + 4]);
+  let resolution_height = i32(iterInputMeta[meta_offset + 5]);
+  let buffer_length = i32(iterInputMeta[meta_offset + 6]);
+  let is_super_sampled = i32(iterInputMeta[meta_offset + 7]);
+  
+  // データの開始位置を計算（あるスレッドのデータがどこから始まるか）
+  var data_start = 0;
+  for (var i = 0; i < i32(thread_id); i++) {
+    let prev_length = i32(iterInputMeta[i * 8 + 6]);
+    data_start += prev_length;
+  }
+  
+  // キャンバスの幅（出力バッファのサイズ計算に使用）
+  let canvas_width = i32(uniforms.canvasWidth);
+  
+  // バッファを処理する
+  for (var world_y = rect_y; world_y < rect_y + rect_height; world_y++) {
+    for (var world_x = rect_x; world_x < rect_x + rect_width; world_x++) {
+      // バッファ内で対応する点の反復回数を取得
+      let local_x = world_x - rect_x;
+      let local_y = world_y - rect_y;
+      
+      let ratio_x = f32(resolution_width) / f32(rect_width);
+      let ratio_y = f32(resolution_height) / f32(rect_height);
+      
+      let scaled_x = i32(f32(local_x) * ratio_x);
+      let scaled_y = i32(f32(local_y) * ratio_y);
+      
+      let idx = scaled_x + scaled_y * resolution_width;
+      let world_idx = world_y * canvas_width + world_x;
+      
+      if (idx < buffer_length && isValidIdx(world_idx, i32(uniforms.canvasWidth * uniforms.canvasHeight))) {
+        iterations[world_idx] = iterInput[data_start + idx];
+      }
+    }
+  }
 };

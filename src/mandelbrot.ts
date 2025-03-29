@@ -16,11 +16,7 @@ import {
   setPrevBatchId,
 } from "./mandelbrot-state/mandelbrot-state";
 import { getCalculationTargetRects, Rect } from "./math/rect";
-import {
-  addIterationBuffer,
-  getCanvasSize,
-  getWholeCanvasRect,
-} from "./rendering/p5-renderer";
+import { getCanvasSize, getWholeCanvasRect } from "./rendering/p5-renderer";
 import { getStore } from "./store/store";
 import { getWorkerCount } from "./worker-pool/pool-instance";
 import {
@@ -53,7 +49,7 @@ export const startCalculation = async (
 
   // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
   removeUnusedIterationCache();
-  addIterationBuffer(rect);
+  // addIterationBuffer(rect);
   markNeedsRerender();
 
   // ドラッグ中に描画をずらしていたのを戻す
