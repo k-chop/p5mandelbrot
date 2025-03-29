@@ -31,10 +31,7 @@ import {
   setRenderer,
   setWebGPUInitialized,
 } from "@/rendering/common";
-import {
-  drawCrossHair,
-  drawScaleRate,
-} from "@/rendering/p5-renderer";
+import { drawCrossHair, drawScaleRate } from "@/rendering/p5-renderer";
 import {
   getCanvasSize,
   initRenderer,
