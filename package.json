@@ -68,7 +68,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-promise-suspense": "0.3.4",
-    "tailwind-merge": "1.14.0",
+    "tailwind-merge": "3.3.1",
     "tailwindcss-animate": "1.0.7",
     "ws": "8.18.3"
   }
