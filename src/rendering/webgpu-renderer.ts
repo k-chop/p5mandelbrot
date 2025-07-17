@@ -42,8 +42,7 @@ let paletteTypedBuffer: TgpuBuffer<d.WgslArray<d.F32>> & StorageFlag;
 let iterationInputTypedBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
 let iterationInputMetadataTypedBuffer: TgpuBuffer<d.WgslArray<d.F32>> &
   StorageFlag;
-
-let iterationBuffer: GPUBuffer;
+let iterationTypedBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
 
 const iterationBufferQueue: IterationBuffer[] = [];
 
@@ -268,12 +267,10 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
     format: canvasFormat,
   });
 
-  iterationBuffer.destroy();
-  iterationBuffer = device.createBuffer({
-    label: "iteration buffer",
-    size: width * height * 4, // Uint32Array
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-  });
+  iterationTypedBuffer.destroy();
+  iterationTypedBuffer = root
+    .createBuffer(d.arrayOf(d.u32, width * height))
+    .$usage("storage");
 
   createBindGroup();
 
@@ -383,11 +380,9 @@ const initializeGPU = async (): Promise<boolean> => {
       .createBuffer(d.arrayOf(d.f32, 10))
       .$usage("uniform");
 
-    iterationBuffer = device.createBuffer({
-      label: "iteration buffer",
-      size: width * height * 4, // Uint32Array,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    });
+    iterationTypedBuffer = root
+      .createBuffer(d.arrayOf(d.u32, width * height))
+      .$usage("storage");
 
     // TODO: d.vec4f, 8192でも良い気がするがbufferに書き込むところでなんかエラー出る
     paletteTypedBuffer = root
@@ -497,7 +492,7 @@ const createBindGroup = () => {
       },
       {
         binding: 1,
-        resource: { buffer: iterationBuffer },
+        resource: { buffer: root.unwrap(iterationTypedBuffer) },
       },
       {
         binding: 2,
