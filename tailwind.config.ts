@@ -11,7 +11,6 @@ export default {
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
   ],
-  safelist: ["dark"],
   theme: {
     container: {
       center: true,
