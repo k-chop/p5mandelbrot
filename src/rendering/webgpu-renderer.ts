@@ -44,7 +44,7 @@ let bindGroupLayout: TgpuBindGroupLayout;
 
 let vertexBuffer: TgpuBuffer<d.WgslArray<d.Vec2f>> & VertexFlag;
 let uniformBuffer: TgpuBuffer<typeof UniformSchema> & UniformFlag;
-let paletteBuffer: TgpuBuffer<d.WgslArray<d.F32>> & StorageFlag;
+let paletteBuffer: TgpuBuffer<d.WgslArray<d.Vec4f>> & StorageFlag;
 let iterationInputBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
 let iterationInputMetadataBuffer: TgpuBuffer<
   typeof IterationInputMetadataSchema
@@ -68,6 +68,8 @@ const UniformSchema = d.struct({
   height: d.f32,
   iterationBufferCount: d.f32,
 });
+
+const PaletteSchema = d.arrayOf(d.vec4f, 8192); // FIXME: paletteの最大サイズ分固定で確保している（手抜き）
 
 const IterationInputMetadataSchema = d.arrayOf(
   d.struct({
@@ -337,10 +339,10 @@ export const updatePaletteDataForGPU = (palette: Palette) => {
   // FIXME: Palette側に定義しとくといいよ
   for (let i = 0; i < palette.length; i++) {
     const [r, g, b] = palette.rgb(i);
-    paletteData.push(...[r / 255, g / 255, b / 255, 1.0]);
+    paletteBuffer.writePartial([
+      { idx: i, value: d.vec4f(r / 255, g / 255, b / 255, 1.0) },
+    ]);
   }
-
-  paletteBuffer.write(paletteData);
 };
 
 const initializeGPU = async (): Promise<boolean> => {
@@ -405,10 +407,7 @@ const initializeGPU = async (): Promise<boolean> => {
       .createBuffer(d.arrayOf(d.u32, width * height))
       .$usage("storage");
 
-    // TODO: d.vec4f, 8192でも良い気がするがbufferに書き込むところでなんかエラー出る
-    paletteBuffer = root
-      .createBuffer(d.arrayOf(d.f32, 8192 * 4)) // FIXME: paletteの最大サイズ分で確保している（手抜き）
-      .$usage("storage");
+    paletteBuffer = root.createBuffer(PaletteSchema).$usage("storage");
 
     iterationInputBuffer = root
       .createBuffer(d.arrayOf(d.u32, width * height))
@@ -426,7 +425,7 @@ const initializeGPU = async (): Promise<boolean> => {
         access: "mutable",
       },
       palette: {
-        storage: d.arrayOf(d.f32, 8192 * 4),
+        storage: PaletteSchema,
         visibility: ["fragment"],
       },
       iterationInput: {
