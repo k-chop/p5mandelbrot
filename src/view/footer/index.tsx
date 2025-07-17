@@ -1,12 +1,7 @@
 import { Separator } from "@/shadcn/components/ui/separator";
 import { ResultSpans, Span } from "@/types";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@radix-ui/react-tooltip";
 import clsx from "clsx";
+import { Tooltip } from "radix-ui";
 import React from "react";
 import { useStoreValue } from "../../store/store";
 
@@ -57,14 +52,14 @@ const BarGraph = (props: ResultSpans) => {
   const { total, spans } = props;
 
   return (
-    <TooltipProvider>
+    <Tooltip.Provider>
       <div className="flex w-full items-center">
         <div className="mr-4 flex-none">Done! ({total}ms)</div>
         <div className="flex grow">
           <Bar spans={spans} total={total} />
         </div>
       </div>
-    </TooltipProvider>
+    </Tooltip.Provider>
   );
 };
 
@@ -80,7 +75,7 @@ const Bar = (props: ResultSpans) => {
   const iterationSpans = spans.filter((s) => s.name.includes("iteration"));
 
   return (
-    <div className="flex h-8 w-full bg-gray-7">
+    <div className="bg-gray-7 flex h-8 w-full">
       {iterationExceptedSpans.map((span, idx) => (
         <BarContent
           key={idx}
@@ -122,28 +117,28 @@ const BarContent = (props: {
   const bgColorClassName = colorMap(name);
 
   return (
-    <Tooltip delayDuration={0}>
+    <Tooltip.Root delayDuration={0}>
       <div
         ref={ref}
         className={clsx(
-          "flex w-52 items-center justify-center truncate text-whiteA-12",
+          "text-white-a-12 flex w-52 items-center justify-center truncate",
           bgColorClassName,
         )}
         style={{ width: `${width}%` }}
       >
-        <TooltipTrigger>{displayText}</TooltipTrigger>
+        <Tooltip.Trigger>{displayText}</Tooltip.Trigger>
       </div>
-      <TooltipContent>
+      <Tooltip.Content>
         <div
           className={clsx(
-            "w-52 rounded-md border-2 border-teal-2 p-2 text-whiteA-12",
+            "border-teal-2 text-white-a-12 w-52 rounded-md border-2 p-2",
             bgColorClassName,
           )}
         >
           <SpansDetail name={name} spans={spans} />
         </div>
-      </TooltipContent>
-    </Tooltip>
+      </Tooltip.Content>
+    </Tooltip.Root>
   );
 };
 

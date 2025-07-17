@@ -10,10 +10,8 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   {
     plugins: {
-      // @ts-expect-error 型が合わない
       "react-hooks": fixupPluginRules(pluginReactHooks),
     },
-    // @ts-expect-error 型が合わない
     rules: {
       ...pluginReactHooks.configs.recommended.rules,
     },
