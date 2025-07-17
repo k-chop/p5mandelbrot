@@ -14,6 +14,8 @@ import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { Rect } from "@/math/rect";
 import { getStore } from "@/store/store";
 import type { IterationBuffer } from "@/types";
+import tgpu, { type TgpuRoot } from "typegpu";
+import * as d from "typegpu/data";
 import computeShaderCode from "./shader/compute.wgsl?raw";
 import renderShaderCode from "./shader/shader.wgsl?raw";
 
@@ -22,6 +24,7 @@ let height: number;
 
 let bufferRect: Rect;
 
+let root: TgpuRoot;
 let device: GPUDevice;
 let context: GPUCanvasContext;
 let bindGroupLayout: GPUBindGroupLayout;
@@ -325,6 +328,8 @@ const initializeGPU = async (): Promise<boolean> => {
 
   try {
     device = await adapter.requestDevice();
+    root = tgpu.initFromDevice({ device });
+
     const gpuCanvas = document.getElementById(
       "gpu-canvas",
     ) as HTMLCanvasElement;
@@ -357,16 +362,12 @@ const initializeGPU = async (): Promise<boolean> => {
     });
     device.queue.writeBuffer(vertexBuffer, 0, vertices);
 
-    const vertexBufferLayout = {
-      arrayStride: 8,
-      attributes: [
-        {
-          format: "float32x2" as GPUVertexFormat,
-          offset: 0,
-          shaderLocation: 0,
-        },
-      ],
-    };
+    const PlaneGeometry = d.struct({
+      xy: d.location(0, d.vec2f),
+    });
+    const geometryLayout = tgpu.vertexLayout((n) =>
+      d.arrayOf(PlaneGeometry, n),
+    );
 
     const renderShaderModule = device.createShaderModule({
       label: "Mandelbrot set shader",
@@ -462,7 +463,7 @@ const initializeGPU = async (): Promise<boolean> => {
       vertex: {
         module: renderShaderModule,
         entryPoint: "vertexMain",
-        buffers: [vertexBufferLayout],
+        buffers: [root.unwrap(geometryLayout)],
       },
       fragment: {
         module: renderShaderModule,
