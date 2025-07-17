@@ -85,8 +85,8 @@ importers:
         specifier: 9.31.0
         version: 9.31.0
       '@radix-ui/colors':
-        specifier: 2.1.0
-        version: 2.1.0
+        specifier: 3.0.0
+        version: 3.0.0
       '@types/chroma-js':
         specifier: 3.1.1
         version: 3.1.1
@@ -172,8 +172,8 @@ importers:
         specifier: 3.2.4
         version: 3.2.4(@types/node@22.16.4)(jiti@1.21.0)(tsx@4.20.3)(yaml@2.4.2)
       windy-radix-palette:
-        specifier: 0.6.1
-        version: 0.6.1(@radix-ui/colors@2.1.0)(tailwindcss@3.4.3)
+        specifier: 2.0.0-beta.7
+        version: 2.0.0-beta.7(@radix-ui/colors@3.0.0)(tailwindcss@3.4.3)
 
 packages:
 
@@ -542,6 +542,10 @@ packages:
     peerDependencies:
       react: ^18.x || ^19.x
 
+  '@noble/hashes@1.8.0':
+    resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
+    engines: {node: ^14.21.3 || >=16}
+
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -554,12 +558,15 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
+  '@paralleldrive/cuid2@2.2.2':
+    resolution: {integrity: sha512-ZOBkgDwEdoYVlSeRbYYXs0S9MejQofiVYoTbKzy/6GQa39/q5tQU2IX46+shYnUkpEl3wc+J6wRlar7r2EK2xA==}
+
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@radix-ui/colors@2.1.0':
-    resolution: {integrity: sha512-gcBnxjS2u2c6thQz/9K1+Pt2ZYcm5WKU4SLi0emYkRmYbVUw+37rlc5wgLtYOsSsRP9nxVtbJJYj6WVO7UUmZg==}
+  '@radix-ui/colors@3.0.0':
+    resolution: {integrity: sha512-FUOsGBkHrYJwCSEtWRCIfQbZG7q1e6DgxCIOe1SUQzDe/7rXXeA47s8yCn6fuTNQAj1Zq4oTFi9Yjp3wzElcxg==}
 
   '@radix-ui/number@1.1.1':
     resolution: {integrity: sha512-MkKCwxlXTgz6CFoJx3pCwn07GKp36+aZyu/u2Ln2VrA5DcdyCZkASEDBTd8x5whTQQL5CiYf4prXKLcgQdv29g==}
@@ -3130,10 +3137,10 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
-  windy-radix-palette@0.6.1:
-    resolution: {integrity: sha512-n8hy1IWNuieGpQ5NS9gCGoUbtzdQ/j4zPk63ok84NgaCWkyP6kBsno/iHpb4ukt3LCQPqNPo+iok2wUgxw8PBQ==}
+  windy-radix-palette@2.0.0-beta.7:
+    resolution: {integrity: sha512-hkPZFp3efEjvSlrMqmqseaDnAJpAK16No9tvPL2k/AUZTvTCps5kATOKatQG+Z8lewNqx2JVwa9f7eSqicrP6w==}
     peerDependencies:
-      '@radix-ui/colors': '>=0.1.0'
+      '@radix-ui/colors': '>=3.0.0'
       tailwindcss: '>=3.0.0'
 
   word-wrap@1.2.5:
@@ -3491,6 +3498,8 @@ snapshots:
     dependencies:
       react: 19.1.0
 
+  '@noble/hashes@1.8.0': {}
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -3503,10 +3512,14 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
 
+  '@paralleldrive/cuid2@2.2.2':
+    dependencies:
+      '@noble/hashes': 1.8.0
+
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@radix-ui/colors@2.1.0': {}
+  '@radix-ui/colors@3.0.0': {}
 
   '@radix-ui/number@1.1.1': {}
 
@@ -6374,9 +6387,10 @@ snapshots:
       siginfo: 2.0.0
       stackback: 0.0.2
 
-  windy-radix-palette@0.6.1(@radix-ui/colors@2.1.0)(tailwindcss@3.4.3):
+  windy-radix-palette@2.0.0-beta.7(@radix-ui/colors@3.0.0)(tailwindcss@3.4.3):
     dependencies:
-      '@radix-ui/colors': 2.1.0
+      '@paralleldrive/cuid2': 2.2.2
+      '@radix-ui/colors': 3.0.0
       tailwindcss: 3.4.3
 
   word-wrap@1.2.5: {}
