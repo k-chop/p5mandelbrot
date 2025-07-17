@@ -14,7 +14,7 @@ import { Settings } from "./settings";
 import { usePOI } from "./use-poi";
 
 const tabsContentClass =
-  "flex h-full flex-grow flex-col data-[state=inactive]:hidden";
+  "flex h-full grow flex-col data-[state=inactive]:hidden";
 
 export const Operations = () => {
   if (isGithubPages()) {
