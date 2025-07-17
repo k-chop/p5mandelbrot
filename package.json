@@ -42,6 +42,7 @@
     "tsx": "4.20.3",
     "typescript": "5.8.3",
     "typescript-eslint": "8.37.0",
+    "unplugin-typegpu": "0.2.0",
     "vite": "7.0.5",
     "vitest": "3.2.4",
     "windy-radix-palette": "2.0.0-beta.7"
@@ -68,6 +69,7 @@
     "react-dom": "19.1.0",
     "react-promise-suspense": "0.3.4",
     "tailwind-merge": "3.3.1",
+    "typegpu": "0.6.0",
     "ws": "8.18.3"
   }
 }

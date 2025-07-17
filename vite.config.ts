@@ -1,11 +1,12 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
+import typegpuPlugin from "unplugin-typegpu/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
   base: process.env.CLOUDFLARE_BUILD === "true" ? "/" : "/p5mandelbrot/",
-  plugins: [tailwindcss(), react()],
+  plugins: [tailwindcss(), react(), typegpuPlugin({})],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
