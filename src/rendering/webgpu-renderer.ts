@@ -43,15 +43,45 @@ let bindGroup: TgpuBindGroup;
 let bindGroupLayout: TgpuBindGroupLayout;
 
 let vertexBuffer: TgpuBuffer<d.WgslArray<d.Vec2f>> & VertexFlag;
-let uniformBuffer: TgpuBuffer<d.WgslArray<d.F32>> & UniformFlag;
+let uniformBuffer: TgpuBuffer<typeof UniformSchema> & UniformFlag;
 let paletteBuffer: TgpuBuffer<d.WgslArray<d.F32>> & StorageFlag;
 let iterationInputBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
-let iterationInputMetadataBuffer: TgpuBuffer<d.WgslArray<d.F32>> & StorageFlag;
+let iterationInputMetadataBuffer: TgpuBuffer<
+  typeof IterationInputMetadataSchema
+> &
+  StorageFlag;
 let iterationBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
 
 const iterationBufferQueue: IterationBuffer[] = [];
 
 let gpuInitialized = false;
+
+const UniformSchema = d.struct({
+  maxIterations: d.f32,
+  canvasWidth: d.f32,
+  canvasHeight: d.f32,
+  paletteOffset: d.f32,
+  paletteSize: d.f32,
+  offsetX: d.f32,
+  offsetY: d.f32,
+  width: d.f32,
+  height: d.f32,
+  iterationBufferCount: d.f32,
+});
+
+const IterationInputMetadataSchema = d.arrayOf(
+  d.struct({
+    rectX: d.f32,
+    rectY: d.f32,
+    rectWidth: d.f32,
+    rectHeight: d.f32,
+    resolutionWidth: d.f32,
+    resolutionHeight: d.f32,
+    bufferLength: d.f32,
+    isSuperSampled: d.f32,
+  }),
+  1024,
+);
 
 export const getCanvasSize = () => ({ width, height });
 export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
@@ -152,18 +182,18 @@ export const renderToCanvas = (
   }
 
   // write uniform buffer
-  uniformBuffer.write([
-    params.N, // maxIteration
-    canvasWidth, // canvasWidth
-    canvasHeight, // canvasHeight
-    palette.offset, // paletteOffset
-    palette.length, // paletteSize
-    x, // offsetX
-    y, // offsetY
-    width ?? canvasWidth, // renderWidth
-    height ?? canvasHeight, // renderHeight
-    processableCount, // iterationBufferCount：実際に処理する数
-  ]);
+  uniformBuffer.write({
+    maxIterations: params.N,
+    canvasWidth: canvasWidth,
+    canvasHeight: canvasHeight,
+    paletteOffset: palette.offset,
+    paletteSize: palette.length,
+    offsetX: x,
+    offsetY: y,
+    width: width ?? canvasWidth,
+    height: height ?? canvasHeight,
+    iterationBufferCount: processableCount,
+  });
 
   if (0 < processableCount) {
     console.log(
@@ -174,23 +204,21 @@ export const renderToCanvas = (
       const iteration = iterationBufferQueue.shift()!;
       const { rect, buffer, resolution, isSuperSampled } = iteration;
 
-      // metadata
-      const metadata = new Float32Array([
-        rect.x,
-        rect.y,
-        rect.width,
-        rect.height,
-        resolution.width,
-        resolution.height,
-        buffer.length,
-        isSuperSampled ? 1 : 0,
+      iterationInputMetadataBuffer.writePartial([
+        {
+          idx,
+          value: {
+            rectX: rect.x,
+            rectY: rect.y,
+            rectWidth: rect.width,
+            rectHeight: rect.height,
+            resolutionWidth: resolution.width,
+            resolutionHeight: resolution.height,
+            bufferLength: buffer.length,
+            isSuperSampled: isSuperSampled ? 1 : 0,
+          },
+        },
       ]);
-      // FIXME: ここはもうちょい良い感じに書き込めるので直す
-      device.queue.writeBuffer(
-        root.unwrap(iterationInputMetadataBuffer),
-        idx * 8 * 4, // 8要素 × 4バイト (Float32Array)
-        metadata,
-      );
 
       device.queue.writeBuffer(
         root.unwrap(iterationInputBuffer),
@@ -371,7 +399,7 @@ const initializeGPU = async (): Promise<boolean> => {
       d.arrayOf(PlaneGeometry, n),
     );
 
-    uniformBuffer = root.createBuffer(d.arrayOf(d.f32, 10)).$usage("uniform");
+    uniformBuffer = root.createBuffer(UniformSchema).$usage("uniform");
 
     iterationBuffer = root
       .createBuffer(d.arrayOf(d.u32, width * height))
@@ -387,14 +415,11 @@ const initializeGPU = async (): Promise<boolean> => {
       .$usage("storage");
 
     iterationInputMetadataBuffer = root
-      .createBuffer(
-        // FIXME: f32で渡してshader側でi32に変換してて謎。あとstruct使え
-        d.arrayOf(d.f32, 4 * 8 * 1024),
-      )
+      .createBuffer(IterationInputMetadataSchema)
       .$usage("storage");
 
     bindGroupLayout = tgpu.bindGroupLayout({
-      uniforms: { uniform: d.arrayOf(d.f32, 10) },
+      uniforms: { uniform: UniformSchema },
       iterations: {
         storage: d.arrayOf(d.u32, width * height),
         visibility: ["fragment", "compute"],
@@ -409,7 +434,7 @@ const initializeGPU = async (): Promise<boolean> => {
         visibility: ["compute"],
       },
       iterationMetadata: {
-        storage: d.arrayOf(d.f32, 4 * 8 * 1024),
+        storage: IterationInputMetadataSchema,
         visibility: ["compute"],
       },
     });
