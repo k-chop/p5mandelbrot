@@ -39,11 +39,11 @@ let computePipeline: GPUComputePipeline;
 let vertexTypedBuffer: TgpuBuffer<d.WgslArray<d.Vec2f>>;
 let uniformTypedBuffer: TgpuBuffer<d.WgslArray<d.F32>>;
 let paletteTypedBuffer: TgpuBuffer<d.WgslArray<d.F32>> & StorageFlag;
+let iterationInputTypedBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
+let iterationInputMetadataTypedBuffer: TgpuBuffer<d.WgslArray<d.F32>> &
+  StorageFlag;
 
 let iterationBuffer: GPUBuffer;
-let iterationInputBuffer: GPUBuffer;
-let iterationInputData: Uint32Array;
-let iterationInputMetadataBuffer: GPUBuffer;
 
 const iterationBufferQueue: IterationBuffer[] = [];
 
@@ -70,7 +70,6 @@ export const initRenderer = async (w: number, h: number): Promise<boolean> => {
   width = w;
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
-  iterationInputData = new Uint32Array(w * h); // FIXME: 分割数に関わらず最大サイズで確保している
 
   try {
     await initializeGPU();
@@ -99,7 +98,7 @@ export const renderToCanvas = (
 
   // queueに積まれたiteration bufferをGPUBufferに書き込む
   let bufferByteOffset = 0;
-  const maxBufferSize = iterationInputBuffer.size;
+  const maxBufferSize = iterationInputTypedBuffer.buffer.size;
 
   // 解像度（rect.width/resolution.width）が荒い順にソートする
   // 値が大きいほど1ピクセルあたりの解像度が荒い
@@ -182,14 +181,15 @@ export const renderToCanvas = (
         buffer.length,
         isSuperSampled ? 1 : 0,
       ]);
+      // FIXME: ここはもうちょい良い感じに書き込めるので直す
       device.queue.writeBuffer(
-        iterationInputMetadataBuffer,
+        root.unwrap(iterationInputMetadataTypedBuffer),
         idx * 8 * 4, // 8要素 × 4バイト (Float32Array)
         metadata,
       );
 
       device.queue.writeBuffer(
-        iterationInputBuffer,
+        root.unwrap(iterationInputTypedBuffer),
         bufferByteOffset,
         buffer,
         0,
@@ -394,17 +394,16 @@ const initializeGPU = async (): Promise<boolean> => {
       .createBuffer(d.arrayOf(d.f32, 8192 * 4)) // FIXME: paletteの最大サイズ分で確保している（手抜き）
       .$usage("storage");
 
-    iterationInputBuffer = device.createBuffer({
-      label: "iteration input buffer",
-      size: iterationInputData.byteLength,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    });
+    iterationInputTypedBuffer = root
+      .createBuffer(d.arrayOf(d.u32, width * height))
+      .$usage("storage");
 
-    iterationInputMetadataBuffer = device.createBuffer({
-      label: "iteration input metadata buffer",
-      size: 4 * 8 * 1024, // uint32(4バイト) * 8要素 * 1024分割までサポート
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    });
+    iterationInputMetadataTypedBuffer = root
+      .createBuffer(
+        // FIXME: f32で渡してshader側でi32に変換してて謎。あとstruct使え
+        d.arrayOf(d.f32, 4 * 8 * 1024),
+      )
+      .$usage("storage");
 
     bindGroupLayout = device.createBindGroupLayout({
       label: "Mandelbrot BindGroupLayout",
@@ -506,11 +505,11 @@ const createBindGroup = () => {
       },
       {
         binding: 3,
-        resource: { buffer: iterationInputBuffer },
+        resource: { buffer: root.unwrap(iterationInputTypedBuffer) },
       },
       {
         binding: 4,
-        resource: { buffer: iterationInputMetadataBuffer },
+        resource: { buffer: root.unwrap(iterationInputMetadataTypedBuffer) },
       },
     ],
   });
