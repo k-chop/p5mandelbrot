@@ -14,6 +14,16 @@ import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { Rect } from "@/math/rect";
 import { getStore } from "@/store/store";
 import type { IterationBuffer } from "@/types";
+import tgpu, {
+  type StorageFlag,
+  type TgpuBindGroup,
+  type TgpuBindGroupLayout,
+  type TgpuBuffer,
+  type TgpuRoot,
+  type UniformFlag,
+  type VertexFlag,
+} from "typegpu";
+import * as d from "typegpu/data";
 import computeShaderCode from "./shader/compute.wgsl?raw";
 import renderShaderCode from "./shader/shader.wgsl?raw";
 
@@ -22,27 +32,58 @@ let height: number;
 
 let bufferRect: Rect;
 
+let root: TgpuRoot;
 let device: GPUDevice;
 let context: GPUCanvasContext;
-let bindGroupLayout: GPUBindGroupLayout;
-let bindGroup: GPUBindGroup;
+
 let renderPipeline: GPURenderPipeline;
 let computePipeline: GPUComputePipeline;
-let vertexBuffer: GPUBuffer;
-let vertices: Float32Array;
 
-let uniformBuffer: GPUBuffer;
-let uniformData: Float32Array;
-let iterationBuffer: GPUBuffer;
-let paletteBuffer: GPUBuffer;
-let paletteData: Float32Array;
-let iterationInputBuffer: GPUBuffer;
-let iterationInputData: Uint32Array;
-let iterationInputMetadataBuffer: GPUBuffer;
+let bindGroup: TgpuBindGroup;
+let bindGroupLayout: TgpuBindGroupLayout;
+
+let vertexBuffer: TgpuBuffer<d.WgslArray<d.Vec2f>> & VertexFlag;
+let uniformBuffer: TgpuBuffer<typeof UniformSchema> & UniformFlag;
+let paletteBuffer: TgpuBuffer<d.WgslArray<d.Vec4f>> & StorageFlag;
+let iterationInputBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
+let iterationInputMetadataBuffer: TgpuBuffer<
+  typeof IterationInputMetadataSchema
+> &
+  StorageFlag;
+let iterationBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
 
 const iterationBufferQueue: IterationBuffer[] = [];
 
 let gpuInitialized = false;
+
+const UniformSchema = d.struct({
+  maxIterations: d.f32,
+  canvasWidth: d.f32,
+  canvasHeight: d.f32,
+  paletteOffset: d.f32,
+  paletteSize: d.f32,
+  offsetX: d.f32,
+  offsetY: d.f32,
+  width: d.f32,
+  height: d.f32,
+  iterationBufferCount: d.f32,
+});
+
+const PaletteSchema = d.arrayOf(d.vec4f, 8192); // FIXME: paletteの最大サイズ分固定で確保している（手抜き）
+
+const IterationInputMetadataSchema = d.arrayOf(
+  d.struct({
+    rectX: d.f32,
+    rectY: d.f32,
+    rectWidth: d.f32,
+    rectHeight: d.f32,
+    resolutionWidth: d.f32,
+    resolutionHeight: d.f32,
+    bufferLength: d.f32,
+    isSuperSampled: d.f32,
+  }),
+  1024,
+);
 
 export const getCanvasSize = () => ({ width, height });
 export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
@@ -65,8 +106,6 @@ export const initRenderer = async (w: number, h: number): Promise<boolean> => {
   width = w;
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
-  paletteData = new Float32Array(8192 * 4); // FIXME: paletteの最大サイズ分で確保している（手抜き）
-  iterationInputData = new Uint32Array(w * h); // FIXME: 分割数に関わらず最大サイズで確保している
 
   try {
     await initializeGPU();
@@ -95,7 +134,7 @@ export const renderToCanvas = (
 
   // queueに積まれたiteration bufferをGPUBufferに書き込む
   let bufferByteOffset = 0;
-  const maxBufferSize = iterationInputBuffer.size;
+  const maxBufferSize = iterationInputBuffer.buffer.size;
 
   // 解像度（rect.width/resolution.width）が荒い順にソートする
   // 値が大きいほど1ピクセルあたりの解像度が荒い
@@ -144,19 +183,19 @@ export const renderToCanvas = (
     processableCount++;
   }
 
-  // トップレベルで定義済みのuniformDataを使い回す
-  uniformData[0] = params.N; // maxIteration
-  uniformData[1] = canvasWidth; // canvasWidth
-  uniformData[2] = canvasHeight; // canvasHeight
-  uniformData[3] = palette.offset; // paletteOffset
-  uniformData[4] = palette.length; // paletteSize
-  uniformData[5] = x; // offsetX
-  uniformData[6] = y; // offsetY
-  uniformData[7] = width ?? canvasWidth; // renderWidth
-  uniformData[8] = height ?? canvasHeight; // renderHeight
-  uniformData[9] = processableCount; // iterationBufferCount：実際に処理する数
-
-  device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+  // write uniform buffer
+  uniformBuffer.write({
+    maxIterations: params.N,
+    canvasWidth: canvasWidth,
+    canvasHeight: canvasHeight,
+    paletteOffset: palette.offset,
+    paletteSize: palette.length,
+    offsetX: x,
+    offsetY: y,
+    width: width ?? canvasWidth,
+    height: height ?? canvasHeight,
+    iterationBufferCount: processableCount,
+  });
 
   if (0 < processableCount) {
     console.log(
@@ -167,25 +206,24 @@ export const renderToCanvas = (
       const iteration = iterationBufferQueue.shift()!;
       const { rect, buffer, resolution, isSuperSampled } = iteration;
 
-      // metadata
-      const metadata = new Float32Array([
-        rect.x,
-        rect.y,
-        rect.width,
-        rect.height,
-        resolution.width,
-        resolution.height,
-        buffer.length,
-        isSuperSampled ? 1 : 0,
+      iterationInputMetadataBuffer.writePartial([
+        {
+          idx,
+          value: {
+            rectX: rect.x,
+            rectY: rect.y,
+            rectWidth: rect.width,
+            rectHeight: rect.height,
+            resolutionWidth: resolution.width,
+            resolutionHeight: resolution.height,
+            bufferLength: buffer.length,
+            isSuperSampled: isSuperSampled ? 1 : 0,
+          },
+        },
       ]);
-      device.queue.writeBuffer(
-        iterationInputMetadataBuffer,
-        idx * 8 * 4, // 8要素 × 4バイト (Float32Array)
-        metadata,
-      );
 
       device.queue.writeBuffer(
-        iterationInputBuffer,
+        root.unwrap(iterationInputBuffer),
         bufferByteOffset,
         buffer,
         0,
@@ -203,7 +241,7 @@ export const renderToCanvas = (
 
   const computePass = encoder.beginComputePass();
   computePass.setPipeline(computePipeline);
-  computePass.setBindGroup(0, bindGroup);
+  computePass.setBindGroup(0, root.unwrap(bindGroup));
   computePass.dispatchWorkgroups(64);
   computePass.end();
 
@@ -219,9 +257,9 @@ export const renderToCanvas = (
   });
 
   renderPass.setPipeline(renderPipeline);
-  renderPass.setBindGroup(0, bindGroup);
-  renderPass.setVertexBuffer(0, vertexBuffer);
-  renderPass.draw(vertices.length / 2);
+  renderPass.setBindGroup(0, root.unwrap(bindGroup));
+  renderPass.setVertexBuffer(0, root.unwrap(vertexBuffer));
+  renderPass.draw(6); // fixed 2 triangle
   renderPass.end();
 
   device.queue.submit([encoder.finish()]);
@@ -265,13 +303,11 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
   });
 
   iterationBuffer.destroy();
-  iterationBuffer = device.createBuffer({
-    label: "iteration buffer",
-    size: width * height * 4, // Uint32Array
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-  });
+  iterationBuffer = root
+    .createBuffer(d.arrayOf(d.u32, width * height))
+    .$usage("storage");
 
-  createBindGroup();
+  bindGroup = createBindGroup(bindGroupLayout);
 
   const scaleFactor =
     Math.min(width, height) / Math.min(from.width, from.height);
@@ -299,16 +335,14 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
 export const updatePaletteDataForGPU = (palette: Palette) => {
   if (!gpuInitialized) return;
 
+  const paletteData = [];
   // FIXME: Palette側に定義しとくといいよ
   for (let i = 0; i < palette.length; i++) {
     const [r, g, b] = palette.rgb(i);
-    paletteData[i * 4] = r / 255;
-    paletteData[i * 4 + 1] = g / 255;
-    paletteData[i * 4 + 2] = b / 255;
-    paletteData[i * 4 + 3] = 1.0;
+    paletteBuffer.writePartial([
+      { idx: i, value: d.vec4f(r / 255, g / 255, b / 255, 1.0) },
+    ]);
   }
-
-  device.queue.writeBuffer(paletteBuffer, 0, paletteData);
 };
 
 const initializeGPU = async (): Promise<boolean> => {
@@ -325,6 +359,8 @@ const initializeGPU = async (): Promise<boolean> => {
 
   try {
     device = await adapter.requestDevice();
+    root = tgpu.initFromDevice({ device });
+
     const gpuCanvas = document.getElementById(
       "gpu-canvas",
     ) as HTMLCanvasElement;
@@ -347,113 +383,75 @@ const initializeGPU = async (): Promise<boolean> => {
     });
 
     // 頂点バッファ（特に変化しない）
-    vertices = new Float32Array([
-      -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
-    ]);
-    vertexBuffer = device.createBuffer({
-      label: "vertices",
-      size: vertices.byteLength,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    });
-    device.queue.writeBuffer(vertexBuffer, 0, vertices);
+    vertexBuffer = root
+      .createBuffer(d.arrayOf(d.vec2f, 6), [
+        d.vec2f(-1.0, -1.0),
+        d.vec2f(1.0, -1.0),
+        d.vec2f(1.0, 1.0),
+        d.vec2f(-1.0, -1.0),
+        d.vec2f(1.0, 1.0),
+        d.vec2f(-1.0, 1.0),
+      ])
+      .$usage("vertex");
 
-    const vertexBufferLayout = {
-      arrayStride: 8,
-      attributes: [
-        {
-          format: "float32x2" as GPUVertexFormat,
-          offset: 0,
-          shaderLocation: 0,
-        },
-      ],
-    };
+    const PlaneGeometry = d.struct({
+      xy: d.location(0, d.vec2f),
+    });
+    const geometryLayout = tgpu.vertexLayout((n) =>
+      d.arrayOf(PlaneGeometry, n),
+    );
+
+    uniformBuffer = root.createBuffer(UniformSchema).$usage("uniform");
+
+    iterationBuffer = root
+      .createBuffer(d.arrayOf(d.u32, width * height))
+      .$usage("storage");
+
+    paletteBuffer = root.createBuffer(PaletteSchema).$usage("storage");
+
+    iterationInputBuffer = root
+      .createBuffer(d.arrayOf(d.u32, width * height))
+      .$usage("storage");
+
+    iterationInputMetadataBuffer = root
+      .createBuffer(IterationInputMetadataSchema)
+      .$usage("storage");
+
+    bindGroupLayout = tgpu.bindGroupLayout({
+      uniforms: { uniform: UniformSchema },
+      iterations: {
+        storage: d.arrayOf(d.u32, width * height),
+        visibility: ["fragment", "compute"],
+        access: "mutable",
+      },
+      palette: {
+        storage: PaletteSchema,
+        visibility: ["fragment"],
+      },
+      iterationInput: {
+        storage: d.arrayOf(d.u32, width * height),
+        visibility: ["compute"],
+      },
+      iterationMetadata: {
+        storage: IterationInputMetadataSchema,
+        visibility: ["compute"],
+      },
+    });
+
+    bindGroup = createBindGroup(bindGroupLayout);
+
+    const pipelineLayout = device.createPipelineLayout({
+      label: "Mandelbrot Pipeline Layout",
+      bindGroupLayouts: [root.unwrap(bindGroupLayout)],
+    });
 
     const renderShaderModule = device.createShaderModule({
       label: "Mandelbrot set shader",
       code: renderShaderCode,
     });
-
     const computeShaderModule = device.createShaderModule({
       label: "Mandelbrot set compute shader",
       code: computeShaderCode,
-    });
-
-    uniformBuffer = device.createBuffer({
-      label: "uniform buffer",
-      size: 48, // uint32 * 10 = 40 だけど16の倍数にしとく
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-
-    uniformData = new Float32Array(12); // 余裕をもって12要素分確保
-
-    iterationBuffer = device.createBuffer({
-      label: "iteration buffer",
-      size: width * height * 4, // Uint32Array,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    });
-
-    paletteBuffer = device.createBuffer({
-      label: "palette buffer",
-      size: paletteData.byteLength,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    });
-
-    iterationInputBuffer = device.createBuffer({
-      label: "iteration input buffer",
-      size: iterationInputData.byteLength,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    });
-
-    iterationInputMetadataBuffer = device.createBuffer({
-      label: "iteration input metadata buffer",
-      size: 4 * 8 * 1024, // uint32(4バイト) * 8要素 * 1024分割までサポート
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    });
-
-    bindGroupLayout = device.createBindGroupLayout({
-      label: "Mandelbrot BindGroupLayout",
-      entries: [
-        {
-          // uniform
-          binding: 0,
-          visibility:
-            GPUShaderStage.FRAGMENT |
-            GPUShaderStage.VERTEX |
-            GPUShaderStage.COMPUTE,
-          buffer: { type: "uniform" },
-        },
-        {
-          // iterations
-          binding: 1,
-          visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
-          buffer: { type: "storage" },
-        },
-        {
-          // palette
-          binding: 2,
-          visibility: GPUShaderStage.FRAGMENT,
-          buffer: { type: "read-only-storage" },
-        },
-        {
-          // iteration buffer input
-          binding: 3,
-          visibility: GPUShaderStage.COMPUTE,
-          buffer: { type: "read-only-storage" },
-        },
-        {
-          // iteration buffer metadata
-          binding: 4,
-          visibility: GPUShaderStage.COMPUTE,
-          buffer: { type: "read-only-storage" },
-        },
-      ],
-    });
-
-    createBindGroup();
-
-    const pipelineLayout = device.createPipelineLayout({
-      label: "Mandelbrot Pipeline Layout",
-      bindGroupLayouts: [bindGroupLayout],
     });
 
     renderPipeline = device.createRenderPipeline({
@@ -462,7 +460,7 @@ const initializeGPU = async (): Promise<boolean> => {
       vertex: {
         module: renderShaderModule,
         entryPoint: "vertexMain",
-        buffers: [vertexBufferLayout],
+        buffers: [root.unwrap(geometryLayout)],
       },
       fragment: {
         module: renderShaderModule,
@@ -491,31 +489,12 @@ const initializeGPU = async (): Promise<boolean> => {
   }
 };
 
-const createBindGroup = () => {
-  bindGroup = device.createBindGroup({
-    label: "Mandelbrot BindGroup",
-    layout: bindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: { buffer: uniformBuffer },
-      },
-      {
-        binding: 1,
-        resource: { buffer: iterationBuffer },
-      },
-      {
-        binding: 2,
-        resource: { buffer: paletteBuffer },
-      },
-      {
-        binding: 3,
-        resource: { buffer: iterationInputBuffer },
-      },
-      {
-        binding: 4,
-        resource: { buffer: iterationInputMetadataBuffer },
-      },
-    ],
+const createBindGroup = (bindGroupLayout: TgpuBindGroupLayout) => {
+  return root.createBindGroup(bindGroupLayout, {
+    uniforms: uniformBuffer,
+    iterations: iterationBuffer,
+    palette: paletteBuffer,
+    iterationInput: iterationInputBuffer,
+    iterationMetadata: iterationInputMetadataBuffer,
   });
 };

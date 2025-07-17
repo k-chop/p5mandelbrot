@@ -32,7 +32,7 @@ export const Header = () => {
               target="_blank"
               rel="noreferrer"
             >
-              <img src="/github-mark-white.svg" />
+              <img src="github-mark-white.svg" />
             </a>
           </Button>
           <Button variant="outline" size="icon-sm" onClick={open}>
