@@ -14,7 +14,11 @@ import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { Rect } from "@/math/rect";
 import { getStore } from "@/store/store";
 import type { IterationBuffer } from "@/types";
-import tgpu, { type TgpuBuffer, type TgpuRoot } from "typegpu";
+import tgpu, {
+  type StorageFlag,
+  type TgpuBuffer,
+  type TgpuRoot,
+} from "typegpu";
 import * as d from "typegpu/data";
 import computeShaderCode from "./shader/compute.wgsl?raw";
 import renderShaderCode from "./shader/shader.wgsl?raw";
@@ -34,10 +38,9 @@ let computePipeline: GPUComputePipeline;
 
 let vertexTypedBuffer: TgpuBuffer<d.WgslArray<d.Vec2f>>;
 let uniformTypedBuffer: TgpuBuffer<d.WgslArray<d.F32>>;
+let paletteTypedBuffer: TgpuBuffer<d.WgslArray<d.F32>> & StorageFlag;
 
 let iterationBuffer: GPUBuffer;
-let paletteBuffer: GPUBuffer;
-let paletteData: Float32Array;
 let iterationInputBuffer: GPUBuffer;
 let iterationInputData: Uint32Array;
 let iterationInputMetadataBuffer: GPUBuffer;
@@ -67,7 +70,6 @@ export const initRenderer = async (w: number, h: number): Promise<boolean> => {
   width = w;
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
-  paletteData = new Float32Array(8192 * 4); // FIXME: paletteの最大サイズ分で確保している（手抜き）
   iterationInputData = new Uint32Array(w * h); // FIXME: 分割数に関わらず最大サイズで確保している
 
   try {
@@ -301,16 +303,14 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
 export const updatePaletteDataForGPU = (palette: Palette) => {
   if (!gpuInitialized) return;
 
+  const paletteData = [];
   // FIXME: Palette側に定義しとくといいよ
   for (let i = 0; i < palette.length; i++) {
     const [r, g, b] = palette.rgb(i);
-    paletteData[i * 4] = r / 255;
-    paletteData[i * 4 + 1] = g / 255;
-    paletteData[i * 4 + 2] = b / 255;
-    paletteData[i * 4 + 3] = 1.0;
+    paletteData.push(...[r / 255, g / 255, b / 255, 1.0]);
   }
 
-  device.queue.writeBuffer(paletteBuffer, 0, paletteData);
+  paletteTypedBuffer.write(paletteData);
 };
 
 const initializeGPU = async (): Promise<boolean> => {
@@ -389,11 +389,10 @@ const initializeGPU = async (): Promise<boolean> => {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
 
-    paletteBuffer = device.createBuffer({
-      label: "palette buffer",
-      size: paletteData.byteLength,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    });
+    // TODO: d.vec4f, 8192でも良い気がするがbufferに書き込むところでなんかエラー出る
+    paletteTypedBuffer = root
+      .createBuffer(d.arrayOf(d.f32, 8192 * 4)) // FIXME: paletteの最大サイズ分で確保している（手抜き）
+      .$usage("storage");
 
     iterationInputBuffer = device.createBuffer({
       label: "iteration input buffer",
@@ -503,7 +502,7 @@ const createBindGroup = () => {
       },
       {
         binding: 2,
-        resource: { buffer: paletteBuffer },
+        resource: { buffer: root.unwrap(paletteTypedBuffer) },
       },
       {
         binding: 3,
