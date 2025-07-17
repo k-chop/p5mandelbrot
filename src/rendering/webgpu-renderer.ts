@@ -14,7 +14,7 @@ import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { Rect } from "@/math/rect";
 import { getStore } from "@/store/store";
 import type { IterationBuffer } from "@/types";
-import tgpu, { type TgpuRoot } from "typegpu";
+import tgpu, { type TgpuBuffer, type TgpuRoot } from "typegpu";
 import * as d from "typegpu/data";
 import computeShaderCode from "./shader/compute.wgsl?raw";
 import renderShaderCode from "./shader/shader.wgsl?raw";
@@ -31,8 +31,8 @@ let bindGroupLayout: GPUBindGroupLayout;
 let bindGroup: GPUBindGroup;
 let renderPipeline: GPURenderPipeline;
 let computePipeline: GPUComputePipeline;
-let vertexBuffer: GPUBuffer;
-let vertices: Float32Array;
+
+let vertexTypedBuffer: TgpuBuffer<d.WgslArray<d.Vec2f>>;
 
 let uniformBuffer: GPUBuffer;
 let uniformData: Float32Array;
@@ -223,8 +223,8 @@ export const renderToCanvas = (
 
   renderPass.setPipeline(renderPipeline);
   renderPass.setBindGroup(0, bindGroup);
-  renderPass.setVertexBuffer(0, vertexBuffer);
-  renderPass.draw(vertices.length / 2);
+  renderPass.setVertexBuffer(0, root.unwrap(vertexTypedBuffer));
+  renderPass.draw(6); // fixed 2 triangle
   renderPass.end();
 
   device.queue.submit([encoder.finish()]);
@@ -352,15 +352,16 @@ const initializeGPU = async (): Promise<boolean> => {
     });
 
     // 頂点バッファ（特に変化しない）
-    vertices = new Float32Array([
-      -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
-    ]);
-    vertexBuffer = device.createBuffer({
-      label: "vertices",
-      size: vertices.byteLength,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    });
-    device.queue.writeBuffer(vertexBuffer, 0, vertices);
+    vertexTypedBuffer = root
+      .createBuffer(d.arrayOf(d.vec2f, 6), [
+        d.vec2f(-1.0, -1.0),
+        d.vec2f(1.0, -1.0),
+        d.vec2f(1.0, 1.0),
+        d.vec2f(-1.0, -1.0),
+        d.vec2f(1.0, 1.0),
+        d.vec2f(-1.0, 1.0),
+      ])
+      .$usage("vertex");
 
     const PlaneGeometry = d.struct({
       xy: d.location(0, d.vec2f),
