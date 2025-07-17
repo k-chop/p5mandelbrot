@@ -16,8 +16,12 @@ import { getStore } from "@/store/store";
 import type { IterationBuffer } from "@/types";
 import tgpu, {
   type StorageFlag,
+  type TgpuBindGroup,
+  type TgpuBindGroupLayout,
   type TgpuBuffer,
   type TgpuRoot,
+  type UniformFlag,
+  type VertexFlag,
 } from "typegpu";
 import * as d from "typegpu/data";
 import computeShaderCode from "./shader/compute.wgsl?raw";
@@ -31,13 +35,15 @@ let bufferRect: Rect;
 let root: TgpuRoot;
 let device: GPUDevice;
 let context: GPUCanvasContext;
-let bindGroupLayout: GPUBindGroupLayout;
-let bindGroup: GPUBindGroup;
+
 let renderPipeline: GPURenderPipeline;
 let computePipeline: GPUComputePipeline;
 
-let vertexTypedBuffer: TgpuBuffer<d.WgslArray<d.Vec2f>>;
-let uniformTypedBuffer: TgpuBuffer<d.WgslArray<d.F32>>;
+let bindGroupTyped: TgpuBindGroup;
+let bindGroupLayoutTyped: TgpuBindGroupLayout;
+
+let vertexTypedBuffer: TgpuBuffer<d.WgslArray<d.Vec2f>> & VertexFlag;
+let uniformTypedBuffer: TgpuBuffer<d.WgslArray<d.F32>> & UniformFlag;
 let paletteTypedBuffer: TgpuBuffer<d.WgslArray<d.F32>> & StorageFlag;
 let iterationInputTypedBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
 let iterationInputMetadataTypedBuffer: TgpuBuffer<d.WgslArray<d.F32>> &
@@ -206,7 +212,7 @@ export const renderToCanvas = (
 
   const computePass = encoder.beginComputePass();
   computePass.setPipeline(computePipeline);
-  computePass.setBindGroup(0, bindGroup);
+  computePass.setBindGroup(0, root.unwrap(bindGroupTyped));
   computePass.dispatchWorkgroups(64);
   computePass.end();
 
@@ -222,7 +228,7 @@ export const renderToCanvas = (
   });
 
   renderPass.setPipeline(renderPipeline);
-  renderPass.setBindGroup(0, bindGroup);
+  renderPass.setBindGroup(0, root.unwrap(bindGroupTyped));
   renderPass.setVertexBuffer(0, root.unwrap(vertexTypedBuffer));
   renderPass.draw(6); // fixed 2 triangle
   renderPass.end();
@@ -272,7 +278,7 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
     .createBuffer(d.arrayOf(d.u32, width * height))
     .$usage("storage");
 
-  createBindGroup();
+  bindGroupTyped = createBindGroup(bindGroupLayoutTyped);
 
   const scaleFactor =
     Math.min(width, height) / Math.min(from.width, from.height);
@@ -400,50 +406,32 @@ const initializeGPU = async (): Promise<boolean> => {
       )
       .$usage("storage");
 
-    bindGroupLayout = device.createBindGroupLayout({
-      label: "Mandelbrot BindGroupLayout",
-      entries: [
-        {
-          // uniform
-          binding: 0,
-          visibility:
-            GPUShaderStage.FRAGMENT |
-            GPUShaderStage.VERTEX |
-            GPUShaderStage.COMPUTE,
-          buffer: { type: "uniform" },
-        },
-        {
-          // iterations
-          binding: 1,
-          visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
-          buffer: { type: "storage" },
-        },
-        {
-          // palette
-          binding: 2,
-          visibility: GPUShaderStage.FRAGMENT,
-          buffer: { type: "read-only-storage" },
-        },
-        {
-          // iteration buffer input
-          binding: 3,
-          visibility: GPUShaderStage.COMPUTE,
-          buffer: { type: "read-only-storage" },
-        },
-        {
-          // iteration buffer metadata
-          binding: 4,
-          visibility: GPUShaderStage.COMPUTE,
-          buffer: { type: "read-only-storage" },
-        },
-      ],
+    bindGroupLayoutTyped = tgpu.bindGroupLayout({
+      uniforms: { uniform: d.arrayOf(d.f32, 10) },
+      iterations: {
+        storage: d.arrayOf(d.u32, width * height),
+        visibility: ["fragment", "compute"],
+        access: "mutable",
+      },
+      palette: {
+        storage: d.arrayOf(d.f32, 8192 * 4),
+        visibility: ["fragment"],
+      },
+      iterationInput: {
+        storage: d.arrayOf(d.u32, width * height),
+        visibility: ["compute"],
+      },
+      iterationMetadata: {
+        storage: d.arrayOf(d.f32, 4 * 8 * 1024),
+        visibility: ["compute"],
+      },
     });
 
-    createBindGroup();
+    bindGroupTyped = createBindGroup(bindGroupLayoutTyped);
 
     const pipelineLayout = device.createPipelineLayout({
       label: "Mandelbrot Pipeline Layout",
-      bindGroupLayouts: [bindGroupLayout],
+      bindGroupLayouts: [root.unwrap(bindGroupLayoutTyped)],
     });
 
     renderPipeline = device.createRenderPipeline({
@@ -481,31 +469,12 @@ const initializeGPU = async (): Promise<boolean> => {
   }
 };
 
-const createBindGroup = () => {
-  bindGroup = device.createBindGroup({
-    label: "Mandelbrot BindGroup",
-    layout: bindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: { buffer: root.unwrap(uniformTypedBuffer) },
-      },
-      {
-        binding: 1,
-        resource: { buffer: root.unwrap(iterationTypedBuffer) },
-      },
-      {
-        binding: 2,
-        resource: { buffer: root.unwrap(paletteTypedBuffer) },
-      },
-      {
-        binding: 3,
-        resource: { buffer: root.unwrap(iterationInputTypedBuffer) },
-      },
-      {
-        binding: 4,
-        resource: { buffer: root.unwrap(iterationInputMetadataTypedBuffer) },
-      },
-    ],
+const createBindGroup = (bindGroupLayout: TgpuBindGroupLayout) => {
+  return root.createBindGroup(bindGroupLayout, {
+    uniforms: uniformTypedBuffer,
+    iterations: iterationTypedBuffer,
+    palette: paletteTypedBuffer,
+    iterationInput: iterationInputTypedBuffer,
+    iterationMetadata: iterationInputMetadataTypedBuffer,
   });
 };
