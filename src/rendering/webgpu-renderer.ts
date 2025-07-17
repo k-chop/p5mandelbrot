@@ -372,16 +372,6 @@ const initializeGPU = async (): Promise<boolean> => {
       d.arrayOf(PlaneGeometry, n),
     );
 
-    const renderShaderModule = device.createShaderModule({
-      label: "Mandelbrot set shader",
-      code: renderShaderCode,
-    });
-
-    const computeShaderModule = device.createShaderModule({
-      label: "Mandelbrot set compute shader",
-      code: computeShaderCode,
-    });
-
     uniformTypedBuffer = root
       .createBuffer(d.arrayOf(d.f32, 10))
       .$usage("uniform");
@@ -432,6 +422,15 @@ const initializeGPU = async (): Promise<boolean> => {
     const pipelineLayout = device.createPipelineLayout({
       label: "Mandelbrot Pipeline Layout",
       bindGroupLayouts: [root.unwrap(bindGroupLayoutTyped)],
+    });
+
+    const renderShaderModule = device.createShaderModule({
+      label: "Mandelbrot set shader",
+      code: renderShaderCode,
+    });
+    const computeShaderModule = device.createShaderModule({
+      label: "Mandelbrot set compute shader",
+      code: computeShaderCode,
     });
 
     renderPipeline = device.createRenderPipeline({
