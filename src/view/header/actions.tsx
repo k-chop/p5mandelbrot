@@ -48,7 +48,7 @@ const SaveImageButton = () => {
       variant="outline"
       size="sm"
       onClick={() => {
-        const imageDataURL = getResizedCanvasImageDataURL(0);
+        const imageDataURL = getResizedCanvasImageDataURL(0, true);
         const link = document.createElement("a");
         link.download = `mandelbrot-${Date.now()}.png`;
         link.href = imageDataURL;
