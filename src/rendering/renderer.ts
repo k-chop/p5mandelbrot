@@ -144,6 +144,6 @@ export const updatePaletteData: Renderer["updatePaletteData"] = (...args) => {
     case "p5js":
       break; // do nothing
     case "webgpu":
-      return webGPURenderer.updatePaletteDataForGPU(...args);
+      return webGPURenderer.updatePaletteData(...args);
   }
 };

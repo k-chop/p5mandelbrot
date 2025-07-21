@@ -17,6 +17,7 @@ import { getStore } from "@/store/store";
 import p5 from "p5";
 import { Rect } from "../math/rect";
 import { IterationBuffer } from "../types";
+import type { Renderer } from "./renderer";
 
 export interface Resolution {
   width: number;
@@ -34,26 +35,37 @@ let bufferRect: Rect;
 
 let unifiedIterationBuffer: Uint32Array;
 
-export const getCanvasSize = () => ({ width, height });
-export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
+export const getCanvasSize: Renderer["getCanvasSize"] = () => ({
+  width,
+  height,
+});
+export const getWholeCanvasRect: Renderer["getWholeCanvasRect"] = () => ({
+  x: 0,
+  y: 0,
+  width,
+  height,
+});
 
-export const initRenderer = (w: number, h: number, p5: p5) => {
-  p5Instance = p5;
+export const initRenderer: Renderer["initRenderer"] = async (w, h, p5) => {
+  // p5は必ず存在することが保証された状態で呼ばれる
+  p5Instance = p5!;
 
-  mainBuffer = p5.createGraphics(w, h);
+  mainBuffer = p5!.createGraphics(w, h);
   width = w;
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
   unifiedIterationBuffer = new Uint32Array(w * h);
 
   console.log("Camera setup done", { width, height });
+
+  return true;
 };
 
-export const renderToCanvas = (
-  x: number,
-  y: number,
-  width?: number,
-  height?: number,
+export const renderToCanvas: Renderer["renderToCanvas"] = (
+  x,
+  y,
+  width,
+  height,
 ) => {
   if (needsRerender()) {
     markAsRendered();
@@ -65,9 +77,9 @@ export const renderToCanvas = (
   p5Instance.image(buffer, x, y, width, height);
 };
 
-export const addIterationBuffer = (
-  rect: Rect = bufferRect,
-  iterBuffer?: IterationBuffer[],
+export const addIterationBuffer: Renderer["addIterationBuffer"] = (
+  rect = bufferRect,
+  iterBuffer,
 ) => {
   renderIterationsToUnifiedBuffer(
     rect,
@@ -85,7 +97,10 @@ export const addIterationBuffer = (
  * - mainBufferのリサイズ
  * - cacheの位置変更（できれば）
  */
-export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
+export const resizeCanvas: Renderer["resizeCanvas"] = (
+  requestWidth,
+  requestHeight,
+) => {
   const from = getCanvasSize();
   console.debug(
     `Request resize canvas to w=${requestWidth} h=${requestHeight}, from w=${from.width} h=${from.height}`,
