@@ -102,7 +102,7 @@ export function resizeCanvas(
  * @param iterBuffer イテレーションバッファ（オプション）
  */
 export function addIterationBuffer(
-  rect: Rect = { x: 0, y: 0, width: 0, height: 0 },
+  rect?: Rect,
   iterBuffer?: IterationBuffer[],
 ): void {
   const rendererType = getRenderer();
