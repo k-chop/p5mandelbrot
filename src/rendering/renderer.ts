@@ -89,12 +89,19 @@ export function resizeCanvas(
   requestWidth: number,
   requestHeight: number,
 ): void {
-  runRendererFunction(
-    p5Renderer.resizeCanvas,
-    webGPURenderer.resizeCanvas,
-    requestWidth,
-    requestHeight,
-  );
+  const rendererType = getRenderer();
+
+  switch (rendererType) {
+    case "p5js": {
+      p5Renderer.resizeCanvas(requestWidth, requestHeight);
+    }
+    case "webgpu": {
+      // 手抜きして従来のp5rendererをそのままUI描画用canvasに使っているので両方リサイズする必要がある
+      // FIXME: UI描画用canvasを分離する
+      webGPURenderer.resizeCanvas(requestWidth, requestHeight);
+      p5Renderer.resizeCanvas(requestWidth, requestHeight);
+    }
+  }
 }
 
 /**
