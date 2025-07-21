@@ -180,7 +180,10 @@ const calculateComplexMouseXY = (
  * 0を指定すると元のサイズで保存する
  * WebGPUレンダリング時はWebGPUキャンバスから画像を取得する
  */
-export const getResizedCanvasImageDataURL = (height: number = 0) => {
+export const getResizedCanvasImageDataURL = (
+  height: number = 0,
+  isRawDownload = false,
+) => {
   const renderer = getRenderer();
   const isWebGPU = renderer === "webgpu" && isWebGPUInitialized();
 
@@ -189,6 +192,10 @@ export const getResizedCanvasImageDataURL = (height: number = 0) => {
       "gpu-canvas",
     ) as HTMLCanvasElement;
     if (gpuCanvas) {
+      if (isRawDownload) {
+        return gpuCanvas.toDataURL("image/png");
+      }
+
       const tempCanvas = document.createElement("canvas");
       const tempContext = tempCanvas.getContext("2d");
 
@@ -201,7 +208,7 @@ export const getResizedCanvasImageDataURL = (height: number = 0) => {
         tempCanvas.height = targetHeight;
         tempContext.drawImage(gpuCanvas, 0, 0, targetWidth, targetHeight);
 
-        return tempCanvas.toDataURL();
+        return tempCanvas.toDataURL("image/png");
       }
     }
 
@@ -379,14 +386,14 @@ export const p5Setup = async (p: p5) => {
       setRenderer("webgpu");
       // 初期化中フラグを設定
       setWebGPUInitializing(true);
-      
+
       // 非同期初期化
       const initialized = await initRenderer(width, height);
       if (initialized) {
         // 初期化成功
         console.log("Using WebGPU renderer");
         setWebGPUInitialized(true);
-        
+
         // 初期化完了後、強制的にレンダリングをトリガー
         setTimeout(() => {
           console.log("Triggering initial render after WebGPU initialization");
@@ -559,13 +566,13 @@ export const p5Draw = (p: p5) => {
 
   // 現在使用中のレンダラーで描画
   const renderer = getRenderer();
-  
+
   // WebGPUが初期化中なら描画をスキップ
   if (renderer === "webgpu" && isWebGPUInitializing()) {
     // 初期化中は何も描画しない
     return;
-  } 
-  
+  }
+
   if (renderer === "webgpu" && isWebGPUInitialized()) {
     // WebGPUレンダラーを使用
     renderToCanvas(x, y, width, height);
