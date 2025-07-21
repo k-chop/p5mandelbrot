@@ -10,26 +10,58 @@ import * as webGPURenderer from "./webgpu-renderer";
 /** 各rendererが実装すべき機能 */
 export type Renderer = {
   // getter
+  /**
+   * 描画域のサイズをpixel単位で返す
+   *
+   * rendererが持つべき関数かこれ？
+   */
   getCanvasSize: () => { width: number; height: number };
+  /**
+   * 描画域をRect(0, 0, width, height)の形式で返す
+   */
   getWholeCanvasRect: () => Rect;
 
   // operation
+  /**
+   * rendererを初期化する
+   *
+   * Promiseを返すがp5の方は同期的に完了する
+   */
   initRenderer: (w: number, h: number, p5Instance?: p5) => Promise<boolean>;
+  /**
+   * canvasのresizeを行う
+   *
+   * 関連するリソースの確保し直しなどをやる
+   */
+  resizeCanvas: (requestWidth: number, requestHeight: number) => void;
+  /**
+   * canvasへの描画を行う
+   *
+   * 描画されるべきデータは既にrendererにセットされているので、描画域の指定のみ可能
+   */
   renderToCanvas: (
     x: number,
     y: number,
     width?: number,
     height?: number,
   ) => void;
-  addIterationBuffer: (rect: Rect, iterBuffer?: IterationBuffer[]) => void;
+  /**
+   * 描画するためのiterationBufferをrendererに登録する
+   */
+  addIterationBuffer: (rect?: Rect, iterBuffer?: IterationBuffer[]) => void;
+  /**
+   * renderer側でのpalette dataの登録を行う
+   *
+   * paletteの内容変更時に呼び出す
+   */
   updatePaletteData: (palette: Palette) => void;
 };
 
-export async function initRenderer(
-  w: number,
-  h: number,
-  p5Instance?: p5,
-): Promise<boolean> {
+export const initRenderer: Renderer["initRenderer"] = async (
+  w,
+  h,
+  p5Instance?,
+) => {
   const rendererType = getRenderer();
 
   switch (rendererType) {
@@ -41,131 +73,77 @@ export async function initRenderer(
       }
       return true;
     }
-    case "webgpu": {
-      return await webGPURenderer.initRenderer(w, h);
-    }
+    case "webgpu":
+      return webGPURenderer.initRenderer(w, h);
   }
-}
+};
 
-/**
- * キャンバスへのレンダリング
- * @param x X座標
- * @param y Y座標
- * @param width 幅（オプション）
- * @param height 高さ（オプション）
- */
-export function renderToCanvas(
-  x: number,
-  y: number,
-  width?: number,
-  height?: number,
-): void {
+export const renderToCanvas: Renderer["renderToCanvas"] = (...args) => {
   const rendererType = getRenderer();
 
   switch (rendererType) {
-    case "p5js": {
-      return p5Renderer.renderToCanvas(x, y, width, height);
-    }
-    case "webgpu": {
-      return webGPURenderer.renderToCanvas(x, y, width, height);
-    }
+    case "p5js":
+      return p5Renderer.renderToCanvas(...args);
+    case "webgpu":
+      return webGPURenderer.renderToCanvas(...args);
   }
-}
+};
 
-/**
- * キャンバスのリサイズ
- * @param requestWidth 要求される幅
- * @param requestHeight 要求される高さ
- */
-export function resizeCanvas(
-  requestWidth: number,
-  requestHeight: number,
-): void {
+export const resizeCanvas: Renderer["resizeCanvas"] = (...args) => {
   const rendererType = getRenderer();
 
   switch (rendererType) {
-    case "p5js": {
-      return p5Renderer.resizeCanvas(requestWidth, requestHeight);
-    }
+    case "p5js":
+      return p5Renderer.resizeCanvas(...args);
     case "webgpu": {
       // 手抜きして従来のp5rendererをそのままUI描画用canvasに使っているので両方リサイズする必要がある
       // FIXME: UI描画用canvasを分離する
-      webGPURenderer.resizeCanvas(requestWidth, requestHeight);
-      return p5Renderer.resizeCanvas(requestWidth, requestHeight);
+      webGPURenderer.resizeCanvas(...args);
+      return p5Renderer.resizeCanvas(...args);
     }
   }
-}
+};
 
-/**
- * イテレーションバッファの追加
- * @param rect 矩形領域
- * @param iterBuffer イテレーションバッファ（オプション）
- */
-export function addIterationBuffer(
-  rect?: Rect,
-  iterBuffer?: IterationBuffer[],
-): void {
+export const addIterationBuffer: Renderer["addIterationBuffer"] = (...args) => {
   const rendererType = getRenderer();
 
   switch (rendererType) {
-    case "p5js": {
-      return p5Renderer.addIterationBuffer(rect, iterBuffer);
-    }
-    case "webgpu": {
-      return webGPURenderer.addIterationBuffer(rect, iterBuffer);
-    }
+    case "p5js":
+      return p5Renderer.addIterationBuffer(...args);
+    case "webgpu":
+      return webGPURenderer.addIterationBuffer(...args);
   }
-}
+};
 
-/**
- * キャンバスサイズの取得
- * @returns キャンバスの幅と高さ
- */
-export function getCanvasSize(): { width: number; height: number } {
+export const getCanvasSize: Renderer["getCanvasSize"] = () => {
   const rendererType = getRenderer();
 
   switch (rendererType) {
-    case "p5js": {
+    case "p5js":
       return p5Renderer.getCanvasSize();
-    }
-    case "webgpu": {
+    case "webgpu":
       return webGPURenderer.getCanvasSize();
-    }
   }
-}
+};
 
-/**
- * キャンバス全体の矩形領域を取得
- * @returns キャンバス全体の矩形領域
- */
-export function getWholeCanvasRect(): Rect {
+export const getWholeCanvasRect: Renderer["getWholeCanvasRect"] = () => {
   const rendererType = getRenderer();
 
   switch (rendererType) {
-    case "p5js": {
+    case "p5js":
       return p5Renderer.getWholeCanvasRect();
-    }
-    case "webgpu": {
+    case "webgpu":
       return webGPURenderer.getWholeCanvasRect();
-    }
   }
-}
+};
 
-/**
- * WebGPUレンダラー特有の機能：パレットデータの更新
- * @param palette パレット
- */
-export function updatePaletteDataForGPU(
-  palette: Parameters<typeof webGPURenderer.updatePaletteDataForGPU>[0],
-): void {
+export const updatePaletteData: Renderer["updatePaletteData"] = (...args) => {
   const rendererType = getRenderer();
 
   switch (rendererType) {
-    case "p5js": {
+    case "p5js":
       break; // do nothing
-    }
-    case "webgpu": {
-      return webGPURenderer.updatePaletteDataForGPU(palette);
-    }
+    case "webgpu":
+      return webGPURenderer.updatePaletteDataForGPU(...args);
   }
-}
+};

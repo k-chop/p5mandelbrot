@@ -5,7 +5,7 @@ import {
   othersPalettes,
   type Palette,
 } from "@/color";
-import { updatePaletteDataForGPU } from "@/rendering/renderer";
+import { updatePaletteData } from "@/rendering/renderer";
 import { updateStore } from "@/store/store";
 
 // 描画時に使うpaletteの状態に関するファイル
@@ -70,7 +70,7 @@ export const setPalette = (palette: Palette = currentPalette) => {
   currentPalette = palette;
   markNeedsRerender();
 
-  updatePaletteDataForGPU(palette);
+  updatePaletteData(palette);
 
   updateStore("paletteLength", palette.length);
   updateStore("paletteOffset", palette.offset);
@@ -105,7 +105,7 @@ export const setCurrentPaletteOffset = (offset: number) => {
   palette.setOffset(offset);
   markNeedsRerender();
 
-  updatePaletteDataForGPU(palette);
+  updatePaletteData(palette);
 
   updateStore("paletteOffset", palette.offset);
 };
@@ -118,7 +118,7 @@ export const setCurrentPaletteLength = (length: number) => {
   palette.setLength(length);
   markNeedsRerender();
 
-  updatePaletteDataForGPU(palette);
+  updatePaletteData(palette);
 
   updateStore("paletteLength", palette.length);
 };
