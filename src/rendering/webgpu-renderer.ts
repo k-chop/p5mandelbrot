@@ -24,6 +24,7 @@ import tgpu, {
   type VertexFlag,
 } from "typegpu";
 import * as d from "typegpu/data";
+import type { Renderer } from "./renderer";
 import computeShaderCode from "./shader/compute.wgsl?raw";
 import renderShaderCode from "./shader/shader.wgsl?raw";
 
@@ -85,8 +86,16 @@ const IterationInputMetadataSchema = d.arrayOf(
   1024,
 );
 
-export const getCanvasSize = () => ({ width, height });
-export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
+export const getCanvasSize: Renderer["getCanvasSize"] = () => ({
+  width,
+  height,
+});
+export const getWholeCanvasRect: Renderer["getWholeCanvasRect"] = () => ({
+  x: 0,
+  y: 0,
+  width,
+  height,
+});
 
 /**
  * WebGPUレンダラーを初期化する
@@ -94,7 +103,7 @@ export const getWholeCanvasRect = () => ({ x: 0, y: 0, width, height });
  * @param h 高さ
  * @returns 初期化が成功したかどうか
  */
-export const initRenderer = async (w: number, h: number): Promise<boolean> => {
+export const initRenderer: Renderer["initRenderer"] = async (w, h) => {
   // TODO: あとでmaxSizeを変えられるようにする
   const resolutionLimit = 134217728 / 32; // default storage buffer maximum size = 128MiB, iteration = Uint32
   if (w * h > resolutionLimit) {
@@ -117,11 +126,11 @@ export const initRenderer = async (w: number, h: number): Promise<boolean> => {
   }
 };
 
-export const renderToCanvas = (
-  x: number,
-  y: number,
-  width?: number,
-  height?: number,
+export const renderToCanvas: Renderer["renderToCanvas"] = (
+  x,
+  y,
+  width,
+  height,
 ) => {
   if (!gpuInitialized) {
     console.warn("WebGPU not yet initialized, skipping render");
@@ -265,16 +274,19 @@ export const renderToCanvas = (
   device.queue.submit([encoder.finish()]);
 };
 
-export const addIterationBuffer = (
-  _rect: Rect = bufferRect,
-  iterBuffer?: IterationBuffer[],
+export const addIterationBuffer: Renderer["addIterationBuffer"] = (
+  _rect = bufferRect,
+  iterBuffer,
 ) => {
   if (!gpuInitialized) return;
 
   iterationBufferQueue.push(...(iterBuffer ?? getIterationCache()));
 };
 
-export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
+export const resizeCanvas: Renderer["resizeCanvas"] = (
+  requestWidth,
+  requestHeight,
+) => {
   if (!gpuInitialized) return;
 
   const from = getCanvasSize();
@@ -332,10 +344,11 @@ export const resizeCanvas = (requestWidth: number, requestHeight: number) => {
   markNeedsRerender();
 };
 
-export const updatePaletteDataForGPU = (palette: Palette) => {
+export const updatePaletteData: Renderer["updatePaletteData"] = (
+  palette: Palette,
+) => {
   if (!gpuInitialized) return;
 
-  const paletteData = [];
   // FIXME: Palette側に定義しとくといいよ
   for (let i = 0; i < palette.length; i++) {
     const [r, g, b] = palette.rgb(i);

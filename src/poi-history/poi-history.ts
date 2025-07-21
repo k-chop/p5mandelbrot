@@ -105,6 +105,7 @@ export const initializePOIHistory = () => {
       poiHistory.push(...history);
     }
     console.debug("POI History initialized from storage", poiHistory);
+    event.emit(POI_HISTORY_CHANGED);
     initialized = true;
   });
 };

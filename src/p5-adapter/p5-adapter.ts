@@ -393,15 +393,6 @@ export const p5Setup = async (p: p5) => {
         // 初期化成功
         console.log("Using WebGPU renderer");
         setWebGPUInitialized(true);
-
-        // 初期化完了後、強制的にレンダリングをトリガー
-        setTimeout(() => {
-          console.log("Triggering initial render after WebGPU initialization");
-          startCalculation(
-            () => {}, // onComplete - 何もしない
-            () => {}, // onTranslated - 何もしない
-          );
-        }, 0);
       } else {
         // 初期化失敗
         console.log(
