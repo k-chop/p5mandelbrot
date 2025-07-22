@@ -123,6 +123,8 @@ body {
 
   display: flex;
   flex-direction: column;
+  height: 88dvh;
+  overflow-y: auto;
 }
 
 #footer {

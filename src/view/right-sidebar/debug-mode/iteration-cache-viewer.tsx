@@ -49,7 +49,7 @@ export const IterationCacheViewer = () => {
             リロードボタンを押してキャッシュを表示
           </div>
         ) : (
-          <div className="max-h-96 space-y-2 overflow-y-auto">
+          <div className="space-y-2">
             {cacheData.map((cache, index) => (
               <div
                 key={index}
