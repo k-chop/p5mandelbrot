@@ -142,35 +142,30 @@ export const IterationCacheViewer = () => {
     const boundsWidth = bounds.maxX - bounds.minX;
     const boundsHeight = bounds.maxY - bounds.minY;
 
-    // アスペクト比を保持した有効描画領域の計算
+    // アスペクト比を保持した動的SVGサイズの計算
     const boundsAspect = boundsWidth / boundsHeight;
-    const minimapAspect = MINIMAP_WIDTH / MINIMAP_HEIGHT;
     
-    let effectiveWidth: number, effectiveHeight: number, offsetX: number, offsetY: number;
+    let effectiveWidth: number, effectiveHeight: number;
     
-    if (boundsAspect > minimapAspect) {
-      // boundsが横長 → 幅を基準にする
+    if (boundsAspect > 1) {
+      // boundsが横長 → 最大幅を基準にする
       effectiveWidth = MINIMAP_WIDTH;
       effectiveHeight = MINIMAP_WIDTH / boundsAspect;
-      offsetX = 0;
-      offsetY = (MINIMAP_HEIGHT - effectiveHeight) / 2;
     } else {
-      // boundsが縦長 → 高さを基準にする
+      // boundsが縦長 → 最大高さを基準にする
       effectiveWidth = MINIMAP_HEIGHT * boundsAspect;
       effectiveHeight = MINIMAP_HEIGHT;
-      offsetX = (MINIMAP_WIDTH - effectiveWidth) / 2;
-      offsetY = 0;
     }
 
-    // 座標をSVG座標系に正規化する関数（アスペクト比保持）
+    // 座標をSVG座標系に正規化する関数（シンプル版）
     const normalizeToSVG = (rect: {
       x: number;
       y: number;
       width: number;
       height: number;
     }) => {
-      const x = ((rect.x - bounds.minX) / boundsWidth) * effectiveWidth + offsetX;
-      const y = ((rect.y - bounds.minY) / boundsHeight) * effectiveHeight + offsetY;
+      const x = ((rect.x - bounds.minX) / boundsWidth) * effectiveWidth;
+      const y = ((rect.y - bounds.minY) / boundsHeight) * effectiveHeight;
       const width = (rect.width / boundsWidth) * effectiveWidth;
       const height = (rect.height / boundsHeight) * effectiveHeight;
       return { x, y, width, height };
@@ -188,8 +183,8 @@ export const IterationCacheViewer = () => {
       <div className="space-y-2">
         <div className="relative">
           <svg
-            width={MINIMAP_WIDTH}
-            height={MINIMAP_HEIGHT}
+            width={effectiveWidth}
+            height={effectiveHeight}
             className="rounded border"
             style={{ backgroundColor: "#f8fafc" }}
           >
@@ -209,28 +204,11 @@ export const IterationCacheViewer = () => {
                 />
               </pattern>
             </defs>
-            {/* 全体の背景（無地） */}
-            <rect width={MINIMAP_WIDTH} height={MINIMAP_HEIGHT} fill="#f8fafc" />
-            
-            {/* 有効領域のみにグリッド背景 */}
+            {/* 背景グリッド */}
             <rect
-              x={offsetX}
-              y={offsetY}
               width={effectiveWidth}
               height={effectiveHeight}
               fill={`url(#grid-${scaleIndex})`}
-            />
-            
-            {/* 有効領域の境界線 */}
-            <rect
-              x={offsetX}
-              y={offsetY}
-              width={effectiveWidth}
-              height={effectiveHeight}
-              fill="none"
-              stroke="#cbd5e1"
-              strokeWidth={1}
-              className="pointer-events-none"
             />
 
             {/* キャッシュrectを描画 */}
