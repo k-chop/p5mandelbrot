@@ -103,19 +103,59 @@ export const IterationCacheViewer = () => {
       return null;
     }
 
-    // 座標をSVG座標系に正規化する関数
+    // 全キャッシュrectとキャンバスを包含するbounds計算
+    const calculateBounds = () => {
+      const allRects = sizeGroups.flatMap(group => group.items.map(item => item.rect));
+      
+      if (allRects.length === 0) {
+        return { minX: 0, minY: 0, maxX: canvasSize.width, maxY: canvasSize.height };
+      }
+      
+      const minX = Math.min(
+        ...allRects.map(rect => rect.x),
+        0  // キャンバス表示領域を含める
+      );
+      const minY = Math.min(
+        ...allRects.map(rect => rect.y),
+        0  // キャンバス表示領域を含める
+      );
+      const maxX = Math.max(
+        ...allRects.map(rect => rect.x + rect.width),
+        canvasSize.width  // キャンバス表示領域を含める
+      );
+      const maxY = Math.max(
+        ...allRects.map(rect => rect.y + rect.height),
+        canvasSize.height  // キャンバス表示領域を含める
+      );
+      
+      return { minX, minY, maxX, maxY };
+    };
+
+    const bounds = calculateBounds();
+    const boundsWidth = bounds.maxX - bounds.minX;
+    const boundsHeight = bounds.maxY - bounds.minY;
+
+    // 座標をSVG座標系に正規化する関数（bounds基準）
     const normalizeToSVG = (rect: {
       x: number;
       y: number;
       width: number;
       height: number;
     }) => {
-      const x = (rect.x / canvasSize.width) * MINIMAP_WIDTH;
-      const y = (rect.y / canvasSize.height) * MINIMAP_HEIGHT;
-      const width = (rect.width / canvasSize.width) * MINIMAP_WIDTH;
-      const height = (rect.height / canvasSize.height) * MINIMAP_HEIGHT;
+      const x = ((rect.x - bounds.minX) / boundsWidth) * MINIMAP_WIDTH;
+      const y = ((rect.y - bounds.minY) / boundsHeight) * MINIMAP_HEIGHT;
+      const width = (rect.width / boundsWidth) * MINIMAP_WIDTH;
+      const height = (rect.height / boundsHeight) * MINIMAP_HEIGHT;
       return { x, y, width, height };
     };
+    
+    // キャンバス表示領域のSVG座標
+    const canvasViewRect = normalizeToSVG({
+      x: 0,
+      y: 0,
+      width: canvasSize.width,
+      height: canvasSize.height
+    });
 
     return (
       <div className="space-y-2">
@@ -172,6 +212,19 @@ export const IterationCacheViewer = () => {
                 );
               });
             })}
+            
+            {/* キャンバス表示領域（赤枠） */}
+            <rect
+              x={canvasViewRect.x}
+              y={canvasViewRect.y}
+              width={canvasViewRect.width}
+              height={canvasViewRect.height}
+              fill="none"
+              stroke="#ef4444"
+              strokeWidth={2}
+              strokeDasharray="4,2"
+              className="pointer-events-none"
+            />
           </svg>
 
           {/* ホバー時のツールチップ */}
@@ -196,6 +249,18 @@ export const IterationCacheViewer = () => {
 
         {/* 凡例 */}
         <div className="flex flex-wrap gap-2 text-xs">
+          {/* Canvas View表示 */}
+          <div className="flex items-center gap-1">
+            <div
+              className="h-3 w-3 border-2 border-dashed"
+              style={{ borderColor: '#ef4444' }}
+            />
+            <span className="font-medium text-red-600">
+              Canvas View ({canvasSize.width}×{canvasSize.height})
+            </span>
+          </div>
+          
+          {/* サイズグループ凡例 */}
           {sizeGroups.map((sizeGroup, sizeIndex) => {
             const color =
               SIZE_GROUP_COLORS[sizeIndex % SIZE_GROUP_COLORS.length];
