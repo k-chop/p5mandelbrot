@@ -105,29 +105,36 @@ export const IterationCacheViewer = () => {
 
     // 全キャッシュrectとキャンバスを包含するbounds計算
     const calculateBounds = () => {
-      const allRects = sizeGroups.flatMap(group => group.items.map(item => item.rect));
-      
+      const allRects = sizeGroups.flatMap((group) =>
+        group.items.map((item) => item.rect),
+      );
+
       if (allRects.length === 0) {
-        return { minX: 0, minY: 0, maxX: canvasSize.width, maxY: canvasSize.height };
+        return {
+          minX: 0,
+          minY: 0,
+          maxX: canvasSize.width,
+          maxY: canvasSize.height,
+        };
       }
-      
+
       const minX = Math.min(
-        ...allRects.map(rect => rect.x),
-        0  // キャンバス表示領域を含める
+        ...allRects.map((rect) => rect.x),
+        0, // キャンバス表示領域を含める
       );
       const minY = Math.min(
-        ...allRects.map(rect => rect.y),
-        0  // キャンバス表示領域を含める
+        ...allRects.map((rect) => rect.y),
+        0, // キャンバス表示領域を含める
       );
       const maxX = Math.max(
-        ...allRects.map(rect => rect.x + rect.width),
-        canvasSize.width  // キャンバス表示領域を含める
+        ...allRects.map((rect) => rect.x + rect.width),
+        canvasSize.width, // キャンバス表示領域を含める
       );
       const maxY = Math.max(
-        ...allRects.map(rect => rect.y + rect.height),
-        canvasSize.height  // キャンバス表示領域を含める
+        ...allRects.map((rect) => rect.y + rect.height),
+        canvasSize.height, // キャンバス表示領域を含める
       );
-      
+
       return { minX, minY, maxX, maxY };
     };
 
@@ -148,13 +155,13 @@ export const IterationCacheViewer = () => {
       const height = (rect.height / boundsHeight) * MINIMAP_HEIGHT;
       return { x, y, width, height };
     };
-    
+
     // キャンバス表示領域のSVG座標
     const canvasViewRect = normalizeToSVG({
       x: 0,
       y: 0,
       width: canvasSize.width,
-      height: canvasSize.height
+      height: canvasSize.height,
     });
 
     return (
@@ -212,7 +219,7 @@ export const IterationCacheViewer = () => {
                 );
               });
             })}
-            
+
             {/* キャンバス表示領域（赤枠） */}
             <rect
               x={canvasViewRect.x}
@@ -229,7 +236,7 @@ export const IterationCacheViewer = () => {
 
           {/* ホバー時のツールチップ */}
           {hoveredRect && (
-            <div className="absolute top-0 left-full z-10 ml-2 rounded bg-black px-2 py-1 text-xs text-white shadow-lg">
+            <div className="absolute top-full left-0 z-20 mt-2 rounded bg-black px-3 py-2 text-xs whitespace-nowrap text-white shadow-lg">
               <div>
                 Position: ({hoveredRect.cache.rect.x.toFixed(1)},{" "}
                 {hoveredRect.cache.rect.y.toFixed(1)})
@@ -243,6 +250,8 @@ export const IterationCacheViewer = () => {
                 {hoveredRect.cache.resolution.height}
               </div>
               {hoveredRect.cache.isSuperSampled && <div>Super Sampled</div>}
+              {/* ツールチップの矢印 */}
+              <div className="absolute bottom-full left-4 h-0 w-0 border-r-4 border-b-4 border-l-4 border-transparent border-b-black" />
             </div>
           )}
         </div>
@@ -253,13 +262,13 @@ export const IterationCacheViewer = () => {
           <div className="flex items-center gap-1">
             <div
               className="h-3 w-3 border-2 border-dashed"
-              style={{ borderColor: '#ef4444' }}
+              style={{ borderColor: "#ef4444" }}
             />
             <span className="font-medium text-red-600">
               Canvas View ({canvasSize.width}×{canvasSize.height})
             </span>
           </div>
-          
+
           {/* サイズグループ凡例 */}
           {sizeGroups.map((sizeGroup, sizeIndex) => {
             const color =
