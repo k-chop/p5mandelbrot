@@ -29,15 +29,17 @@ export const IterationCacheViewer = () => {
     for (const cache of cacheData) {
       const rectSize = { width: cache.rect.width, height: cache.rect.height };
       const resolution = cache.resolution;
-      const scale = (rectSize.width * rectSize.height) / (resolution.width * resolution.height);
+      const scale =
+        (rectSize.width * rectSize.height) /
+        (resolution.width * resolution.height);
       const sizeKey = `${rectSize.width}x${rectSize.height}-${resolution.width}x${resolution.height}`;
-      
+
       if (!scaleGroups.has(scale)) {
         scaleGroups.set(scale, new Map<string, SizeGroup>());
       }
-      
+
       const sizeGroupsForScale = scaleGroups.get(scale)!;
-      
+
       if (!sizeGroupsForScale.has(sizeKey)) {
         sizeGroupsForScale.set(sizeKey, {
           rectSize,
@@ -46,7 +48,7 @@ export const IterationCacheViewer = () => {
           hasSuperSampled: false,
         });
       }
-      
+
       const sizeGroup = sizeGroupsForScale.get(sizeKey)!;
       sizeGroup.items.push(cache);
       if (cache.isSuperSampled) {
@@ -67,11 +69,12 @@ export const IterationCacheViewer = () => {
       .sort((a, b) => b.scale - a.scale); // scaleが大きい順（解像度が荒い順）
   };
 
-
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Iteration Cache</h3>
+        <h3 className="text-lg font-semibold">
+          Iteration Cache (count: {cacheData.length})
+        </h3>
         <Button onClick={loadCache} variant="outline" size="sm">
           リロード
         </Button>
@@ -82,10 +85,6 @@ export const IterationCacheViewer = () => {
           const scaleGroups = groupCacheData(cacheData);
           return (
             <>
-              <div className="text-muted-foreground text-sm">
-                Cache Groups ({scaleGroups.length}個のスケールグループ)
-              </div>
-
               {scaleGroups.length === 0 ? (
                 <div className="text-muted-foreground text-sm italic">
                   リロードボタンを押してキャッシュを表示
@@ -97,7 +96,7 @@ export const IterationCacheViewer = () => {
                       <div className="text-base font-semibold">
                         Scale: {scaleGroup.scale.toFixed(2)}
                       </div>
-                      
+
                       <div className="space-y-2 pl-4">
                         {scaleGroup.sizeGroups.map((sizeGroup, sizeIndex) => (
                           <div
@@ -106,7 +105,11 @@ export const IterationCacheViewer = () => {
                           >
                             <div className="flex items-center gap-2">
                               <span className="font-medium">
-                                {sizeGroup.rectSize.width.toFixed(1)}×{sizeGroup.rectSize.height.toFixed(1)} @ {sizeGroup.resolution.width}×{sizeGroup.resolution.height} - {sizeGroup.items.length}個
+                                {sizeGroup.rectSize.width.toFixed(1)}×
+                                {sizeGroup.rectSize.height.toFixed(1)} @{" "}
+                                {sizeGroup.resolution.width}×
+                                {sizeGroup.resolution.height} -{" "}
+                                {sizeGroup.items.length}個
                               </span>
                               {sizeGroup.hasSuperSampled && (
                                 <span className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800">
@@ -117,8 +120,12 @@ export const IterationCacheViewer = () => {
 
                             <div className="mt-3 space-y-1 pl-4">
                               {sizeGroup.items.map((cache, itemIndex) => (
-                                <div key={itemIndex} className="text-muted-foreground text-xs">
-                                  • ({cache.rect.x.toFixed(1)}, {cache.rect.y.toFixed(1)})
+                                <div
+                                  key={itemIndex}
+                                  className="text-muted-foreground text-xs"
+                                >
+                                  • ({cache.rect.x.toFixed(1)},{" "}
+                                  {cache.rect.y.toFixed(1)})
                                 </div>
                               ))}
                             </div>
