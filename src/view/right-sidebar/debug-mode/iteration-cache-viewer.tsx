@@ -33,6 +33,7 @@ const SIZE_GROUP_COLORS = [
 
 export const IterationCacheViewer = () => {
   const cacheData = useIterationCache();
+  const [detailVisibilityMap, setDetailVisibilityMap] = useState<Record<string, boolean>>({});
 
   const groupCacheData = (cacheData: IterationBuffer[]): ScaleGroup[] => {
     // 1段階目: scaleでグループ化
@@ -334,50 +335,65 @@ export const IterationCacheViewer = () => {
                           scaleIndex={scaleIndex}
                         />
 
-                        {/* 詳細リスト */}
-                        {scaleGroup.sizeGroups.map((sizeGroup, sizeIndex) => (
-                          <div
-                            key={sizeIndex}
-                            className="rounded-lg border p-3 text-sm"
-                          >
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="h-3 w-3 border"
-                                style={{
-                                  backgroundColor:
-                                    SIZE_GROUP_COLORS[
-                                      sizeIndex % SIZE_GROUP_COLORS.length
-                                    ],
-                                  opacity: 0.6,
-                                }}
-                              />
-                              <span className="font-medium">
-                                {sizeGroup.rectSize.width.toFixed(1)}×
-                                {sizeGroup.rectSize.height.toFixed(1)} @{" "}
-                                {sizeGroup.resolution.width}×
-                                {sizeGroup.resolution.height} -{" "}
-                                {sizeGroup.items.length}個
-                              </span>
-                              {sizeGroup.hasSuperSampled && (
-                                <span className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800">
-                                  Super Sampled
+                        {/* サイズ情報リスト（常に表示） */}
+                        {scaleGroup.sizeGroups.map((sizeGroup, sizeIndex) => {
+                          const detailKey = `${scaleIndex}-${sizeIndex}`;
+                          return (
+                            <div
+                              key={sizeIndex}
+                              className="rounded-lg border p-3 text-sm"
+                            >
+                              <button
+                                onClick={() => setDetailVisibilityMap(prev => ({
+                                  ...prev,
+                                  [detailKey]: !prev[detailKey]
+                                }))}
+                                className="flex w-full items-center gap-2 text-left"
+                              >
+                                <span className="text-xs text-blue-600">
+                                  {detailVisibilityMap[detailKey] ? "▼" : "▶"}
                                 </span>
+                                <div
+                                  className="h-3 w-3 border"
+                                  style={{
+                                    backgroundColor:
+                                      SIZE_GROUP_COLORS[
+                                        sizeIndex % SIZE_GROUP_COLORS.length
+                                      ],
+                                    opacity: 0.6,
+                                  }}
+                                />
+                                <span className="font-medium">
+                                  {sizeGroup.rectSize.width.toFixed(1)}×
+                                  {sizeGroup.rectSize.height.toFixed(1)} @{" "}
+                                  {sizeGroup.resolution.width}×
+                                  {sizeGroup.resolution.height} -{" "}
+                                  {sizeGroup.items.length}個
+                                </span>
+                                {sizeGroup.hasSuperSampled && (
+                                  <span className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800">
+                                    Super Sampled
+                                  </span>
+                                )}
+                              </button>
+
+                              {/* 座標リスト */}
+                              {detailVisibilityMap[detailKey] && (
+                                <div className="mt-3 space-y-1 pl-4">
+                                  {sizeGroup.items.map((cache, itemIndex) => (
+                                    <div
+                                      key={itemIndex}
+                                      className="text-muted-foreground text-xs"
+                                    >
+                                      • ({cache.rect.x.toFixed(1)},{" "}
+                                      {cache.rect.y.toFixed(1)})
+                                    </div>
+                                  ))}
+                                </div>
                               )}
                             </div>
-
-                            <div className="mt-3 space-y-1 pl-4">
-                              {sizeGroup.items.map((cache, itemIndex) => (
-                                <div
-                                  key={itemIndex}
-                                  className="text-muted-foreground text-xs"
-                                >
-                                  • ({cache.rect.x.toFixed(1)},{" "}
-                                  {cache.rect.y.toFixed(1)})
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
