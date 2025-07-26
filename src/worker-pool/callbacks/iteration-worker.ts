@@ -1,5 +1,6 @@
 import {
   getIterationCache,
+  notifyIterationCacheUpdate,
   upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
 import { addIterationBuffer } from "@/rendering/renderer";
@@ -67,6 +68,9 @@ export const onIterationWorkerResult: IterationResultCallback = (
   batchContext.onChangeProgress();
 
   addIterationBuffer(rect, [iterBuffer]);
+
+  // UIに変更を通知
+  notifyIterationCacheUpdate();
 
   // バッチ全体が完了していたらonComplete callbackを呼ぶ
   if (isBatchCompleted(job.batchId)) {

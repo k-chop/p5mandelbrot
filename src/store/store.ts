@@ -8,6 +8,7 @@ import {
 } from "./sync-storage/settings";
 
 type Store = {
+  // mandelbrot params
   centerX: BigNumber;
   centerY: BigNumber;
   mouseX: BigNumber;
@@ -16,21 +17,40 @@ type Store = {
   N: number;
   iteration: number | string;
   mode: "normal" | "perturbation";
+
+  // POI List
   poi: POIData[];
+
+  // Settings
   zoomRate: number;
   workerCount: number;
   animationTime: number;
   refOrbitWorkerCount: number;
-  /** -1なら無制限。値があればcanvasの縦横幅はこの値以上にならない */
+  /**
+   * 最大キャンバスサイズ
+   *
+   * -1なら無制限
+   * 値があればcanvasの縦横幅はこの値以上にならない
+   */
   maxCanvasSize: number;
+
+  // UI state
   canvasLocked: boolean;
+
+  // mandelbrot state
   shouldReuseRefOrbit: boolean;
+
+  // palette settings
   paletteLength: number;
   paletteOffset: number;
   animationCycleStep: number;
+
+  // state
   progress: string | ResultSpans;
-  /** 現在使用中のレンダラー */
+  /** 現在使用中のrenderer */
   rendererType: "webgpu" | "p5js";
+  /** Debug Mode中か否か */
+  isDebugMode: boolean;
 };
 
 const store: Store = {
@@ -61,8 +81,8 @@ const store: Store = {
   animationCycleStep: 1,
   // state
   progress: "",
-  // renderer
   rendererType: "p5js",
+  isDebugMode: false,
 };
 
 const event = eventmit<string>();
