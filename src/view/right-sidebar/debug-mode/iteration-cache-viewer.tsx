@@ -42,9 +42,7 @@ export const IterationCacheViewer = () => {
     for (const cache of cacheData) {
       const rectSize = { width: cache.rect.width, height: cache.rect.height };
       const resolution = cache.resolution;
-      const scale =
-        (rectSize.width * rectSize.height) /
-        (resolution.width * resolution.height);
+      const scale = rectSize.width / resolution.width;
       const sizeKey = `${rectSize.width}x${rectSize.height}-${resolution.width}x${resolution.height}`;
 
       if (!scaleGroups.has(scale)) {
