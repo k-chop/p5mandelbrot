@@ -1,11 +1,12 @@
 import { bufferLocalLogicalIndex } from "@/rendering/common";
-import { getCanvasSize } from "@/rendering/renderer";
 import type { Resolution } from "@/rendering/p5-renderer";
+import { getCanvasSize } from "@/rendering/renderer";
 import { Rect } from "../math/rect";
 import { IterationBuffer } from "../types";
 
 // FIXME: 配列全部舐める必要があるのよくないので良い感じにデータを持つようにする
 let iterationCache: IterationBuffer[] = [];
+let iterationCacheSnapshot: IterationBuffer[] = [];
 
 // Subscription system for iteration cache updates
 let subscribers: Set<() => void> = new Set();
@@ -42,6 +43,24 @@ export const getIterationCache = (): IterationBuffer[] => {
   return iterationCache;
 };
 
+/**
+ * useSyncExternalStore用のsnapshotを返す
+ *
+ * 未変化のときに参照が変わらないように取っておいたsnapshotを返す
+ */
+export const getIterationCacheSnapshot = (): IterationBuffer[] => {
+  return iterationCacheSnapshot;
+};
+
+/**
+ * useSynExternalStore用のsnapshotを更新
+ */
+const updateSnapshot = (): void => {
+  iterationCacheSnapshot = iterationCache.map((iterCache) => ({
+    ...iterCache,
+  }));
+};
+
 // Subscription functions for cache updates
 export const subscribeToIterationCacheUpdates = (callback: () => void) => {
   subscribers.add(callback);
@@ -50,9 +69,12 @@ export const subscribeToIterationCacheUpdates = (callback: () => void) => {
   };
 };
 
-// Explicit notification function to be called after rendering is complete
+/**
+ * useIterationCacheに変更を伝えたいときに呼ぶ
+ */
 export const notifyIterationCacheUpdate = () => {
-  subscribers.forEach(callback => callback());
+  updateSnapshot();
+  subscribers.forEach((callback) => callback());
 };
 
 /**
