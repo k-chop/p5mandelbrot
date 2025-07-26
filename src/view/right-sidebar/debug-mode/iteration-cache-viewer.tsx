@@ -1,6 +1,5 @@
-import { getIterationCache } from "@/iteration-buffer/iteration-buffer";
+import { useIterationCache } from "@/iteration-buffer/use-iteration-cache";
 import { getCanvasSize } from "@/rendering/renderer";
-import { Button } from "@/shadcn/components/ui/button";
 import type { IterationBuffer } from "@/types";
 import { useState } from "react";
 
@@ -33,11 +32,7 @@ const SIZE_GROUP_COLORS = [
 ];
 
 export const IterationCacheViewer = () => {
-  const [cacheData, setCacheData] = useState<IterationBuffer[]>([]);
-  const loadCache = () => {
-    const cache = getIterationCache();
-    setCacheData(cache);
-  };
+  const cacheData = useIterationCache();
 
   const groupCacheData = (cacheData: IterationBuffer[]): ScaleGroup[] => {
     // 1段階目: scaleでグループ化
@@ -313,9 +308,6 @@ export const IterationCacheViewer = () => {
         <h3 className="text-lg font-semibold">
           Iteration Cache (count: {cacheData.length})
         </h3>
-        <Button onClick={loadCache} variant="outline" size="sm">
-          リロード
-        </Button>
       </div>
 
       <div className="space-y-4">
@@ -325,7 +317,7 @@ export const IterationCacheViewer = () => {
             <>
               {scaleGroups.length === 0 ? (
                 <div className="text-muted-foreground text-sm italic">
-                  リロードボタンを押してキャッシュを表示
+                  キャッシュデータはありません
                 </div>
               ) : (
                 <div className="space-y-4">

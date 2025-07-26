@@ -1,6 +1,7 @@
 import {
   getIterationCache,
   upsertIterationCache,
+  notifyIterationCacheUpdate,
 } from "@/iteration-buffer/iteration-buffer";
 import { addIterationBuffer } from "@/rendering/renderer";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
@@ -68,6 +69,9 @@ export const onIterationWorkerResult: IterationResultCallback = (
 
   addIterationBuffer(rect, [iterBuffer]);
 
+  // UIに変更を通知
+  notifyIterationCacheUpdate();
+
   // バッチ全体が完了していたらonComplete callbackを呼ぶ
   if (isBatchCompleted(job.batchId)) {
     const finishedAt = performance.now();
@@ -102,4 +106,7 @@ export const onIterationWorkerIntermediateResult = (
     resolution,
   );
   addIterationBuffer(rect, [iterBuffer]);
+
+  // UIに変更を通知
+  notifyIterationCacheUpdate();
 };

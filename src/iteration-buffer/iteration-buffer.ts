@@ -7,6 +7,9 @@ import { IterationBuffer } from "../types";
 // FIXME: 配列全部舐める必要があるのよくないので良い感じにデータを持つようにする
 let iterationCache: IterationBuffer[] = [];
 
+// Subscription system for iteration cache updates
+let subscribers: Set<() => void> = new Set();
+
 export const upsertIterationCache = (
   rect: Rect,
   buffer: Uint32Array,
@@ -37,6 +40,19 @@ export const upsertIterationCache = (
 
 export const getIterationCache = (): IterationBuffer[] => {
   return iterationCache;
+};
+
+// Subscription functions for cache updates
+export const subscribeToIterationCacheUpdates = (callback: () => void) => {
+  subscribers.add(callback);
+  return () => {
+    subscribers.delete(callback);
+  };
+};
+
+// Explicit notification function to be called after rendering is complete
+export const notifyIterationCacheUpdate = () => {
+  subscribers.forEach(callback => callback());
 };
 
 /**
