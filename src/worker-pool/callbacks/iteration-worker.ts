@@ -1,7 +1,7 @@
 import {
   getIterationCache,
-  upsertIterationCache,
   notifyIterationCacheUpdate,
+  upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
 import { addIterationBuffer } from "@/rendering/renderer";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
@@ -106,7 +106,4 @@ export const onIterationWorkerIntermediateResult = (
     resolution,
   );
   addIterationBuffer(rect, [iterBuffer]);
-
-  // UIに変更を通知
-  notifyIterationCacheUpdate();
 };
