@@ -1,3 +1,4 @@
+import { removeBatchTrace, startBatchTrace } from "@/event-viewer/event";
 import { getStore } from "@/store/store";
 import {
   BatchContext,
@@ -269,6 +270,7 @@ function start(workerIdx: number, job: MandelbrotJob) {
 
 export function startBatch(batchId: BatchId) {
   acceptingBatchIds.add(batchId);
+  startBatchTrace(batchId);
 }
 
 /**
@@ -276,6 +278,7 @@ export function startBatch(batchId: BatchId) {
  */
 export function cancelBatch(batchId: string) {
   acceptingBatchIds.delete(batchId);
+  removeBatchTrace(batchId);
 
   // 待ちリストからは単純に削除
   removeBatchFromWaitingJobs(batchId);
