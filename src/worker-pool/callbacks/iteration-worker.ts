@@ -1,3 +1,4 @@
+import { addTraceEvent, test_printBatchTrace } from "@/event-viewer/event";
 import {
   getIterationCache,
   notifyIterationCacheUpdate,
@@ -56,6 +57,7 @@ export const onIterationWorkerResult: IterationResultCallback = (
 
   // jobを完了させる
   batchContext.progressMap.set(job.id, 1.0);
+  addTraceEvent("worker", { type: "completed", workerIdx: job.workerIdx! });
 
   completeJob(job);
   removeWorkerReference(job.id);
@@ -79,6 +81,8 @@ export const onIterationWorkerResult: IterationResultCallback = (
     const elapsed = finishedAt - batchContext.startedAt;
 
     console.log("Iteration Buffer length: ", getIterationCache().length);
+
+    test_printBatchTrace();
 
     batchContext.onComplete(elapsed);
   }

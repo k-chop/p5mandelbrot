@@ -4,10 +4,23 @@ type EventBase = {
   time: AbsoluteTime;
 };
 
+// Worker Event ==================================================
 type WorkerEvent = EventBase & {
-  workerId: string;
-};
+  workerIdx: number;
+} & (
+    | {
+        type: "launched" | "started" | "completed";
+      }
+    | {
+        type: "progress";
+        progress: number;
+      }
+  );
+
+// Renderer Event ==================================================
 type RendererEvent = EventBase & {};
+
+// Job Event ==================================================
 type JobEvent = EventBase & {};
 
 type BatchTraceEvents = {
@@ -68,3 +81,7 @@ export const addTraceEvent = <T extends keyof BatchTraceEvents>(
 export const removeBatchTrace = (batchId: string) => {
   traceMap.delete(batchId);
 };
+
+/** test */
+export const test_printBatchTrace = () =>
+  console.log(traceMap.get(currentBatchId));

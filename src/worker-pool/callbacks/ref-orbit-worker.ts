@@ -1,3 +1,4 @@
+import { addTraceEvent } from "@/event-viewer/event";
 import { setRefOrbitCache } from "../ref-orbit-cache";
 import { completeJob } from "../task-queue";
 import {
@@ -56,6 +57,8 @@ export const onRefOrbitWorkerResult: RefOrbitResultCallback = (result, job) => {
     xn,
     blaTable,
   });
+
+  addTraceEvent("worker", { type: "completed", workerIdx: job.workerIdx! });
 
   completeJob(job);
   removeWorkerReference(job.id);

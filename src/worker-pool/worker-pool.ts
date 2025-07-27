@@ -1,4 +1,8 @@
-import { removeBatchTrace, startBatchTrace } from "@/event-viewer/event";
+import {
+  addTraceEvent,
+  removeBatchTrace,
+  startBatchTrace,
+} from "@/event-viewer/event";
 import { getStore } from "@/store/store";
 import {
   BatchContext,
@@ -264,6 +268,10 @@ function start(workerIdx: number, job: MandelbrotJob) {
   const workerFacade = getWorkerPool(assignedJob.type)[workerIdx];
 
   workerFacade.startCalculate(assignedJob, batchContext, workerIdxForTerminate);
+  addTraceEvent("worker", {
+    type: "launched",
+    workerIdx: workerIdxForTerminate,
+  });
   startJob(assignedJob);
   setWorkerReference(assignedJob.id, workerFacade);
 }
