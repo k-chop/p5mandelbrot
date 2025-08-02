@@ -207,9 +207,11 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (
   });
 
   if (0 < processableCount) {
+    const remaining = iterationBufferQueue.length - processableCount;
     console.log(
-      `Processing ${processableCount} iteration buffers (total: ${iterationBufferQueue.length}, remaining: ${iterationBufferQueue.length - processableCount})`,
+      `Processing ${processableCount} iteration buffers (total: ${iterationBufferQueue.length}, remaining: ${remaining})`,
     );
+
     // 処理可能な数だけ処理
     for (let idx = 0; idx < processableCount; idx++) {
       const iteration = iterationBufferQueue.shift()!;
