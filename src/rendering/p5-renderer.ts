@@ -193,6 +193,16 @@ export const drawUICurrentParams = (p: p5, params: MandelbrotParams) => {
   p.textSize(14);
 
   p.text(`r: ${params.r.toPrecision(10)}\nN: ${params.N}`, 4, 14);
+
+  const isNotEnoughPrecision =
+    params.mode === "normal" && params.r.isLessThan(1e-13);
+  if (isNotEnoughPrecision) {
+    p.text(
+      `Not enough precision.\nSwitch to perturbation mode by [m] key!`,
+      4,
+      p.height - 25,
+    );
+  }
 };
 
 /**
