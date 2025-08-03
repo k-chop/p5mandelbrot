@@ -1,3 +1,4 @@
+import type { Rect } from "@/math/rect";
 import { nowAbs, type AbsoluteTime } from "./time";
 
 type EventBase = {
@@ -18,7 +19,17 @@ type WorkerEvent = EventBase & {
   );
 
 // Renderer Event ==================================================
-type RendererEvent = EventBase & {};
+type RendererEvent = EventBase & {} & {
+  type: "iterationBufferProcessing";
+  resolution: number; // 現状は一度に処理されるiterationBufferの解像度は同一になっているためeventにつき1つで良い
+  count: number;
+  remaining: number;
+  rects: Rect[];
+};
+
+// 次はこれかな？
+// WebGPUでの描画開始と描画完全完了をトラッキングしたいかも
+// どう可視化するのかも含めて考えるぞい
 
 // Job Event ==================================================
 type JobEvent = EventBase & {};

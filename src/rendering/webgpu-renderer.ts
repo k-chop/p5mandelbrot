@@ -4,6 +4,7 @@ import {
   setPalette,
 } from "@/camera/palette";
 import type { Palette } from "@/color";
+import { addTraceEvent } from "@/event-viewer/event";
 import {
   getIterationCache,
   scaleIterationCacheAroundPoint,
@@ -182,9 +183,6 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (
       currentResolution = resolution;
     } else if (Math.abs(resolution - currentResolution) > 0.001) {
       // 解像度が変わったら処理を中断
-      console.log(
-        `Resolution changed: ${currentResolution} -> ${resolution}, remaining: ${iterationBufferQueue.length - processableCount}`,
-      );
       break;
     }
 
@@ -208,14 +206,17 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (
 
   if (0 < processableCount) {
     const remaining = iterationBufferQueue.length - processableCount;
-    console.log(
-      `Processing ${processableCount} iteration buffers (total: ${iterationBufferQueue.length}, remaining: ${remaining})`,
-    );
+
+    const resolution =
+      iterationBufferQueue[0].rect.width /
+      iterationBufferQueue[0].resolution.width;
+    const rects: Rect[] = [];
 
     // 処理可能な数だけ処理
     for (let idx = 0; idx < processableCount; idx++) {
       const iteration = iterationBufferQueue.shift()!;
       const { rect, buffer, resolution, isSuperSampled } = iteration;
+      rects.push(rect);
 
       iterationInputMetadataBuffer.writePartial([
         {
@@ -243,6 +244,14 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (
 
       bufferByteOffset += buffer.byteLength;
     }
+
+    addTraceEvent("renderer", {
+      type: "iterationBufferProcessing",
+      resolution,
+      count: processableCount,
+      remaining,
+      rects,
+    });
   }
 
   // 毎フレームのunifiedIterationBufferの転送は不要

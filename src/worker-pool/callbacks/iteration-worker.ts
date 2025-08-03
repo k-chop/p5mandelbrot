@@ -1,6 +1,5 @@
 import { addTraceEvent, test_printBatchTrace } from "@/event-viewer/event";
 import {
-  getIterationCache,
   notifyIterationCacheUpdate,
   upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
@@ -79,8 +78,6 @@ export const onIterationWorkerResult: IterationResultCallback = (
     const finishedAt = performance.now();
     batchContext.finishedAt = finishedAt;
     const elapsed = finishedAt - batchContext.startedAt;
-
-    console.log("Iteration Buffer length: ", getIterationCache().length);
 
     test_printBatchTrace();
 
