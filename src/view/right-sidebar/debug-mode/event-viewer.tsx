@@ -5,6 +5,7 @@ import {
   type BatchTrace,
 } from "@/event-viewer/event";
 import type { AbsoluteTime } from "@/event-viewer/time";
+import { Switch } from "@/shadcn/components/ui/switch";
 import { useState, useSyncExternalStore } from "react";
 
 type EventType = "worker" | "renderer" | "job";
@@ -32,9 +33,11 @@ const EVENT_TYPE_LABELS = {
 
 export const EventViewer = () => {
   const [selectedBatchId, setSelectedBatchId] = useState<string>("");
-  const [filterEventType, setFilterEventType] = useState<EventType | "all">(
-    "all",
-  );
+  const [filterEventTypes, setFilterEventTypes] = useState<EventType[]>([
+    "worker",
+    "renderer",
+    "job",
+  ]);
 
   const currentBatchId = useSyncExternalStore(
     subscribeToEventUpdates,
@@ -52,6 +55,16 @@ export const EventViewer = () => {
   }
 
   const selectedBatch = currentBatch;
+
+  const handleEventTypeToggle = (eventType: EventType) => {
+    setFilterEventTypes((prev) =>
+      prev.includes(eventType)
+        ? prev.filter((type) => type !== eventType)
+        : [...prev, eventType],
+    );
+  };
+
+  const allEventTypes: EventType[] = ["worker", "renderer", "job"];
 
   const flattenEvents = (batch: BatchTrace): FlatEvent[] => {
     const events: FlatEvent[] = [];
@@ -96,8 +109,8 @@ export const EventViewer = () => {
   };
 
   const filteredEvents = selectedBatch
-    ? flattenEvents(selectedBatch).filter(
-        (event) => filterEventType === "all" || event.type === filterEventType,
+    ? flattenEvents(selectedBatch).filter((event) =>
+        filterEventTypes.includes(event.type),
       )
     : [];
 
@@ -137,18 +150,18 @@ export const EventViewer = () => {
       {/* Event type filter */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Filter:</label>
-        <select
-          value={filterEventType}
-          onChange={(e) =>
-            setFilterEventType(e.target.value as EventType | "all")
-          }
-          className="w-full rounded border p-2 text-sm"
-        >
-          <option value="all">All Events</option>
-          <option value="worker">Worker Events</option>
-          <option value="renderer">Renderer Events</option>
-          <option value="job">Job Events</option>
-        </select>
+        {/* Individual event type toggles */}
+        <div className="flex flex-wrap gap-3">
+          {(Object.keys(EVENT_TYPE_LABELS) as EventType[]).map((eventType) => (
+            <div key={eventType} className="flex items-center gap-2">
+              <Switch
+                checked={filterEventTypes.includes(eventType)}
+                onCheckedChange={() => handleEventTypeToggle(eventType)}
+              />
+              <span className="text-xs">{EVENT_TYPE_LABELS[eventType]}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Events timeline */}
