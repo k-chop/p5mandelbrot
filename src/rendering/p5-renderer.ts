@@ -16,7 +16,7 @@ import { clamp } from "@/math/util";
 import { getStore } from "@/store/store";
 import p5 from "p5";
 import { Rect } from "../math/rect";
-import { IterationBuffer } from "../types";
+import { IterationBuffer, type MandelbrotParams } from "../types";
 import type { Renderer } from "./renderer";
 
 export interface Resolution {
@@ -184,6 +184,15 @@ export const drawUIScaleRate = (p: p5, scaleFactor: number) => {
   const y = clamp(p.mouseY, 0, p.height - 25);
 
   p.text(`${text}`, x + 10, y + 20);
+};
+
+export const drawUICurrentParams = (p: p5, params: MandelbrotParams) => {
+  p.fill(255);
+  p.stroke(0);
+  p.strokeWeight(3);
+  p.textSize(14);
+
+  p.text(`r: ${params.r.toPrecision(10)}\nN: ${params.N}`, 4, 14);
 };
 
 /**

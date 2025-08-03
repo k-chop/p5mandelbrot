@@ -33,7 +33,11 @@ import {
   setWebGPUInitialized,
   setWebGPUInitializing,
 } from "@/rendering/common";
-import { drawUICrossHair, drawUIScaleRate } from "@/rendering/p5-renderer";
+import {
+  drawUICrossHair,
+  drawUICurrentParams,
+  drawUIScaleRate,
+} from "@/rendering/p5-renderer";
 import {
   getCanvasSize,
   initRenderer,
@@ -584,6 +588,8 @@ export const p5Draw = (p: p5) => {
   }
 
   syncStoreValues(p);
+
+  drawUICurrentParams(p, getCurrentParams());
 
   if (shouldSavePOIHistoryNextRender) {
     shouldSavePOIHistoryNextRender = false;
