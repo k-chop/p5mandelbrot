@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
 import {
-  getAllBatchTraces,
   getCurrentBatchId,
-  getCurrentBatchTrace,
+  getCurrentBatchSnapshot,
+  subscribeToEventUpdates,
   type BatchTrace,
 } from "@/event-viewer/event";
 import type { AbsoluteTime } from "@/event-viewer/time";
+import { useState, useSyncExternalStore } from "react";
 
 type EventType = "worker" | "renderer" | "job";
 
@@ -20,7 +20,7 @@ type FlatEvent = {
 
 const EVENT_TYPE_COLORS = {
   worker: "bg-blue-500",
-  renderer: "bg-green-500", 
+  renderer: "bg-green-500",
   job: "bg-purple-500",
 };
 
@@ -31,39 +31,31 @@ const EVENT_TYPE_LABELS = {
 };
 
 export const EventViewer = () => {
-  const [currentBatch, setCurrentBatch] = useState<BatchTrace | undefined>();
-  const [currentBatchId, setCurrentBatchId] = useState<string>("");
   const [selectedBatchId, setSelectedBatchId] = useState<string>("");
-  const [allBatches, setAllBatches] = useState<Array<{ batchId: string; trace: BatchTrace }>>([]);
-  const [filterEventType, setFilterEventType] = useState<EventType | "all">("all");
+  const [filterEventType, setFilterEventType] = useState<EventType | "all">(
+    "all",
+  );
 
-  const updateData = () => {
-    const batchId = getCurrentBatchId();
-    const batch = getCurrentBatchTrace();
-    const all = getAllBatchTraces();
-    
-    setCurrentBatchId(batchId);
-    setCurrentBatch(batch);
-    setAllBatches(all);
-    
-    if (!selectedBatchId && batchId) {
-      setSelectedBatchId(batchId);
-    }
-  };
+  const currentBatchId = useSyncExternalStore(
+    subscribeToEventUpdates,
+    getCurrentBatchId,
+  );
 
-  useEffect(() => {
-    updateData();
-    const interval = setInterval(updateData, 100);
-    return () => clearInterval(interval);
-  }, []);
+  const currentBatch = useSyncExternalStore(
+    subscribeToEventUpdates,
+    getCurrentBatchSnapshot,
+  );
 
-  const selectedBatch = selectedBatchId === currentBatchId 
-    ? currentBatch 
-    : allBatches.find(b => b.batchId === selectedBatchId)?.trace;
+  // 初回時に現在のバッチIDを選択
+  if (!selectedBatchId && currentBatchId) {
+    setSelectedBatchId(currentBatchId);
+  }
+
+  const selectedBatch = currentBatch;
 
   const flattenEvents = (batch: BatchTrace): FlatEvent[] => {
     const events: FlatEvent[] = [];
-    
+
     // Worker events
     batch.worker.forEach((event: any, index: number) => {
       events.push({
@@ -80,7 +72,7 @@ export const EventViewer = () => {
     batch.renderer.forEach((event: any, index: number) => {
       events.push({
         id: `renderer-${index}`,
-        type: "renderer", 
+        type: "renderer",
         eventType: event.type,
         time: event.time,
         relativeTime: event.time - batch.baseTime,
@@ -103,9 +95,9 @@ export const EventViewer = () => {
     return events.sort((a, b) => a.time - b.time);
   };
 
-  const filteredEvents = selectedBatch 
-    ? flattenEvents(selectedBatch).filter(event => 
-        filterEventType === "all" || event.type === filterEventType
+  const filteredEvents = selectedBatch
+    ? flattenEvents(selectedBatch).filter(
+        (event) => filterEventType === "all" || event.type === filterEventType,
       )
     : [];
 
@@ -121,15 +113,16 @@ export const EventViewer = () => {
         return (
           <div className="text-xs text-gray-600">
             Worker {workerEvent.workerIdx}: {event.eventType}
-            {"progress" in workerEvent && ` (${(workerEvent.progress * 100).toFixed(1)}%)`}
+            {"progress" in workerEvent &&
+              ` (${(workerEvent.progress * 100).toFixed(1)}%)`}
           </div>
         );
       case "renderer":
         const rendererEvent = event.data;
         return (
           <div className="text-xs text-gray-600">
-            Resolution: {rendererEvent.resolution}, Count: {rendererEvent.count}, 
-            Remaining: {rendererEvent.remaining}
+            Resolution: {rendererEvent.resolution}, Count: {rendererEvent.count}
+            , Remaining: {rendererEvent.remaining}
           </div>
         );
       case "job":
@@ -141,29 +134,15 @@ export const EventViewer = () => {
 
   return (
     <div className="space-y-4">
-      {/* Batch selector */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Batch:</label>
-        <select 
-          value={selectedBatchId} 
-          onChange={(e) => setSelectedBatchId(e.target.value)}
-          className="w-full p-2 border rounded text-sm"
-        >
-          {allBatches.map(({ batchId }) => (
-            <option key={batchId} value={batchId}>
-              {batchId} {batchId === currentBatchId ? "(current)" : ""}
-            </option>
-          ))}
-        </select>
-      </div>
-
       {/* Event type filter */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Filter:</label>
-        <select 
-          value={filterEventType} 
-          onChange={(e) => setFilterEventType(e.target.value as EventType | "all")}
-          className="w-full p-2 border rounded text-sm"
+        <select
+          value={filterEventType}
+          onChange={(e) =>
+            setFilterEventType(e.target.value as EventType | "all")
+          }
+          className="w-full rounded border p-2 text-sm"
         >
           <option value="all">All Events</option>
           <option value="worker">Worker Events</option>
@@ -174,18 +153,20 @@ export const EventViewer = () => {
 
       {/* Events timeline */}
       <div className="space-y-2">
-        <h3 className="text-sm font-medium">Events ({filteredEvents.length})</h3>
-        <div className="max-h-96 overflow-y-auto space-y-1">
+        <h3 className="text-sm font-medium">
+          Events ({filteredEvents.length})
+        </h3>
+        <div className="max-h-96 space-y-1 overflow-y-auto">
           {filteredEvents.map((event) => (
-            <div key={event.id} className="border rounded p-2 bg-gray-50">
-              <div className="flex items-center gap-2 mb-1">
-                <span 
-                  className={`w-3 h-3 rounded-full ${EVENT_TYPE_COLORS[event.type]}`}
+            <div key={event.id} className="rounded border bg-gray-50 p-2">
+              <div className="mb-1 flex items-center gap-2">
+                <span
+                  className={`h-3 w-3 rounded-full ${EVENT_TYPE_COLORS[event.type]}`}
                 ></span>
-                <span className="font-medium text-sm">
+                <span className="text-sm font-medium">
                   {EVENT_TYPE_LABELS[event.type]} - {event.eventType}
                 </span>
-                <span className="text-xs text-gray-500 ml-auto">
+                <span className="ml-auto text-xs text-gray-500">
                   +{formatTime(event.relativeTime)}
                 </span>
               </div>
@@ -193,7 +174,7 @@ export const EventViewer = () => {
             </div>
           ))}
           {filteredEvents.length === 0 && (
-            <div className="text-center text-gray-500 py-4">
+            <div className="py-4 text-center text-gray-500">
               No events found
             </div>
           )}

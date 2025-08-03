@@ -1,4 +1,5 @@
 import type { Rect } from "@/math/rect";
+import { debounce } from "es-toolkit";
 import { nowAbs, type AbsoluteTime } from "./time";
 
 type EventBase = {
@@ -49,6 +50,12 @@ const traceMap = new Map<string, BatchTrace>(); // key = batchId
 
 let currentBatchId = "";
 
+// Subscription system for event updates
+let eventSubscribers: Set<() => void> = new Set();
+
+// Snapshots for useSyncExternalStore
+let currentBatchSnapshot: BatchTrace | undefined = undefined;
+
 /**
  * batchIdに対してtrace eventの記録を開始する
  */
@@ -61,6 +68,8 @@ export const startBatchTrace = (batchId: string) => {
     renderer: [],
     job: [],
   });
+
+  notifyEventUpdateDebounced();
 };
 
 type UnArray<T> = T extends (infer U)[] ? U : never;
@@ -80,10 +89,14 @@ export const addTraceEvent = <T extends keyof BatchTraceEvents>(
   if ("time" in event) {
     // 引数の型チェックで守られているのでas anyで良い
     batchTrace[type].push({ ...event } as any);
+
+    notifyEventUpdateDebounced();
     return;
   }
 
   batchTrace[type].push({ ...event, time: nowAbs() } as any);
+
+  notifyEventUpdateDebounced();
 };
 
 /**
@@ -91,6 +104,8 @@ export const addTraceEvent = <T extends keyof BatchTraceEvents>(
  */
 export const removeBatchTrace = (batchId: string) => {
   traceMap.delete(batchId);
+
+  notifyEventUpdateDebounced();
 };
 
 /**
@@ -113,24 +128,44 @@ export const getBatchTrace = (batchId: string): BatchTrace | undefined => {
 };
 
 /**
- * 全てのバッチのトレース情報を取得
- */
-export const getAllBatchTraces = (): Array<{
-  batchId: string;
-  trace: BatchTrace;
-}> => {
-  return Array.from(traceMap.entries()).map(([batchId, trace]) => ({
-    batchId,
-    trace,
-  }));
-};
-
-/**
  * 全てのバッチIDの一覧を取得
  */
 export const getAllBatchIds = (): string[] => {
   return Array.from(traceMap.keys());
 };
+
+/**
+ * useSyncExternalStore用のsnapshot更新関数
+ */
+const updateSnapshot = (): void => {
+  const currentTrace = traceMap.get(currentBatchId);
+  currentBatchSnapshot = currentTrace ? { ...currentTrace } : undefined;
+};
+
+/**
+ * useSyncExternalStore用のスナップショット取得関数
+ */
+export const getCurrentBatchSnapshot = (): BatchTrace | undefined =>
+  currentBatchSnapshot;
+
+/**
+ * useSyncExternalStore用の購読関数
+ */
+export const subscribeToEventUpdates = (callback: () => void) => {
+  eventSubscribers.add(callback);
+  return () => {
+    eventSubscribers.delete(callback);
+  };
+};
+
+/**
+ * イベント更新の通知を送信
+ */
+const notifyEventUpdate = () => {
+  updateSnapshot();
+  eventSubscribers.forEach((callback) => callback());
+};
+const notifyEventUpdateDebounced = debounce(notifyEventUpdate, 250);
 
 /** test */
 export const test_printBatchTrace = () =>
