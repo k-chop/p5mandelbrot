@@ -103,7 +103,7 @@ export const EventViewer = () => {
       });
     });
 
-    return events.sort((a, b) => a.time - b.time);
+    return events.sort((a, b) => b.time - a.time);
   };
 
   const getEventCount = (eventType: EventType): number => {
