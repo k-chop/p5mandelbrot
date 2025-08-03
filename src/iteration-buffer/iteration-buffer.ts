@@ -80,6 +80,8 @@ export const notifyIterationCacheUpdate = debounce(() => {
 
 /**
  * 以下の条件でもはや描画に使用できないiterationキャッシュを削除する
+ *
+ * 0. 現状存在する最も解像度が高いcache以外
  * 1. 完全に画面外にいる
  * 2. 小さすぎて描画に使えない
  * 3. でかすぎて描画に使えるピクセルが少ない
@@ -97,6 +99,16 @@ export const removeUnusedIterationCache = (): void => {
   );
 
   const beforeCount = iterationCache.length;
+
+  // 現状存在する最大解像度以外のcacheは消す
+  const maxRes = iterationCache.reduce((prev, iterCache) => {
+    const res = iterCache.resolution.width / iterCache.rect.width;
+    return res > prev ? res : prev;
+  }, Number.MIN_VALUE);
+  iterationCache = iterationCache.filter((iterCache) => {
+    const res = iterCache.resolution.width / iterCache.rect.width;
+    return Math.abs(res - maxRes) < Number.EPSILON;
+  });
 
   iterationCache = iterationCache.filter((iterCache) => {
     const { x, y, width, height } = iterCache.rect;
