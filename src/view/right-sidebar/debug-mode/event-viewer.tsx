@@ -122,15 +122,51 @@ export const EventViewer = () => {
     return `${(ms / 1000).toFixed(2)}s`;
   };
 
+  const findLaunchedEventForCompleted = (
+    completedEvent: FlatEvent,
+    allEvents: FlatEvent[],
+  ): FlatEvent | null => {
+    if (completedEvent.type !== "worker" || completedEvent.eventType !== "completed") {
+      return null;
+    }
+
+    const completedWorkerId = completedEvent.data.workerId;
+    const completedTime = completedEvent.time;
+
+    // 同じworkerIdのlaunchedイベントを時系列順で探す
+    const launchedEvents = allEvents
+      .filter(
+        (event) =>
+          event.type === "worker" &&
+          event.eventType === "launched" &&
+          event.data.workerId === completedWorkerId &&
+          event.time < completedTime,
+      )
+      .sort((a, b) => b.time - a.time); // 新しい順
+
+    return launchedEvents[0] || null;
+  };
+
   const renderEventDetails = (event: FlatEvent) => {
     switch (event.type) {
       case "worker":
         const workerEvent = event.data;
+        let elapsedTimeText = "";
+        
+        if (event.eventType === "completed") {
+          const launchedEvent = findLaunchedEventForCompleted(event, filteredEvents);
+          if (launchedEvent) {
+            const elapsedTime = event.time - launchedEvent.time;
+            elapsedTimeText = ` (from launched: ${formatTime(elapsedTime)})`;
+          }
+        }
+        
         return (
           <div className="text-xs text-gray-600">
             Worker {workerEvent.workerId}: {event.eventType}
             {"progress" in workerEvent &&
               ` (${(workerEvent.progress * 100).toFixed(1)}%)`}
+            {elapsedTimeText}
           </div>
         );
       case "renderer":
