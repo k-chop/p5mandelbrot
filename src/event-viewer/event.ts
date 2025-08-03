@@ -40,7 +40,7 @@ type BatchTraceEvents = {
   job: JobEvent[];
 };
 
-type BatchTrace = {
+export type BatchTrace = {
   // batchの開始時刻
   baseTime: AbsoluteTime;
 } & BatchTraceEvents;
@@ -91,6 +91,45 @@ export const addTraceEvent = <T extends keyof BatchTraceEvents>(
  */
 export const removeBatchTrace = (batchId: string) => {
   traceMap.delete(batchId);
+};
+
+/**
+ * 現在のバッチIDを取得
+ */
+export const getCurrentBatchId = (): string => currentBatchId;
+
+/**
+ * 現在のバッチのトレース情報を取得
+ */
+export const getCurrentBatchTrace = (): BatchTrace | undefined => {
+  return traceMap.get(currentBatchId);
+};
+
+/**
+ * 指定したバッチIDのトレース情報を取得
+ */
+export const getBatchTrace = (batchId: string): BatchTrace | undefined => {
+  return traceMap.get(batchId);
+};
+
+/**
+ * 全てのバッチのトレース情報を取得
+ */
+export const getAllBatchTraces = (): Array<{
+  batchId: string;
+  trace: BatchTrace;
+}> => {
+  return Array.from(traceMap.entries()).map(([batchId, trace]) => ({
+    batchId,
+    trace,
+  }));
+};
+
+/**
+ * 全てのバッチIDの一覧を取得
+ */
+export const getAllBatchIds = (): string[] => {
+  return Array.from(traceMap.keys());
 };
 
 /** test */
