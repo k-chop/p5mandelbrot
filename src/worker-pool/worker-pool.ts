@@ -15,7 +15,6 @@ import {
   ResultSpans,
   mandelbrotWorkerTypes,
 } from "@/types";
-import { debugWatch } from "@/utils/debug";
 import {
   calcNormalizedWorkerIndex,
   findFreeWorkerIndex,
@@ -250,10 +249,11 @@ export function tickWorkerPool() {
   }
 
   if (jobStarted || !hasRunningJob()) {
-    debugWatch(
-      "jobStatus",
-      `running: ${countRunningJobs()}, waiting: ${countWaitingJobs()}`,
-    );
+    addTraceEvent("job", {
+      type: "jobCountChanged",
+      running: countRunningJobs(),
+      waiting: countWaitingJobs(),
+    });
   }
 }
 

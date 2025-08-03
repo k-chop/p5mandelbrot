@@ -39,7 +39,7 @@ export type RendererEvent = EventBase & {
 // Job Event ==================================================
 export type JobEvent = EventBase & {
   /* common type */
-} & { type: "notImplemented" };
+} & { type: "jobCountChanged"; running: number; waiting: number };
 
 // イベント定義ここまで =======================================
 

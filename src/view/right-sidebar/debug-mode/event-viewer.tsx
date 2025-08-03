@@ -4,6 +4,7 @@ import {
   subscribeToEventUpdates,
   type AllTraceEvent,
   type BatchTrace,
+  type JobEvent,
   type RendererEvent,
   type WorkerEvent,
 } from "@/event-viewer/event";
@@ -198,7 +199,16 @@ export const EventViewer = () => {
         }
 
       case "job":
-        return <div className="text-xs text-gray-600">Job Event</div>;
+        const jobEvent = event.data as JobEvent;
+
+        switch (jobEvent.type) {
+          case "jobCountChanged":
+            return (
+              <div className="text-xs text-gray-600">
+                running: {jobEvent.running}, waiting: {jobEvent.waiting}
+              </div>
+            );
+        }
       default:
         return null;
     }
