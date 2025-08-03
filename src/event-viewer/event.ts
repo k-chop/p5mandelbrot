@@ -73,7 +73,7 @@ export const startBatchTrace = (batchId: string) => {
     job: [],
   });
 
-  notifyEventUpdateDebounced();
+  notifyEventUpdate();
 };
 
 type UnArray<T> = T extends (infer U)[] ? U : never;
@@ -94,13 +94,13 @@ export const addTraceEvent = <T extends keyof BatchTraceEvents>(
     // 引数の型チェックで守られているのでas anyで良い
     batchTrace[type].push({ ...event } as any);
 
-    notifyEventUpdateDebounced();
+    notifyEventUpdate();
     return;
   }
 
   batchTrace[type].push({ ...event, time: nowAbs() } as any);
 
-  notifyEventUpdateDebounced();
+  notifyEventUpdate();
 };
 
 /**
@@ -109,7 +109,7 @@ export const addTraceEvent = <T extends keyof BatchTraceEvents>(
 export const removeBatchTrace = (batchId: string) => {
   traceMap.delete(batchId);
 
-  notifyEventUpdateDebounced();
+  notifyEventUpdate();
 };
 
 /**
@@ -165,11 +165,10 @@ export const subscribeToEventUpdates = (callback: () => void) => {
 /**
  * イベント更新の通知を送信
  */
-const notifyEventUpdate = () => {
+const notifyEventUpdate = debounce(() => {
   updateSnapshot();
   eventSubscribers.forEach((callback) => callback());
-};
-const notifyEventUpdateDebounced = debounce(notifyEventUpdate, 250);
+}, 250);
 
 /** test */
 export const test_printBatchTrace = () =>
