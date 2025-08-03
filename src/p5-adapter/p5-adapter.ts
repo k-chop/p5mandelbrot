@@ -33,7 +33,11 @@ import {
   setWebGPUInitialized,
   setWebGPUInitializing,
 } from "@/rendering/common";
-import { drawCrossHair, drawScaleRate } from "@/rendering/p5-renderer";
+import {
+  drawUICrossHair,
+  drawUICurrentParams,
+  drawUIScaleRate,
+} from "@/rendering/p5-renderer";
 import {
   getCanvasSize,
   initRenderer,
@@ -576,14 +580,16 @@ export const p5Draw = (p: p5) => {
 
   switch (draggingMode) {
     case "move":
-      drawCrossHair(p);
+      drawUICrossHair(p);
       break;
     case "zoom":
-      drawScaleRate(p, scaleFactor);
+      drawUIScaleRate(p, scaleFactor);
       break;
   }
 
   syncStoreValues(p);
+
+  drawUICurrentParams(p, getCurrentParams());
 
   if (shouldSavePOIHistoryNextRender) {
     shouldSavePOIHistoryNextRender = false;
