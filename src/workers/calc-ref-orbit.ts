@@ -137,7 +137,7 @@ function calcBLACoefficient(ref: Complex[], pixelSpacing: number) {
     if (blaTable[d + 1].length === 1) break;
   }
 
-  console.debug("blaTable", blaTable);
+  // console.debug("blaTable", blaTable);
 
   return blaTable;
 }
@@ -270,7 +270,7 @@ async function setup() {
       } = event.data as RefOrbitWorkerParams;
 
       const startedAt = performance.now();
-      console.debug(`${jobId}: start (ref)`);
+      // console.debug(`${jobId}: start (ref)`);
 
       const terminateChecker = new Uint8Array(terminator);
 
@@ -326,7 +326,7 @@ async function setup() {
         return;
       }
 
-      console.log("Reference orbit calculated", xn);
+      // console.log("Reference orbit calculated", xn);
 
       const pixelSpacing =
         radius.toNumber() / Math.max(pixelWidth, pixelHeight);
@@ -344,7 +344,7 @@ async function setup() {
         elapsed,
       });
 
-      console.debug(`${jobId}: completed (ref)`);
+      // console.debug(`${jobId}: completed (ref)`);
     } else if (event.data.type === "request-shutdown") {
       console.log("Shutdown requested");
       ws?.close();

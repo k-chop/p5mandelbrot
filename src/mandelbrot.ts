@@ -1,6 +1,5 @@
 import { markNeedsRerender } from "./camera/palette";
 import {
-  getIterationCache,
   removeUnusedIterationCache,
   scaleIterationCacheAroundPoint,
   setIterationCache,
@@ -54,7 +53,6 @@ export const startCalculation = async (
 
   // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
   removeUnusedIterationCache();
-  console.log("iterationCacheLength", getIterationCache().length);
   addIterationBuffer(rect);
   markNeedsRerender();
 
