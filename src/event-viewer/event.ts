@@ -20,7 +20,9 @@ type WorkerEvent = EventBase & {
   );
 
 // Renderer Event ==================================================
-type RendererEvent = EventBase & {} & {
+type RendererEvent = EventBase & {
+  /* common type */
+} & {
   type: "iterationBufferProcessing";
   resolution: number; // 現状は一度に処理されるiterationBufferの解像度は同一になっているためeventにつき1つで良い
   count: number;
@@ -33,7 +35,13 @@ type RendererEvent = EventBase & {} & {
 // どう可視化するのかも含めて考えるぞい
 
 // Job Event ==================================================
-type JobEvent = EventBase & {};
+type JobEvent = EventBase & {
+  /* common type */
+} & { type: "notImplemented" };
+
+// イベント定義ここまで =======================================
+
+export type AllTraceEvent = WorkerEvent | RendererEvent | JobEvent;
 
 type BatchTraceEvents = {
   worker: WorkerEvent[];

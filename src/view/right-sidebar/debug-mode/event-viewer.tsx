@@ -2,6 +2,7 @@ import {
   getCurrentBatchId,
   getCurrentBatchSnapshot,
   subscribeToEventUpdates,
+  type AllTraceEvent,
   type BatchTrace,
 } from "@/event-viewer/event";
 import type { AbsoluteTime } from "@/event-viewer/time";
@@ -13,7 +14,7 @@ type EventType = "worker" | "renderer" | "job";
 type FlatEvent = {
   id: string;
   type: EventType;
-  eventType: string;
+  eventType: AllTraceEvent["type"];
   time: AbsoluteTime;
   relativeTime: number;
   data: any;
@@ -68,7 +69,7 @@ export const EventViewer = () => {
     const events: FlatEvent[] = [];
 
     // Worker events
-    batch.worker.forEach((event: any, index: number) => {
+    batch.worker.forEach((event, index) => {
       events.push({
         id: `worker-${index}`,
         type: "worker",
@@ -80,7 +81,7 @@ export const EventViewer = () => {
     });
 
     // Renderer events
-    batch.renderer.forEach((event: any, index: number) => {
+    batch.renderer.forEach((event, index) => {
       events.push({
         id: `renderer-${index}`,
         type: "renderer",
@@ -92,7 +93,7 @@ export const EventViewer = () => {
     });
 
     // Job events
-    batch.job.forEach((event: any, index: number) => {
+    batch.job.forEach((event, index) => {
       events.push({
         id: `job-${index}`,
         type: "job",
