@@ -126,7 +126,10 @@ export const EventViewer = () => {
     completedEvent: FlatEvent,
     allEvents: FlatEvent[],
   ): FlatEvent | null => {
-    if (completedEvent.type !== "worker" || completedEvent.eventType !== "completed") {
+    if (
+      completedEvent.type !== "worker" ||
+      completedEvent.eventType !== "completed"
+    ) {
       return null;
     }
 
@@ -152,15 +155,18 @@ export const EventViewer = () => {
       case "worker":
         const workerEvent = event.data;
         let elapsedTimeText = "";
-        
+
         if (event.eventType === "completed") {
-          const launchedEvent = findLaunchedEventForCompleted(event, filteredEvents);
+          const launchedEvent = findLaunchedEventForCompleted(
+            event,
+            filteredEvents,
+          );
           if (launchedEvent) {
             const elapsedTime = event.time - launchedEvent.time;
-            elapsedTimeText = ` (from launched: ${formatTime(elapsedTime)})`;
+            elapsedTimeText = ` (elapsed: ${formatTime(elapsedTime)})`;
           }
         }
-        
+
         return (
           <div className="text-xs text-gray-600">
             Worker {workerEvent.workerId}: {event.eventType}
@@ -173,8 +179,8 @@ export const EventViewer = () => {
         const rendererEvent = event.data;
         return (
           <div className="text-xs text-gray-600">
-            Resolution: {rendererEvent.resolution}, Count: {rendererEvent.count}
-            , Remaining: {rendererEvent.remaining}
+            Resolution: {rendererEvent.resolution.toFixed(1)}, Count:{" "}
+            {rendererEvent.count}, Remaining: {rendererEvent.remaining}
           </div>
         );
       case "job":
