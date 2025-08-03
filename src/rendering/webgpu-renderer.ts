@@ -165,18 +165,14 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (
   for (let i = 0; i < iterationBufferQueue.length; i++) {
     const iterBuffer = iterationBufferQueue[i];
     const nextSize = iterBuffer.buffer.byteLength;
+    const resolution = iterBuffer.rect.width / iterBuffer.resolution.width;
 
     // バッファサイズオーバーチェック
     if (tempBufferByteOffset + nextSize > maxBufferSize) {
-      console.log(
-        `Buffer size exceeded: ${tempBufferByteOffset} + ${nextSize} > ${maxBufferSize}, remaining: ${
-          iterationBufferQueue.length - processableCount
-        }`,
-      );
+      const remaining = iterationBufferQueue.length - processableCount;
+      addTraceEvent("renderer", { type: "bufferSizeExceeded", remaining });
       break;
     }
-
-    const resolution = iterBuffer.rect.width / iterBuffer.resolution.width;
 
     // 初回または同じ解像度のみ処理
     if (currentResolution === -1) {

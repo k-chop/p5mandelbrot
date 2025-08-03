@@ -22,13 +22,19 @@ type WorkerEvent = EventBase & {
 // Renderer Event ==================================================
 type RendererEvent = EventBase & {
   /* common type */
-} & {
-  type: "iterationBufferProcessing";
-  resolution: number; // 現状は一度に処理されるiterationBufferの解像度は同一になっているためeventにつき1つで良い
-  count: number;
-  remaining: number;
-  rects: Rect[];
-};
+} & (
+    | {
+        type: "iterationBufferProcessing";
+        resolution: number; // 現状は一度に処理されるiterationBufferの解像度は同一になっているためeventにつき1つで良い
+        count: number;
+        remaining: number;
+        rects: Rect[];
+      }
+    | {
+        type: "bufferSizeExceeded";
+        remaining: number;
+      }
+  );
 
 // Job Event ==================================================
 type JobEvent = EventBase & {
@@ -76,32 +82,26 @@ export const startBatchTrace = (batchId: string) => {
   notifyEventUpdate();
 };
 
-type UnArray<T> = T extends (infer U)[] ? U : never;
-type PartialPick<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
-
 /**
  * 現在描画中のbatchIdに対するtrace eventを記録する
  */
-export const addTraceEvent = <T extends keyof BatchTraceEvents>(
-  type: T,
-  event: PartialPick<UnArray<BatchTraceEvents[T]>, "time">,
-) => {
+type EventWithoutTime<T> = T extends { time: any } ? Omit<T, "time"> : T;
+
+export function addTraceEvent<T extends keyof BatchTraceEvents>(
+  category: T,
+  event: EventWithoutTime<BatchTraceEvents[T][number]> & {
+    time?: AbsoluteTime;
+  },
+): void {
   const batchTrace = traceMap.get(currentBatchId);
   if (batchTrace == null) return;
 
-  // timeが既にあるなら上書きしない
-  if ("time" in event) {
-    // 引数の型チェックで守られているのでas anyで良い
-    batchTrace[type].push({ ...event } as any);
-
-    notifyEventUpdate();
-    return;
-  }
-
-  batchTrace[type].push({ ...event, time: nowAbs() } as any);
+  const fullEvent = { ...event, time: event.time ?? nowAbs() };
+  // NOTE: 引数の型チェックで守られているのでas anyで良い
+  batchTrace[category].push(fullEvent as any);
 
   notifyEventUpdate();
-};
+}
 
 /**
  * 指定したbatchIdのtrace eventを削除
