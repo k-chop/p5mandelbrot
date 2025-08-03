@@ -64,8 +64,6 @@ export const EventViewer = () => {
     );
   };
 
-  const allEventTypes: EventType[] = ["worker", "renderer", "job"];
-
   const flattenEvents = (batch: BatchTrace): FlatEvent[] => {
     const events: FlatEvent[] = [];
 
@@ -106,6 +104,11 @@ export const EventViewer = () => {
     });
 
     return events.sort((a, b) => a.time - b.time);
+  };
+
+  const getEventCount = (eventType: EventType): number => {
+    if (!selectedBatch) return 0;
+    return selectedBatch[eventType].length;
   };
 
   const filteredEvents = selectedBatch
@@ -158,7 +161,9 @@ export const EventViewer = () => {
                 checked={filterEventTypes.includes(eventType)}
                 onCheckedChange={() => handleEventTypeToggle(eventType)}
               />
-              <span className="text-xs">{EVENT_TYPE_LABELS[eventType]}</span>
+              <span className="text-xs">
+                {EVENT_TYPE_LABELS[eventType]} ({getEventCount(eventType)})
+              </span>
             </div>
           ))}
         </div>
