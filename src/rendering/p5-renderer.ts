@@ -148,7 +148,7 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (
 /**
  * ドラッグ中のクロスヘア描画
  */
-export const drawCrossHair = (p: p5) => {
+export const drawUICrossHair = (p: p5) => {
   const length = 10;
 
   const centerX = Math.floor(p.width / 2);
@@ -172,7 +172,7 @@ export const drawCrossHair = (p: p5) => {
  *
  * interactive zoom中に表示する
  */
-export const drawScaleRate = (p: p5, scaleFactor: number) => {
+export const drawUIScaleRate = (p: p5, scaleFactor: number) => {
   p.fill(255);
   p.stroke(0);
   p.strokeWeight(4);
