@@ -16,7 +16,11 @@ import {
   MandelbrotFacadeLike,
   RefOrbitWorker,
 } from "./worker-facade";
-import { clearBatchContext, tickWorkerPool } from "./worker-pool";
+import {
+  clearBatchContext,
+  tickWorkerPool,
+  tickWorkerPoolThrottled,
+} from "./worker-pool";
 import { clearWorkerReference } from "./worker-reference";
 
 type WorkerPool = MandelbrotFacadeLike[];
@@ -152,7 +156,8 @@ function fillIterationWorkerPool(
 
     workerFacade.onResult((...args) => {
       onIterationWorkerResult(...args);
-      tickWorkerPool();
+      // iterationWorkerの完了は殺到する可能性があるのでthrottledの方を呼ぶ
+      tickWorkerPoolThrottled();
     });
     workerFacade.onIntermediateResult(onIterationWorkerIntermediateResult);
     workerFacade.onProgress(onIterationWorkerProgress);

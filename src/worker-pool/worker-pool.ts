@@ -15,6 +15,7 @@ import {
   ResultSpans,
   mandelbrotWorkerTypes,
 } from "@/types";
+import { throttle } from "es-toolkit";
 import {
   calcNormalizedWorkerIndex,
   findFreeWorkerIndex,
@@ -191,11 +192,17 @@ export function registerBatch(
 export function tickWorkerPool() {
   let jobStarted = false;
   const refPool = getWorkerPool("calc-ref-orbit");
+  const waitingRefJobs = getWaitingJobs("calc-ref-orbit");
+  const waitingIterJobs = getWaitingJobs("calc-iteration");
+
   if (
-    (refPool.length > 0 && findFreeWorkerIndex("calc-ref-orbit") === -1) ||
-    findFreeWorkerIndex("calc-iteration") === -1
+    (refPool.length > 0 &&
+      waitingRefJobs.length !== 0 &&
+      findFreeWorkerIndex("calc-ref-orbit") === -1) ||
+    (waitingIterJobs.length !== 0 &&
+      findFreeWorkerIndex("calc-iteration") === -1)
   ) {
-    // まだ準備ができていないworkerがいる場合は待つ
+    // 処理すべきjobが残っていて、まだ準備ができていないworkerがいる場合は100ms待つ
     setTimeout(tickWorkerPool, 100);
     return;
   }
@@ -256,6 +263,7 @@ export function tickWorkerPool() {
     });
   }
 }
+export const tickWorkerPoolThrottled = throttle(tickWorkerPool, 100);
 
 /**
  * 指定したworkerを使ってjobを開始する
