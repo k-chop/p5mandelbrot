@@ -133,7 +133,7 @@ export const EventViewer = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-2">
       {/* Event type filter */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Filter:</label>

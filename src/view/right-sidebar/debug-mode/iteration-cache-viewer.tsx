@@ -33,7 +33,9 @@ const SIZE_GROUP_COLORS = [
 
 export const IterationCacheViewer = () => {
   const cacheData = useIterationCache();
-  const [detailVisibilityMap, setDetailVisibilityMap] = useState<Record<string, boolean>>({});
+  const [detailVisibilityMap, setDetailVisibilityMap] = useState<
+    Record<string, boolean>
+  >({});
 
   const groupCacheData = (cacheData: IterationBuffer[]): ScaleGroup[] => {
     // 1段階目: scaleでグループ化
@@ -138,9 +140,9 @@ export const IterationCacheViewer = () => {
 
     // アスペクト比を保持した動的SVGサイズの計算
     const boundsAspect = boundsWidth / boundsHeight;
-    
+
     let effectiveWidth: number, effectiveHeight: number;
-    
+
     if (boundsAspect > 1) {
       // boundsが横長 → 最大幅を基準にする
       effectiveWidth = MINIMAP_WIDTH;
@@ -302,7 +304,7 @@ export const IterationCacheViewer = () => {
   };
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-2">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">
           Iteration Cache (count: {cacheData.length})
@@ -342,10 +344,12 @@ export const IterationCacheViewer = () => {
                               className="rounded-lg border p-3 text-sm"
                             >
                               <button
-                                onClick={() => setDetailVisibilityMap(prev => ({
-                                  ...prev,
-                                  [detailKey]: !prev[detailKey]
-                                }))}
+                                onClick={() =>
+                                  setDetailVisibilityMap((prev) => ({
+                                    ...prev,
+                                    [detailKey]: !prev[detailKey],
+                                  }))
+                                }
                                 className="flex w-full items-center gap-2 text-left"
                               >
                                 <span className="text-xs text-blue-600">
