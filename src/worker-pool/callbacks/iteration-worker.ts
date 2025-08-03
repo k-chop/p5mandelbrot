@@ -1,4 +1,4 @@
-import { addTraceEvent, test_printBatchTrace } from "@/event-viewer/event";
+import { addTraceEvent } from "@/event-viewer/event";
 import {
   notifyIterationCacheUpdate,
   upsertIterationCache,
@@ -79,8 +79,6 @@ export const onIterationWorkerResult: IterationResultCallback = (
     const finishedAt = performance.now();
     batchContext.finishedAt = finishedAt;
     const elapsed = finishedAt - batchContext.startedAt;
-
-    test_printBatchTrace();
 
     batchContext.onComplete(elapsed);
   }

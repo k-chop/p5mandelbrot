@@ -169,7 +169,3 @@ const notifyEventUpdate = debounce(() => {
   updateSnapshot();
   eventSubscribers.forEach((callback) => callback());
 }, 250);
-
-/** test */
-export const test_printBatchTrace = () =>
-  console.log(traceMap.get(currentBatchId));
