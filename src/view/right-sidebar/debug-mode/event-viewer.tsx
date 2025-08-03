@@ -128,7 +128,7 @@ export const EventViewer = () => {
         const workerEvent = event.data;
         return (
           <div className="text-xs text-gray-600">
-            Worker {workerEvent.workerIdx}: {event.eventType}
+            Worker {workerEvent.workerId}: {event.eventType}
             {"progress" in workerEvent &&
               ` (${(workerEvent.progress * 100).toFixed(1)}%)`}
           </div>

@@ -19,6 +19,7 @@ import { debugWatch } from "@/utils/debug";
 import {
   calcNormalizedWorkerIndex,
   findFreeWorkerIndex,
+  getWorkerId,
   getWorkerPool,
 } from "./pool-instance";
 import {
@@ -268,9 +269,10 @@ function start(workerIdx: number, job: MandelbrotJob) {
   const workerFacade = getWorkerPool(assignedJob.type)[workerIdx];
 
   workerFacade.startCalculate(assignedJob, batchContext, workerIdxForTerminate);
+
   addTraceEvent("worker", {
     type: "launched",
-    workerIdx: workerIdxForTerminate,
+    workerId: getWorkerId(assignedJob),
   });
   startJob(assignedJob);
   setWorkerReference(assignedJob.id, workerFacade);

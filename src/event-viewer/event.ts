@@ -8,7 +8,7 @@ type EventBase = {
 
 // Worker Event ==================================================
 type WorkerEvent = EventBase & {
-  workerIdx: number;
+  workerId: string;
 } & (
     | {
         type: "launched" | "started" | "completed";

@@ -5,6 +5,7 @@ import {
 } from "@/iteration-buffer/iteration-buffer";
 import { addIterationBuffer } from "@/rendering/renderer";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
+import { getWorkerId } from "../pool-instance";
 import { completeJob, isBatchCompleted } from "../task-queue";
 import {
   IterationProgressCallback,
@@ -56,7 +57,7 @@ export const onIterationWorkerResult: IterationResultCallback = (
 
   // jobを完了させる
   batchContext.progressMap.set(job.id, 1.0);
-  addTraceEvent("worker", { type: "completed", workerIdx: job.workerIdx! });
+  addTraceEvent("worker", { type: "completed", workerId: getWorkerId(job) });
 
   completeJob(job);
   removeWorkerReference(job.id);
