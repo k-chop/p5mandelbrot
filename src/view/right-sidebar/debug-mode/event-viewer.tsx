@@ -4,6 +4,8 @@ import {
   subscribeToEventUpdates,
   type AllTraceEvent,
   type BatchTrace,
+  type RendererEvent,
+  type WorkerEvent,
 } from "@/event-viewer/event";
 import type { AbsoluteTime } from "@/event-viewer/time";
 import { Switch } from "@/shadcn/components/ui/switch";
@@ -154,7 +156,7 @@ export const EventViewer = () => {
   const renderEventDetails = (event: FlatEvent) => {
     switch (event.type) {
       case "worker":
-        const workerEvent = event.data;
+        const workerEvent = event.data as WorkerEvent;
         let elapsedTimeText = "";
 
         if (event.eventType === "completed") {
@@ -177,13 +179,24 @@ export const EventViewer = () => {
           </div>
         );
       case "renderer":
-        const rendererEvent = event.data;
-        return (
-          <div className="text-xs text-gray-600">
-            Resolution: {rendererEvent.resolution.toFixed(1)}, Count:{" "}
-            {rendererEvent.count}, Remaining: {rendererEvent.remaining}
-          </div>
-        );
+        const rendererEvent = event.data as RendererEvent;
+
+        switch (rendererEvent.type) {
+          case "iterationBufferProcessing":
+            return (
+              <div className="text-xs text-gray-600">
+                Resolution: {rendererEvent.resolution.toFixed(1)}, Count:{" "}
+                {rendererEvent.count}, Remaining: {rendererEvent.remaining}
+              </div>
+            );
+          case "bufferSizeExceeded":
+            return (
+              <div className="text-xs text-gray-600">
+                Remaining: {rendererEvent.remaining}
+              </div>
+            );
+        }
+
       case "job":
         return <div className="text-xs text-gray-600">Job Event</div>;
       default:

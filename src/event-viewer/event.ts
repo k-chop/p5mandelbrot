@@ -7,7 +7,7 @@ type EventBase = {
 };
 
 // Worker Event ==================================================
-type WorkerEvent = EventBase & {
+export type WorkerEvent = EventBase & {
   workerId: string;
 } & (
     | {
@@ -20,7 +20,7 @@ type WorkerEvent = EventBase & {
   );
 
 // Renderer Event ==================================================
-type RendererEvent = EventBase & {
+export type RendererEvent = EventBase & {
   /* common type */
 } & (
     | {
@@ -37,7 +37,7 @@ type RendererEvent = EventBase & {
   );
 
 // Job Event ==================================================
-type JobEvent = EventBase & {
+export type JobEvent = EventBase & {
   /* common type */
 } & { type: "notImplemented" };
 
