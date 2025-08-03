@@ -1,3 +1,8 @@
+import {
+  addTraceEvent,
+  removeBatchTrace,
+  startBatchTrace,
+} from "@/event-viewer/event";
 import { getStore } from "@/store/store";
 import {
   BatchContext,
@@ -10,10 +15,10 @@ import {
   ResultSpans,
   mandelbrotWorkerTypes,
 } from "@/types";
-import { debugWatch } from "@/utils/debug";
 import {
   calcNormalizedWorkerIndex,
   findFreeWorkerIndex,
+  getWorkerId,
   getWorkerPool,
 } from "./pool-instance";
 import {
@@ -244,10 +249,11 @@ export function tickWorkerPool() {
   }
 
   if (jobStarted || !hasRunningJob()) {
-    debugWatch(
-      "jobStatus",
-      `running: ${countRunningJobs()}, waiting: ${countWaitingJobs()}`,
-    );
+    addTraceEvent("job", {
+      type: "jobCountChanged",
+      running: countRunningJobs(),
+      waiting: countWaitingJobs(),
+    });
   }
 }
 
@@ -263,12 +269,18 @@ function start(workerIdx: number, job: MandelbrotJob) {
   const workerFacade = getWorkerPool(assignedJob.type)[workerIdx];
 
   workerFacade.startCalculate(assignedJob, batchContext, workerIdxForTerminate);
+
+  addTraceEvent("worker", {
+    type: "launched",
+    workerId: getWorkerId(assignedJob),
+  });
   startJob(assignedJob);
   setWorkerReference(assignedJob.id, workerFacade);
 }
 
 export function startBatch(batchId: BatchId) {
   acceptingBatchIds.add(batchId);
+  startBatchTrace(batchId);
 }
 
 /**
@@ -276,6 +288,7 @@ export function startBatch(batchId: BatchId) {
  */
 export function cancelBatch(batchId: string) {
   acceptingBatchIds.delete(batchId);
+  removeBatchTrace(batchId);
 
   // 待ちリストからは単純に削除
   removeBatchFromWaitingJobs(batchId);

@@ -1,10 +1,11 @@
+import { addTraceEvent } from "@/event-viewer/event";
 import {
-  getIterationCache,
   notifyIterationCacheUpdate,
   upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
 import { addIterationBuffer } from "@/rendering/renderer";
 import { CalcIterationJob, IterationIntermediateResult } from "@/types";
+import { getWorkerId } from "../pool-instance";
 import { completeJob, isBatchCompleted } from "../task-queue";
 import {
   IterationProgressCallback,
@@ -56,6 +57,7 @@ export const onIterationWorkerResult: IterationResultCallback = (
 
   // jobを完了させる
   batchContext.progressMap.set(job.id, 1.0);
+  addTraceEvent("worker", { type: "completed", workerId: getWorkerId(job) });
 
   completeJob(job);
   removeWorkerReference(job.id);
@@ -77,8 +79,6 @@ export const onIterationWorkerResult: IterationResultCallback = (
     const finishedAt = performance.now();
     batchContext.finishedAt = finishedAt;
     const elapsed = finishedAt - batchContext.startedAt;
-
-    console.log("Iteration Buffer length: ", getIterationCache().length);
 
     batchContext.onComplete(elapsed);
   }

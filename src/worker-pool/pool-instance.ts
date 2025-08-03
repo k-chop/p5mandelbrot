@@ -1,5 +1,5 @@
 import { getStore, updateStore } from "@/store/store";
-import { JobType, MandelbrotWorkerType } from "@/types";
+import { JobType, MandelbrotWorkerType, type MandelbrotJob } from "@/types";
 import {
   onIterationWorkerIntermediateResult,
   onIterationWorkerProgress,
@@ -92,6 +92,12 @@ export const calcNormalizedWorkerIndex = (
   }
 
   return workerIdx;
+};
+
+/** event表示用に使う各workerのid */
+export const getWorkerId = (job: MandelbrotJob): string => {
+  if (job.type === "calc-ref-orbit") return `ref-orbit`;
+  return `iteration-${job.workerIdx}`;
 };
 
 /**

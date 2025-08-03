@@ -1,6 +1,7 @@
 import { bufferLocalLogicalIndex } from "@/rendering/common";
 import type { Resolution } from "@/rendering/p5-renderer";
 import { getCanvasSize } from "@/rendering/renderer";
+import { debounce } from "es-toolkit";
 import { Rect } from "../math/rect";
 import { IterationBuffer } from "../types";
 
@@ -72,10 +73,10 @@ export const subscribeToIterationCacheUpdates = (callback: () => void) => {
 /**
  * useIterationCacheに変更を伝えたいときに呼ぶ
  */
-export const notifyIterationCacheUpdate = () => {
+export const notifyIterationCacheUpdate = debounce(() => {
   updateSnapshot();
   subscribers.forEach((callback) => callback());
-};
+}, 250);
 
 /**
  * 以下の条件でもはや描画に使用できないiterationキャッシュを削除する

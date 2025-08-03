@@ -4,6 +4,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shadcn/components/ui/tabs";
+import { EventViewer } from "./event-viewer";
 import { IterationCacheViewer } from "./iteration-cache-viewer";
 
 export const DebugMode = () => {
@@ -11,13 +12,13 @@ export const DebugMode = () => {
     <Tabs defaultValue="iteration-cache">
       <TabsList>
         <TabsTrigger value="iteration-cache">Iteration Cache</TabsTrigger>
-        <TabsTrigger value="worker-stats">Worker Stats</TabsTrigger>
+        <TabsTrigger value="event-viewer">Event Viewer</TabsTrigger>
       </TabsList>
       <TabsContent value="iteration-cache">
         <IterationCacheViewer />
       </TabsContent>
-      <TabsContent value="worker-stats">
-        <div>hello</div>
+      <TabsContent value="event-viewer">
+        <EventViewer />
       </TabsContent>
     </Tabs>
   );
