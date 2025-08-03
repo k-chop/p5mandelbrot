@@ -30,10 +30,6 @@ type RendererEvent = EventBase & {
   rects: Rect[];
 };
 
-// 次はこれかな？
-// WebGPUでの描画開始と描画完全完了をトラッキングしたいかも
-// どう可視化するのかも含めて考えるぞい
-
 // Job Event ==================================================
 type JobEvent = EventBase & {
   /* common type */
