@@ -15,6 +15,7 @@ import {
   ResultSpans,
   mandelbrotWorkerTypes,
 } from "@/types";
+import { throttle } from "es-toolkit";
 import {
   calcNormalizedWorkerIndex,
   findFreeWorkerIndex,
@@ -256,6 +257,7 @@ export function tickWorkerPool() {
     });
   }
 }
+export const tickWorkerPoolThrottled = throttle(tickWorkerPool, 100);
 
 /**
  * 指定したworkerを使ってjobを開始する
