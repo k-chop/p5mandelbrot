@@ -187,6 +187,7 @@ export const drawUIScaleRate = (p: p5, scaleFactor: number) => {
 };
 
 export const drawUICurrentParams = (p: p5, params: MandelbrotParams) => {
+  p.textAlign(p.LEFT, p.BASELINE);
   p.fill(255);
   p.stroke(0);
   p.strokeWeight(3);
@@ -195,12 +196,14 @@ export const drawUICurrentParams = (p: p5, params: MandelbrotParams) => {
   p.text(`r: ${params.r.toPrecision(10)}\nN: ${params.N}`, 4, 14);
 
   const isNotEnoughPrecision =
-    params.mode === "normal" && params.r.isLessThan(1e-13);
+    params.mode === "normal" && params.r.isLessThan(3.5e-14);
   if (isNotEnoughPrecision) {
+    p.textSize(16);
+    p.textAlign(p.CENTER, p.CENTER);
     p.text(
       `Not enough precision.\nSwitch to perturbation mode by [m] key!`,
-      4,
-      p.height - 25,
+      p.width / 2,
+      p.height / 2,
     );
   }
 };
