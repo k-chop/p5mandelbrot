@@ -12,12 +12,7 @@ export interface MandelbrotRenderer {
   /**
    * 何をどう使って描画するかは問わないので、とにかくcanvasに描画する
    */
-  renderToCanvas: (
-    x: number,
-    y: number,
-    width?: number,
-    height?: number,
-  ) => void;
+  renderToCanvas: (x: number, y: number, width?: number, height?: number) => void;
   /**
    * canvasのリサイズ。そのまま
    */

@@ -1,7 +1,8 @@
 import { getCurrentPalette } from "@/camera/palette";
 import { deserializePalette } from "@/color";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { MandelbrotWorkerType, mandelbrotWorkerTypes } from "@/types";
+import type { MandelbrotWorkerType } from "@/types";
+import { mandelbrotWorkerTypes } from "@/types";
 import BigNumber from "bignumber.js";
 
 /**
@@ -77,7 +78,5 @@ export const copyCurrentParamsToClipboard = () => {
     palette: palette.serialize(),
   });
 
-  navigator.clipboard.writeText(
-    `${location.origin}${location.pathname}?${params.toString()}`,
-  );
+  navigator.clipboard.writeText(`${location.origin}${location.pathname}?${params.toString()}`);
 };

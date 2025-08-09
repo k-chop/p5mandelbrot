@@ -23,8 +23,7 @@ const defaultSettings = {
   rendererType: "p5js" as RendererType,
 } satisfies Settings;
 
-export const isSettingField = (key: string): key is keyof Settings =>
-  key in defaultSettings;
+export const isSettingField = (key: string): key is keyof Settings => key in defaultSettings;
 
 export const writeSettingsToStorage = () => {
   const settings = {

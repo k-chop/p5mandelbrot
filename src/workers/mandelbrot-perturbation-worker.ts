@@ -1,10 +1,7 @@
 /// <reference lib="webworker" />
 
 import { generateLowResDiffSequence } from "@/math/low-res-diff-sequence";
-import {
-  decodeBLATableItems,
-  type BLATableItem,
-} from "@/workers/bla-table-item";
+import { decodeBLATableItems, type BLATableItem } from "@/workers/bla-table-item";
 import { ComplexArrayView } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
@@ -16,8 +13,8 @@ import {
   pixelToComplexCoordinateComplexArbitrary,
   toComplex,
 } from "../math/complex";
-import { IterationWorkerParams } from "../types";
-import { RefOrbitContextPopulated } from "./calc-ref-orbit";
+import type { IterationWorkerParams } from "../types";
+import type { RefOrbitContextPopulated } from "./calc-ref-orbit";
 
 const calcHandler = (data: IterationWorkerParams) => {
   const {
@@ -131,12 +128,8 @@ const calcHandler = (data: IterationWorkerParams) => {
         const { re: aRe, im: aIm } = bla.a;
         const { re: bRe, im: bIm } = bla.b;
 
-        const dzRe =
-          mulRe(aRe, aIm, deltaNRe, deltaNIm) +
-          mulRe(bRe, bIm, deltaC.re, deltaC.im);
-        const dzIm =
-          mulIm(aRe, aIm, deltaNRe, deltaNIm) +
-          mulIm(bRe, bIm, deltaC.re, deltaC.im);
+        const dzRe = mulRe(aRe, aIm, deltaNRe, deltaNIm) + mulRe(bRe, bIm, deltaC.re, deltaC.im);
+        const dzIm = mulIm(aRe, aIm, deltaNRe, deltaNIm) + mulIm(bRe, bIm, deltaC.re, deltaC.im);
 
         deltaNRe = dzRe;
         deltaNIm = dzIm;
@@ -181,9 +174,7 @@ const calcHandler = (data: IterationWorkerParams) => {
 
     const scaledAreaWidth = Math.floor(areaWidth / xDiff);
     const scaledAreaHeight = Math.floor(areaHeight / yDiff);
-    const scaledIterations = new Uint32Array(
-      scaledAreaWidth * scaledAreaHeight,
-    );
+    const scaledIterations = new Uint32Array(scaledAreaWidth * scaledAreaHeight);
 
     let scaledY = 0;
     for (let y = startY; y < endY; y = y + yDiff, scaledY++) {
@@ -219,10 +210,9 @@ const calcHandler = (data: IterationWorkerParams) => {
 
     if (isSuperSampling) {
       const elapsed = performance.now() - startedAt;
-      self.postMessage(
-        { type: "result", iterations: scaledIterations, elapsed },
-        [scaledIterations.buffer],
-      );
+      self.postMessage({ type: "result", iterations: scaledIterations, elapsed }, [
+        scaledIterations.buffer,
+      ]);
     } else {
       self.postMessage(
         {
@@ -241,9 +231,7 @@ const calcHandler = (data: IterationWorkerParams) => {
   }
   if (!isSuperSampling) {
     const elapsed = performance.now() - startedAt;
-    self.postMessage({ type: "result", iterations, elapsed }, [
-      iterations.buffer,
-    ]);
+    self.postMessage({ type: "result", iterations, elapsed }, [iterations.buffer]);
   }
 };
 

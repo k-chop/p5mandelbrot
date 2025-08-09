@@ -9,15 +9,9 @@ export const AppRoot = () => {
   return (
     <>
       {ReactDOM.createPortal(<Header />, document.getElementById("header")!)}
-      {ReactDOM.createPortal(
-        <RightSidebar />,
-        document.getElementById("sidebar-right")!,
-      )}
+      {ReactDOM.createPortal(<RightSidebar />, document.getElementById("sidebar-right")!)}
       {ReactDOM.createPortal(<Footer />, document.getElementById("footer")!)}
-      {ReactDOM.createPortal(
-        <CanvasOverlay />,
-        document.getElementById("canvas-overlay")!,
-      )}
+      {ReactDOM.createPortal(<CanvasOverlay />, document.getElementById("canvas-overlay")!)}
       <Toaster />
     </>
   );

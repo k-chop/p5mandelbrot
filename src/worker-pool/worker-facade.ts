@@ -1,4 +1,4 @@
-import {
+import type {
   BatchContext,
   CalcIterationJob,
   CalcRefOrbitJob,
@@ -8,10 +8,10 @@ import {
   MandelbrotWorkerType,
   RefOrbitProgress,
   RefOrbitResult,
-  type RefOrbitShutdown,
 } from "@/types";
+import { type RefOrbitShutdown } from "@/types";
 import { refOrbitWorkerPath, workerPaths } from "@/workers";
-import { RefOrbitContext } from "@/workers/calc-ref-orbit";
+import type { RefOrbitContext } from "@/workers/calc-ref-orbit";
 
 export interface IterationResult {
   type: "result";
@@ -19,19 +19,10 @@ export interface IterationResult {
   elapsed: number;
 }
 
-export type RefOrbitResultCallback = (
-  result: RefOrbitContext,
-  job: CalcRefOrbitJob,
-) => void;
-export type RefOrbitProgressCallback = (
-  result: RefOrbitProgress,
-  job: CalcRefOrbitJob,
-) => void;
+export type RefOrbitResultCallback = (result: RefOrbitContext, job: CalcRefOrbitJob) => void;
+export type RefOrbitProgressCallback = (result: RefOrbitProgress, job: CalcRefOrbitJob) => void;
 export type RefOrbitTerminatedCallback = (job: CalcRefOrbitJob) => void;
-export type IterationResultCallback = (
-  result: IterationResult,
-  job: CalcIterationJob,
-) => void;
+export type IterationResultCallback = (result: IterationResult, job: CalcIterationJob) => void;
 export type IterationIntermediateResultCallback = (
   result: IterationIntermediateResult,
   job: CalcIterationJob,
@@ -44,11 +35,7 @@ export type BatchCompleteCallback = (elapsed: number) => void;
 export type BatchProgressChangedCallback = () => void;
 
 export interface MandelbrotFacadeLike {
-  startCalculate(
-    job: MandelbrotJob,
-    batchContext: BatchContext,
-    workerIdx: number,
-  ): void;
+  startCalculate(job: MandelbrotJob, batchContext: BatchContext, workerIdx: number): void;
 
   terminate(callback?: () => void): void;
   terminateAsync(): Promise<void>;
@@ -83,17 +70,11 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
 
   init = async () => {};
 
-  startCalculate = (
-    job: CalcIterationJob,
-    batchContext: BatchContext,
-    workerIdx: number,
-  ) => {
+  startCalculate = (job: CalcIterationJob, batchContext: BatchContext, workerIdx: number) => {
     this.running = true;
 
     const f = (
-      ev: MessageEvent<
-        IterationResult | IterationIntermediateResult | IterationProgress
-      >,
+      ev: MessageEvent<IterationResult | IterationIntermediateResult | IterationProgress>,
     ) => {
       const data = ev.data;
 
@@ -128,16 +109,8 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
     };
 
     const { rect, id } = job;
-    const {
-      pixelHeight,
-      pixelWidth,
-      xn,
-      blaTable,
-      refX,
-      refY,
-      terminator,
-      mandelbrotParams,
-    } = batchContext;
+    const { pixelHeight, pixelWidth, xn, blaTable, refX, refY, terminator, mandelbrotParams } =
+      batchContext;
 
     this.worker.addEventListener("message", f);
 
@@ -243,11 +216,7 @@ export class RefOrbitWorker implements MandelbrotFacadeLike {
     });
   };
 
-  startCalculate = (
-    job: CalcRefOrbitJob,
-    batchContext: BatchContext,
-    workerIdx: number,
-  ) => {
+  startCalculate = (job: CalcRefOrbitJob, batchContext: BatchContext, workerIdx: number) => {
     this.running = true;
 
     const complexCenterX = batchContext.mandelbrotParams.x.toString();

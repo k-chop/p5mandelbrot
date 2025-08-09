@@ -15,19 +15,12 @@ import {
   resetScaleParams,
   setPrevBatchId,
 } from "./mandelbrot-state/mandelbrot-state";
-import { getCalculationTargetRects, Rect } from "./math/rect";
-import {
-  addIterationBuffer,
-  getCanvasSize,
-  getWholeCanvasRect,
-} from "./rendering/renderer";
+import type { Rect } from "./math/rect";
+import { getCalculationTargetRects } from "./math/rect";
+import { addIterationBuffer, getCanvasSize, getWholeCanvasRect } from "./rendering/renderer";
 import { getStore } from "./store/store";
 import { getWorkerCount } from "./worker-pool/pool-instance";
-import {
-  cancelBatch,
-  registerBatch,
-  startBatch,
-} from "./worker-pool/worker-pool";
+import { cancelBatch, registerBatch, startBatch } from "./worker-pool/worker-pool";
 
 /**
  * 現在のパラメータと設定で計算を開始する
@@ -45,11 +38,7 @@ export const startCalculation = async (
 
   const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
 
-  const rect = translateIterationCache(
-    canvasWidth,
-    canvasHeight,
-    getOffsetParams(),
-  );
+  const rect = translateIterationCache(canvasWidth, canvasHeight, getOffsetParams());
 
   // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
   removeUnusedIterationCache();

@@ -39,12 +39,7 @@ export type Renderer = {
    *
    * 描画されるべきデータは既にrendererにセットされているので、描画域の指定のみ可能
    */
-  renderToCanvas: (
-    x: number,
-    y: number,
-    width?: number,
-    height?: number,
-  ) => void;
+  renderToCanvas: (x: number, y: number, width?: number, height?: number) => void;
   /**
    * 描画するためのiterationBufferをrendererに登録する
    */
@@ -57,11 +52,7 @@ export type Renderer = {
   updatePaletteData: (palette: Palette) => void;
 };
 
-export const initRenderer: Renderer["initRenderer"] = async (
-  w,
-  h,
-  p5Instance?,
-) => {
+export const initRenderer: Renderer["initRenderer"] = async (w, h, p5Instance?) => {
   const rendererType = getRenderer();
 
   switch (rendererType) {

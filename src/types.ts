@@ -1,7 +1,6 @@
-import { BigNumber } from "bignumber.js";
-import { Rect } from "./math/rect";
+import type { Rect } from "./math/rect";
 import type { Resolution } from "./rendering/p5-renderer";
-import {
+import type {
   BatchCompleteCallback,
   BatchProgressChangedCallback,
 } from "./worker-pool/worker-facade";
@@ -95,7 +94,7 @@ export type MandelbrotWorkerType = (typeof mandelbrotWorkerTypes)[number];
 
 export interface IterationBuffer {
   rect: Rect;
-  buffer: Uint32Array;
+  buffer: Uint32Array<ArrayBuffer>;
   resolution: Resolution;
   isSuperSampled?: boolean;
 }
@@ -114,9 +113,7 @@ export interface MandelbrotJobBase {
   requiredJobIds: string[];
 }
 
-export interface CalcIterationJob
-  extends MandelbrotJobBase,
-    MandelbrotRenderingUnit {
+export interface CalcIterationJob extends MandelbrotJobBase, MandelbrotRenderingUnit {
   type: "calc-iteration";
 }
 

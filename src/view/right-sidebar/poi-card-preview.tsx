@@ -1,5 +1,5 @@
 import { loadPreview, useTrackChangePreview } from "@/store/preview-store";
-import { POIData } from "@/types";
+import type { POIData } from "@/types";
 import React from "react";
 import usePromise from "react-promise-suspense";
 
@@ -13,11 +13,7 @@ export const POICardPreview = React.memo(({ poi }: Props) => {
   useTrackChangePreview(poi.id);
 
   if (data == null)
-    return (
-      <div className="flex size-[100px] items-center justify-center border-2">
-        No Image
-      </div>
-    );
+    return <div className="flex size-[100px] items-center justify-center border-2">No Image</div>;
 
   return <img src={data} />;
 });

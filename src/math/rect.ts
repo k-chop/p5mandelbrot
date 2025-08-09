@@ -1,6 +1,8 @@
-import BigNumber from "bignumber.js";
+import type BigNumber from "bignumber.js";
 import { getOffsetParams } from "../mandelbrot-state/mandelbrot-state";
 import type { OffsetParams } from "../types";
+
+const DIVIDE_MIN_SIZE = 80; // px
 
 /** pixel単位の矩形 */
 export interface Rect {
@@ -28,12 +30,8 @@ export const calculateRealRect = (
 ): RealRect => {
   const topLeftX = cx.plus((rect.x * 2) / canvasWidth - 1.0).times(r);
   const topLeftY = cy.minus((rect.y * 2) / canvasHeight - 1.0).times(r);
-  const bottomRightX = cx
-    .plus(((rect.x + rect.width) * 2) / canvasWidth - 1.0)
-    .times(r);
-  const bottomRightY = cy
-    .minus(((rect.y + rect.height) * 2) / canvasHeight - 1.0)
-    .times(r);
+  const bottomRightX = cx.plus(((rect.x + rect.width) * 2) / canvasWidth - 1.0).times(r);
+  const bottomRightY = cy.minus(((rect.y + rect.height) * 2) / canvasHeight - 1.0).times(r);
 
   return {
     topLeftX,
@@ -73,11 +71,7 @@ export const calculateDivideArea = (
   };
 };
 
-export const divideRect = (
-  rects: Rect[],
-  expectedDivideCount: number,
-  minSide = 1,
-): Rect[] => {
+export const divideRect = (rects: Rect[], expectedDivideCount: number, minSide = 1): Rect[] => {
   if (rects.length > expectedDivideCount) {
     throw new Error("rects.length > expectedDivideCount");
   }
@@ -87,10 +81,7 @@ export const divideRect = (
   const areas = rects.map((rect) => rect.width * rect.height);
   const areaSum = areas.reduce((a, b) => a + b);
   const divideCounts = areas.map((area) => {
-    const count = Math.max(
-      Math.floor((expectedDivideCount * area) / areaSum),
-      1,
-    );
+    const count = Math.max(Math.floor((expectedDivideCount * area) / areaSum), 1);
     // 各エリアの分割数は1もしくは偶数にする
     return count % 2 === 0 || count === 1 ? count : count + 1;
   });
@@ -118,10 +109,8 @@ export const divideRect = (
     const endY = rect.y + rect.height;
     const endX = rect.x + rect.width;
 
-    const sideXCount =
-      rect.width > rect.height ? longSideCount : shortSideCount;
-    const sideYCount =
-      rect.width > rect.height ? shortSideCount : longSideCount;
+    const sideXCount = rect.width > rect.height ? longSideCount : shortSideCount;
+    const sideYCount = rect.width > rect.height ? shortSideCount : longSideCount;
 
     const sideX = Math.max(minSide, Math.ceil(rect.width / sideXCount));
     const sideY = Math.max(minSide, Math.ceil(rect.height / sideYCount));
@@ -186,12 +175,14 @@ export const getCalculationTargetRects = (
     return divideRect(
       getOffsetRects(canvasWidth, canvasHeight),
       expectedDivideCount,
+      DIVIDE_MIN_SIZE,
     );
   } else {
     // FIXME: 縮小する場合にもっと小さくできる
     return divideRect(
       [{ x: 0, y: 0, width: canvasWidth, height: canvasHeight }],
       divideRectCount,
+      DIVIDE_MIN_SIZE,
     );
   }
 };

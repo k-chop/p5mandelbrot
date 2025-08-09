@@ -22,27 +22,11 @@ export type Palette = {
   serialize(): string;
 };
 
-export const buildRGB = ({
-  r,
-  g,
-  b,
-}: {
-  r: number;
-  g: number;
-  b: number;
-}): RGB => {
+export const buildRGB = ({ r, g, b }: { r: number; g: number; b: number }): RGB => {
   return [r, g, b];
 };
 
-export const buildRGB32Byte = ({
-  r,
-  g,
-  b,
-}: {
-  r: number;
-  g: number;
-  b: number;
-}): RGB => {
+export const buildRGB32Byte = ({ r, g, b }: { r: number; g: number; b: number }): RGB => {
   return [r * 255, g * 255, b * 255];
 };
 

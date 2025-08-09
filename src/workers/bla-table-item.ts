@@ -26,10 +26,7 @@ export function encodeBlaTableItem(item: BLATableItem): ArrayBuffer {
   return buffer;
 }
 
-export function decodeBLATableItem(
-  view: DataView,
-  offset: number,
-): BLATableItem {
+export function decodeBLATableItem(view: DataView, offset: number): BLATableItem {
   const aRe = view.getFloat64(offset, true); // a.re
   const aIm = view.getFloat64(offset + 8, true); // a.im
   const bRe = view.getFloat64(offset + 16, true); // b.re
@@ -68,9 +65,7 @@ export function encodeBlaTableItems(items: BLATableItem[][]): ArrayBuffer {
       const itemBuffer = encodeBlaTableItem(item);
       // Int32のエントリではなく、バイトとしてのオフセットを計算する必要がある
       const byteOffset = offset * 4;
-      new Uint8Array(buffer, byteOffset, ITEM_BYTE_LENGTH).set(
-        new Uint8Array(itemBuffer),
-      );
+      new Uint8Array(buffer, byteOffset, ITEM_BYTE_LENGTH).set(new Uint8Array(itemBuffer));
       offset += ITEM_BYTE_LENGTH / 4; // 次のアイテムのためにオフセットをアイテムのバイト長分進める
     });
   });

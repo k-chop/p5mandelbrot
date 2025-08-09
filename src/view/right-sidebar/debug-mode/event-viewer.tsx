@@ -43,15 +43,9 @@ export const EventViewer = () => {
     "job",
   ]);
 
-  const currentBatchId = useSyncExternalStore(
-    subscribeToEventUpdates,
-    getCurrentBatchId,
-  );
+  const currentBatchId = useSyncExternalStore(subscribeToEventUpdates, getCurrentBatchId);
 
-  const currentBatch = useSyncExternalStore(
-    subscribeToEventUpdates,
-    getCurrentBatchSnapshot,
-  );
+  const currentBatch = useSyncExternalStore(subscribeToEventUpdates, getCurrentBatchSnapshot);
 
   // 初回時に現在のバッチIDを選択
   if (!selectedBatchId && currentBatchId) {
@@ -62,9 +56,7 @@ export const EventViewer = () => {
 
   const handleEventTypeToggle = (eventType: EventType) => {
     setFilterEventTypes((prev) =>
-      prev.includes(eventType)
-        ? prev.filter((type) => type !== eventType)
-        : [...prev, eventType],
+      prev.includes(eventType) ? prev.filter((type) => type !== eventType) : [...prev, eventType],
     );
   };
 
@@ -116,9 +108,7 @@ export const EventViewer = () => {
   };
 
   const filteredEvents = selectedBatch
-    ? flattenEvents(selectedBatch).filter((event) =>
-        filterEventTypes.includes(event.type),
-      )
+    ? flattenEvents(selectedBatch).filter((event) => filterEventTypes.includes(event.type))
     : [];
 
   const formatTime = (ms: number) => {
@@ -130,10 +120,7 @@ export const EventViewer = () => {
     completedEvent: FlatEvent,
     allEvents: FlatEvent[],
   ): FlatEvent | null => {
-    if (
-      completedEvent.type !== "worker" ||
-      completedEvent.eventType !== "completed"
-    ) {
+    if (completedEvent.type !== "worker" || completedEvent.eventType !== "completed") {
       return null;
     }
 
@@ -161,10 +148,7 @@ export const EventViewer = () => {
         let elapsedTimeText = "";
 
         if (event.eventType === "completed") {
-          const launchedEvent = findLaunchedEventForCompleted(
-            event,
-            filteredEvents,
-          );
+          const launchedEvent = findLaunchedEventForCompleted(event, filteredEvents);
           if (launchedEvent) {
             const elapsedTime = event.time - launchedEvent.time;
             elapsedTimeText = ` (elapsed: ${formatTime(elapsedTime)})`;
@@ -174,8 +158,7 @@ export const EventViewer = () => {
         return (
           <div className="text-xs text-gray-600">
             Worker {workerEvent.workerId}: {event.eventType}
-            {"progress" in workerEvent &&
-              ` (${(workerEvent.progress * 100).toFixed(1)}%)`}
+            {"progress" in workerEvent && ` (${(workerEvent.progress * 100).toFixed(1)}%)`}
             {elapsedTimeText}
           </div>
         );
@@ -186,15 +169,13 @@ export const EventViewer = () => {
           case "iterationBufferProcessing":
             return (
               <div className="text-xs text-gray-600">
-                Resolution: {rendererEvent.resolution.toFixed(1)}, Count:{" "}
-                {rendererEvent.count}, Remaining: {rendererEvent.remaining}
+                Resolution: {rendererEvent.resolution.toFixed(1)}, Count: {rendererEvent.count},
+                Remaining: {rendererEvent.remaining}
               </div>
             );
           case "bufferSizeExceeded":
             return (
-              <div className="text-xs text-gray-600">
-                Remaining: {rendererEvent.remaining}
-              </div>
+              <div className="text-xs text-gray-600">Remaining: {rendererEvent.remaining}</div>
             );
         }
 
@@ -237,16 +218,12 @@ export const EventViewer = () => {
 
       {/* Events timeline */}
       <div className="space-y-2">
-        <h3 className="text-sm font-medium">
-          Events ({filteredEvents.length})
-        </h3>
+        <h3 className="text-sm font-medium">Events ({filteredEvents.length})</h3>
         <div className="max-h-96 space-y-1 overflow-y-auto">
           {filteredEvents.map((event) => (
             <div key={event.id} className="rounded border bg-gray-50 p-2">
               <div className="mb-1 flex items-center gap-2">
-                <span
-                  className={`h-3 w-3 rounded-full ${EVENT_TYPE_COLORS[event.type]}`}
-                ></span>
+                <span className={`h-3 w-3 rounded-full ${EVENT_TYPE_COLORS[event.type]}`}></span>
                 <span className="text-sm font-medium">
                   {EVENT_TYPE_LABELS[event.type]} - {event.eventType}
                 </span>
@@ -258,9 +235,7 @@ export const EventViewer = () => {
             </div>
           ))}
           {filteredEvents.length === 0 && (
-            <div className="py-4 text-center text-gray-500">
-              No events found
-            </div>
+            <div className="py-4 text-center text-gray-500">No events found</div>
           )}
         </div>
       </div>

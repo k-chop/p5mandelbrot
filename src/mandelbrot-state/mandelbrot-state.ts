@@ -61,8 +61,7 @@ const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
   a.isSuperSampling === b.isSuperSampling;
 
 export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
-  const needModeChange =
-    params.mode != null && currentParams.mode !== params.mode;
+  const needModeChange = params.mode != null && currentParams.mode !== params.mode;
   const needResetOffset = params.r != null && !currentParams.r.eq(params.r);
 
   if (!params.isSuperSampling) {
@@ -110,8 +109,7 @@ export const resetScaleParams = () => {
 
 export const resetIterationCount = () => setCurrentParams({ N: DEFAULT_N });
 
-export const setDeepIterationCount = () =>
-  setCurrentParams({ N: DEFAULT_N * 20 });
+export const setDeepIterationCount = () => setCurrentParams({ N: DEFAULT_N * 20 });
 
 export const resetRadius = () => setCurrentParams({ r: new BigNumber("2.0") });
 

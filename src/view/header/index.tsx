@@ -1,10 +1,5 @@
 import { Button } from "@/shadcn/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/shadcn/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { Label } from "@/shadcn/components/ui/label";
 import { Switch } from "@/shadcn/components/ui/switch";
 import { updateStoreWith, useStoreValue } from "@/store/store";
@@ -41,11 +36,7 @@ export const Header = () => {
             <Label htmlFor="debug-mode">Debug Mode</Label>
           </div>
           <Button variant="outline" size="icon-sm" asChild>
-            <a
-              href="https://github.com/k-chop/p5mandelbrot"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href="https://github.com/k-chop/p5mandelbrot" target="_blank" rel="noreferrer">
               <img src="github-mark-white.svg" className="p-1" />
             </a>
           </Button>

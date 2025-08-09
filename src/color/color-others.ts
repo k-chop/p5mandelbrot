@@ -1,7 +1,9 @@
 import { safeParseInt } from "@/math/util";
-import { Hsv, convertHsvToRgb, samples } from "culori";
+import type { Hsv } from "culori";
+import { convertHsvToRgb, samples } from "culori";
 import { BasePalette } from "./color";
-import { Palette, RGB, buildRGB32Byte, clampedPaletteParams } from "./model";
+import type { Palette, RGB } from "./model";
+import { buildRGB32Byte, clampedPaletteParams } from "./model";
 
 type OthersInterpolator = (t: number) => Hsv;
 
@@ -42,12 +44,7 @@ export class OthersPalette extends BasePalette {
   private interpolator: (t: number) => Hsv;
   colors: Hsv[] = [];
 
-  constructor(
-    length: number,
-    interpolator: (t: number) => Hsv,
-    mirrored = true,
-    offset = 0,
-  ) {
+  constructor(length: number, interpolator: (t: number) => Hsv, mirrored = true, offset = 0) {
     const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
     super(colorLength, mirrored, offsetIndex);
@@ -79,8 +76,7 @@ export class OthersPalette extends BasePalette {
   }
 
   static deserialize(serialized: string): OthersPalette {
-    const [, rawInterpolate, rawMirrored, rawLength, rawOffset] =
-      serialized.split(",");
+    const [, rawInterpolate, rawMirrored, rawLength, rawOffset] = serialized.split(",");
 
     const length = safeParseInt(rawLength);
     const offset = safeParseInt(rawOffset);

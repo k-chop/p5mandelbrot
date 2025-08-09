@@ -61,7 +61,7 @@ const traceMap = new Map<string, BatchTrace>(); // key = batchId
 let currentBatchId = "";
 
 // Subscription system for event updates
-let eventSubscribers: Set<() => void> = new Set();
+const eventSubscribers: Set<() => void> = new Set();
 
 // Snapshots for useSyncExternalStore
 let currentBatchSnapshot: BatchTrace | undefined = undefined;
@@ -149,8 +149,7 @@ const updateSnapshot = (): void => {
 /**
  * useSyncExternalStore用のスナップショット取得関数
  */
-export const getCurrentBatchSnapshot = (): BatchTrace | undefined =>
-  currentBatchSnapshot;
+export const getCurrentBatchSnapshot = (): BatchTrace | undefined => currentBatchSnapshot;
 
 /**
  * useSyncExternalStore用の購読関数

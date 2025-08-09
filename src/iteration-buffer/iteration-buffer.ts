@@ -2,34 +2,29 @@ import { bufferLocalLogicalIndex } from "@/rendering/common";
 import type { Resolution } from "@/rendering/p5-renderer";
 import { getCanvasSize } from "@/rendering/renderer";
 import { debounce } from "es-toolkit";
-import { Rect } from "../math/rect";
-import { IterationBuffer } from "../types";
+import type { Rect } from "../math/rect";
+import type { IterationBuffer } from "../types";
 
 // FIXME: 配列全部舐める必要があるのよくないので良い感じにデータを持つようにする
 let iterationCache: IterationBuffer[] = [];
 let iterationCacheSnapshot: IterationBuffer[] = [];
 
 // Subscription system for iteration cache updates
-let subscribers: Set<() => void> = new Set();
+const subscribers: Set<() => void> = new Set();
 
 export const upsertIterationCache = (
   rect: Rect,
-  buffer: Uint32Array,
+  buffer: Uint32Array<ArrayBuffer>,
   resolution: Resolution,
   isSuperSampled = false,
 ): IterationBuffer => {
   const item = { rect, buffer, resolution, isSuperSampled };
 
-  const idx = iterationCache.findIndex(
-    (i) => i.rect.x === rect.x && i.rect.y === rect.y,
-  );
+  const idx = iterationCache.findIndex((i) => i.rect.x === rect.x && i.rect.y === rect.y);
 
   if (idx !== -1) {
     const old = iterationCache[idx];
-    if (
-      old.resolution.width * old.resolution.height <
-      resolution.width * resolution.height
-    ) {
+    if (old.resolution.width * old.resolution.height < resolution.width * resolution.height) {
       // 解像度が大きい方を採用
       iterationCache[idx] = item;
     }
@@ -94,9 +89,7 @@ export const removeUnusedIterationCache = (): void => {
   // rect内の1pixelがcanvas上で何pixelに相当するかで上限を設ける
   // ここでは3pixelより荒いときに消す
   // そんなに超拡大してたらほぼ画面外判定の方で消えるので、これは荒くてもよい
-  const maxResolutionPerPixel = Math.floor(
-    Math.min(canvasWidth, canvasHeight) / 3,
-  );
+  const maxResolutionPerPixel = Math.floor(Math.min(canvasWidth, canvasHeight) / 3);
 
   const beforeCount = iterationCache.length;
 
@@ -114,12 +107,7 @@ export const removeUnusedIterationCache = (): void => {
     const { x, y, width, height } = iterCache.rect;
 
     // 1. 完全に画面外にいる
-    if (
-      x + width < 0 ||
-      y + height < 0 ||
-      x > canvasWidth ||
-      y > canvasHeight
-    ) {
+    if (x + width < 0 || y + height < 0 || x > canvasWidth || y > canvasHeight) {
       return false;
     }
 
@@ -140,9 +128,7 @@ export const removeUnusedIterationCache = (): void => {
   });
 
   const afterCount = iterationCache.length;
-  console.debug(
-    `${beforeCount - afterCount} iteration cache removed. Remaining: ${afterCount}`,
-  );
+  console.debug(`${beforeCount - afterCount} iteration cache removed. Remaining: ${afterCount}`);
 };
 
 /**
@@ -158,16 +144,8 @@ export const clearIterationCache = (): void => {
  */
 export const getIterationTimeAt = (worldX: number, worldY: number) => {
   for (const iteration of iterationCache) {
-    if (
-      worldX < iteration.rect.x ||
-      iteration.rect.x + iteration.rect.width < worldX
-    )
-      continue;
-    if (
-      worldY < iteration.rect.y ||
-      iteration.rect.y + iteration.rect.height < worldY
-    )
-      continue;
+    if (worldX < iteration.rect.x || iteration.rect.x + iteration.rect.width < worldX) continue;
+    if (worldY < iteration.rect.y || iteration.rect.y + iteration.rect.height < worldY) continue;
     const [idx] = bufferLocalLogicalIndex(
       Math.floor(worldX),
       Math.floor(worldY),
@@ -180,10 +158,7 @@ export const getIterationTimeAt = (worldX: number, worldY: number) => {
   return -1;
 };
 
-export const translateRectInIterationCache = (
-  offsetX: number,
-  offsetY: number,
-): void => {
+export const translateRectInIterationCache = (offsetX: number, offsetY: number): void => {
   iterationCache = iterationCache.map((iteration) => {
     return {
       rect: {
@@ -214,12 +189,7 @@ export const scaleIterationCacheAroundPoint = (
   iterationCache: IterationBuffer[] = getIterationCache(),
 ) => {
   return iterationCache.map((iteration) => {
-    const scaledRect = scaleRectAroundPoint(
-      iteration.rect,
-      centerX,
-      centerY,
-      scale,
-    );
+    const scaledRect = scaleRectAroundPoint(iteration.rect, centerX, centerY, scale);
 
     // クリック位置が画面中央に来るように位置調整
     scaledRect.x = Math.round(scaledRect.x - (centerX - canvasWidth / 2));
@@ -236,12 +206,7 @@ export const scaleIterationCacheAroundPoint = (
 /**
  * Rectを指定した点を中心にscale倍する
  */
-export function scaleRectAroundPoint(
-  rect: Rect,
-  centerX: number,
-  centerY: number,
-  scale: number,
-) {
+export function scaleRectAroundPoint(rect: Rect, centerX: number, centerY: number, scale: number) {
   const localX = rect.x - centerX;
   const localY = rect.y - centerY;
 

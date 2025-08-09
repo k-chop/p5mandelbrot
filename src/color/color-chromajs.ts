@@ -1,18 +1,14 @@
 import { safeParseInt } from "@/math/util";
 import chroma from "chroma-js";
 import { BasePalette } from "./color";
-import { Palette, RGB, clampedPaletteParams } from "./model";
+import type { Palette, RGB } from "./model";
+import { clampedPaletteParams } from "./model";
 
 export class ChromaJsPalette extends BasePalette {
   colorConstructor: string[];
   colors: chroma.Color[] = [];
 
-  constructor(
-    colorConstructor: string[],
-    length: number,
-    mirrored = true,
-    offset = 0,
-  ) {
+  constructor(colorConstructor: string[], length: number, mirrored = true, offset = 0) {
     const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
     super(colorLength, mirrored, offsetIndex);
@@ -33,9 +29,7 @@ export class ChromaJsPalette extends BasePalette {
   }
 
   buildColors(): void {
-    this.colors = chroma
-      .scale(this.colorConstructor)
-      .colors(this.colorLength, null);
+    this.colors = chroma.scale(this.colorConstructor).colors(this.colorLength, null);
     this.fillCache();
   }
 

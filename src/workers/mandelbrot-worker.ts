@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 declare const self: DedicatedWorkerGlobalScope;
 
-import { IterationWorkerParams } from "../types";
+import type { IterationWorkerParams } from "../types";
 
 self.addEventListener("message", (event) => {
   const {
@@ -75,7 +75,5 @@ self.addEventListener("message", (event) => {
   }
 
   const elapsed = performance.now() - startedAt;
-  self.postMessage({ type: "result", iterations, elapsed }, [
-    iterations.buffer,
-  ]);
+  self.postMessage({ type: "result", iterations, elapsed }, [iterations.buffer]);
 });

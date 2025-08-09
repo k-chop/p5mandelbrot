@@ -4,20 +4,14 @@ import {
   upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
 import { addIterationBuffer } from "@/rendering/renderer";
-import { CalcIterationJob, IterationIntermediateResult } from "@/types";
+import type { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { getWorkerId } from "../pool-instance";
 import { completeJob, isBatchCompleted } from "../task-queue";
-import {
-  IterationProgressCallback,
-  IterationResultCallback,
-} from "../worker-facade";
+import type { IterationProgressCallback, IterationResultCallback } from "../worker-facade";
 import { getBatchContext } from "../worker-pool";
 import { removeWorkerReference } from "../worker-reference";
 
-export const onIterationWorkerProgress: IterationProgressCallback = (
-  result,
-  job,
-) => {
+export const onIterationWorkerProgress: IterationProgressCallback = (result, job) => {
   const { progress } = result;
   const batchContext = getBatchContext(job.batchId);
 
@@ -29,10 +23,7 @@ export const onIterationWorkerProgress: IterationProgressCallback = (
   batchContext.progressMap.set(job.id, progress);
 };
 
-export const onIterationWorkerResult: IterationResultCallback = (
-  result,
-  job,
-) => {
+export const onIterationWorkerResult: IterationResultCallback = (result, job) => {
   const { iterations, elapsed } = result;
   const { rect } = job;
   const batchContext = getBatchContext(job.batchId);
@@ -100,10 +91,6 @@ export const onIterationWorkerIntermediateResult = (
 
   batchContext.onChangeProgress();
 
-  const iterBuffer = upsertIterationCache(
-    rect,
-    new Uint32Array(iterations),
-    resolution,
-  );
+  const iterBuffer = upsertIterationCache(rect, new Uint32Array(iterations), resolution);
   addIterationBuffer(rect, [iterBuffer]);
 };

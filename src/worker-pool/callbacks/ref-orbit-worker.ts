@@ -2,7 +2,7 @@ import { addTraceEvent } from "@/event-viewer/event";
 import { getWorkerId } from "../pool-instance";
 import { setRefOrbitCache } from "../ref-orbit-cache";
 import { completeJob } from "../task-queue";
-import {
+import type {
   RefOrbitProgressCallback,
   RefOrbitResultCallback,
   RefOrbitTerminatedCallback,
@@ -10,17 +10,12 @@ import {
 import { getBatchContext } from "../worker-pool";
 import { removeWorkerReference } from "../worker-reference";
 
-export const onRefOrbitWorkerTerminated: RefOrbitTerminatedCallback = (
-  _job,
-) => {
+export const onRefOrbitWorkerTerminated: RefOrbitTerminatedCallback = (_job) => {
   // ここで何をする予定だったんだっけ...
   // terminateされているということは外部からcancelされており、後始末はそっちで行われるはず
 };
 
-export const onRefOrbitWorkerProgress: RefOrbitProgressCallback = (
-  { progress },
-  job,
-) => {
+export const onRefOrbitWorkerProgress: RefOrbitProgressCallback = ({ progress }, job) => {
   const batchContext = getBatchContext(job.batchId);
 
   // 停止が間に合わなかったケースや既にcancelされているケース。何もしない

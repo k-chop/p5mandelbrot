@@ -8,7 +8,8 @@ import {
   interpolateTurbo,
 } from "d3-scale-chromatic";
 import { BasePalette } from "./color";
-import { Palette, RGB, buildRGB, clampedPaletteParams } from "./model";
+import type { Palette, RGB } from "./model";
+import { buildRGB, clampedPaletteParams } from "./model";
 
 type D3Interpolator = (t: number) => string;
 type D3Color = ReturnType<typeof color>;
@@ -46,12 +47,7 @@ export class D3ChromaticPalette extends BasePalette {
   interpolator: D3Interpolator;
   colors: D3Color[] = [];
 
-  constructor(
-    interpolator: D3Interpolator,
-    length: number,
-    mirrored = true,
-    offset = 0,
-  ) {
+  constructor(interpolator: D3Interpolator, length: number, mirrored = true, offset = 0) {
     const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
     super(colorLength, mirrored, offsetIndex);
@@ -83,8 +79,7 @@ export class D3ChromaticPalette extends BasePalette {
   }
 
   static deserialize(serialized: string): D3ChromaticPalette {
-    const [, rawInterpolate, rawMirrored, rawLength, rawOffset] =
-      serialized.split(",");
+    const [, rawInterpolate, rawMirrored, rawLength, rawOffset] = serialized.split(",");
 
     const length = safeParseInt(rawLength);
     const offset = safeParseInt(rawOffset);

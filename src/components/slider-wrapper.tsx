@@ -32,9 +32,7 @@ export function ValueSlider<T extends {}>({
   onValueCommit,
 }: Props<T>) {
   const marks = useMarksFromValues(values);
-  const d = marks.find(
-    (mark) => valueConverter(mark.value) === defaultValue,
-  )?.valueForSlider;
+  const d = marks.find((mark) => valueConverter(mark.value) === defaultValue)?.valueForSlider;
 
   return (
     <Slider

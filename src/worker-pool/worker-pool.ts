@@ -1,10 +1,6 @@
-import {
-  addTraceEvent,
-  removeBatchTrace,
-  startBatchTrace,
-} from "@/event-viewer/event";
+import { addTraceEvent, removeBatchTrace, startBatchTrace } from "@/event-viewer/event";
 import { getStore } from "@/store/store";
-import {
+import type {
   BatchContext,
   CalcIterationJob,
   CalcRefOrbitJob,
@@ -13,8 +9,8 @@ import {
   MandelbrotRenderingUnit,
   MandelbrotWorkerType,
   ResultSpans,
-  mandelbrotWorkerTypes,
 } from "@/types";
+import { mandelbrotWorkerTypes } from "@/types";
 import { throttle } from "es-toolkit";
 import {
   calcNormalizedWorkerIndex,
@@ -22,10 +18,7 @@ import {
   getWorkerId,
   getWorkerPool,
 } from "./pool-instance";
-import {
-  getRefOrbitCache,
-  getRefOrbitCacheIfAvailable,
-} from "./ref-orbit-cache";
+import { getRefOrbitCache, getRefOrbitCacheIfAvailable } from "./ref-orbit-cache";
 import {
   addJob,
   canQueueJob,
@@ -68,8 +61,7 @@ const getLatestBatchContext = () => {
 /**
  * BatchContextを取得する
  */
-export const getBatchContext = (batchId: string) =>
-  batchContextMap.get(batchId);
+export const getBatchContext = (batchId: string) => batchContextMap.get(batchId);
 
 export const clearBatchContext = () => {
   batchContextMap.clear();
@@ -99,8 +91,7 @@ export const getProgressData = (): string | ResultSpans => {
   }
 
   const progressList = Array.from(progressMap.values());
-  const progress =
-    progressList.reduce((a, b) => a + b, 0) / progressList.length;
+  const progress = progressList.reduce((a, b) => a + b, 0) / progressList.length;
 
   return `Generating... ${Math.floor(progress * 100)}%`;
 };
@@ -108,12 +99,9 @@ export const getProgressData = (): string | ResultSpans => {
 export const cycleWorkerType = (): MandelbrotWorkerType => {
   const currentMode = getStore("mode");
 
-  const currentIndex = mandelbrotWorkerTypes.findIndex(
-    (v) => v === currentMode,
-  );
+  const currentIndex = mandelbrotWorkerTypes.findIndex((v) => v === currentMode);
 
-  const nextMode =
-    mandelbrotWorkerTypes[(currentIndex + 1) % mandelbrotWorkerTypes.length];
+  const nextMode = mandelbrotWorkerTypes[(currentIndex + 1) % mandelbrotWorkerTypes.length];
 
   return nextMode;
 };
@@ -199,8 +187,7 @@ export function tickWorkerPool() {
     (refPool.length > 0 &&
       waitingRefJobs.length !== 0 &&
       findFreeWorkerIndex("calc-ref-orbit") === -1) ||
-    (waitingIterJobs.length !== 0 &&
-      findFreeWorkerIndex("calc-iteration") === -1)
+    (waitingIterJobs.length !== 0 && findFreeWorkerIndex("calc-iteration") === -1)
   ) {
     // 処理すべきjobが残っていて、まだ準備ができていないworkerがいる場合は100ms待つ
     setTimeout(tickWorkerPool, 100);
