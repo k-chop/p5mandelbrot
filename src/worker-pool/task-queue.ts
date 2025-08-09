@@ -1,4 +1,4 @@
-import { JobType, MandelbrotJob } from "@/types";
+import type { JobType, MandelbrotJob } from "@/types";
 
 let waitingList: MandelbrotJob[] = [];
 let runningList: MandelbrotJob[] = [];

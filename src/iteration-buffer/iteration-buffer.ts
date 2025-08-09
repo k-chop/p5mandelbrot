@@ -2,15 +2,15 @@ import { bufferLocalLogicalIndex } from "@/rendering/common";
 import type { Resolution } from "@/rendering/p5-renderer";
 import { getCanvasSize } from "@/rendering/renderer";
 import { debounce } from "es-toolkit";
-import { Rect } from "../math/rect";
-import { IterationBuffer } from "../types";
+import type { Rect } from "../math/rect";
+import type { IterationBuffer } from "../types";
 
 // FIXME: 配列全部舐める必要があるのよくないので良い感じにデータを持つようにする
 let iterationCache: IterationBuffer[] = [];
 let iterationCacheSnapshot: IterationBuffer[] = [];
 
 // Subscription system for iteration cache updates
-let subscribers: Set<() => void> = new Set();
+const subscribers: Set<() => void> = new Set();
 
 export const upsertIterationCache = (
   rect: Rect,

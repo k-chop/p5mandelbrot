@@ -4,10 +4,10 @@ import {
   upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
 import { addIterationBuffer } from "@/rendering/renderer";
-import { CalcIterationJob, IterationIntermediateResult } from "@/types";
+import type { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { getWorkerId } from "../pool-instance";
 import { completeJob, isBatchCompleted } from "../task-queue";
-import { IterationProgressCallback, IterationResultCallback } from "../worker-facade";
+import type { IterationProgressCallback, IterationResultCallback } from "../worker-facade";
 import { getBatchContext } from "../worker-pool";
 import { removeWorkerReference } from "../worker-reference";
 

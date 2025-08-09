@@ -13,8 +13,8 @@ import {
   pixelToComplexCoordinateComplexArbitrary,
   toComplex,
 } from "../math/complex";
-import { IterationWorkerParams } from "../types";
-import { RefOrbitContextPopulated } from "./calc-ref-orbit";
+import type { IterationWorkerParams } from "../types";
+import type { RefOrbitContextPopulated } from "./calc-ref-orbit";
 
 const calcHandler = (data: IterationWorkerParams) => {
   const {

@@ -1,5 +1,5 @@
 import { loadPreview, useTrackChangePreview } from "@/store/preview-store";
-import { POIData } from "@/types";
+import type { POIData } from "@/types";
 import React from "react";
 import usePromise from "react-promise-suspense";
 

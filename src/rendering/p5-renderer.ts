@@ -4,7 +4,7 @@ import {
   markNeedsRerender,
   needsRerender,
 } from "@/camera/palette";
-import { Palette } from "@/color";
+import type { Palette } from "@/color";
 import {
   getIterationCache,
   scaleIterationCacheAroundPoint,
@@ -14,9 +14,10 @@ import {
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { clamp } from "@/math/util";
 import { getStore } from "@/store/store";
-import p5 from "p5";
-import { Rect } from "../math/rect";
-import { IterationBuffer, type MandelbrotParams } from "../types";
+import type p5 from "p5";
+import type { Rect } from "../math/rect";
+import type { IterationBuffer } from "../types";
+import { type MandelbrotParams } from "../types";
 import type { Renderer } from "./renderer";
 
 export interface Resolution {

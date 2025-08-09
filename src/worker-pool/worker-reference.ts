@@ -1,4 +1,4 @@
-import { MandelbrotFacadeLike } from "./worker-facade";
+import type { MandelbrotFacadeLike } from "./worker-facade";
 
 type JobId = string;
 const runningWorkerFacadeMap = new Map<JobId, MandelbrotFacadeLike>();

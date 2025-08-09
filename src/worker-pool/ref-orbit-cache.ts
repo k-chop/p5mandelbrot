@@ -1,4 +1,4 @@
-import { MandelbrotParams, RefOrbitCache } from "@/types";
+import type { MandelbrotParams, RefOrbitCache } from "@/types";
 
 let latestRefOrbitCache: RefOrbitCache | null = null;
 

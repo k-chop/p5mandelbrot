@@ -11,7 +11,7 @@ import { deletePreview, savePreview } from "@/store/preview-store";
 import { useCallback } from "react";
 import { updateStore, useStoreValue } from "../../store/store";
 import { createNewPOIData, writePOIListToStorage } from "../../store/sync-storage/poi-list";
-import { MandelbrotParams, POIData } from "../../types";
+import type { MandelbrotParams, POIData } from "../../types";
 
 /**
  * パラメータに合わせたサムネイル画像を取得する共通関数

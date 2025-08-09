@@ -1,5 +1,6 @@
 import { getStore, updateStore } from "@/store/store";
-import { JobType, MandelbrotWorkerType, type MandelbrotJob } from "@/types";
+import type { JobType, MandelbrotWorkerType } from "@/types";
+import { type MandelbrotJob } from "@/types";
 import {
   onIterationWorkerIntermediateResult,
   onIterationWorkerProgress,
@@ -11,7 +12,8 @@ import {
   onRefOrbitWorkerTerminated,
 } from "./callbacks/ref-orbit-worker";
 import { clearTaskQueue } from "./task-queue";
-import { CalcIterationWorker, MandelbrotFacadeLike, RefOrbitWorker } from "./worker-facade";
+import type { MandelbrotFacadeLike } from "./worker-facade";
+import { CalcIterationWorker, RefOrbitWorker } from "./worker-facade";
 import { clearBatchContext, tickWorkerPool, tickWorkerPoolThrottled } from "./worker-pool";
 import { clearWorkerReference } from "./worker-reference";
 

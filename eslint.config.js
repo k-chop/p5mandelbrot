@@ -28,7 +28,7 @@ export default tseslint.config(
           argsIgnorePattern: "^_",
         },
       ],
-      "@typescript-eslint/consistent-type-imports": "error"
+      "@typescript-eslint/consistent-type-imports": "error",
     },
   },
 );

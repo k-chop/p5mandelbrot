@@ -1,7 +1,8 @@
 import type { Palette } from "@/color";
 import BigNumber from "bignumber.js";
-import { Result, err, ok } from "neverthrow";
-import { MandelbrotParams, POIData } from "../../types";
+import type { Result } from "neverthrow";
+import { err, ok } from "neverthrow";
+import type { MandelbrotParams, POIData } from "../../types";
 import { updateStore } from "../store";
 
 export const createNewPOIData = (params: MandelbrotParams, palette: Palette): POIData => ({

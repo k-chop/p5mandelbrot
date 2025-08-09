@@ -4,7 +4,7 @@ import { Card } from "@/shadcn/components/ui/card";
 import { useStoreValue } from "@/store/store";
 import { IconArrowBigLeftLine, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { Suspense } from "react";
-import { POIData } from "../../types";
+import type { POIData } from "../../types";
 import { POICardPreview } from "./poi-card-preview";
 
 type POICardProps = {

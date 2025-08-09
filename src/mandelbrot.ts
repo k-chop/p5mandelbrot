@@ -15,7 +15,8 @@ import {
   resetScaleParams,
   setPrevBatchId,
 } from "./mandelbrot-state/mandelbrot-state";
-import { getCalculationTargetRects, Rect } from "./math/rect";
+import type { Rect } from "./math/rect";
+import { getCalculationTargetRects } from "./math/rect";
 import { addIterationBuffer, getCanvasSize, getWholeCanvasRect } from "./rendering/renderer";
 import { getStore } from "./store/store";
 import { getWorkerCount } from "./worker-pool/pool-instance";

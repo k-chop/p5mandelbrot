@@ -1,7 +1,9 @@
-import { BigNumber } from "bignumber.js";
-import { Rect } from "./math/rect";
+import type { Rect } from "./math/rect";
 import type { Resolution } from "./rendering/p5-renderer";
-import { BatchCompleteCallback, BatchProgressChangedCallback } from "./worker-pool/worker-facade";
+import type {
+  BatchCompleteCallback,
+  BatchProgressChangedCallback,
+} from "./worker-pool/worker-facade";
 
 // FIXME: このファイルは破壊しろ
 

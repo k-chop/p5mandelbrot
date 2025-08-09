@@ -8,7 +8,8 @@ import {
   interpolateTurbo,
 } from "d3-scale-chromatic";
 import { BasePalette } from "./color";
-import { Palette, RGB, buildRGB, clampedPaletteParams } from "./model";
+import type { Palette, RGB } from "./model";
+import { buildRGB, clampedPaletteParams } from "./model";
 
 type D3Interpolator = (t: number) => string;
 type D3Color = ReturnType<typeof color>;

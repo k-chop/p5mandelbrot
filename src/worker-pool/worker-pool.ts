@@ -1,6 +1,6 @@
 import { addTraceEvent, removeBatchTrace, startBatchTrace } from "@/event-viewer/event";
 import { getStore } from "@/store/store";
-import {
+import type {
   BatchContext,
   CalcIterationJob,
   CalcRefOrbitJob,
@@ -9,8 +9,8 @@ import {
   MandelbrotRenderingUnit,
   MandelbrotWorkerType,
   ResultSpans,
-  mandelbrotWorkerTypes,
 } from "@/types";
+import { mandelbrotWorkerTypes } from "@/types";
 import { throttle } from "es-toolkit";
 import {
   calcNormalizedWorkerIndex,

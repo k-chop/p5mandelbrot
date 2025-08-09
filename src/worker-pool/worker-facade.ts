@@ -1,4 +1,4 @@
-import {
+import type {
   BatchContext,
   CalcIterationJob,
   CalcRefOrbitJob,
@@ -8,10 +8,10 @@ import {
   MandelbrotWorkerType,
   RefOrbitProgress,
   RefOrbitResult,
-  type RefOrbitShutdown,
 } from "@/types";
+import { type RefOrbitShutdown } from "@/types";
 import { refOrbitWorkerPath, workerPaths } from "@/workers";
-import { RefOrbitContext } from "@/workers/calc-ref-orbit";
+import type { RefOrbitContext } from "@/workers/calc-ref-orbit";
 
 export interface IterationResult {
   type: "result";
