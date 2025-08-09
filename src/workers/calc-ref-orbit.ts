@@ -1,9 +1,6 @@
 /// <reference lib="webworker" />
 
-import {
-  encodeBlaTableItems,
-  type BLATableItem,
-} from "@/workers/bla-table-item";
+import { encodeBlaTableItems, type BLATableItem } from "@/workers/bla-table-item";
 import { ComplexArrayView, encodeComplexArray } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
@@ -125,10 +122,7 @@ function calcBLACoefficient(ref: Complex[], pixelSpacing: number) {
         const b = add(mul(y.a, x.b), y.b);
         const absXA = Math.sqrt(norm(x.a));
         const absXB = Math.sqrt(norm(x.b));
-        const r = Math.min(
-          x.r,
-          Math.max(0, (y.r - absXB * pixelSpacing) / absXA),
-        );
+        const r = Math.min(x.r, Math.max(0, (y.r - absXB * pixelSpacing) / absXA));
         blaTable[d + 1][j] = { a, b, r, l: x.l + y.l };
       } else {
         blaTable[d + 1][j] = blaTable[d][jx];
@@ -218,9 +212,7 @@ async function initWebsocketServer() {
 
     ws.addEventListener("error", (event) => {
       console.error("Failed to connect to websocket server!", event);
-      console.error(
-        "Check the server and refOrbit calculation rust client is running",
-      );
+      console.error("Check the server and refOrbit calculation rust client is running");
       reject(event);
     });
     ws.addEventListener("open", () => {
@@ -241,10 +233,7 @@ async function initWebsocketServer() {
  * worker起動時に呼ばれる
  */
 async function setup() {
-  if (
-    process.env.NODE_ENV === "development" &&
-    websocketServerConnected === false
-  ) {
+  if (process.env.NODE_ENV === "development" && websocketServerConnected === false) {
     try {
       await initWebsocketServer();
       websocketServerConnected = true;
@@ -295,26 +284,16 @@ async function setup() {
       try {
         // とりあえずrefOrbit計算serverは開発環境のみ使えるようにしておく
         // worker起動のタイミングでwebsocket serverが立ち上がってなかったら、次からローカルで計算する
-        if (
-          process.env.NODE_ENV === "development" &&
-          websocketServerConnected
-        ) {
+        if (process.env.NODE_ENV === "development" && websocketServerConnected) {
           xn = await calcRefOrbitExternal(referencePoint, maxIteration);
         }
       } catch {
-        console.warn(
-          "Failed to calculate refOrbit on external server. Fallback.",
-        );
+        console.warn("Failed to calculate refOrbit on external server. Fallback.");
       }
 
       if (xn.length === 0) {
         // この時点で計算結果がない場合はローカルで計算する
-        const { xn: xn2 } = calcRefOrbit(
-          referencePoint,
-          maxIteration,
-          terminateChecker,
-          workerIdx,
-        );
+        const { xn: xn2 } = calcRefOrbit(referencePoint, maxIteration, terminateChecker, workerIdx);
         xn = xn2;
       }
 
@@ -328,8 +307,7 @@ async function setup() {
 
       // console.log("Reference orbit calculated", xn);
 
-      const pixelSpacing =
-        radius.toNumber() / Math.max(pixelWidth, pixelHeight);
+      const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
       const blaTable = calcBLACoefficient(xn, pixelSpacing);
 
       const xnConverted = encodeComplexArray(xn);

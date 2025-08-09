@@ -23,10 +23,7 @@ export function encodeComplexArray(complexArray: Complex[]): ArrayBuffer {
  * @param limit 最大デコード数（省略時は全てデコード）
  * @returns デコードされた複素数配列
  */
-export function decodeComplexArray(
-  buffer: ArrayBuffer,
-  limit?: number,
-): Complex[] {
+export function decodeComplexArray(buffer: ArrayBuffer, limit?: number): Complex[] {
   const view = new Float64Array(buffer);
   const length = limit ? Math.min(limit * 2, view.length) : view.length;
   const complexArray: Complex[] = new Array(Math.floor(length / 2));

@@ -77,7 +77,5 @@ export const copyCurrentParamsToClipboard = () => {
     palette: palette.serialize(),
   });
 
-  navigator.clipboard.writeText(
-    `${location.origin}${location.pathname}?${params.toString()}`,
-  );
+  navigator.clipboard.writeText(`${location.origin}${location.pathname}?${params.toString()}`);
 };

@@ -149,8 +149,7 @@ const updateSnapshot = (): void => {
 /**
  * useSyncExternalStore用のスナップショット取得関数
  */
-export const getCurrentBatchSnapshot = (): BatchTrace | undefined =>
-  currentBatchSnapshot;
+export const getCurrentBatchSnapshot = (): BatchTrace | undefined => currentBatchSnapshot;
 
 /**
  * useSyncExternalStore用の購読関数

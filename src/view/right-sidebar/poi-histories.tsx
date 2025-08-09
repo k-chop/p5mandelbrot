@@ -18,11 +18,7 @@ export const POIHistories = () => {
           return (
             <div key={history.id} className="min-w-[100px]">
               <button onClick={() => applyPOI(history)}>
-                <img
-                  src={history.imageDataUrl}
-                  width="100"
-                  className="rounded-xl"
-                />
+                <img src={history.imageDataUrl} width="100" className="rounded-xl" />
               </button>
             </div>
           );

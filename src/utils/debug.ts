@@ -23,11 +23,7 @@ const logMap = new Map<string, number>();
 /**
  * デバッグ用：指定した間隔でログを出力する
  */
-export const logInterval = (
-  name: string,
-  value: unknown,
-  interval: number = 1000,
-) => {
+export const logInterval = (name: string, value: unknown, interval: number = 1000) => {
   const prev = logMap.get(name);
   const now = Date.now();
 

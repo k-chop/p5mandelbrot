@@ -15,10 +15,7 @@ import {
 import { isInside } from "./p5-adapter/utils";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
-import {
-  isSettingField,
-  readSettingsFromStorage,
-} from "./store/sync-storage/settings";
+import { isSettingField, readSettingsFromStorage } from "./store/sync-storage/settings";
 import "./style.css";
 import { AppRoot } from "./view/app-root";
 import { prepareWorkerPool } from "./worker-pool/pool-instance";

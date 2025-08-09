@@ -2,10 +2,7 @@ import type { POIData, ResultSpans } from "@/types";
 import BigNumber from "bignumber.js";
 import { eventmit } from "eventmit";
 import { useEffect, useState } from "react";
-import {
-  isSettingField,
-  writeSettingsToStorage,
-} from "./sync-storage/settings";
+import { isSettingField, writeSettingsToStorage } from "./sync-storage/settings";
 
 type Store = {
   // mandelbrot params
@@ -93,17 +90,13 @@ export const createStore = (): Store => {
 
 export const getStore = <Key extends keyof Store>(key: Key) => store[key];
 
-export const updateStore = <Key extends keyof Store>(
-  key: Key,
-  value: Store[Key],
-) => {
+export const updateStore = <Key extends keyof Store>(key: Key, value: Store[Key]) => {
   if (store[key] === value) return;
   // BigNumberはeqで比較
   if (value instanceof BigNumber && value.eq(store[key] as BigNumber)) return;
   // progressがobjectなので、totalが同じなら更新しない
   // @ts-expect-error 手抜き
-  if (value != null && value.total != null && value.total === store[key].total)
-    return;
+  if (value != null && value.total != null && value.total === store[key].total) return;
 
   store[key] = value;
 

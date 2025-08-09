@@ -69,9 +69,7 @@ const Bar = (props: ResultSpans) => {
   const maxIterationElapsed = Math.max(
     ...spans.filter((s) => s.name.includes("iteration")).map((s) => s.elapsed),
   );
-  const iterationExceptedSpans = spans.filter(
-    (s) => !s.name.includes("iteration"),
-  );
+  const iterationExceptedSpans = spans.filter((s) => !s.name.includes("iteration"));
   const iterationSpans = spans.filter((s) => s.name.includes("iteration"));
 
   return (
@@ -95,12 +93,7 @@ const Bar = (props: ResultSpans) => {
   );
 };
 
-const BarContent = (props: {
-  name: string;
-  elapsed: number;
-  total: number;
-  spans: Span[];
-}) => {
+const BarContent = (props: { name: string; elapsed: number; total: number; spans: Span[] }) => {
   const { name, elapsed, total, spans } = props;
 
   const [displayText, setDisplayText] = React.useState(`${name}: ${elapsed}ms`);

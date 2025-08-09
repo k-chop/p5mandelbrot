@@ -33,9 +33,7 @@ const SIZE_GROUP_COLORS = [
 
 export const IterationCacheViewer = () => {
   const cacheData = useIterationCache();
-  const [detailVisibilityMap, setDetailVisibilityMap] = useState<
-    Record<string, boolean>
-  >({});
+  const [detailVisibilityMap, setDetailVisibilityMap] = useState<Record<string, boolean>>({});
 
   const groupCacheData = (cacheData: IterationBuffer[]): ScaleGroup[] => {
     // 1段階目: scaleでグループ化
@@ -101,9 +99,7 @@ export const IterationCacheViewer = () => {
 
     // 全キャッシュrectとキャンバスを包含するbounds計算
     const calculateBounds = () => {
-      const allRects = sizeGroups.flatMap((group) =>
-        group.items.map((item) => item.rect),
-      );
+      const allRects = sizeGroups.flatMap((group) => group.items.map((item) => item.rect));
 
       if (allRects.length === 0) {
         return {
@@ -154,12 +150,7 @@ export const IterationCacheViewer = () => {
     }
 
     // 座標をSVG座標系に正規化する関数（シンプル版）
-    const normalizeToSVG = (rect: {
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-    }) => {
+    const normalizeToSVG = (rect: { x: number; y: number; width: number; height: number }) => {
       const x = ((rect.x - bounds.minX) / boundsWidth) * effectiveWidth;
       const y = ((rect.y - bounds.minY) / boundsHeight) * effectiveHeight;
       const width = (rect.width / boundsWidth) * effectiveWidth;
@@ -192,12 +183,7 @@ export const IterationCacheViewer = () => {
                 height="20"
                 patternUnits="userSpaceOnUse"
               >
-                <path
-                  d="M 20 0 L 0 0 0 20"
-                  fill="none"
-                  stroke="#e2e8f0"
-                  strokeWidth="0.5"
-                />
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" strokeWidth="0.5" />
               </pattern>
             </defs>
             {/* 背景グリッド */}
@@ -209,8 +195,7 @@ export const IterationCacheViewer = () => {
 
             {/* キャッシュrectを描画 */}
             {sizeGroups.map((sizeGroup, sizeIndex) => {
-              const color =
-                SIZE_GROUP_COLORS[sizeIndex % SIZE_GROUP_COLORS.length];
+              const color = SIZE_GROUP_COLORS[sizeIndex % SIZE_GROUP_COLORS.length];
               return sizeGroup.items.map((cache, itemIndex) => {
                 const normalizedRect = normalizeToSVG(cache.rect);
                 return (
@@ -272,10 +257,7 @@ export const IterationCacheViewer = () => {
         <div className="flex flex-wrap gap-2 text-xs">
           {/* Canvas View表示 */}
           <div className="flex items-center gap-1">
-            <div
-              className="h-3 w-3 border-2 border-dashed"
-              style={{ borderColor: "#ef4444" }}
-            />
+            <div className="h-3 w-3 border-2 border-dashed" style={{ borderColor: "#ef4444" }} />
             <span className="font-medium text-red-600">
               Canvas View ({canvasSize.width}×{canvasSize.height})
             </span>
@@ -283,17 +265,12 @@ export const IterationCacheViewer = () => {
 
           {/* サイズグループ凡例 */}
           {sizeGroups.map((sizeGroup, sizeIndex) => {
-            const color =
-              SIZE_GROUP_COLORS[sizeIndex % SIZE_GROUP_COLORS.length];
+            const color = SIZE_GROUP_COLORS[sizeIndex % SIZE_GROUP_COLORS.length];
             return (
               <div key={sizeIndex} className="flex items-center gap-1">
-                <div
-                  className="h-3 w-3 border"
-                  style={{ backgroundColor: color, opacity: 0.6 }}
-                />
+                <div className="h-3 w-3 border" style={{ backgroundColor: color, opacity: 0.6 }} />
                 <span>
-                  {sizeGroup.rectSize.width.toFixed(1)}×
-                  {sizeGroup.rectSize.height.toFixed(1)}
+                  {sizeGroup.rectSize.width.toFixed(1)}×{sizeGroup.rectSize.height.toFixed(1)}
                 </span>
               </div>
             );
@@ -306,9 +283,7 @@ export const IterationCacheViewer = () => {
   return (
     <div className="space-y-4 p-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">
-          Iteration Cache (count: {cacheData.length})
-        </h3>
+        <h3 className="text-lg font-semibold">Iteration Cache (count: {cacheData.length})</h3>
       </div>
 
       <div className="space-y-4">
@@ -339,10 +314,7 @@ export const IterationCacheViewer = () => {
                         {scaleGroup.sizeGroups.map((sizeGroup, sizeIndex) => {
                           const detailKey = `${scaleIndex}-${sizeIndex}`;
                           return (
-                            <div
-                              key={sizeIndex}
-                              className="rounded-lg border p-3 text-sm"
-                            >
+                            <div key={sizeIndex} className="rounded-lg border p-3 text-sm">
                               <button
                                 onClick={() =>
                                   setDetailVisibilityMap((prev) => ({
@@ -359,17 +331,14 @@ export const IterationCacheViewer = () => {
                                   className="h-3 w-3 border"
                                   style={{
                                     backgroundColor:
-                                      SIZE_GROUP_COLORS[
-                                        sizeIndex % SIZE_GROUP_COLORS.length
-                                      ],
+                                      SIZE_GROUP_COLORS[sizeIndex % SIZE_GROUP_COLORS.length],
                                     opacity: 0.6,
                                   }}
                                 />
                                 <span className="font-medium">
                                   {sizeGroup.rectSize.width.toFixed(1)}×
                                   {sizeGroup.rectSize.height.toFixed(1)} @{" "}
-                                  {sizeGroup.resolution.width}×
-                                  {sizeGroup.resolution.height} -{" "}
+                                  {sizeGroup.resolution.width}×{sizeGroup.resolution.height} -{" "}
                                   {sizeGroup.items.length}個
                                 </span>
                                 {sizeGroup.hasSuperSampled && (
@@ -383,12 +352,8 @@ export const IterationCacheViewer = () => {
                               {detailVisibilityMap[detailKey] && (
                                 <div className="mt-3 space-y-1 pl-4">
                                   {sizeGroup.items.map((cache, itemIndex) => (
-                                    <div
-                                      key={itemIndex}
-                                      className="text-muted-foreground text-xs"
-                                    >
-                                      • ({cache.rect.x.toFixed(1)},{" "}
-                                      {cache.rect.y.toFixed(1)})
+                                    <div key={itemIndex} className="text-muted-foreground text-xs">
+                                      • ({cache.rect.x.toFixed(1)}, {cache.rect.y.toFixed(1)})
                                     </div>
                                   ))}
                                 </div>

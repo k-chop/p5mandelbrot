@@ -91,9 +91,7 @@ wss.on("connection", (ws: WebSocket) => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validateCalculationRequest = (data: any) => {
   return (
-    typeof data.x === "string" &&
-    typeof data.y === "string" &&
-    typeof data.maxIter === "number"
+    typeof data.x === "string" && typeof data.y === "string" && typeof data.maxIter === "number"
   );
 };
 
@@ -163,8 +161,7 @@ function handleClientDisconnection(client: CalculationClient) {
     request.ws.send(
       JSON.stringify({
         type: "error",
-        message:
-          "The calculation client has disconnected. Further waiting is futile.",
+        message: "The calculation client has disconnected. Further waiting is futile.",
       }),
     );
   });

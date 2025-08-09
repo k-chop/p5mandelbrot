@@ -22,10 +22,7 @@ export const getRefOrbitCacheIfAvailable = (params: MandelbrotParams) => {
     return null;
   }
 
-  if (
-    latestRefOrbitCache.x.eq(params.x) &&
-    latestRefOrbitCache.y.eq(params.y)
-  ) {
+  if (latestRefOrbitCache.x.eq(params.x) && latestRefOrbitCache.y.eq(params.y)) {
     // 地点が同じでより深い場所でのキャッシュは間違いなく使える
     if (latestRefOrbitCache.r.lt(params.r)) {
       return latestRefOrbitCache;

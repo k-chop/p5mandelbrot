@@ -11,16 +11,8 @@ import {
   onRefOrbitWorkerTerminated,
 } from "./callbacks/ref-orbit-worker";
 import { clearTaskQueue } from "./task-queue";
-import {
-  CalcIterationWorker,
-  MandelbrotFacadeLike,
-  RefOrbitWorker,
-} from "./worker-facade";
-import {
-  clearBatchContext,
-  tickWorkerPool,
-  tickWorkerPoolThrottled,
-} from "./worker-pool";
+import { CalcIterationWorker, MandelbrotFacadeLike, RefOrbitWorker } from "./worker-facade";
+import { clearBatchContext, tickWorkerPool, tickWorkerPoolThrottled } from "./worker-pool";
 import { clearWorkerReference } from "./worker-reference";
 
 type WorkerPool = MandelbrotFacadeLike[];
@@ -55,9 +47,7 @@ export const iterateAllWorker = <T>(f: (worker: MandelbrotFacadeLike) => T) => {
 /**
  * 全workerに対して非同期処理を行う
  */
-export const iterateAllWorkerAsync = async <T>(
-  f: (worker: MandelbrotFacadeLike) => Promise<T>,
-) => {
+export const iterateAllWorkerAsync = async <T>(f: (worker: MandelbrotFacadeLike) => Promise<T>) => {
   const promises = [];
   for (const workers of pool.values()) {
     promises.push(...workers.map(f));
@@ -76,19 +66,14 @@ export const resetAllWorker = () => {
  * 空いてるworkerがあればそのindexを返す
  */
 export function findFreeWorkerIndex(jobType: JobType) {
-  return getWorkerPool(jobType).findIndex(
-    (worker) => worker.isReady() && !worker.isRunning(),
-  );
+  return getWorkerPool(jobType).findIndex((worker) => worker.isReady() && !worker.isRunning());
 }
 
 /**
  * terminate判定用のworker indexを返す
  * 返り値は0 ~ 各workerの合計数 - 1の範囲になる
  */
-export const calcNormalizedWorkerIndex = (
-  jobType: JobType,
-  workerIdx: number,
-) => {
+export const calcNormalizedWorkerIndex = (jobType: JobType, workerIdx: number) => {
   // FIXME: jobTypeが増えたときに対応できていない
   if (jobType === "calc-ref-orbit") {
     const pool = getWorkerPool("calc-iteration");
@@ -168,9 +153,7 @@ function fillIterationWorkerPool(
   }
 
   if (fillCount > 0) {
-    console.info(
-      `Iteration Worker filled: fill count = ${fillCount}, pool size = ${pool.length}`,
-    );
+    console.info(`Iteration Worker filled: fill count = ${fillCount}, pool size = ${pool.length}`);
   }
 }
 
@@ -201,8 +184,6 @@ function fillRefOrbitWorkerPool(
   }
 
   if (fillCount > 0) {
-    console.info(
-      `RefOrbit Worker filled: fill count = ${fillCount}, pool size = ${pool.length}`,
-    );
+    console.info(`RefOrbit Worker filled: fill count = ${fillCount}, pool size = ${pool.length}`);
   }
 }

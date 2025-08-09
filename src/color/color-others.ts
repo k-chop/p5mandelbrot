@@ -42,12 +42,7 @@ export class OthersPalette extends BasePalette {
   private interpolator: (t: number) => Hsv;
   colors: Hsv[] = [];
 
-  constructor(
-    length: number,
-    interpolator: (t: number) => Hsv,
-    mirrored = true,
-    offset = 0,
-  ) {
+  constructor(length: number, interpolator: (t: number) => Hsv, mirrored = true, offset = 0) {
     const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
     super(colorLength, mirrored, offsetIndex);
@@ -79,8 +74,7 @@ export class OthersPalette extends BasePalette {
   }
 
   static deserialize(serialized: string): OthersPalette {
-    const [, rawInterpolate, rawMirrored, rawLength, rawOffset] =
-      serialized.split(",");
+    const [, rawInterpolate, rawMirrored, rawLength, rawOffset] = serialized.split(",");
 
     const length = safeParseInt(rawLength);
     const offset = safeParseInt(rawOffset);

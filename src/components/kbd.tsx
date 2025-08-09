@@ -6,9 +6,7 @@ type Props = {
   className?: string;
 };
 
-const kbdVariants = cva(
-  "rounded-md border-2 bg-muted p-1 text-xs font-bold text-muted-foreground",
-);
+const kbdVariants = cva("rounded-md border-2 bg-muted p-1 text-xs font-bold text-muted-foreground");
 
 export const Kbd = ({ className, children }: Props) => (
   <span className={cn(kbdVariants(), className)}>{children}</span>

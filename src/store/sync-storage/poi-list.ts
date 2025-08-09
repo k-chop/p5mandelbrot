@@ -4,10 +4,7 @@ import { Result, err, ok } from "neverthrow";
 import { MandelbrotParams, POIData } from "../../types";
 import { updateStore } from "../store";
 
-export const createNewPOIData = (
-  params: MandelbrotParams,
-  palette: Palette,
-): POIData => ({
+export const createNewPOIData = (params: MandelbrotParams, palette: Palette): POIData => ({
   id: crypto.randomUUID(),
   ...params,
   serializedPalette: palette.serialize(),
@@ -74,9 +71,7 @@ const mergePOIList = (
   return { result, imported, conflicted };
 };
 
-export const readPOIListFromClipboard = async (): Promise<
-  Result<string, string>
-> => {
+export const readPOIListFromClipboard = async (): Promise<Result<string, string>> => {
   try {
     const serialized = await navigator.clipboard.readText();
     if (!serialized) return err("Clipboard is empty");
@@ -86,10 +81,7 @@ export const readPOIListFromClipboard = async (): Promise<
     const importedPOIList = rawList.map(deserializeMandelbrotParams);
 
     const existsPOIList = readPOIListFromStorage();
-    const { result, imported, conflicted } = mergePOIList(
-      existsPOIList,
-      importedPOIList,
-    );
+    const { result, imported, conflicted } = mergePOIList(existsPOIList, importedPOIList);
 
     console.info(`Imported: ${imported}, Conflicted: ${conflicted}`);
 

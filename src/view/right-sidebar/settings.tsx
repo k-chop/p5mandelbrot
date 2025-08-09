@@ -1,5 +1,10 @@
 import { ValueSlider } from "@/components/slider-wrapper";
-import { getRenderer, isWebGPUInitialized, isWebGPUSupported, setRenderer } from "@/rendering/common";
+import {
+  getRenderer,
+  isWebGPUInitialized,
+  isWebGPUSupported,
+  setRenderer,
+} from "@/rendering/common";
 import type { RendererType } from "@/rendering/common";
 import { resizeTo } from "@/p5-adapter/p5-adapter";
 import { Button } from "@/shadcn/components/ui/button";
@@ -15,15 +20,7 @@ import { DEFAULT_WORKER_COUNT } from "../../store/sync-storage/settings";
 
 const createWorkerCountValues = () => {
   const base = DEFAULT_WORKER_COUNT;
-  const counts = [
-    base / 8,
-    base / 4,
-    base / 2,
-    base,
-    base * 2,
-    base * 4,
-    base * 8,
-  ].map(Math.ceil);
+  const counts = [base / 8, base / 4, base / 2, base, base * 2, base * 4, base * 8].map(Math.ceil);
   const distinctCounts = [...new Set([1, ...counts])];
   distinctCounts.sort((a, b) => a - b);
 
@@ -36,11 +33,11 @@ export const Settings = () => {
   const zoomRate = useStoreValue("zoomRate");
   const workerCount = useStoreValue("workerCount");
   const maxCanvasSize = useStoreValue("maxCanvasSize");
-  
+
   // WebGPUサポート状態の確認
   const [webGPUSupported, setWebGPUSupported] = useState(false);
   const [rendererType, setRendererType] = useState<RendererType>("p5js");
-  
+
   useEffect(() => {
     // コンポーネントマウント時にWebGPUサポート状態を確認
     setWebGPUSupported(isWebGPUSupported() && isWebGPUInitialized());
@@ -49,17 +46,7 @@ export const Settings = () => {
 
   const zoomRateValues = ["1.2", "1.5", "2.0", "4.0", "6.0", "10", "50", "100"];
   const workerCountValues = createWorkerCountValues();
-  const animationTimeValues = [
-    "0",
-    "1000",
-    "600",
-    "300",
-    "100",
-    "60",
-    "33",
-    "16",
-    "6",
-  ];
+  const animationTimeValues = ["0", "1000", "600", "300", "100", "60", "33", "16", "6"];
   const animationCycleStepValues = [
     "1",
     "2",
@@ -78,34 +65,23 @@ export const Settings = () => {
     "43",
     "47",
   ];
-  const maxCanvasSizeValues = [
-    "-1",
-    "128",
-    "256",
-    "512",
-    "800",
-    "1024",
-    "2048",
-  ];
+  const maxCanvasSizeValues = ["-1", "128", "256", "512", "800", "1024", "2048"];
 
   const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
   const [workerCountPreview, setWorkerCountPreview] = useState(workerCount);
-  const [animationTime, setAnimationTime] = useState(() =>
-    getStore("animationTime"),
-  );
+  const [animationTime, setAnimationTime] = useState(() => getStore("animationTime"));
   const [animationCycleStep, setAnimationCycleStep] = useState(() =>
     getStore("animationCycleStep"),
   );
-  const [maxCanvasSizePreview, setMaxCanvasSizePreview] =
-    useState(maxCanvasSize);
+  const [maxCanvasSizePreview, setMaxCanvasSizePreview] = useState(maxCanvasSize);
 
   return (
     <div className="flex max-w-80 flex-col gap-6">
       {webGPUSupported && (
         <div>
           <div className="mb-2 ml-2">Renderer Type</div>
-          <RadioGroup 
-            value={rendererType} 
+          <RadioGroup
+            value={rendererType}
             onValueChange={(value: RendererType) => {
               setRendererType(value);
               setRenderer(value);
@@ -125,16 +101,20 @@ export const Settings = () => {
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="webgpu" id="webgpu" />
-              <Label htmlFor="webgpu" className="cursor-pointer">WebGPU (Faster)</Label>
+              <Label htmlFor="webgpu" className="cursor-pointer">
+                WebGPU (Faster)
+              </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="p5js" id="p5js" />
-              <Label htmlFor="p5js" className="cursor-pointer">P5.js (Compatible)</Label>
+              <Label htmlFor="p5js" className="cursor-pointer">
+                P5.js (Compatible)
+              </Label>
             </div>
           </RadioGroup>
         </div>
       )}
-      
+
       <div>
         <div className="mb-1 ml-2">Zoom Rate: x{zoomRatePreview}</div>
         <ValueSlider<number>
@@ -160,8 +140,7 @@ export const Settings = () => {
       </div>
       <div>
         <div className="mb-1 ml-2">
-          Animation Frequency:{" "}
-          {animationTime === 0 ? "None" : `${animationTime} ms`}
+          Animation Frequency: {animationTime === 0 ? "None" : `${animationTime} ms`}
         </div>
         <ValueSlider<number>
           values={animationTimeValues}
@@ -177,9 +156,7 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">
-          Animation Cycle Step: {animationCycleStep}
-        </div>
+        <div className="mb-1 ml-2">Animation Cycle Step: {animationCycleStep}</div>
         <ValueSlider<number>
           values={animationCycleStepValues}
           defaultValue={animationCycleStep}

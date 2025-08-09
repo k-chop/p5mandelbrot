@@ -46,12 +46,7 @@ export class D3ChromaticPalette extends BasePalette {
   interpolator: D3Interpolator;
   colors: D3Color[] = [];
 
-  constructor(
-    interpolator: D3Interpolator,
-    length: number,
-    mirrored = true,
-    offset = 0,
-  ) {
+  constructor(interpolator: D3Interpolator, length: number, mirrored = true, offset = 0) {
     const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
     super(colorLength, mirrored, offsetIndex);
@@ -83,8 +78,7 @@ export class D3ChromaticPalette extends BasePalette {
   }
 
   static deserialize(serialized: string): D3ChromaticPalette {
-    const [, rawInterpolate, rawMirrored, rawLength, rawOffset] =
-      serialized.split(",");
+    const [, rawInterpolate, rawMirrored, rawLength, rawOffset] = serialized.split(",");
 
     const length = safeParseInt(rawLength);
     const offset = safeParseInt(rawOffset);

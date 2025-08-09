@@ -1,12 +1,7 @@
 import { Kbd } from "@/components/kbd";
 import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { Card, CardContent } from "@/shadcn/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTrigger,
-} from "@/shadcn/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "@/shadcn/components/ui/dialog";
 import { Input } from "@/shadcn/components/ui/input";
 import {
   Tooltip,

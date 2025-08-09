@@ -10,28 +10,23 @@ import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
 import { deletePreview, savePreview } from "@/store/preview-store";
 import { useCallback } from "react";
 import { updateStore, useStoreValue } from "../../store/store";
-import {
-  createNewPOIData,
-  writePOIListToStorage,
-} from "../../store/sync-storage/poi-list";
+import { createNewPOIData, writePOIListToStorage } from "../../store/sync-storage/poi-list";
 import { MandelbrotParams, POIData } from "../../types";
 
 /**
  * パラメータに合わせたサムネイル画像を取得する共通関数
  * 履歴から一致するものがあれば使用し、なければ直接キャプチャ
  */
-function getThumbnailForParams(
-  params: MandelbrotParams = getCurrentParams()
-): string {
+function getThumbnailForParams(params: MandelbrotParams = getCurrentParams()): string {
   const matchingThumbnail = getMatchingHistoryThumbnail(params);
-  
+
   if (matchingThumbnail) {
     console.log("Using existing thumbnail from history");
     return matchingThumbnail;
   }
-  
+
   console.log("Capturing new thumbnail");
-  
+
   try {
     return getResizedCanvasImageDataURL(100);
   } catch (e) {

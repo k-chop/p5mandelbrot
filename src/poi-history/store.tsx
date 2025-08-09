@@ -1,7 +1,4 @@
-import {
-  deserializeMandelbrotParams,
-  serializePOIData,
-} from "@/store/sync-storage/poi-list";
+import { deserializeMandelbrotParams, serializePOIData } from "@/store/sync-storage/poi-list";
 import { get, set } from "idb-keyval";
 import type { POIHistory } from "./poi-history";
 
@@ -43,9 +40,7 @@ export const saveHistoriesToStorage = (histories: POIHistory[]) => {
 /**
  * indexedDBから履歴データを読む
  */
-export const loadHistoriesFromStorage = async (): Promise<
-  POIHistory[] | undefined
-> => {
+export const loadHistoriesFromStorage = async (): Promise<POIHistory[] | undefined> => {
   const serialized = await get(POI_HISTORY_KEY);
   if (!serialized) return undefined;
 

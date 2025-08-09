@@ -1,9 +1,4 @@
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shadcn/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shadcn/components/ui/tabs";
 import { EventViewer } from "./event-viewer";
 import { IterationCacheViewer } from "./iteration-cache-viewer";
 

@@ -8,8 +8,7 @@ import { POICard } from "./poi-card";
 import { usePOI } from "./use-poi";
 
 export const POI = () => {
-  const { poiList, addPOI, deletePOIAt, applyPOI, regenerateThumbnailPOI } =
-    usePOI();
+  const { poiList, addPOI, deletePOIAt, applyPOI, regenerateThumbnailPOI } = usePOI();
   const scrollTop = useRef(parseInt(sessionStorage.getItem("scroll") ?? "0"));
   const viewportRef = useRef<HTMLDivElement>(null);
 

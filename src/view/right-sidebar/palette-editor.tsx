@@ -1,7 +1,4 @@
-import {
-  setCurrentPaletteLength,
-  setCurrentPaletteOffset,
-} from "@/camera/palette";
+import { setCurrentPaletteLength, setCurrentPaletteOffset } from "@/camera/palette";
 import { ValueSlider } from "@/components/slider-wrapper";
 import { Slider } from "@/shadcn/components/ui/slider";
 import { getStore, updateStore, useStoreValue } from "@/store/store";
@@ -24,12 +21,8 @@ const paletteLengthValues = [
 ];
 
 export const PaletteEditor = () => {
-  const [paletteLengthValue, setPaletteLengthValue] = useState(() =>
-    getStore("paletteLength"),
-  );
-  const [paletteOffsetValue, setPaletteOffsetValue] = useState(() =>
-    getStore("paletteOffset"),
-  );
+  const [paletteLengthValue, setPaletteLengthValue] = useState(() => getStore("paletteLength"));
+  const [paletteOffsetValue, setPaletteOffsetValue] = useState(() => getStore("paletteOffset"));
 
   // subscribe
   const paletteLength = useStoreValue("paletteLength");

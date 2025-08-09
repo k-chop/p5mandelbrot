@@ -1,8 +1,4 @@
-import {
-  getCurrentPalette,
-  markNeedsRerender,
-  setPalette,
-} from "@/camera/palette";
+import { getCurrentPalette, markNeedsRerender, setPalette } from "@/camera/palette";
 import type { Palette } from "@/color";
 import { addTraceEvent } from "@/event-viewer/event";
 import {
@@ -48,10 +44,7 @@ let vertexBuffer: TgpuBuffer<d.WgslArray<d.Vec2f>> & VertexFlag;
 let uniformBuffer: TgpuBuffer<typeof UniformSchema> & UniformFlag;
 let paletteBuffer: TgpuBuffer<d.WgslArray<d.Vec4f>> & StorageFlag;
 let iterationInputBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
-let iterationInputMetadataBuffer: TgpuBuffer<
-  typeof IterationInputMetadataSchema
-> &
-  StorageFlag;
+let iterationInputMetadataBuffer: TgpuBuffer<typeof IterationInputMetadataSchema> & StorageFlag;
 let iterationBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
 
 const iterationBufferQueue: IterationBuffer[] = [];
@@ -127,12 +120,7 @@ export const initRenderer: Renderer["initRenderer"] = async (w, h) => {
   }
 };
 
-export const renderToCanvas: Renderer["renderToCanvas"] = (
-  x,
-  y,
-  width,
-  height,
-) => {
+export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) => {
   if (!gpuInitialized) {
     console.warn("WebGPU not yet initialized, skipping render");
     return;
@@ -204,8 +192,7 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (
     const remaining = iterationBufferQueue.length - processableCount;
 
     const resolution =
-      iterationBufferQueue[0].rect.width /
-      iterationBufferQueue[0].resolution.width;
+      iterationBufferQueue[0].rect.width / iterationBufferQueue[0].resolution.width;
     const rects: Rect[] = [];
 
     // 処理可能な数だけ処理
@@ -290,10 +277,7 @@ export const addIterationBuffer: Renderer["addIterationBuffer"] = (
   iterationBufferQueue.push(...(iterBuffer ?? getIterationCache()));
 };
 
-export const resizeCanvas: Renderer["resizeCanvas"] = (
-  requestWidth,
-  requestHeight,
-) => {
+export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeight) => {
   if (!gpuInitialized) return;
 
   const from = getCanvasSize();
@@ -322,14 +306,11 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (
   });
 
   iterationBuffer.destroy();
-  iterationBuffer = root
-    .createBuffer(d.arrayOf(d.u32, width * height))
-    .$usage("storage");
+  iterationBuffer = root.createBuffer(d.arrayOf(d.u32, width * height)).$usage("storage");
 
   bindGroup = createBindGroup(bindGroupLayout);
 
-  const scaleFactor =
-    Math.min(width, height) / Math.min(from.width, from.height);
+  const scaleFactor = Math.min(width, height) / Math.min(from.width, from.height);
 
   console.debug("Resize scale factor", scaleFactor);
 
@@ -351,17 +332,13 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (
   markNeedsRerender();
 };
 
-export const updatePaletteData: Renderer["updatePaletteData"] = (
-  palette: Palette,
-) => {
+export const updatePaletteData: Renderer["updatePaletteData"] = (palette: Palette) => {
   if (!gpuInitialized) return;
 
   // FIXME: Palette側に定義しとくといいよ
   for (let i = 0; i < palette.length; i++) {
     const [r, g, b] = palette.rgb(i);
-    paletteBuffer.writePartial([
-      { idx: i, value: d.vec4f(r / 255, g / 255, b / 255, 1.0) },
-    ]);
+    paletteBuffer.writePartial([{ idx: i, value: d.vec4f(r / 255, g / 255, b / 255, 1.0) }]);
   }
 };
 
@@ -381,9 +358,7 @@ const initializeGPU = async (): Promise<boolean> => {
     device = await adapter.requestDevice();
     root = tgpu.initFromDevice({ device });
 
-    const gpuCanvas = document.getElementById(
-      "gpu-canvas",
-    ) as HTMLCanvasElement;
+    const gpuCanvas = document.getElementById("gpu-canvas") as HTMLCanvasElement;
     if (!gpuCanvas) {
       console.error("WebGPU canvas element not found");
       return false;
@@ -417,21 +392,15 @@ const initializeGPU = async (): Promise<boolean> => {
     const PlaneGeometry = d.struct({
       xy: d.location(0, d.vec2f),
     });
-    const geometryLayout = tgpu.vertexLayout((n) =>
-      d.arrayOf(PlaneGeometry, n),
-    );
+    const geometryLayout = tgpu.vertexLayout((n) => d.arrayOf(PlaneGeometry, n));
 
     uniformBuffer = root.createBuffer(UniformSchema).$usage("uniform");
 
-    iterationBuffer = root
-      .createBuffer(d.arrayOf(d.u32, width * height))
-      .$usage("storage");
+    iterationBuffer = root.createBuffer(d.arrayOf(d.u32, width * height)).$usage("storage");
 
     paletteBuffer = root.createBuffer(PaletteSchema).$usage("storage");
 
-    iterationInputBuffer = root
-      .createBuffer(d.arrayOf(d.u32, width * height))
-      .$usage("storage");
+    iterationInputBuffer = root.createBuffer(d.arrayOf(d.u32, width * height)).$usage("storage");
 
     iterationInputMetadataBuffer = root
       .createBuffer(IterationInputMetadataSchema)

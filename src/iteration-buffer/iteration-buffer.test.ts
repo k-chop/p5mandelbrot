@@ -1,9 +1,6 @@
 import type { IterationBuffer } from "@/types";
 import { describe, expect, it } from "vitest";
-import {
-  scaleIterationCacheAroundPoint,
-  scaleRectAroundPoint,
-} from "./iteration-buffer";
+import { scaleIterationCacheAroundPoint, scaleRectAroundPoint } from "./iteration-buffer";
 
 describe("scaleRectAroundPoint", () => {
   it("原点で1.0倍しても変化しない", () => {

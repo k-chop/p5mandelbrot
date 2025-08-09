@@ -11,10 +11,7 @@ export const clearWorkerReference = () => {
   runningWorkerFacadeMap.clear();
 };
 
-export const setWorkerReference = (
-  jobId: JobId,
-  worker: MandelbrotFacadeLike,
-) => {
+export const setWorkerReference = (jobId: JobId, worker: MandelbrotFacadeLike) => {
   runningWorkerFacadeMap.set(jobId, worker);
 };
 

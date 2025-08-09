@@ -2,11 +2,7 @@ import { SimpleTooltip } from "@/components/simple-tooltip";
 import { Button } from "@/shadcn/components/ui/button";
 import { Card } from "@/shadcn/components/ui/card";
 import { useStoreValue } from "@/store/store";
-import {
-  IconArrowBigLeftLine,
-  IconRefresh,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconArrowBigLeftLine, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { Suspense } from "react";
 import { POIData } from "../../types";
 import { POICardPreview } from "./poi-card-preview";
@@ -18,12 +14,7 @@ type POICardProps = {
   onRegenerateThumbnail: () => void;
 };
 
-export const POICard = ({
-  poi,
-  onDelete,
-  onApply,
-  onRegenerateThumbnail,
-}: POICardProps) => {
+export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICardProps) => {
   const { r, N } = poi;
 
   const canRegenerate = useIsInSamePlace(poi);
@@ -49,11 +40,7 @@ export const POICard = ({
           <div className="mt-2 flex justify-between gap-2">
             {canRegenerate ? (
               <SimpleTooltip content="Regenerate thumbnail">
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  onClick={onRegenerateThumbnail}
-                >
+                <Button variant="secondary" size="icon" onClick={onRegenerateThumbnail}>
                   <IconRefresh />
                 </Button>
               </SimpleTooltip>
@@ -83,11 +70,5 @@ const useIsInSamePlace = (poi: POIData) => {
   const N = useStoreValue("N");
   const mode = useStoreValue("mode");
 
-  return (
-    poi.x.eq(centerX) &&
-    poi.y.eq(centerY) &&
-    poi.r.eq(r) &&
-    poi.N === N &&
-    poi.mode === mode
-  );
+  return poi.x.eq(centerX) && poi.y.eq(centerY) && poi.r.eq(r) && poi.N === N && poi.mode === mode;
 };

@@ -80,12 +80,7 @@ describe("d3-chromatic", () => {
 
 describe("othersPalette", () => {
   it("不正な入力に対してデフォルト値を適用する", () => {
-    const palette = new OthersPalette(
-      -1,
-      () => ({ mode: "hsv", h: 0, s: 0, v: 0 }),
-      true,
-      -512,
-    );
+    const palette = new OthersPalette(-1, () => ({ mode: "hsv", h: 0, s: 0, v: 0 }), true, -512);
     const serialized = palette.serialize();
     expect(serialized).toBe("others,hue360,1,1,0");
   });

@@ -1,10 +1,5 @@
 import { Button } from "@/shadcn/components/ui/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shadcn/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shadcn/components/ui/tabs";
 import { useToast } from "@/shadcn/hooks/use-toast";
 import { isGithubPages } from "@/utils/location";
 import { IconCircleCheck, IconCopy } from "@tabler/icons-react";
@@ -13,8 +8,7 @@ import { POI } from "./poi";
 import { Settings } from "./settings";
 import { usePOI } from "./use-poi";
 
-const tabsContentClass =
-  "flex h-full grow flex-col data-[state=inactive]:hidden";
+const tabsContentClass = "flex h-full grow flex-col data-[state=inactive]:hidden";
 
 export const Operations = () => {
   if (isGithubPages()) {
@@ -50,17 +44,12 @@ const SuggestRedirect = () => {
       <div className="text-lg font-bold">This is outdated app.</div>
       <div className="py-2">
         Please visit{" "}
-        <a
-          href="https://p5mandelbrot.pages.dev"
-          className="text-primary hover:underline"
-        >
+        <a href="https://p5mandelbrot.pages.dev" className="text-primary hover:underline">
           https://p5mandelbrot.pages.dev
         </a>{" "}
         to use new app.
       </div>
-      <div className="py-2">
-        If you wish to export/import the POI list, use this button.
-      </div>
+      <div className="py-2">If you wish to export/import the POI list, use this button.</div>
       <div className="py-2">
         <Button
           variant="default"

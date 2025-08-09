@@ -6,8 +6,7 @@ let runningList: MandelbrotJob[] = [];
 const doneJobIds = new Set<string>();
 
 const executableJobFilter = (job: MandelbrotJob) =>
-  job.requiredJobIds.length === 0 ||
-  job.requiredJobIds.every((id) => doneJobIds.has(id));
+  job.requiredJobIds.length === 0 || job.requiredJobIds.every((id) => doneJobIds.has(id));
 
 /**
  * jobTypeに対応する実行待ちのJobを返す
@@ -101,9 +100,7 @@ export const startJob = (job: MandelbrotJob) => {
  * 実行可能とは、requiredJobIdsが空か、全て完了していることを指す
  */
 export const popWaitingExecutableJob = (jobType: JobType) => {
-  const job = waitingList.find(
-    (job) => job.type === jobType && executableJobFilter(job),
-  );
+  const job = waitingList.find((job) => job.type === jobType && executableJobFilter(job));
   if (job) {
     waitingList = waitingList.filter((j) => j.id !== job.id);
   }

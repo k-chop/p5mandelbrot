@@ -61,12 +61,7 @@ export const initRenderer: Renderer["initRenderer"] = async (w, h, p5) => {
   return true;
 };
 
-export const renderToCanvas: Renderer["renderToCanvas"] = (
-  x,
-  y,
-  width,
-  height,
-) => {
+export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) => {
   if (needsRerender()) {
     markAsRendered();
     renderToMainBuffer();
@@ -81,11 +76,7 @@ export const addIterationBuffer: Renderer["addIterationBuffer"] = (
   rect = bufferRect,
   iterBuffer,
 ) => {
-  renderIterationsToUnifiedBuffer(
-    rect,
-    unifiedIterationBuffer,
-    iterBuffer ?? getIterationCache(),
-  );
+  renderIterationsToUnifiedBuffer(rect, unifiedIterationBuffer, iterBuffer ?? getIterationCache());
   markNeedsRerender();
 };
 
@@ -97,10 +88,7 @@ export const addIterationBuffer: Renderer["addIterationBuffer"] = (
  * - mainBufferのリサイズ
  * - cacheの位置変更（できれば）
  */
-export const resizeCanvas: Renderer["resizeCanvas"] = (
-  requestWidth,
-  requestHeight,
-) => {
+export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeight) => {
   const from = getCanvasSize();
   console.debug(
     `Request resize canvas to w=${requestWidth} h=${requestHeight}, from w=${from.width} h=${from.height}`,
@@ -122,8 +110,7 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (
   unifiedIterationBuffer = new Uint32Array(w * h * 4);
   mainBuffer.resizeCanvas(width, height);
 
-  const scaleFactor =
-    Math.min(width, height) / Math.min(from.width, from.height);
+  const scaleFactor = Math.min(width, height) / Math.min(from.width, from.height);
 
   console.debug("Resize scale factor", scaleFactor);
 
@@ -195,8 +182,7 @@ export const drawUICurrentParams = (p: p5, params: MandelbrotParams) => {
 
   p.text(`r: ${params.r.toPrecision(10)}\nN: ${params.N}`, 4, 14);
 
-  const isNotEnoughPrecision =
-    params.mode === "normal" && params.r.isLessThan(3.5e-14);
+  const isNotEnoughPrecision = params.mode === "normal" && params.r.isLessThan(3.5e-14);
   if (isNotEnoughPrecision) {
     p.textSize(16);
     p.textAlign(p.CENTER, p.CENTER);
@@ -253,9 +239,7 @@ const fillColor = (
         const idx01 = x2 + i + (y2 + j + 1) * doubleCanvasWidth;
         const idx11 = x2 + i + 1 + (y2 + j + 1) * doubleCanvasWidth;
 
-        iteration = Math.round(
-          (buffer[idx00] + buffer[idx10] + buffer[idx01] + buffer[idx11]) / 4,
-        );
+        iteration = Math.round((buffer[idx00] + buffer[idx10] + buffer[idx01] + buffer[idx11]) / 4);
 
         const r00 = palette.r(buffer[idx00]);
         const g00 = palette.g(buffer[idx00]);
@@ -384,17 +368,11 @@ const renderIterationsToUnifiedBuffer = (
           const worldX2x = worldX * 2;
 
           // 4点のデータを対応する位置にそのまま格納
-          unifiedIterationBuffer[worldY2x * doubleCanvasWidth + worldX2x] =
-            buffer[idx00];
-          unifiedIterationBuffer[
-            worldY2x * doubleCanvasWidth + (worldX2x + 1)
-          ] = buffer[idx10];
-          unifiedIterationBuffer[
-            (worldY2x + 1) * doubleCanvasWidth + worldX2x
-          ] = buffer[idx01];
-          unifiedIterationBuffer[
-            (worldY2x + 1) * doubleCanvasWidth + (worldX2x + 1)
-          ] = buffer[idx11];
+          unifiedIterationBuffer[worldY2x * doubleCanvasWidth + worldX2x] = buffer[idx00];
+          unifiedIterationBuffer[worldY2x * doubleCanvasWidth + (worldX2x + 1)] = buffer[idx10];
+          unifiedIterationBuffer[(worldY2x + 1) * doubleCanvasWidth + worldX2x] = buffer[idx01];
+          unifiedIterationBuffer[(worldY2x + 1) * doubleCanvasWidth + (worldX2x + 1)] =
+            buffer[idx11];
         }
       }
     }

@@ -11,11 +11,7 @@ import { updateStore } from "@/store/store";
 // 描画時に使うpaletteの状態に関するファイル
 
 /** 数値キーで選択できるpaletteのプリセット */
-const palettePresets: Palette[] = [
-  ...d3ChromaticPalettes,
-  ...othersPalettes,
-  ...chromaJsPalettes,
-];
+const palettePresets: Palette[] = [...d3ChromaticPalettes, ...othersPalettes, ...chromaJsPalettes];
 
 /** 現在選択中のPalette */
 let currentPalette: Palette = palettePresets[0];

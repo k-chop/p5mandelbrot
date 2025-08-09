@@ -45,10 +45,7 @@ export function add(a: Complex, b: Complex): Complex {
   return { re: a.re + b.re, im: a.im + b.im };
 }
 
-export function dMul(
-  a: ComplexArbitrary,
-  b: ComplexArbitrary | number,
-): ComplexArbitrary {
+export function dMul(a: ComplexArbitrary, b: ComplexArbitrary | number): ComplexArbitrary {
   if (typeof b === "number") {
     return {
       re: a.re.times(b),
@@ -76,21 +73,11 @@ export function mulN(a: Complex, b: number): Complex {
   };
 }
 
-export function mulRe(
-  aRe: number,
-  aIm: number,
-  bRe: number,
-  bIm: number,
-): number {
+export function mulRe(aRe: number, aIm: number, bRe: number, bIm: number): number {
   return aRe * bRe - aIm * bIm;
 }
 
-export function mulIm(
-  aRe: number,
-  aIm: number,
-  bRe: number,
-  bIm: number,
-): number {
+export function mulIm(aRe: number, aIm: number, bRe: number, bIm: number): number {
   return aRe * bIm + aIm * bRe;
 }
 
@@ -108,20 +95,14 @@ export function square(n: Complex): Complex {
   };
 }
 
-export function dAdd(
-  a: ComplexArbitrary,
-  b: ComplexArbitrary | Complex,
-): ComplexArbitrary {
+export function dAdd(a: ComplexArbitrary, b: ComplexArbitrary | Complex): ComplexArbitrary {
   return {
     re: a.re.plus(b.re),
     im: a.im.plus(b.im),
   };
 }
 
-export function dSub(
-  a: ComplexArbitrary,
-  b: ComplexArbitrary | Complex,
-): ComplexArbitrary {
+export function dSub(a: ComplexArbitrary, b: ComplexArbitrary | Complex): ComplexArbitrary {
   return {
     re: a.re.minus(b.re),
     im: a.im.minus(b.im),
@@ -155,22 +136,10 @@ export function pixelToComplexCoordinateComplexArbitrary(
 
   return {
     re: c.re.plus(
-      new BigNumber(pixelX)
-        .times(2)
-        .div(pixelWidth)
-        .minus(1)
-        .times(r)
-        .times(scaleX)
-        .sd(PRECISION),
+      new BigNumber(pixelX).times(2).div(pixelWidth).minus(1).times(r).times(scaleX).sd(PRECISION),
     ),
     im: c.im.minus(
-      new BigNumber(pixelY)
-        .times(2)
-        .div(pixelHeight)
-        .minus(1)
-        .times(r)
-        .times(scaleY)
-        .sd(PRECISION),
+      new BigNumber(pixelY).times(2).div(pixelHeight).minus(1).times(r).times(scaleY).sd(PRECISION),
     ),
   };
 }

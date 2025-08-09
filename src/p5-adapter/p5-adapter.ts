@@ -1,8 +1,4 @@
-import {
-  changePaletteFromPresets,
-  cycleCurrentPaletteOffset,
-  setPalette,
-} from "@/camera/palette";
+import { changePaletteFromPresets, cycleCurrentPaletteOffset, setPalette } from "@/camera/palette";
 import { getIterationTimeAt } from "@/iteration-buffer/iteration-buffer";
 import { startCalculation } from "@/mandelbrot";
 import {
@@ -19,10 +15,7 @@ import {
   setScaleParams,
   togglePinReference,
 } from "@/mandelbrot-state/mandelbrot-state";
-import {
-  addCurrentLocationToPOIHistory,
-  initializePOIHistory,
-} from "@/poi-history/poi-history";
+import { addCurrentLocationToPOIHistory, initializePOIHistory } from "@/poi-history/poi-history";
 import {
   getRenderer,
   initializeCanvasSize,
@@ -33,17 +26,8 @@ import {
   setWebGPUInitialized,
   setWebGPUInitializing,
 } from "@/rendering/common";
-import {
-  drawUICrossHair,
-  drawUICurrentParams,
-  drawUIScaleRate,
-} from "@/rendering/p5-renderer";
-import {
-  getCanvasSize,
-  initRenderer,
-  renderToCanvas,
-  resizeCanvas,
-} from "@/rendering/renderer";
+import { drawUICrossHair, drawUICurrentParams, drawUIScaleRate } from "@/rendering/p5-renderer";
+import { getCanvasSize, initRenderer, renderToCanvas, resizeCanvas } from "@/rendering/renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
 import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";
@@ -82,10 +66,7 @@ let UNSAFE_p5Instance: p5;
 /**
  * 開始地点からのドラッグ量を取得
  */
-const getDraggingPixelDiff = (
-  p: p5,
-  clickedOn: { mouseX: number; mouseY: number },
-) => {
+const getDraggingPixelDiff = (p: p5, clickedOn: { mouseX: number; mouseY: number }) => {
   const { mouseX: clickedMouseX, mouseY: clickedMouseY } = clickedOn;
 
   const pixelDiffX = Math.floor(p.mouseX - clickedMouseX);
@@ -97,19 +78,14 @@ const getDraggingPixelDiff = (
 /**
  * 右クリックドラッグでのzoom中の倍率を計算して返す
  */
-const calcInteractiveScaleFactor = (
-  p: p5,
-  clickedOn: { mouseX: number; mouseY: number },
-) => {
+const calcInteractiveScaleFactor = (p: p5, clickedOn: { mouseX: number; mouseY: number }) => {
   const { pixelDiffY } = getDraggingPixelDiff(p, clickedOn);
 
   const zoomRate = getStore("zoomRate");
   const maxPixelDiff = p.height / 2;
 
   const scaleFactor =
-    pixelDiffY < 0
-      ? Math.pow(zoomRate, -pixelDiffY / maxPixelDiff)
-      : 1 + pixelDiffY * -0.01;
+    pixelDiffY < 0 ? Math.pow(zoomRate, -pixelDiffY / maxPixelDiff) : 1 + pixelDiffY * -0.01;
 
   const minSize = 20;
   return Math.max(scaleFactor, minSize / p.width);
@@ -166,9 +142,7 @@ const calculateComplexMouseXY = (
   const scaleX = width / Math.min(width, height);
   const scaleY = height / Math.min(width, height);
 
-  const complexMouseX = currentParams.x.plus(
-    normalizedMouseX.times(currentParams.r).times(scaleX),
-  );
+  const complexMouseX = currentParams.x.plus(normalizedMouseX.times(currentParams.r).times(scaleX));
   const complexMouseY = currentParams.y.minus(
     normalizedMouseY.times(currentParams.r).times(scaleY),
   );
@@ -184,17 +158,12 @@ const calculateComplexMouseXY = (
  * 0を指定すると元のサイズで保存する
  * WebGPUレンダリング時はWebGPUキャンバスから画像を取得する
  */
-export const getResizedCanvasImageDataURL = (
-  height: number = 0,
-  isRawDownload = false,
-) => {
+export const getResizedCanvasImageDataURL = (height: number = 0, isRawDownload = false) => {
   const renderer = getRenderer();
   const isWebGPU = renderer === "webgpu" && isWebGPUInitialized();
 
   if (isWebGPU) {
-    const gpuCanvas = document.getElementById(
-      "gpu-canvas",
-    ) as HTMLCanvasElement;
+    const gpuCanvas = document.getElementById("gpu-canvas") as HTMLCanvasElement;
     if (gpuCanvas) {
       if (isRawDownload) {
         return gpuCanvas.toDataURL("image/png");
@@ -216,9 +185,7 @@ export const getResizedCanvasImageDataURL = (
       }
     }
 
-    console.warn(
-      "Failed to get image from WebGPU canvas, falling back to p5.js canvas",
-    );
+    console.warn("Failed to get image from WebGPU canvas, falling back to p5.js canvas");
   }
 
   const img = UNSAFE_p5Instance.get() as p5.Image & {
@@ -263,10 +230,7 @@ export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
 /**
  * ドラッグした分だけ位置を移動する
  */
-export const moveTo = (dragOffset: {
-  pixelDiffX: number;
-  pixelDiffY: number;
-}) => {
+export const moveTo = (dragOffset: { pixelDiffX: number; pixelDiffY: number }) => {
   const { width, height } = getCanvasSize();
 
   const centerX = width / 2;
@@ -286,10 +250,7 @@ export const moveTo = (dragOffset: {
 /**
  * scaleOriginを中心にscaleFactor倍する
  */
-export const scaleTo = (
-  scaleFactor: number,
-  scaleOrigin: { x: number; y: number },
-) => {
+export const scaleTo = (scaleFactor: number, scaleOrigin: { x: number; y: number }) => {
   const { width, height } = getCanvasSize();
 
   const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
@@ -399,18 +360,14 @@ export const p5Setup = async (p: p5) => {
         setWebGPUInitialized(true);
       } else {
         // 初期化失敗
-        console.log(
-          "WebGPU initialization failed, falling back to p5js renderer",
-        );
+        console.log("WebGPU initialization failed, falling back to p5js renderer");
         setRenderer("p5js");
         setWebGPUInitialized(false);
         setWebGPUInitializing(false);
       }
     } else {
       // WebGPU非対応ブラウザ
-      console.log(
-        "WebGPU is not supported in this browser, using p5js renderer",
-      );
+      console.log("WebGPU is not supported in this browser, using p5js renderer");
       setRenderer("p5js");
       setWebGPUInitialized(false);
       setWebGPUInitializing(false);
@@ -537,10 +494,7 @@ export const p5Draw = (p: p5) => {
 
   if (isTranslatingMainBuffer) {
     if (draggingMode === "move") {
-      const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(
-        p,
-        mouseClickedOn,
-      );
+      const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p, mouseClickedOn);
       x = pixelDiffX;
       y = pixelDiffY;
     } else if (draggingMode === "zoom") {
