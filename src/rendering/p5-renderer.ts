@@ -55,7 +55,7 @@ export const initRenderer: Renderer["initRenderer"] = async (w, h, p5) => {
   width = w;
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
-  unifiedIterationBuffer = new Uint32Array(w * h);
+  unifiedIterationBuffer = new Uint32Array(w * h * 4);
 
   console.log("Camera setup done", { width, height });
 
