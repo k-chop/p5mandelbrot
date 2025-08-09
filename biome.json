@@ -32,7 +32,7 @@
   },
   "html": { "formatter": { "selfCloseVoidElements": "always" } },
   "assist": {
-    "enabled": true,
+    "enabled": false,
     "actions": { "source": { "organizeImports": "on" } }
   }
 }
