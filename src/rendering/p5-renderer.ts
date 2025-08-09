@@ -34,7 +34,7 @@ let height: number;
 
 let bufferRect: Rect;
 
-let unifiedIterationBuffer: Uint32Array;
+let unifiedIterationBuffer: Uint32Array<ArrayBuffer>;
 
 export const getCanvasSize: Renderer["getCanvasSize"] = () => ({
   width,
@@ -206,7 +206,7 @@ const fillColor = (
   canvasWidth: number,
   pixels: Uint8ClampedArray,
   palette: Palette,
-  buffer: Uint32Array,
+  buffer: Uint32Array<ArrayBuffer>,
   isSuperSampled: boolean,
   maxIteration: number,
   density: number,
@@ -282,7 +282,7 @@ const renderIterationsToPixel = (
   worldRect: Rect,
   graphics: p5.Graphics,
   maxIteration: number,
-  unifiedIterationBuffer: Uint32Array,
+  unifiedIterationBuffer: Uint32Array<ArrayBuffer>,
   isSuperSampled: boolean = false,
   palette: Palette,
 ) => {
@@ -325,7 +325,7 @@ const renderIterationsToPixel = (
  */
 const renderIterationsToUnifiedBuffer = (
   worldRect: Rect,
-  unifiedIterationBuffer: Uint32Array,
+  unifiedIterationBuffer: Uint32Array<ArrayBuffer>,
   iterationsResult: IterationBuffer[],
 ) => {
   const { width: canvasWidth } = getCanvasSize();

@@ -94,7 +94,7 @@ export type MandelbrotWorkerType = (typeof mandelbrotWorkerTypes)[number];
 
 export interface IterationBuffer {
   rect: Rect;
-  buffer: Uint32Array;
+  buffer: Uint32Array<ArrayBuffer>;
   resolution: Resolution;
   isSuperSampled?: boolean;
 }

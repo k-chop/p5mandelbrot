@@ -14,7 +14,7 @@ const subscribers: Set<() => void> = new Set();
 
 export const upsertIterationCache = (
   rect: Rect,
-  buffer: Uint32Array,
+  buffer: Uint32Array<ArrayBuffer>,
   resolution: Resolution,
   isSuperSampled = false,
 ): IterationBuffer => {
