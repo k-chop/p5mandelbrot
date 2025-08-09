@@ -1,3 +1,4 @@
+import { getRenderer } from "@/rendering/common";
 import { getCanvasSize } from "@/rendering/renderer";
 import { getStore, updateStore, updateStoreWith } from "@/store/store";
 import type { MandelbrotParams, OffsetParams } from "@/types";
@@ -64,11 +65,11 @@ export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
   const needModeChange = params.mode != null && currentParams.mode !== params.mode;
   const needResetOffset = params.r != null && !currentParams.r.eq(params.r);
 
-  if (!params.isSuperSampling) {
-    // supersamplingは次の描画で解除される
-    currentParams = { ...currentParams, ...params, isSuperSampling: false };
+  // TEMP: supersamplingはp5jsでの描画のみ有効
+  if (params.isSuperSampling && getRenderer() === "p5js") {
+    currentParams = { ...currentParams, ...params, isSuperSampling: true };
   } else {
-    // FIXME: 一時的にsupersamplingは無効にしている
+    // supersamplingは次の描画で解除される
     currentParams = { ...currentParams, ...params, isSuperSampling: false };
   }
 
