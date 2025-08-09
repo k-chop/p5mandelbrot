@@ -37,7 +37,6 @@
     "eslint": "9.31.0",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "5.2.0",
-    "eslint-plugin-tailwindcss": "3.18.2",
     "npm-run-all2": "8.0.4",
     "tailwindcss": "4.1.11",
     "tsx": "4.20.3",
