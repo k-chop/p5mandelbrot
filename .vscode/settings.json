@@ -1,4 +1,6 @@
 {
+  "prettier.enable": false,
+  "biome.enabled": true,
   "files.associations": {
     "*.css": "tailwindcss"
   },
