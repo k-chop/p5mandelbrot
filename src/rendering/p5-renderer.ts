@@ -204,7 +204,7 @@ const fillColor = (
   x: number,
   y: number,
   canvasWidth: number,
-  imageData: Uint8ClampedArray,
+  imageData: Uint8ClampedArray<ArrayBuffer>,
   palette: Palette,
   buffer: Uint32Array<ArrayBuffer>,
   isSuperSampled: boolean,
@@ -299,7 +299,7 @@ const renderIterationsToPixel = (
 
   for (let worldY = startY; worldY < endY; worldY++) {
     for (let worldX = startX; worldX < endX; worldX++) {
-      const imageData = graphics.pixels as unknown as Uint8ClampedArray;
+      const imageData = graphics.pixels as unknown as Uint8ClampedArray<ArrayBuffer>;
 
       fillColor(
         worldX,
