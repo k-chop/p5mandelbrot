@@ -204,7 +204,7 @@ const fillColor = (
   x: number,
   y: number,
   canvasWidth: number,
-  pixels: Uint8ClampedArray,
+  imageData: Uint8ClampedArray,
   palette: Palette,
   buffer: Uint32Array<ArrayBuffer>,
   isSuperSampled: boolean,
@@ -264,15 +264,15 @@ const fillColor = (
       }
 
       if (iteration !== maxIteration) {
-        pixels[pixelIndex + 0] = r;
-        pixels[pixelIndex + 1] = g;
-        pixels[pixelIndex + 2] = b;
-        pixels[pixelIndex + 3] = 255;
+        imageData[pixelIndex + 0] = r;
+        imageData[pixelIndex + 1] = g;
+        imageData[pixelIndex + 2] = b;
+        imageData[pixelIndex + 3] = 255;
       } else {
-        pixels[pixelIndex + 0] = 0;
-        pixels[pixelIndex + 1] = 0;
-        pixels[pixelIndex + 2] = 0;
-        pixels[pixelIndex + 3] = 255;
+        imageData[pixelIndex + 0] = 0;
+        imageData[pixelIndex + 1] = 0;
+        imageData[pixelIndex + 2] = 0;
+        imageData[pixelIndex + 3] = 255;
       }
     }
   }
@@ -299,13 +299,13 @@ const renderIterationsToPixel = (
 
   for (let worldY = startY; worldY < endY; worldY++) {
     for (let worldX = startX; worldX < endX; worldX++) {
-      const pixels = graphics.pixels as unknown as Uint8ClampedArray;
+      const imageData = graphics.pixels as unknown as Uint8ClampedArray;
 
       fillColor(
         worldX,
         worldY,
         canvasWidth,
-        pixels,
+        imageData,
         palette,
         unifiedIterationBuffer,
         isSuperSampled,
