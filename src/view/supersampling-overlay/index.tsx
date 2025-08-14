@@ -68,6 +68,13 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
   }, []);
 
   const handleClose = useCallback(() => {
+    // 閉じるときにcanvasのメモリ解放しておく
+    const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement;
+    if (canvas) {
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+
     const overlay = document.getElementById("supersampling-overlay");
     if (overlay) {
       overlay.style.display = "";
