@@ -4,7 +4,6 @@ import type { IterationBuffer } from "@/types";
 import type p5 from "p5";
 import { getRenderer } from "./common";
 
-import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import * as p5Renderer from "./p5-renderer";
 import * as webGPURenderer from "./webgpu-renderer";
 
@@ -44,7 +43,11 @@ export type Renderer = {
   /**
    * 描画するためのiterationBufferをrendererに登録する
    */
-  addIterationBuffer: (rect?: Rect, iterBuffer?: IterationBuffer[]) => void;
+  addIterationBuffer: (
+    rect?: Rect,
+    iterBuffer?: IterationBuffer[],
+    isSuperSampled?: boolean,
+  ) => void;
   /**
    * renderer側でのpalette dataの登録を行う
    *
@@ -96,18 +99,21 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (...args) => {
   }
 };
 
-export const addIterationBuffer: Renderer["addIterationBuffer"] = (...args) => {
+export const addIterationBuffer: Renderer["addIterationBuffer"] = (
+  rect,
+  iterBuffer,
+  isSuperSampled,
+) => {
   const rendererType = getRenderer();
-  const { isSuperSampling } = getCurrentParams();
 
   // supersamplingが有効な場合はp5rendererを使って別canvasに書き込む
-  if (isSuperSampling) return p5Renderer.addIterationBuffer(...args);
+  if (isSuperSampled) return p5Renderer.addIterationBuffer(rect, iterBuffer, isSuperSampled);
 
   switch (rendererType) {
     case "p5js":
-      return p5Renderer.addIterationBuffer(...args);
+      return p5Renderer.addIterationBuffer(rect, iterBuffer);
     case "webgpu":
-      return webGPURenderer.addIterationBuffer(...args);
+      return webGPURenderer.addIterationBuffer(rect, iterBuffer);
   }
 };
 

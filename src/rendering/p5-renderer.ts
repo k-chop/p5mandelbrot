@@ -76,9 +76,9 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
 export const addIterationBuffer: Renderer["addIterationBuffer"] = (
   rect = bufferRect,
   iterBuffer,
+  isSuperSampled = false,
 ) => {
-  const { isSuperSampling = false } = getCurrentParams();
-  if (isSuperSampling && iterBuffer) {
+  if (isSuperSampled && iterBuffer) {
     renderIterationsToPixelSupersampled(rect, iterBuffer);
   } else {
     renderIterationsToUnifiedBuffer(
@@ -532,7 +532,7 @@ const renderToMainBuffer = (rect: Rect = bufferRect) => {
     mainBuffer,
     params.N,
     unifiedIterationBuffer,
-    params.isSuperSampling,
+    false,
     getCurrentPalette(),
   );
 };

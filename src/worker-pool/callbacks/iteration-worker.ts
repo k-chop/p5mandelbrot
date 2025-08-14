@@ -60,7 +60,7 @@ export const onIterationWorkerResult: IterationResultCallback = (result, job) =>
 
   batchContext.onChangeProgress();
 
-  addIterationBuffer(rect, [iterBuffer]);
+  addIterationBuffer(rect, [iterBuffer], isSuperSampled);
 
   // UIに変更を通知
   notifyIterationCacheUpdate();
