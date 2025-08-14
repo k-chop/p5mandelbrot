@@ -14,7 +14,7 @@ import { refOrbitWorkerPath, workerPaths } from "@/workers";
 import type { RefOrbitContext } from "@/workers/calc-ref-orbit";
 
 export interface IterationResult {
-  type: "result";
+  type: "result" | "terminated";
   iterations: ArrayBuffer;
   elapsed: number;
 }
@@ -103,6 +103,13 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
         case "progress": {
           const { progress } = data;
           this.progressCallback?.({ type: "progress", progress }, job);
+          break;
+        }
+        case "terminated": {
+          this.worker.removeEventListener("message", f);
+          this.running = false;
+
+          // this.terminatedCallback?.(job);
           break;
         }
       }

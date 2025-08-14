@@ -1,3 +1,5 @@
+import { getPrevBatchId } from "@/mandelbrot-state/mandelbrot-state";
+import { cancelBatch } from "@/worker-pool/worker-pool";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 interface SupersamplingOverlayProps {
@@ -68,6 +70,9 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
     if (overlay) {
       overlay.style.display = "";
     }
+    // 処理中だったらバッチを止める
+    cancelBatch(getPrevBatchId());
+
     onClose?.();
   }, [onClose]);
 

@@ -226,6 +226,9 @@ const calcHandler = (data: IterationWorkerParams) => {
   }
   if (terminateChecker[workerIdx] !== 0) {
     console.debug(`${jobId}: terminated`);
+    self.postMessage({
+      type: "terminated",
+    });
   } else {
     // console.debug(`${jobId}: completed`);
   }
