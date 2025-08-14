@@ -6,10 +6,51 @@ interface SupersamplingOverlayProps {
 
 const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [fitMode, setFitMode] = useState(true);
+  const [dragState, setDragState] = useState({
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    scrollLeft: 0,
+    scrollTop: 0,
+  });
 
   const handleToggleFitMode = useCallback(() => {
     setFitMode((prev) => !prev);
+  }, []);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (fitMode || !containerRef.current) return;
+    
+    setDragState({
+      isDragging: true,
+      startX: e.pageX - containerRef.current.offsetLeft,
+      startY: e.pageY - containerRef.current.offsetTop,
+      scrollLeft: containerRef.current.scrollLeft,
+      scrollTop: containerRef.current.scrollTop,
+    });
+  }, [fitMode]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!dragState.isDragging || !containerRef.current) return;
+    
+    e.preventDefault();
+    const x = e.pageX - containerRef.current.offsetLeft;
+    const y = e.pageY - containerRef.current.offsetTop;
+    const walkX = (x - dragState.startX) * 1;
+    const walkY = (y - dragState.startY) * 1;
+    
+    containerRef.current.scrollLeft = dragState.scrollLeft - walkX;
+    containerRef.current.scrollTop = dragState.scrollTop - walkY;
+  }, [dragState]);
+
+  const handleMouseUp = useCallback(() => {
+    setDragState(prev => ({ ...prev, isDragging: false }));
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setDragState(prev => ({ ...prev, isDragging: false }));
   }, []);
 
   const handleClose = useCallback(() => {
@@ -35,16 +76,41 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
-      {/* キャンバス - 画面フルサイズ */}
-      <canvas
-        key="supersampling-canvas"
-        id="supersampling-canvas"
-        ref={canvasRef}
+      {/* キャンバスコンテナ */}
+      <div
+        ref={containerRef}
         className={
-          fitMode ? "w-full h-full object-contain" : "w-full h-full object-none object-center"
+          fitMode 
+            ? "w-full h-full flex items-center justify-center"
+            : "w-full h-full overflow-auto cursor-grab active:cursor-grabbing"
         }
-        style={fitMode ? {} : { imageRendering: "pixelated" }}
-      />
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        style={fitMode ? {} : { cursor: dragState.isDragging ? 'grabbing' : 'grab' }}
+      >
+        <canvas
+          key="supersampling-canvas"
+          id="supersampling-canvas"
+          ref={canvasRef}
+          className={
+            fitMode 
+              ? "max-w-full max-h-full object-contain"
+              : "block"
+          }
+          style={
+            fitMode 
+              ? {} 
+              : { 
+                  imageRendering: "pixelated",
+                  minWidth: "100%",
+                  minHeight: "100%",
+                  display: "block"
+                }
+          }
+        />
+      </div>
 
       {/* 左上の閉じるボタン */}
       <div className="absolute top-4 left-4">
