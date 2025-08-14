@@ -55,7 +55,7 @@ export const initRenderer: Renderer["initRenderer"] = async (w, h, p5) => {
   width = w;
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
-  unifiedIterationBuffer = new Uint32Array(w * h * 4);
+  unifiedIterationBuffer = new Uint32Array(w * h);
 
   console.log("Camera setup done", { width, height });
 
@@ -117,7 +117,7 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
 
-  unifiedIterationBuffer = new Uint32Array(w * h * 4);
+  unifiedIterationBuffer = new Uint32Array(w * h);
   mainBuffer.resizeCanvas(width, height);
 
   const scaleFactor = Math.min(width, height) / Math.min(from.width, from.height);
