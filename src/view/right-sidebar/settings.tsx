@@ -1,12 +1,12 @@
 import { ValueSlider } from "@/components/slider-wrapper";
+import { resizeTo } from "@/p5-adapter/p5-adapter";
+import type { RendererType } from "@/rendering/common";
 import {
   getRenderer,
   isWebGPUInitialized,
   isWebGPUSupported,
   setRenderer,
 } from "@/rendering/common";
-import type { RendererType } from "@/rendering/common";
-import { resizeTo } from "@/p5-adapter/p5-adapter";
 import { Button } from "@/shadcn/components/ui/button";
 import { Label } from "@/shadcn/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
@@ -14,7 +14,7 @@ import { useToast } from "@/shadcn/hooks/use-toast";
 import { readPOIListFromClipboard } from "@/store/sync-storage/poi-list";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { IconCircleCheck } from "@tabler/icons-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getStore, updateStore, useStoreValue } from "../../store/store";
 import { DEFAULT_WORKER_COUNT } from "../../store/sync-storage/settings";
 
@@ -33,6 +33,8 @@ export const Settings = () => {
   const zoomRate = useStoreValue("zoomRate");
   const workerCount = useStoreValue("workerCount");
   const maxCanvasSize = useStoreValue("maxCanvasSize");
+  const supersamplingWidth = useStoreValue("supersamplingWidth");
+  const supersamplingHeight = useStoreValue("supersamplingHeight");
 
   // WebGPUサポート状態の確認
   const [webGPUSupported, setWebGPUSupported] = useState(false);
@@ -66,6 +68,8 @@ export const Settings = () => {
     "47",
   ];
   const maxCanvasSizeValues = ["-1", "128", "256", "512", "800", "1024", "2048"];
+  const supersamplingWidthValues = ["1280", "1920", "2560", "3840" /* "5120", "7680" */];
+  const supersamplingHeightValues = ["720", "1080", "1440", "2160" /* "2880", "4320" */];
 
   const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
   const [workerCountPreview, setWorkerCountPreview] = useState(workerCount);
@@ -74,6 +78,8 @@ export const Settings = () => {
     getStore("animationCycleStep"),
   );
   const [maxCanvasSizePreview, setMaxCanvasSizePreview] = useState(maxCanvasSize);
+  const [supersamplingWidthPreview, setSupersamplingWidthPreview] = useState(supersamplingWidth);
+  const [supersamplingHeightPreview, setSupersamplingHeightPreview] = useState(supersamplingHeight);
 
   return (
     <div className="flex max-w-80 flex-col gap-6">
@@ -178,6 +184,26 @@ export const Settings = () => {
             updateStore("maxCanvasSize", value);
             resizeTo();
           }}
+        />
+      </div>
+      <div>
+        <div className="mb-1 ml-2">Supersampling Width: {supersamplingWidthPreview}px</div>
+        <ValueSlider<number>
+          values={supersamplingWidthValues}
+          defaultValue={supersamplingWidth}
+          valueConverter={(value) => parseInt(value)}
+          onValueChange={(value) => setSupersamplingWidthPreview(value)}
+          onValueCommit={(value) => updateStore("supersamplingWidth", value)}
+        />
+      </div>
+      <div>
+        <div className="mb-1 ml-2">Supersampling Height: {supersamplingHeightPreview}px</div>
+        <ValueSlider<number>
+          values={supersamplingHeightValues}
+          defaultValue={supersamplingHeight}
+          valueConverter={(value) => parseInt(value)}
+          onValueChange={(value) => setSupersamplingHeightPreview(value)}
+          onValueCommit={(value) => updateStore("supersamplingHeight", value)}
         />
       </div>
       <div>
