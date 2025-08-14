@@ -39,10 +39,10 @@ export const startCalculation = async (
   const { isSuperSampling } = getCurrentParams();
   if (isSuperSampling) {
     // supersampling用のcanvasを用意
-    const canvas = document.getElementById("supersampling-canvas");
+    const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement;
     if (canvas) {
-      canvas.style.width = "800px";
-      canvas.style.height = "800px";
+      canvas.width = 800;
+      canvas.height = 800;
       const overlay = document.getElementById("supersampling-overlay")!;
       overlay.style.display = "block";
     }
