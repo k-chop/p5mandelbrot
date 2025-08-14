@@ -36,32 +36,41 @@ export const startCalculation = async (
   cancelBatch(getPrevBatchId());
   setPrevBatchId(currentBatchId);
 
+  // FIXME: 仮
+  const SUPER_WIDTH = 2560;
+  const SUPER_HEIGHT = 1440;
+
   const { isSuperSampling } = getCurrentParams();
   if (isSuperSampling) {
     // supersampling用のcanvasを用意
     const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement;
     if (canvas) {
-      canvas.width = 800;
-      canvas.height = 800;
-      const overlay = document.getElementById("supersampling-overlay")!;
-      overlay.style.display = "block";
+      canvas.width = SUPER_WIDTH;
+      canvas.height = SUPER_HEIGHT;
+
+      const overlay = document.getElementById("supersampling-overlay");
+      if (overlay) overlay.style.display = "block";
     }
   }
 
-  const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
+  const { width: canvasWidth, height: canvasHeight } = isSuperSampling
+    ? { width: SUPER_WIDTH, height: SUPER_HEIGHT }
+    : getCanvasSize();
 
-  const rect = translateIterationCache(canvasWidth, canvasHeight, getOffsetParams());
+  if (!isSuperSampling) {
+    const rect = translateIterationCache(canvasWidth, canvasHeight, getOffsetParams());
 
-  // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
-  removeUnusedIterationCache();
-  addIterationBuffer(rect);
-  markNeedsRerender();
+    // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
+    removeUnusedIterationCache();
+    addIterationBuffer(rect);
+    markNeedsRerender();
 
-  // ドラッグ中に描画をずらしていたのを戻す
-  onTranslated();
+    // ドラッグ中に描画をずらしていたのを戻す
+    onTranslated();
+  }
 
   // workerに分配するために描画範囲を分割
-  const divideRectCount = getWorkerCount("calc-iteration");
+  const divideRectCount = getWorkerCount("calc-iteration") * (isSuperSampling ? 4 : 1);
   const currentParams = getCurrentParams();
   const calculationRects = getCalculationTargetRects(
     canvasWidth,
