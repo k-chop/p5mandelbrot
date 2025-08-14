@@ -201,7 +201,7 @@ export function tickWorkerPool() {
 
     // 空いているworkerが見つからなかったのでqueueに戻す
     if (!refPool[workerIdx]) {
-      console.error("All workers are currently busy: ", {
+      console.warn("All ref workers are currently busy: ", {
         refPoolLength: refPool.length,
         waitingJobs: getWaitingJobs(),
         runningJobs: getRunningJobs(),
@@ -225,7 +225,7 @@ export function tickWorkerPool() {
 
     // 空いているworkerが見つからなかったのでqueueに戻す
     if (!iterPool[workerIdx]) {
-      console.error("All workers are currently busy: ", {
+      console.warn("All iter workers are currently busy: ", {
         iterPoolLength: iterPool.length,
         waitingJobs: getWaitingJobs(),
         runningJobs: getRunningJobs(),
