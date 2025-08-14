@@ -141,7 +141,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
       </div>
 
       {/* 左上の閉じるボタン */}
-      <div className="absolute top-4 left-4">
+      <div className="absolute top-4 left-4 z-20">
         <button
           onClick={handleClose}
           className="p-2 text-white/80 bg-black/80 hover:text-white hover:bg-red-500/70 rounded-full shadow-lg transition-colors backdrop-blur-sm border border-white/20"
@@ -158,7 +158,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
       </div>
 
       {/* 右上のコントロール */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-20">
         <button
           onClick={handleToggleFitMode}
           className="px-3 py-1 text-sm bg-blue-500/90 text-white rounded shadow-lg hover:bg-blue-600/90 transition-colors backdrop-blur-sm"
