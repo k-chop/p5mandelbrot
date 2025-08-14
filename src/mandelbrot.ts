@@ -40,16 +40,15 @@ export const startCalculation = async (
   cancelBatch(getPrevBatchId());
   setPrevBatchId(currentBatchId);
 
-  // FIXME: 仮
-  const SUPER_WIDTH = 2560;
-  const SUPER_HEIGHT = 1440;
+  const supersamplingWidth = getStore("supersamplingWidth");
+  const supersamplingHeight = getStore("supersamplingHeight");
 
   if (isSuperSampling) {
     // supersampling用のcanvasを用意
     const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement;
     if (canvas) {
-      canvas.width = SUPER_WIDTH;
-      canvas.height = SUPER_HEIGHT;
+      canvas.width = supersamplingWidth;
+      canvas.height = supersamplingHeight;
 
       const overlay = document.getElementById("supersampling-overlay");
       if (overlay) overlay.style.display = "block";
@@ -57,7 +56,7 @@ export const startCalculation = async (
   }
 
   const { width: canvasWidth, height: canvasHeight } = isSuperSampling
-    ? { width: SUPER_WIDTH, height: SUPER_HEIGHT }
+    ? { width: supersamplingWidth, height: supersamplingHeight }
     : getCanvasSize();
 
   if (!isSuperSampling) {

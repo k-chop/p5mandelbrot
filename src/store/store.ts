@@ -42,6 +42,10 @@ type Store = {
   paletteOffset: number;
   animationCycleStep: number;
 
+  // supersampling settings
+  supersamplingWidth: number;
+  supersamplingHeight: number;
+
   // state
   progress: string | ResultSpans;
   /** 現在使用中のrenderer */
@@ -76,6 +80,9 @@ const store: Store = {
   paletteLength: 128,
   paletteOffset: 0,
   animationCycleStep: 1,
+  // supersampling settings
+  supersamplingWidth: 1920,
+  supersamplingHeight: 1080,
   // state
   progress: "",
   rendererType: "p5js",

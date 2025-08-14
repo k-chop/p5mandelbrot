@@ -9,6 +9,8 @@ export type Settings = {
   animationCycleStep: number;
   maxCanvasSize: number;
   rendererType: RendererType;
+  supersamplingWidth: number;
+  supersamplingHeight: number;
 };
 
 export const DEFAULT_WORKER_COUNT =
@@ -21,6 +23,8 @@ const defaultSettings = {
   animationCycleStep: 1,
   maxCanvasSize: -1,
   rendererType: "p5js" as RendererType,
+  supersamplingWidth: 1920,
+  supersamplingHeight: 1080,
 } satisfies Settings;
 
 export const isSettingField = (key: string): key is keyof Settings => key in defaultSettings;
@@ -33,6 +37,8 @@ export const writeSettingsToStorage = () => {
     animationCycleStep: getStore("animationCycleStep"),
     maxCanvasSize: getStore("maxCanvasSize"),
     rendererType: getStore("rendererType"),
+    supersamplingWidth: getStore("supersamplingWidth"),
+    supersamplingHeight: getStore("supersamplingHeight"),
   } satisfies Settings;
 
   const serialized = JSON.stringify(settings);
