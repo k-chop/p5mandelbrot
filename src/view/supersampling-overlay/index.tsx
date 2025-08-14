@@ -53,6 +53,10 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
     setDragState(prev => ({ ...prev, isDragging: false }));
   }, []);
 
+  const handleBackgroundEvent = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
   const handleClose = useCallback(() => {
     const overlay = document.getElementById("supersampling-overlay");
     if (overlay) {
@@ -75,7 +79,11 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
   }, [handleClose]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
+    <div 
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+      onMouseDown={handleBackgroundEvent}
+      onClick={handleBackgroundEvent}
+    >
       {/* キャンバスコンテナ */}
       <div
         ref={containerRef}
