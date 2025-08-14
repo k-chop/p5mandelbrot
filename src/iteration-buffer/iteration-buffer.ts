@@ -22,6 +22,9 @@ export const upsertIterationCache = (
 
   const idx = iterationCache.findIndex((i) => i.rect.x === rect.x && i.rect.y === rect.y);
 
+  // supersampledな場合は別経路の描画なのでiterationCacheには積まない
+  if (isSuperSampled) return item
+  
   if (idx !== -1) {
     const old = iterationCache[idx];
     if (old.resolution.width * old.resolution.height < resolution.width * resolution.height) {

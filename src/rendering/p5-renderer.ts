@@ -77,8 +77,17 @@ export const addIterationBuffer: Renderer["addIterationBuffer"] = (
   rect = bufferRect,
   iterBuffer,
 ) => {
-  renderIterationsToUnifiedBuffer(rect, unifiedIterationBuffer, iterBuffer ?? getIterationCache());
-  markNeedsRerender();
+  const { isSuperSampling = false } = getCurrentParams();
+  if (isSuperSampling && iterBuffer) {
+    renderIterationsToPixelSupersampled(rect, iterBuffer);
+  } else {
+    renderIterationsToUnifiedBuffer(
+      rect,
+      unifiedIterationBuffer,
+      iterBuffer ?? getIterationCache(),
+    );
+    markNeedsRerender();
+  }
 };
 
 /**
@@ -378,6 +387,20 @@ const renderIterationsToUnifiedBuffer = (
       }
     }
   }
+};
+
+/**
+ * supersampliedなiterationBufferをその場でcanvasに書き込む。
+ * supersampleポップアップ内のcanvasへの描画で使用する
+ *
+ * unifiedIterationBufferは用いない。
+ * canvasに書き込んだらそのiterationBufferは捨てられる
+ */
+const renderIterationsToPixelSupersampled = (
+  worldRect: Rect,
+  iterationsResult: IterationBuffer[],
+) => {
+  return null;
 };
 
 const renderToMainBuffer = (rect: Rect = bufferRect) => {

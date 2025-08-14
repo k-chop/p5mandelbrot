@@ -36,13 +36,15 @@ export const startCalculation = async (
   cancelBatch(getPrevBatchId());
   setPrevBatchId(currentBatchId);
 
-  const { isSuperSampling } = getCurrentParams()
+  const { isSuperSampling } = getCurrentParams();
   if (isSuperSampling) {
     // supersampling用のcanvasを用意
-    const canvas = document.getElementById("supersampling-canvas")
+    const canvas = document.getElementById("supersampling-canvas");
     if (canvas) {
-      canvas.style.width = "1000px"
-      canvas.style.height = "1000px"
+      canvas.style.width = "800px";
+      canvas.style.height = "800px";
+      const overlay = document.getElementById("supersampling-overlay")!;
+      overlay.style.display = "block";
     }
   }
 

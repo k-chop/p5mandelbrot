@@ -4,6 +4,7 @@ import type { IterationBuffer } from "@/types";
 import type p5 from "p5";
 import { getRenderer } from "./common";
 
+import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import * as p5Renderer from "./p5-renderer";
 import * as webGPURenderer from "./webgpu-renderer";
 
@@ -97,6 +98,10 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (...args) => {
 
 export const addIterationBuffer: Renderer["addIterationBuffer"] = (...args) => {
   const rendererType = getRenderer();
+  const { isSuperSampling } = getCurrentParams();
+
+  // supersamplingが有効な場合はp5rendererを使って別canvasに書き込む
+  if (isSuperSampling) return p5Renderer.addIterationBuffer(...args);
 
   switch (rendererType) {
     case "p5js":
