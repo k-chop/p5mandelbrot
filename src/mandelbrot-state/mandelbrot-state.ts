@@ -64,12 +64,7 @@ export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
   const needModeChange = params.mode != null && currentParams.mode !== params.mode;
   const needResetOffset = params.r != null && !currentParams.r.eq(params.r);
 
-  if (params.isSuperSampling) {
-    currentParams = { ...currentParams, ...params, isSuperSampling: true };
-  } else {
-    // supersamplingは1バッチ間でのみ有効
-    currentParams = { ...currentParams, ...params, isSuperSampling: false };
-  }
+  currentParams = { ...currentParams, ...params };
 
   updateStore("r", currentParams.r);
   updateStore("N", currentParams.N);

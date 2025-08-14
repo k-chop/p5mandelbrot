@@ -13,6 +13,7 @@ import {
   markAsRenderedWithCurrentParams,
   resetOffsetParams,
   resetScaleParams,
+  setCurrentParams,
   setPrevBatchId,
 } from "./mandelbrot-state/mandelbrot-state";
 import type { Rect } from "./math/rect";
@@ -29,6 +30,9 @@ export const startCalculation = async (
   onComplete: (elapsed: number) => void,
   onTranslated: () => void,
 ) => {
+  const { isSuperSampling } = getCurrentParams();
+  // supersamplingは一回きりなのでここで変更はなかったことにする
+  setCurrentParams({ isSuperSampling: false });
   markAsRenderedWithCurrentParams();
 
   const currentBatchId = crypto.randomUUID();
@@ -40,7 +44,6 @@ export const startCalculation = async (
   const SUPER_WIDTH = 2560;
   const SUPER_HEIGHT = 1440;
 
-  const { isSuperSampling } = getCurrentParams();
   if (isSuperSampling) {
     // supersampling用のcanvasを用意
     const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement;
@@ -71,7 +74,7 @@ export const startCalculation = async (
 
   // workerに分配するために描画範囲を分割
   const divideRectCount = getWorkerCount("calc-iteration") * (isSuperSampling ? 4 : 1);
-  const currentParams = getCurrentParams();
+  const currentParams = { ...getCurrentParams(), isSuperSampling };
   const calculationRects = getCalculationTargetRects(
     canvasWidth,
     canvasHeight,
