@@ -412,25 +412,15 @@ const renderIterationsToPixelSupersampled = (
     return;
   }
 
-  const canvasWidth = 800;
-  const canvasHeight = 800;
-
   const params = getCurrentParams();
   const palette = getCurrentPalette();
 
-  // canvasサイズを設定
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
+  // HTML canvasのpixel density取得
+  const density = Math.round(window.devicePixelRatio || 1);
 
-  // 全体のimageDataを取得
-  const imageData = context.getImageData(0, 0, canvasWidth, canvasHeight);
-  const pixelData = imageData.data;
-
-  const density = 1; // canvasの場合は1
-
-  // iterationsResultから直接imageDataに書き込み（1回のループで処理）
+  // iterationsResultから直接canvasに描画
   for (const iterBuffer of iterationsResult) {
-    const { rect, buffer, resolution } = iterBuffer;
+    const { rect, buffer, resolution, isSuperSampled } = iterBuffer;
 
     // worldRectとiterationのrectが重なっている部分だけ処理
     const startY = Math.max(rect.y, worldRect.y);
@@ -438,16 +428,28 @@ const renderIterationsToPixelSupersampled = (
     const endY = Math.min(rect.y + rect.height, worldRect.y + worldRect.height);
     const endX = Math.min(rect.x + rect.width, worldRect.x + worldRect.width);
 
+    // 描画範囲のimageDataのみを取得
+    const drawWidth = endX - startX;
+    const drawHeight = endY - startY;
+
+    if (drawWidth <= 0 || drawHeight <= 0) continue;
+
+    const imageData = context.getImageData(startX, startY, drawWidth, drawHeight);
+    const pixelData = imageData.data;
+
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
-        // fillColor関数のdensityループを直接実装
+        // 部分imageDataでの相対座標
+        const relativeY = y - startY;
+        const relativeX = x - startX;
+
+        // retina対応
         for (let i = 0; i < density; i++) {
           for (let j = 0; j < density; j++) {
             const pixelIndex = Math.floor(
-              4 * ((y * density + j) * canvasWidth * density + (x * density + i)),
+              4 * ((relativeY * density + j) * drawWidth * density + (relativeX * density + i)),
             );
 
-            // iterBufferから直接iteration値を取得
             const localX = x - rect.x;
             const localY = y - rect.y;
 
@@ -462,55 +464,64 @@ const renderIterationsToPixelSupersampled = (
             let b = 0;
             let iteration = 0;
 
-            const idx00 = scaledX + scaledY * resolution.width;
-            const idx10 = scaledX + 1 + scaledY * resolution.width;
-            const idx01 = scaledX + (scaledY + 1) * resolution.width;
-            const idx11 = scaledX + 1 + (scaledY + 1) * resolution.width;
+            if (!isSuperSampled) {
+              const idx = scaledX + scaledY * resolution.width;
+              iteration = buffer[idx];
 
-            iteration = Math.round(
-              (buffer[idx00] + buffer[idx10] + buffer[idx01] + buffer[idx11]) / 4,
-            );
-
-            const r00 = palette.r(buffer[idx00]);
-            const g00 = palette.g(buffer[idx00]);
-            const b00 = palette.b(buffer[idx00]);
-
-            const r10 = palette.r(buffer[idx10]);
-            const g10 = palette.g(buffer[idx10]);
-            const b10 = palette.b(buffer[idx10]);
-
-            const r01 = palette.r(buffer[idx01]);
-            const g01 = palette.g(buffer[idx01]);
-            const b01 = palette.b(buffer[idx01]);
-
-            const r11 = palette.r(buffer[idx11]);
-            const g11 = palette.g(buffer[idx11]);
-            const b11 = palette.b(buffer[idx11]);
-
-            r = (r00 + r10 + r01 + r11) / 4;
-            g = (g00 + g10 + g01 + g11) / 4;
-            b = (b00 + b10 + b01 + b11) / 4;
-
-            // 直接imageDataに書き込み
-            if (iteration !== params.N) {
-              pixelData[pixelIndex + 0] = r;
-              pixelData[pixelIndex + 1] = g;
-              pixelData[pixelIndex + 2] = b;
-              pixelData[pixelIndex + 3] = 255;
+              r = palette.r(buffer[idx]);
+              g = palette.g(buffer[idx]);
+              b = palette.b(buffer[idx]);
             } else {
-              pixelData[pixelIndex + 0] = 0;
-              pixelData[pixelIndex + 1] = 0;
-              pixelData[pixelIndex + 2] = 0;
-              pixelData[pixelIndex + 3] = 255;
+              // supersamplingの場合は4点平均
+              const idx00 = scaledX + scaledY * resolution.width;
+              const idx10 = scaledX + 1 + scaledY * resolution.width;
+              const idx01 = scaledX + (scaledY + 1) * resolution.width;
+              const idx11 = scaledX + 1 + (scaledY + 1) * resolution.width;
+
+              iteration = Math.round(
+                (buffer[idx00] + buffer[idx10] + buffer[idx01] + buffer[idx11]) / 4,
+              );
+
+              const r00 = palette.r(buffer[idx00]);
+              const g00 = palette.g(buffer[idx00]);
+              const b00 = palette.b(buffer[idx00]);
+
+              const r10 = palette.r(buffer[idx10]);
+              const g10 = palette.g(buffer[idx10]);
+              const b10 = palette.b(buffer[idx10]);
+
+              const r01 = palette.r(buffer[idx01]);
+              const g01 = palette.g(buffer[idx01]);
+              const b01 = palette.b(buffer[idx01]);
+
+              const r11 = palette.r(buffer[idx11]);
+              const g11 = palette.g(buffer[idx11]);
+              const b11 = palette.b(buffer[idx11]);
+
+              r = (r00 + r10 + r01 + r11) / 4;
+              g = (g00 + g10 + g01 + g11) / 4;
+              b = (b00 + b10 + b01 + b11) / 4;
+
+              if (iteration !== params.N) {
+                pixelData[pixelIndex + 0] = r;
+                pixelData[pixelIndex + 1] = g;
+                pixelData[pixelIndex + 2] = b;
+                pixelData[pixelIndex + 3] = 255;
+              } else {
+                pixelData[pixelIndex + 0] = 0;
+                pixelData[pixelIndex + 1] = 0;
+                pixelData[pixelIndex + 2] = 0;
+                pixelData[pixelIndex + 3] = 255;
+              }
             }
           }
         }
       }
     }
-  }
 
-  // canvasに反映
-  context.putImageData(imageData, 0, 0);
+    // 描画範囲のみcanvasに反映
+    context.putImageData(imageData, startX, startY);
+  }
 };
 
 const renderToMainBuffer = (rect: Rect = bufferRect) => {
