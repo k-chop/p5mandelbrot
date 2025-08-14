@@ -2,6 +2,7 @@ import { LoadingSpinner } from "@/components/loading-spinner";
 import { getPrevBatchId } from "@/mandelbrot-state/mandelbrot-state";
 import { cancelBatch } from "@/worker-pool/worker-pool";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { Footer } from "../footer";
 
 interface SupersamplingOverlayProps {
   onClose?: () => void;
@@ -166,6 +167,9 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
           {fitMode ? "原寸表示" : "フィット表示"}
         </button>
       </div>
+      <div className="absolute bottom-4 z-1 w-full px-8">
+        <Progress />
+      </div>
     </div>
   );
 };
@@ -173,3 +177,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
 SupersamplingOverlayComponent.displayName = "SupersamplingOverlay";
 
 export const SupersamplingOverlay = memo(SupersamplingOverlayComponent);
+
+const Progress = () => {
+  return <Footer />;
+};
