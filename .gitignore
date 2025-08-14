@@ -33,3 +33,4 @@ rust_client/target/*
 
 # Claude agent files
 CLAUDE.md
+tmp
