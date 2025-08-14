@@ -67,7 +67,6 @@
     "radix-ui": "1.4.2",
     "react": "19.1.1",
     "react-dom": "19.1.1",
-    "react-promise-suspense": "0.3.4",
     "tailwind-merge": "3.3.1",
     "typegpu": "0.7.0",
     "ws": "8.18.3"
