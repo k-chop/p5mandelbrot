@@ -1,3 +1,4 @@
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { getPrevBatchId } from "@/mandelbrot-state/mandelbrot-state";
 import { cancelBatch } from "@/worker-pool/worker-pool";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -109,11 +110,23 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
         onMouseLeave={handleMouseLeave}
         style={fitMode ? {} : { cursor: dragState.isDragging ? "grabbing" : "grab" }}
       >
+        {/* ローディングスピナー - canvasの下に表示 */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="bg-black/80 text-white px-6 py-4 rounded-lg shadow-lg backdrop-blur-sm border border-white/20">
+            <div className="flex items-center gap-3">
+              <LoadingSpinner />
+              <span className="text-sm font-medium">描画中...</span>
+            </div>
+          </div>
+        </div>
+
         <canvas
           key="supersampling-canvas"
           id="supersampling-canvas"
           ref={canvasRef}
-          className={fitMode ? "max-w-full max-h-full object-contain" : "block"}
+          className={
+            fitMode ? "max-w-full max-h-full object-contain relative z-10" : "block relative z-10"
+          }
           style={
             fitMode
               ? {}
