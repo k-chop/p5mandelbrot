@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, memo, useEffect } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 interface SupersamplingOverlayProps {
   onClose?: () => void;
@@ -9,27 +9,27 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
   const [fitMode, setFitMode] = useState(true);
 
   const handleToggleFitMode = useCallback(() => {
-    setFitMode(prev => !prev);
+    setFitMode((prev) => !prev);
   }, []);
 
   const handleClose = useCallback(() => {
     const overlay = document.getElementById("supersampling-overlay");
     if (overlay) {
-      overlay.style.display = "none";
+      overlay.style.display = "";
     }
     onClose?.();
   }, [onClose]);
 
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         handleClose();
       }
     };
 
-    document.addEventListener('keydown', handleEscKey);
+    document.addEventListener("keydown", handleEscKey);
     return () => {
-      document.removeEventListener('keydown', handleEscKey);
+      document.removeEventListener("keydown", handleEscKey);
     };
   }, [handleClose]);
 
@@ -41,25 +41,18 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
         id="supersampling-canvas"
         ref={canvasRef}
         className={
-          fitMode
-            ? "w-full h-full object-contain"
-            : "w-full h-full object-none object-center"
+          fitMode ? "w-full h-full object-contain" : "w-full h-full object-none object-center"
         }
         style={fitMode ? {} : { imageRendering: "pixelated" }}
       />
-      
+
       {/* 左上の閉じるボタン */}
       <div className="absolute top-4 left-4">
         <button
           onClick={handleClose}
           className="p-2 text-white/80 hover:text-white hover:bg-red-500/20 rounded-full shadow-lg transition-colors backdrop-blur-sm border border-white/20"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
