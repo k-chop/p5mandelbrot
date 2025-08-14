@@ -43,7 +43,11 @@ export type Renderer = {
   /**
    * 描画するためのiterationBufferをrendererに登録する
    */
-  addIterationBuffer: (rect?: Rect, iterBuffer?: IterationBuffer[]) => void;
+  addIterationBuffer: (
+    rect?: Rect,
+    iterBuffer?: IterationBuffer[],
+    isSuperSampled?: boolean,
+  ) => void;
   /**
    * renderer側でのpalette dataの登録を行う
    *
@@ -95,14 +99,21 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (...args) => {
   }
 };
 
-export const addIterationBuffer: Renderer["addIterationBuffer"] = (...args) => {
+export const addIterationBuffer: Renderer["addIterationBuffer"] = (
+  rect,
+  iterBuffer,
+  isSuperSampled,
+) => {
   const rendererType = getRenderer();
+
+  // supersamplingが有効な場合はp5rendererを使って別canvasに書き込む
+  if (isSuperSampled) return p5Renderer.addIterationBuffer(rect, iterBuffer, isSuperSampled);
 
   switch (rendererType) {
     case "p5js":
-      return p5Renderer.addIterationBuffer(...args);
+      return p5Renderer.addIterationBuffer(rect, iterBuffer);
     case "webgpu":
-      return webGPURenderer.addIterationBuffer(...args);
+      return webGPURenderer.addIterationBuffer(rect, iterBuffer);
   }
 };
 

@@ -13,6 +13,7 @@ import {
   markAsRenderedWithCurrentParams,
   resetOffsetParams,
   resetScaleParams,
+  setCurrentParams,
   setPrevBatchId,
 } from "./mandelbrot-state/mandelbrot-state";
 import type { Rect } from "./math/rect";
@@ -29,6 +30,9 @@ export const startCalculation = async (
   onComplete: (elapsed: number) => void,
   onTranslated: () => void,
 ) => {
+  const { isSuperSampling } = getCurrentParams();
+  // supersamplingは一回きりなのでここで変更はなかったことにする
+  setCurrentParams({ isSuperSampling: false });
   markAsRenderedWithCurrentParams();
 
   const currentBatchId = crypto.randomUUID();
@@ -36,21 +40,41 @@ export const startCalculation = async (
   cancelBatch(getPrevBatchId());
   setPrevBatchId(currentBatchId);
 
-  const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
+  // FIXME: 仮
+  const SUPER_WIDTH = 2560;
+  const SUPER_HEIGHT = 1440;
 
-  const rect = translateIterationCache(canvasWidth, canvasHeight, getOffsetParams());
+  if (isSuperSampling) {
+    // supersampling用のcanvasを用意
+    const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement;
+    if (canvas) {
+      canvas.width = SUPER_WIDTH;
+      canvas.height = SUPER_HEIGHT;
 
-  // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
-  removeUnusedIterationCache();
-  addIterationBuffer(rect);
-  markNeedsRerender();
+      const overlay = document.getElementById("supersampling-overlay");
+      if (overlay) overlay.style.display = "block";
+    }
+  }
 
-  // ドラッグ中に描画をずらしていたのを戻す
-  onTranslated();
+  const { width: canvasWidth, height: canvasHeight } = isSuperSampling
+    ? { width: SUPER_WIDTH, height: SUPER_HEIGHT }
+    : getCanvasSize();
+
+  if (!isSuperSampling) {
+    const rect = translateIterationCache(canvasWidth, canvasHeight, getOffsetParams());
+
+    // 動かしたiteration cacheを使って再描画、これが描画が開始されるまでの画面になる
+    removeUnusedIterationCache();
+    addIterationBuffer(rect);
+    markNeedsRerender();
+
+    // ドラッグ中に描画をずらしていたのを戻す
+    onTranslated();
+  }
 
   // workerに分配するために描画範囲を分割
-  const divideRectCount = getWorkerCount("calc-iteration");
-  const currentParams = getCurrentParams();
+  const divideRectCount = getWorkerCount("calc-iteration") * (isSuperSampling ? 4 : 1);
+  const currentParams = { ...getCurrentParams(), isSuperSampling };
   const calculationRects = getCalculationTargetRects(
     canvasWidth,
     canvasHeight,

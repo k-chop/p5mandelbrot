@@ -76,9 +76,18 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
 export const addIterationBuffer: Renderer["addIterationBuffer"] = (
   rect = bufferRect,
   iterBuffer,
+  isSuperSampled = false,
 ) => {
-  renderIterationsToUnifiedBuffer(rect, unifiedIterationBuffer, iterBuffer ?? getIterationCache());
-  markNeedsRerender();
+  if (isSuperSampled && iterBuffer) {
+    renderIterationsToPixelSupersampled(rect, iterBuffer);
+  } else {
+    renderIterationsToUnifiedBuffer(
+      rect,
+      unifiedIterationBuffer,
+      iterBuffer ?? getIterationCache(),
+    );
+    markNeedsRerender();
+  }
 };
 
 /**
@@ -108,7 +117,7 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
   height = h;
   bufferRect = { x: 0, y: 0, width: w, height: h };
 
-  unifiedIterationBuffer = new Uint32Array(w * h * 4);
+  unifiedIterationBuffer = new Uint32Array(w * h);
   mainBuffer.resizeCanvas(width, height);
 
   const scaleFactor = Math.min(width, height) / Math.min(from.width, from.height);
@@ -204,7 +213,7 @@ const fillColor = (
   x: number,
   y: number,
   canvasWidth: number,
-  pixels: Uint8ClampedArray,
+  imageData: Uint8ClampedArray<ArrayBuffer>,
   palette: Palette,
   buffer: Uint32Array<ArrayBuffer>,
   isSuperSampled: boolean,
@@ -223,56 +232,23 @@ const fillColor = (
 
       let iteration = 0;
 
-      if (!isSuperSampled) {
-        const idx = x * density + i + (y * density + j) * canvasWidth * density;
-        iteration = buffer[idx];
+      const idx = x * density + i + (y * density + j) * canvasWidth * density;
+      iteration = buffer[idx];
 
-        r = palette.r(buffer[idx]);
-        g = palette.g(buffer[idx]);
-        b = palette.b(buffer[idx]);
-      } else {
-        const doubleCanvasWidth = canvasWidth * 2;
-        const y2 = y * 2;
-        const x2 = x * 2;
-
-        const idx00 = x2 + i + (y2 + j) * doubleCanvasWidth;
-        const idx10 = x2 + i + 1 + (y2 + j) * doubleCanvasWidth;
-        const idx01 = x2 + i + (y2 + j + 1) * doubleCanvasWidth;
-        const idx11 = x2 + i + 1 + (y2 + j + 1) * doubleCanvasWidth;
-
-        iteration = Math.round((buffer[idx00] + buffer[idx10] + buffer[idx01] + buffer[idx11]) / 4);
-
-        const r00 = palette.r(buffer[idx00]);
-        const g00 = palette.g(buffer[idx00]);
-        const b00 = palette.b(buffer[idx00]);
-
-        const r10 = palette.r(buffer[idx10]);
-        const g10 = palette.g(buffer[idx10]);
-        const b10 = palette.b(buffer[idx10]);
-
-        const r01 = palette.r(buffer[idx01]);
-        const g01 = palette.g(buffer[idx01]);
-        const b01 = palette.b(buffer[idx01]);
-
-        const r11 = palette.r(buffer[idx11]);
-        const g11 = palette.g(buffer[idx11]);
-        const b11 = palette.b(buffer[idx11]);
-
-        r = (r00 + r10 + r01 + r11) / 4;
-        g = (g00 + g10 + g01 + g11) / 4;
-        b = (b00 + b10 + b01 + b11) / 4;
-      }
+      r = palette.r(buffer[idx]);
+      g = palette.g(buffer[idx]);
+      b = palette.b(buffer[idx]);
 
       if (iteration !== maxIteration) {
-        pixels[pixelIndex + 0] = r;
-        pixels[pixelIndex + 1] = g;
-        pixels[pixelIndex + 2] = b;
-        pixels[pixelIndex + 3] = 255;
+        imageData[pixelIndex + 0] = r;
+        imageData[pixelIndex + 1] = g;
+        imageData[pixelIndex + 2] = b;
+        imageData[pixelIndex + 3] = 255;
       } else {
-        pixels[pixelIndex + 0] = 0;
-        pixels[pixelIndex + 1] = 0;
-        pixels[pixelIndex + 2] = 0;
-        pixels[pixelIndex + 3] = 255;
+        imageData[pixelIndex + 0] = 0;
+        imageData[pixelIndex + 1] = 0;
+        imageData[pixelIndex + 2] = 0;
+        imageData[pixelIndex + 3] = 255;
       }
     }
   }
@@ -299,13 +275,13 @@ const renderIterationsToPixel = (
 
   for (let worldY = startY; worldY < endY; worldY++) {
     for (let worldX = startX; worldX < endX; worldX++) {
-      const pixels = graphics.pixels as unknown as Uint8ClampedArray;
+      const imageData = graphics.pixels as unknown as Uint8ClampedArray<ArrayBuffer>;
 
       fillColor(
         worldX,
         worldY,
         canvasWidth,
-        pixels,
+        imageData,
         palette,
         unifiedIterationBuffer,
         isSuperSampled,
@@ -331,7 +307,7 @@ const renderIterationsToUnifiedBuffer = (
   const { width: canvasWidth } = getCanvasSize();
 
   for (const iteration of iterationsResult) {
-    const { rect, buffer, resolution, isSuperSampled } = iteration;
+    const { rect, buffer, resolution } = iteration;
 
     // worldRectとiterationのrectが重なっている部分だけ描画する
     const startY = Math.max(rect.y, worldRect.y);
@@ -353,30 +329,146 @@ const renderIterationsToUnifiedBuffer = (
 
         const worldIdx = worldY * canvasWidth + worldX;
 
-        if (!isSuperSampled) {
-          const idx = scaledX + scaledY * resolution.width;
+        const idx = scaledX + scaledY * resolution.width;
 
-          unifiedIterationBuffer[worldIdx] = buffer[idx];
-        } else {
-          const idx00 = scaledX + scaledY * resolution.width;
-          const idx10 = scaledX + 1 + scaledY * resolution.width;
-          const idx01 = scaledX + (scaledY + 1) * resolution.width;
-          const idx11 = scaledX + 1 + (scaledY + 1) * resolution.width;
+        unifiedIterationBuffer[worldIdx] = buffer[idx];
+      }
+    }
+  }
+};
 
-          // unifiedIterationBufferは幅・高さともに2倍のサイズを想定
-          const doubleCanvasWidth = canvasWidth * 2;
-          const worldY2x = worldY * 2;
-          const worldX2x = worldX * 2;
+/**
+ * supersampliedなiterationBufferをその場でcanvasに書き込む。
+ * supersampleポップアップ内のcanvasへの描画で使用する
+ *
+ * unifiedIterationBufferは用いない。
+ * canvasに書き込んだらそのiterationBufferは捨てられる
+ */
+const renderIterationsToPixelSupersampled = (
+  worldRect: Rect,
+  iterationsResult: IterationBuffer[],
+) => {
+  const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement;
+  if (!canvas) {
+    console.error("supersampling-canvas not found");
+    return;
+  }
 
-          // 4点のデータを対応する位置にそのまま格納
-          unifiedIterationBuffer[worldY2x * doubleCanvasWidth + worldX2x] = buffer[idx00];
-          unifiedIterationBuffer[worldY2x * doubleCanvasWidth + (worldX2x + 1)] = buffer[idx10];
-          unifiedIterationBuffer[(worldY2x + 1) * doubleCanvasWidth + worldX2x] = buffer[idx01];
-          unifiedIterationBuffer[(worldY2x + 1) * doubleCanvasWidth + (worldX2x + 1)] =
-            buffer[idx11];
+  const context = canvas.getContext("2d");
+  if (!context) {
+    console.error("Failed to get 2d context from supersampling-canvas");
+    return;
+  }
+
+  const params = getCurrentParams();
+  const palette = getCurrentPalette();
+
+  // HTML canvasのpixel density取得
+  const density = Math.round(window.devicePixelRatio || 1);
+
+  // iterationsResultから直接canvasに描画
+  for (const iterBuffer of iterationsResult) {
+    const { rect, buffer, resolution, isSuperSampled } = iterBuffer;
+
+    // worldRectとiterationのrectが重なっている部分だけ処理
+    const startY = Math.max(rect.y, worldRect.y);
+    const startX = Math.max(rect.x, worldRect.x);
+    const endY = Math.min(rect.y + rect.height, worldRect.y + worldRect.height);
+    const endX = Math.min(rect.x + rect.width, worldRect.x + worldRect.width);
+
+    // 描画範囲のimageDataのみを取得
+    const drawWidth = endX - startX;
+    const drawHeight = endY - startY;
+
+    if (drawWidth <= 0 || drawHeight <= 0) continue;
+
+    const imageData = context.getImageData(startX, startY, drawWidth, drawHeight);
+    const pixelData = imageData.data;
+
+    for (let y = startY; y < endY; y++) {
+      for (let x = startX; x < endX; x++) {
+        // 部分imageDataでの相対座標
+        const relativeY = y - startY;
+        const relativeX = x - startX;
+
+        // retina対応
+        for (let i = 0; i < density; i++) {
+          for (let j = 0; j < density; j++) {
+            const pixelIndex = Math.floor(
+              4 * ((relativeY * density + j) * drawWidth * density + (relativeX * density + i)),
+            );
+
+            const localX = x - rect.x;
+            const localY = y - rect.y;
+
+            const ratioX = resolution.width / rect.width;
+            const ratioY = resolution.height / rect.height;
+
+            const scaledX = Math.floor(localX * ratioX);
+            const scaledY = Math.floor(localY * ratioY);
+
+            let r = 0;
+            let g = 0;
+            let b = 0;
+            let iteration = 0;
+
+            if (!isSuperSampled) {
+              const idx = scaledX + scaledY * resolution.width;
+              iteration = buffer[idx];
+
+              r = palette.r(buffer[idx]);
+              g = palette.g(buffer[idx]);
+              b = palette.b(buffer[idx]);
+            } else {
+              // supersamplingの場合は4点平均
+              const idx00 = scaledX + scaledY * resolution.width;
+              const idx10 = scaledX + 1 + scaledY * resolution.width;
+              const idx01 = scaledX + (scaledY + 1) * resolution.width;
+              const idx11 = scaledX + 1 + (scaledY + 1) * resolution.width;
+
+              iteration = Math.round(
+                (buffer[idx00] + buffer[idx10] + buffer[idx01] + buffer[idx11]) / 4,
+              );
+
+              const r00 = palette.r(buffer[idx00]);
+              const g00 = palette.g(buffer[idx00]);
+              const b00 = palette.b(buffer[idx00]);
+
+              const r10 = palette.r(buffer[idx10]);
+              const g10 = palette.g(buffer[idx10]);
+              const b10 = palette.b(buffer[idx10]);
+
+              const r01 = palette.r(buffer[idx01]);
+              const g01 = palette.g(buffer[idx01]);
+              const b01 = palette.b(buffer[idx01]);
+
+              const r11 = palette.r(buffer[idx11]);
+              const g11 = palette.g(buffer[idx11]);
+              const b11 = palette.b(buffer[idx11]);
+
+              r = (r00 + r10 + r01 + r11) / 4;
+              g = (g00 + g10 + g01 + g11) / 4;
+              b = (b00 + b10 + b01 + b11) / 4;
+
+              if (iteration !== params.N) {
+                pixelData[pixelIndex + 0] = r;
+                pixelData[pixelIndex + 1] = g;
+                pixelData[pixelIndex + 2] = b;
+                pixelData[pixelIndex + 3] = 255;
+              } else {
+                pixelData[pixelIndex + 0] = 0;
+                pixelData[pixelIndex + 1] = 0;
+                pixelData[pixelIndex + 2] = 0;
+                pixelData[pixelIndex + 3] = 255;
+              }
+            }
+          }
         }
       }
     }
+
+    // 描画範囲のみcanvasに反映
+    context.putImageData(imageData, startX, startY);
   }
 };
 
@@ -388,7 +480,7 @@ const renderToMainBuffer = (rect: Rect = bufferRect) => {
     mainBuffer,
     params.N,
     unifiedIterationBuffer,
-    params.isSuperSampling,
+    false,
     getCurrentPalette(),
   );
 };
