@@ -4,6 +4,7 @@ import { CanvasOverlay } from "./canvas-overlay";
 import { Footer } from "./footer";
 import { Header } from "./header";
 import { RightSidebar } from "./right-sidebar";
+import { SupersamplingOverlay } from "./supersampling-overlay";
 
 export const AppRoot = () => {
   return (
@@ -12,6 +13,7 @@ export const AppRoot = () => {
       {ReactDOM.createPortal(<RightSidebar />, document.getElementById("sidebar-right")!)}
       {ReactDOM.createPortal(<Footer />, document.getElementById("footer")!)}
       {ReactDOM.createPortal(<CanvasOverlay />, document.getElementById("canvas-overlay")!)}
+      {ReactDOM.createPortal(<SupersamplingOverlay />, document.getElementById("supersampling-overlay")!)}
       <Toaster />
     </>
   );

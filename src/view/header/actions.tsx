@@ -73,9 +73,6 @@ const SaveImageButton = () => {
 };
 
 const SupersamplingButton = () => {
-  return null;
-
-  // FIXME: Supersampling is temporarily disabled
   return (
     <Button
       variant="outline"

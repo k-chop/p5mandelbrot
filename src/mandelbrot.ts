@@ -36,6 +36,16 @@ export const startCalculation = async (
   cancelBatch(getPrevBatchId());
   setPrevBatchId(currentBatchId);
 
+  const { isSuperSampling } = getCurrentParams()
+  if (isSuperSampling) {
+    // supersampling用のcanvasを用意
+    const canvas = document.getElementById("supersampling-canvas")
+    if (canvas) {
+      canvas.style.width = "1000px"
+      canvas.style.height = "1000px"
+    }
+  }
+
   const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
 
   const rect = translateIterationCache(canvasWidth, canvasHeight, getOffsetParams());
