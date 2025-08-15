@@ -147,8 +147,12 @@ export const clearIterationCache = (): void => {
  */
 export const getIterationTimeAt = (worldX: number, worldY: number) => {
   for (const iteration of iterationCache) {
+    // 解像度が荒いやつを無視 (表示にはx1.0のもののみ利用する)
+    if (iteration.rect.width !== iteration.resolution.width) continue;
+    // 範囲内になければ無視
     if (worldX < iteration.rect.x || iteration.rect.x + iteration.rect.width < worldX) continue;
     if (worldY < iteration.rect.y || iteration.rect.y + iteration.rect.height < worldY) continue;
+
     const [idx] = bufferLocalLogicalIndex(
       Math.floor(worldX),
       Math.floor(worldY),
@@ -158,6 +162,7 @@ export const getIterationTimeAt = (worldX: number, worldY: number) => {
 
     return iteration.buffer[idx];
   }
+
   return -1;
 };
 

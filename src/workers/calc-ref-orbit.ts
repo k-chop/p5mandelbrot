@@ -1,6 +1,10 @@
 /// <reference lib="webworker" />
 
-import { encodeBlaTableItems, type BLATableItem } from "@/workers/bla-table-item";
+import {
+  encodeBlaTableItems,
+  SKIP_BLA_ENTRY_UNTIL_THIS_L,
+  type BLATableItem,
+} from "@/workers/bla-table-item";
 import type { ComplexArrayView } from "@/workers/xn-buffer";
 import { encodeComplexArray } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
@@ -129,6 +133,11 @@ function calcBLACoefficient(ref: Complex[], pixelSpacing: number) {
       }
     }
     if (blaTable[d + 1].length === 1) break;
+  }
+
+  // スキップ量が少なくデータ量が多いエントリを抜いておく
+  for (let idx = 0; idx <= Math.log2(SKIP_BLA_ENTRY_UNTIL_THIS_L); idx++) {
+    blaTable[idx] = [];
   }
 
   // console.debug("blaTable", blaTable);

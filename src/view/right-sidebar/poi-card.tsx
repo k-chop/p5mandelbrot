@@ -3,7 +3,6 @@ import { Button } from "@/shadcn/components/ui/button";
 import { Card } from "@/shadcn/components/ui/card";
 import { useStoreValue } from "@/store/store";
 import { IconArrowBigLeftLine, IconRefresh, IconTrash } from "@tabler/icons-react";
-import { Suspense } from "react";
 import type { POIData } from "../../types";
 import { POICardPreview } from "./poi-card-preview";
 
@@ -23,9 +22,7 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
     <Card className="p-2">
       <div className="flex">
         <div className="">
-          <Suspense fallback={"loading..."}>
-            <POICardPreview poi={poi} />
-          </Suspense>
+          <POICardPreview poi={poi} />
         </div>
         <div className="ml-2 flex grow flex-col">
           <div className="flex justify-between">

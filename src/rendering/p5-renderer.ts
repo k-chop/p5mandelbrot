@@ -183,6 +183,9 @@ export const drawUIScaleRate = (p: p5, scaleFactor: number) => {
   p.text(`${text}`, x + 10, y + 20);
 };
 
+/**
+ * 現状の描画位置に関する情報をcanvasにUIとして描画する
+ */
 export const drawUICurrentParams = (p: p5, params: MandelbrotParams) => {
   p.textAlign(p.LEFT, p.BASELINE);
   p.fill(255);
@@ -202,6 +205,19 @@ export const drawUICurrentParams = (p: p5, params: MandelbrotParams) => {
       p.height / 2,
     );
   }
+};
+
+/**
+ * 現在マウスが指している位置のiteration数をcanvasにUIとして描画する
+ */
+export const drawUIIterationAtCursor = (p: p5, iteration: string | number) => {
+  p.textAlign(p.RIGHT, p.TOP);
+  p.fill(255);
+  p.stroke(0);
+  p.strokeWeight(3);
+  p.textSize(14);
+
+  p.text(`iteration: ${iteration}`, p.width - 2, 2);
 };
 
 /**

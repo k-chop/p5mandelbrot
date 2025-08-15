@@ -1,7 +1,11 @@
 /// <reference lib="webworker" />
 
 import { generateLowResDiffSequence } from "@/math/low-res-diff-sequence";
-import { decodeBLATableItems, type BLATableItem } from "@/workers/bla-table-item";
+import {
+  decodeBLATableItems,
+  SKIP_BLA_ENTRY_UNTIL_THIS_L,
+  type BLATableItem,
+} from "@/workers/bla-table-item";
 import { ComplexArrayView } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
@@ -56,6 +60,9 @@ const calcHandler = (data: IterationWorkerParams) => {
   const ref = complexArbitary(refX, refY);
   const r = new BigNumber(rStr);
 
+  // データ節約のために空にしたBLATableの次のindexから開始
+  const startBLAIndex = Math.floor(Math.log2(SKIP_BLA_ENTRY_UNTIL_THIS_L)) + 1;
+
   function calcIterationAt(
     pixelX: number,
     pixelY: number,
@@ -106,7 +113,7 @@ const calcHandler = (data: IterationWorkerParams) => {
 
       // refIteration === (jIdx << d) + 1と|dz| < rを満たす、最大のlを持つデータをblaTableから探す
       if (0 < refIteration) {
-        for (let d = 0; d < blaTable.length; d++) {
+        for (let d = startBLAIndex; d < blaTable.length; d++) {
           // この辺まだよく分かっていない
           const jIdx = Math.floor((refIteration - 1) / 2 ** d);
           const checkM = jIdx * 2 ** d + 1;
