@@ -26,7 +26,12 @@ import {
   setWebGPUInitialized,
   setWebGPUInitializing,
 } from "@/rendering/common";
-import { drawUICrossHair, drawUICurrentParams, drawUIScaleRate } from "@/rendering/p5-renderer";
+import {
+  drawUICrossHair,
+  drawUICurrentParams,
+  drawUIIterationAtCursor,
+  drawUIScaleRate,
+} from "@/rendering/p5-renderer";
 import { getCanvasSize, initRenderer, renderToCanvas, resizeCanvas } from "@/rendering/renderer";
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
@@ -544,6 +549,7 @@ export const p5Draw = (p: p5) => {
   syncStoreValues(p);
 
   drawUICurrentParams(p, getCurrentParams());
+  drawUIIterationAtCursor(p, getStore("iteration"));
 
   if (shouldSavePOIHistoryNextRender) {
     shouldSavePOIHistoryNextRender = false;
