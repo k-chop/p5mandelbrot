@@ -314,7 +314,7 @@ export const p5Setup = async (p: p5) => {
 
   const { width, height } = initializeCanvasSize();
 
-  // p5レンダラーの初期化
+  // p5 renderer
   initRenderer(width, height, p);
 
   const canvas = p.createCanvas(width, height);
@@ -325,66 +325,63 @@ export const p5Setup = async (p: p5) => {
   p.colorMode(p.HSB, 360, 100, 100, 100);
   p.cursor(p.CROSS);
 
-  // p5.jsのキャンバスを透明にして、イベント処理だけを受け付けるように設定
+  // p5 canvasは透明、イベント処理だけを受け付けるように設定
   canvas.elt.style.position = "absolute";
-  canvas.elt.style.pointerEvents = "auto"; // マウス操作を受け付ける
-  canvas.elt.style.background = "transparent"; // 背景を透明に
-  canvas.elt.style.zIndex = "10"; // 上に表示
+  canvas.elt.style.pointerEvents = "auto";
+  canvas.elt.style.background = "transparent";
+  canvas.elt.style.zIndex = "10";
   canvas.elt.style.top = "50%";
   canvas.elt.style.left = "50%";
-  canvas.elt.style.transform = "translate(-50%, -50%)"; // 中央に配置
+  canvas.elt.style.transform = "translate(-50%, -50%)";
 
-  // WebGPU用のキャンバスを作成して下に配置
+  // WebGPU canvas
   const gpuCanvas = document.createElement("canvas");
   gpuCanvas.id = "gpu-canvas";
   gpuCanvas.width = width;
   gpuCanvas.height = height;
   gpuCanvas.style.position = "absolute";
-  gpuCanvas.style.zIndex = "5"; // p5.jsキャンバスの下に
+  gpuCanvas.style.zIndex = "5"; // p5 canvasの下
   gpuCanvas.style.top = "50%";
   gpuCanvas.style.left = "50%";
-  gpuCanvas.style.transform = "translate(-50%, -50%)"; // 中央に配置
+  gpuCanvas.style.transform = "translate(-50%, -50%)";
 
-  // キャンバスラッパーに追加
   const wrapper = document.getElementById("canvas-wrapper");
   wrapper?.appendChild(gpuCanvas);
 
-  // WebGPUサポートの確認と初期化
+  // WebGPUをsupportしていれば初期化してrendererをwebgpuに設定する
+  // FIXME:
+  //   現状p5jsを設定していてもリロード時に必ずwebgpuが使えるならwebgpuになってしまう
   try {
     if (isWebGPUSupported()) {
-      // WebGPU対応ブラウザなので初期化を試みる
       setRenderer("webgpu");
-      // 初期化中フラグを設定
       setWebGPUInitializing(true);
 
-      // 非同期初期化
       const initialized = await initRenderer(width, height);
       if (initialized) {
-        // 初期化成功
         console.log("Using WebGPU renderer");
         setWebGPUInitialized(true);
       } else {
-        // 初期化失敗
         console.log("WebGPU initialization failed, falling back to p5js renderer");
         setRenderer("p5js");
         setWebGPUInitialized(false);
         setWebGPUInitializing(false);
       }
     } else {
-      // WebGPU非対応ブラウザ
+      // WebGPU非対応の場合はp5jsにfallback
       console.log("WebGPU is not supported in this browser, using p5js renderer");
       setRenderer("p5js");
       setWebGPUInitialized(false);
       setWebGPUInitializing(false);
     }
   } catch (e) {
-    console.error("Error during renderer initialization:", e);
-    // エラーが発生した場合はp5jsにフォールバック
+    console.error("Error during webgpu renderer initialization:", e);
+    // エラー時もp5jsにフォールバック
     setRenderer("p5js");
     setWebGPUInitialized(false);
     setWebGPUInitializing(false);
   }
 
+  // 右クリックドラッグでcanvasの外にはみ出たときにcontextmenuを表示しない制御
   window.oncontextmenu = () => {
     if (willBlockNextContextMenu) {
       willBlockNextContextMenu = false;
@@ -395,8 +392,8 @@ export const p5Setup = async (p: p5) => {
 
   initializePOIHistory();
 
+  // URL共有で飛んできたときに各種パラメータを初期値としてセットする
   const initialParams = extractMandelbrotParams();
-
   if (initialParams) {
     setCurrentParams(initialParams.mandelbrot);
     setPalette(initialParams.palette);
@@ -518,22 +515,17 @@ export const p5Draw = (p: p5) => {
     }
   }
 
-  // 現在使用中のレンダラーで描画
   const renderer = getRenderer();
 
-  // WebGPUが初期化中なら描画をスキップ
-  if (renderer === "webgpu" && isWebGPUInitializing()) {
-    // 初期化中は何も描画しない
-    return;
-  }
+  if (renderer === "webgpu") {
+    // 初期化中、または初期化が済んでいない場合は描画をスキップ
+    if (isWebGPUInitializing() || !isWebGPUInitialized()) return;
 
-  if (renderer === "webgpu" && isWebGPUInitialized()) {
-    // WebGPUレンダラーを使用
     renderToCanvas(x, y, width, height);
-    // WebGPUは透明な背景を持つp5キャンバスを上に置く (UIのみを描画)
+    // WebGPUの時はp5js canvasはUIのみ描画するので透明背景にしておく
     p.clear();
   } else {
-    // p5レンダラーを使用 (WebGPU非対応またはWebGPU初期化失敗時)
+    // p5js
     renderToCanvas(x, y, width, height);
   }
 
