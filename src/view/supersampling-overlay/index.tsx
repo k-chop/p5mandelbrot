@@ -123,7 +123,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
           <div className="bg-black/80 text-white px-6 py-4 rounded-lg shadow-lg backdrop-blur-sm border border-white/20">
             <div className="flex items-center gap-3">
               <LoadingSpinner />
-              <span className="text-sm font-medium">描画中...</span>
+              <span className="text-sm font-medium">Supersampling...</span>
             </div>
           </div>
         </div>
@@ -171,7 +171,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
           onClick={handleToggleFitMode}
           className="px-3 py-1 text-sm bg-blue-500/90 text-white rounded shadow-lg hover:bg-blue-600/90 transition-colors backdrop-blur-sm"
         >
-          {fitMode ? "原寸表示" : "フィット表示"}
+          {fitMode ? "Actual Size" : "Fit to Screen"}
         </button>
       </div>
       <div className="absolute bottom-4 z-1 w-full px-8">
