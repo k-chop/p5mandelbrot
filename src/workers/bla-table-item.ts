@@ -2,6 +2,16 @@ import type { Complex } from "@/math/complex";
 
 const ITEM_BYTE_LENGTH = 44;
 
+/*
+ * lがこれと同値までのblaをスキップする
+ * Nが伸びたときにBLATableのデータ量がめっちゃ増えるのを防ぐ
+ *
+ * 現状は2。ここまでは試してみてほとんど速度変わらなかったから。
+ * 4にすると地点によるがN=200000で300msくらい落ちる
+ * たぶん
+ */
+export const SKIP_BLA_ENTRY_UNTIL_THIS_L = 2;
+
 export type BLATableItem = {
   a: Complex;
   b: Complex;
