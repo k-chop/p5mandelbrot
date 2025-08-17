@@ -74,8 +74,8 @@ export interface IterationWorkerParams {
   workerIdx: number;
 }
 
-export type XnBuffer = ArrayBuffer;
-export type BLATableBuffer = ArrayBuffer;
+export type XnBuffer = SharedArrayBuffer;
+export type BLATableBuffer = SharedArrayBuffer;
 
 export interface RefOrbitWorkerParams {
   complexCenterX: string;

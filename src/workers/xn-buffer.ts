@@ -4,8 +4,8 @@ const COMPLEX_BYTE_LENGTH = 16;
 
 // このファイルはほとんどChatGPTくんによって生成されました
 
-export function encodeComplexArray(complexArray: Complex[]): ArrayBuffer {
-  const buffer = new ArrayBuffer(complexArray.length * COMPLEX_BYTE_LENGTH);
+export function encodeComplexArray(complexArray: Complex[]): SharedArrayBuffer {
+  const buffer = new SharedArrayBuffer(complexArray.length * COMPLEX_BYTE_LENGTH);
   const view = new Float64Array(buffer);
 
   complexArray.forEach((complex, index) => {
@@ -22,7 +22,7 @@ export function encodeComplexArray(complexArray: Complex[]): ArrayBuffer {
 export class ComplexArrayView {
   private view: Float64Array;
 
-  constructor(buffer: ArrayBuffer) {
+  constructor(buffer: SharedArrayBuffer) {
     this.view = new Float64Array(buffer);
   }
 
