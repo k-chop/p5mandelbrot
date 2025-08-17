@@ -51,8 +51,8 @@ export class BasePalette implements Palette {
     return this.offsetIndex;
   }
 
-  public rgb(index: number): RGB {
-    const colorIndex = this.getColorIndex(index);
+  public rgb(index: number, ignoreOffset = false): RGB {
+    const colorIndex = this.getColorIndex(index, ignoreOffset);
 
     if (this.hasCache(colorIndex)) return this.readCache(colorIndex);
 
@@ -86,11 +86,13 @@ export class BasePalette implements Palette {
     return this.mirrored ? this.colorLength * 2 - 2 : this.colorLength;
   }
 
-  getColorIndex(index: number) {
+  getColorIndex(index: number, ignoreOffset = false) {
     const size = this.size();
+    const offset = ignoreOffset ? 0 : this.offsetIndex;
+
     if (this.mirrored) {
       // 折り返す
-      const offsettedIndex = (index + this.offsetIndex) % size;
+      const offsettedIndex = (index + offset) % size;
 
       if (offsettedIndex < this.colorLength) {
         return offsettedIndex;
@@ -99,7 +101,7 @@ export class BasePalette implements Palette {
       }
     } else {
       // そのまま
-      const offsettedIndex = (index + this.offsetIndex) % size;
+      const offsettedIndex = (index + offset) % size;
       return offsettedIndex;
     }
   }
