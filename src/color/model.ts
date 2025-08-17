@@ -3,7 +3,7 @@ import { clamp } from "@/math/util";
 export type RGB = [number, number, number];
 
 export type Palette = {
-  rgb(index: number): RGB;
+  rgb(index: number, ignoreOffset?: boolean): RGB;
 
   r(index: number): number;
   g(index: number): number;

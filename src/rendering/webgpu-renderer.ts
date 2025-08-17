@@ -337,7 +337,8 @@ export const updatePaletteData: Renderer["updatePaletteData"] = (palette: Palett
 
   // FIXME: Palette側に定義しとくといいよ
   for (let i = 0; i < palette.length; i++) {
-    const [r, g, b] = palette.rgb(i);
+    // offsetに影響しないpalette dataを取得したいのでignoreOffset: true
+    const [r, g, b] = palette.rgb(i, true);
     paletteBuffer.writePartial([{ idx: i, value: d.vec4f(r / 255, g / 255, b / 255, 1.0) }]);
   }
 };
