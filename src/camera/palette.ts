@@ -101,7 +101,7 @@ export const setCurrentPaletteOffset = (offset: number) => {
   palette.setOffset(offset);
   markNeedsRerender();
 
-  updatePaletteData(palette);
+  // offset変更時はupdatePaletteDataする必要ない
 
   updateStore("paletteOffset", palette.offset);
 };
