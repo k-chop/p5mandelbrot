@@ -131,7 +131,7 @@ export class BLATableView {
       };
 
       // 次のrowLengthのoffsetにセットしておく
-      byteOffset = 4 + ITEM_BYTE_LENGTH * rowLength;
+      byteOffset += 4 + ITEM_BYTE_LENGTH * rowLength;
     }
   }
 
