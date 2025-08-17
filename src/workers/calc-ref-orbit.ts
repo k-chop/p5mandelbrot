@@ -4,6 +4,7 @@ import {
   encodeBlaTableItems,
   SKIP_BLA_ENTRY_UNTIL_THIS_L,
   type BLATableItem,
+  type BLATableView,
 } from "@/workers/bla-table-item";
 import type { ComplexArrayView } from "@/workers/xn-buffer";
 import { encodeComplexArray } from "@/workers/xn-buffer";
@@ -33,7 +34,7 @@ export type RefOrbitContext = {
 
 export type RefOrbitContextPopulated = {
   xnView: ComplexArrayView;
-  blaTable: BLATableItem[][];
+  blaTableView: BLATableView;
 };
 
 // FIXME: 手抜き

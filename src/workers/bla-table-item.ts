@@ -107,3 +107,63 @@ export function decodeBLATableItems(buffer: ArrayBuffer): BLATableItem[][] {
 
   return items;
 }
+
+/**
+ * BLATableを表現するbufferから直接値を取り出せるようにするラッパー
+ */
+export class BLATableView {
+  private view: DataView;
+  public readonly length: number;
+  public readonly offsetMap: { [rowIndex: number]: { byteOffset: number; length: number } };
+
+  constructor(buffer: ArrayBuffer) {
+    this.view = new DataView(buffer);
+
+    this.length = this.view.getInt32(0, true);
+
+    this.offsetMap = {};
+    let byteOffset = 4; // ↑で読み込んだi32ひとつ分
+    for (let idx = 0; idx < this.length; idx++) {
+      const rowLength = this.view.getInt32(byteOffset, true);
+      this.offsetMap[idx] = {
+        byteOffset: byteOffset + 4, // itemの開始offsetが欲しいのでrowLength分は飛ばす
+        length: rowLength,
+      };
+
+      // 次のrowLengthのoffsetにセットしておく
+      byteOffset += 4 + ITEM_BYTE_LENGTH * rowLength;
+    }
+  }
+
+  /**
+   * 指定した位置のBLAItemが格納されているbyteOffsetを返す
+   */
+  getBLAItemOffset(rowIdx: number, columnIdx: number) {
+    const { byteOffset, length } = this.offsetMap[rowIdx];
+    if (columnIdx > length)
+      throw new Error(`Invalid offset specified: row: ${rowIdx}, ${columnIdx} > ${length}`);
+
+    return byteOffset + columnIdx * ITEM_BYTE_LENGTH;
+  }
+
+  getR(rowIdx: number, columnIdx: number) {
+    const byteOffset = this.getBLAItemOffset(rowIdx, columnIdx);
+    return this.view.getFloat64(byteOffset + 32, true);
+  }
+
+  getL(rowIdx: number, columnIdx: number) {
+    const byteOffset = this.getBLAItemOffset(rowIdx, columnIdx);
+    return this.view.getInt32(byteOffset + 40, true); // l
+  }
+
+  getAB(rowIdx: number, columnIdx: number) {
+    const byteOffset = this.getBLAItemOffset(rowIdx, columnIdx);
+
+    const aRe = this.view.getFloat64(byteOffset, true);
+    const aIm = this.view.getFloat64(byteOffset + 8, true);
+    const bRe = this.view.getFloat64(byteOffset + 16, true);
+    const bIm = this.view.getFloat64(byteOffset + 24, true);
+
+    return { aRe, aIm, bRe, bIm };
+  }
+}

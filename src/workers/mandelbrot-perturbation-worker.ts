@@ -1,11 +1,7 @@
 /// <reference lib="webworker" />
 
 import { generateLowResDiffSequence } from "@/math/low-res-diff-sequence";
-import {
-  decodeBLATableItems,
-  SKIP_BLA_ENTRY_UNTIL_THIS_L,
-  type BLATableItem,
-} from "@/workers/bla-table-item";
+import { BLATableView, SKIP_BLA_ENTRY_UNTIL_THIS_L } from "@/workers/bla-table-item";
 import { ComplexArrayView } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import {
@@ -48,7 +44,7 @@ const calcHandler = (data: IterationWorkerParams) => {
   const terminateChecker = new Uint8Array(terminator);
 
   const xnView = new ComplexArrayView(xnBuffer);
-  const blaTable = decodeBLATableItems(blaTableBuffer);
+  const blaTableView = new BLATableView(blaTableBuffer);
 
   const areaWidth = endX - startX;
   const areaHeight = endY - startY;
@@ -68,7 +64,7 @@ const calcHandler = (data: IterationWorkerParams) => {
     pixelY: number,
     context: RefOrbitContextPopulated,
   ): number {
-    const { xnView, blaTable } = context;
+    const { xnView, blaTableView } = context;
     const maxRefIteration = xnView.length - 1;
 
     // Δn
@@ -109,31 +105,34 @@ const calcHandler = (data: IterationWorkerParams) => {
       const absDz = Math.sqrt(dzNorm);
 
       // BLA
-      let bla: BLATableItem | null = null;
+      let blaRowIdx = null;
+      let blaColumnIdx = null;
 
       // refIteration === (jIdx << d) + 1と|dz| < rを満たす、最大のlを持つデータをblaTableから探す
       if (0 < refIteration) {
-        for (let d = startBLAIndex; d < blaTable.length; d++) {
+        for (let d = startBLAIndex; d < blaTableView.length; d++) {
           // この辺まだよく分かっていない
           const jIdx = Math.floor((refIteration - 1) / 2 ** d);
           const checkM = jIdx * 2 ** d + 1;
 
-          const isValid = absDz < blaTable[d][jIdx].r;
+          const isValid = absDz < blaTableView.getR(d, jIdx);
 
           if (refIteration === checkM && isValid) {
-            bla = blaTable[d][jIdx];
+            blaRowIdx = d;
+            blaColumnIdx = jIdx;
           } else {
             break;
           }
         }
       }
 
-      const skipped = bla?.l ?? 0;
+      const hasBLA = blaRowIdx != null && blaColumnIdx != null;
+
+      const skipped = hasBLA ? blaTableView.getL(blaRowIdx!, blaColumnIdx!) : 0;
       const n = refIteration + skipped;
 
-      if (bla && n < maxRefIteration) {
-        const { re: aRe, im: aIm } = bla.a;
-        const { re: bRe, im: bIm } = bla.b;
+      if (hasBLA && n < maxRefIteration) {
+        const { aRe, aIm, bRe, bIm } = blaTableView.getAB(blaRowIdx!, blaColumnIdx!);
 
         const dzRe = mulRe(aRe, aIm, deltaNRe, deltaNIm) + mulRe(bRe, bIm, deltaC.re, deltaC.im);
         const dzIm = mulIm(aRe, aIm, deltaNRe, deltaNIm) + mulIm(bRe, bIm, deltaC.re, deltaC.im);
@@ -163,7 +162,7 @@ const calcHandler = (data: IterationWorkerParams) => {
     return Math.min(iteration, maxIteration);
   }
 
-  const context = { xnView, blaTable };
+  const context = { xnView, blaTableView };
 
   let { xDiffs, yDiffs } = generateLowResDiffSequence(6, areaWidth, areaHeight);
 
