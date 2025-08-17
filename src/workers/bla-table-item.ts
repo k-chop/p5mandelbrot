@@ -140,8 +140,8 @@ export class BLATableView {
    */
   getBLAItemOffset(rowIdx: number, columnIdx: number) {
     const { byteOffset, length } = this.offsetMap[rowIdx];
-    if (columnIdx < length)
-      throw new Error(`Invalid offset specified: row: ${rowIdx}, ${columnIdx} < ${length}`);
+    if (columnIdx > length)
+      throw new Error(`Invalid offset specified: row: ${rowIdx}, ${columnIdx} > ${length}`);
 
     return byteOffset + columnIdx * ITEM_BYTE_LENGTH;
   }
