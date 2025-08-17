@@ -52,7 +52,7 @@ export function decodeBLATableItem(view: DataView, offset: number): BLATableItem
   };
 }
 
-export function encodeBlaTableItems(items: BLATableItem[][]): ArrayBuffer {
+export function encodeBlaTableItems(items: BLATableItem[][]): SharedArrayBuffer {
   // 行の数と、それぞれの行の要素数を格納するのに必要なバイト数を加算
   let totalSize = 4; // 最初の4バイトは行の数
   items.forEach((row) => {
@@ -60,7 +60,7 @@ export function encodeBlaTableItems(items: BLATableItem[][]): ArrayBuffer {
     totalSize += row.length * ITEM_BYTE_LENGTH; // 実際の各行のデータ
   });
 
-  const buffer = new ArrayBuffer(totalSize);
+  const buffer = new SharedArrayBuffer(totalSize);
   const view = new Int32Array(buffer);
 
   // 最初のエントリに行の数を設定
@@ -116,7 +116,7 @@ export class BLATableView {
   public readonly length: number;
   public readonly offsetMap: { [rowIndex: number]: { byteOffset: number; length: number } };
 
-  constructor(buffer: ArrayBuffer) {
+  constructor(buffer: SharedArrayBuffer) {
     this.view = new DataView(buffer);
 
     this.length = this.view.getInt32(0, true);
