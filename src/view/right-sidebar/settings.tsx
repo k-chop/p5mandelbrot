@@ -69,7 +69,7 @@ export const Settings = () => {
   ];
   const maxCanvasSizeValues = ["-1", "128", "256", "512", "800", "1024", "2048"];
   const supersamplingWidthValues = ["1280", "1920", "2560", "3840", "5120", "7680"];
-  const supersamplingHeightValues = ["720", "1080", "1440", "2160", "2880" /* "4320" */];
+  const supersamplingHeightValues = ["720", "1080", "1440", "2160", "2880", "4320"];
 
   const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
   const [workerCountPreview, setWorkerCountPreview] = useState(workerCount);
