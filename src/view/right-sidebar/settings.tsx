@@ -68,8 +68,8 @@ export const Settings = () => {
     "47",
   ];
   const maxCanvasSizeValues = ["-1", "128", "256", "512", "800", "1024", "2048"];
-  const supersamplingWidthValues = ["1280", "1920", "2560", "3840" /* "5120", "7680" */];
-  const supersamplingHeightValues = ["720", "1080", "1440", "2160" /* "2880", "4320" */];
+  const supersamplingWidthValues = ["1280", "1920", "2560", "3840", "5120", "7680"];
+  const supersamplingHeightValues = ["720", "1080", "1440", "2160", "2880" /* "4320" */];
 
   const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
   const [workerCountPreview, setWorkerCountPreview] = useState(workerCount);
@@ -187,7 +187,7 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">Supersampling Width: {supersamplingWidthPreview}px</div>
+        <div className="mb-1 ml-2">Supersampling Output Width: {supersamplingWidthPreview}px</div>
         <ValueSlider<number>
           values={supersamplingWidthValues}
           defaultValue={supersamplingWidth}
@@ -197,7 +197,7 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">Supersampling Height: {supersamplingHeightPreview}px</div>
+        <div className="mb-1 ml-2">Supersampling Output Height: {supersamplingHeightPreview}px</div>
         <ValueSlider<number>
           values={supersamplingHeightValues}
           defaultValue={supersamplingHeight}
