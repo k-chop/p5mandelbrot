@@ -47,6 +47,7 @@ export class ChromaJsPalette extends BasePalette {
     result.push(`${this.colorLength}`);
     result.push(`${this.offsetIndex}`);
 
+    // FIXME: serialize -> deserializeで名前が失われる
     return result.join(",");
   }
 
@@ -59,6 +60,7 @@ export class ChromaJsPalette extends BasePalette {
     const colorLength = safeParseInt(parts[2 + colorNum + 1], 16);
     const offset = safeParseInt(parts[2 + colorNum + 2], 0);
 
+    // FIXME: serialize -> deserializeで名前が失われる
     const displayName = colorConstructor.join(" → ");
 
     return new ChromaJsPalette(colorConstructor, displayName, colorLength, mirrored, offset);

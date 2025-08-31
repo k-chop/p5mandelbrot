@@ -78,6 +78,7 @@ export class OthersPalette extends BasePalette {
     result.push(`${this.colorLength}`);
     result.push(`${this.offsetIndex}`);
 
+    // FIXME: serialize -> deserializeで名前が失われる
     return result.join(",");
   }
 
@@ -89,6 +90,7 @@ export class OthersPalette extends BasePalette {
     const mirrored = rawMirrored === "1";
 
     const interpolator = getInterpolatorFromName(rawInterpolate);
+    // FIXME: serialize -> deserializeで名前が失われる
     const displayName = getInterpolatorName(interpolator);
 
     return new OthersPalette(displayName, length, interpolator, mirrored, offset);
