@@ -47,10 +47,16 @@ export class D3ChromaticPalette extends BasePalette {
   interpolator: D3Interpolator;
   colors: D3Color[] = [];
 
-  constructor(interpolator: D3Interpolator, length: number, mirrored = true, offset = 0) {
+  constructor(
+    interpolator: D3Interpolator,
+    displayName: string,
+    length: number,
+    mirrored = true,
+    offset = 0,
+  ) {
     const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
-    super(colorLength, mirrored, offsetIndex);
+    super(colorLength, displayName, mirrored, offsetIndex);
 
     this.interpolator = interpolator;
 
@@ -86,13 +92,14 @@ export class D3ChromaticPalette extends BasePalette {
     const mirrored = rawMirrored === "1";
 
     const interpolator = getInterpolatorFromName(rawInterpolate);
+    const displayName = getInterpolatorName(interpolator);
 
-    return new D3ChromaticPalette(interpolator, length, mirrored, offset);
+    return new D3ChromaticPalette(interpolator, displayName, length, mirrored, offset);
   }
 }
 
 export const d3ChromaticPalettes = [
-  new D3ChromaticPalette(interpolateRdYlBu, 128),
-  new D3ChromaticPalette(interpolateTurbo, 128),
-  new D3ChromaticPalette(interpolateInferno, 128),
+  new D3ChromaticPalette(interpolateRdYlBu, "RdYlBu", 128),
+  new D3ChromaticPalette(interpolateTurbo, "Turbo", 128),
+  new D3ChromaticPalette(interpolateInferno, "Inferno", 128),
 ] satisfies Palette[];

@@ -20,6 +20,7 @@ export type Palette = {
   setMirrored(mirrored: boolean): void;
 
   serialize(): string;
+  getDisplayName(): string;
 };
 
 export const buildRGB = ({ r, g, b }: { r: number; g: number; b: number }): RGB => {

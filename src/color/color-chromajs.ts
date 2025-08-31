@@ -8,10 +8,16 @@ export class ChromaJsPalette extends BasePalette {
   colorConstructor: string[];
   colors: chroma.Color[] = [];
 
-  constructor(colorConstructor: string[], length: number, mirrored = true, offset = 0) {
+  constructor(
+    colorConstructor: string[],
+    displayName: string,
+    length: number,
+    mirrored = true,
+    offset = 0,
+  ) {
     const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
-    super(colorLength, mirrored, offsetIndex);
+    super(colorLength, displayName, mirrored, offsetIndex);
 
     if (colorConstructor.length === 0) {
       this.colorConstructor = ["black", "white"];
@@ -53,16 +59,18 @@ export class ChromaJsPalette extends BasePalette {
     const colorLength = safeParseInt(parts[2 + colorNum + 1], 16);
     const offset = safeParseInt(parts[2 + colorNum + 2], 0);
 
-    return new ChromaJsPalette(colorConstructor, colorLength, mirrored, offset);
+    const displayName = colorConstructor.join(" → ");
+
+    return new ChromaJsPalette(colorConstructor, displayName, colorLength, mirrored, offset);
   }
 
   static defaultPalette(): ChromaJsPalette {
-    return new ChromaJsPalette(["lightblue", "navy", "white"], 128);
+    return new ChromaJsPalette(["lightblue", "navy", "white"], "Icy", 128);
   }
 }
 
 export const chromaJsPalettes = [
-  // new ChromaJsPalette(["black", "red", "yellow", "white"], 128), // prominence
-  new ChromaJsPalette(["lightblue", "navy", "white"], 128), // icy
-  new ChromaJsPalette(["lightgreen", "green", "#d3b480", "green"], 128), // forest
+  new ChromaJsPalette(["black", "red", "yellow", "white"], "Prominence", 128),
+  new ChromaJsPalette(["lightblue", "navy", "white"], "Icy", 128),
+  new ChromaJsPalette(["lightgreen", "green", "#d3b480", "green"], "Forest", 128),
 ] satisfies Palette[];
