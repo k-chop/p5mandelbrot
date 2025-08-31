@@ -50,13 +50,14 @@ export class D3ChromaticPalette extends BasePalette {
   constructor(
     interpolator: D3Interpolator,
     displayName: string,
+    id: string,
     length: number,
     mirrored = true,
     offset = 0,
   ) {
     const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
-    super(colorLength, displayName, mirrored, offsetIndex);
+    super(colorLength, displayName, id, mirrored, offsetIndex);
 
     this.interpolator = interpolator;
 
@@ -95,13 +96,14 @@ export class D3ChromaticPalette extends BasePalette {
     const interpolator = getInterpolatorFromName(rawInterpolate);
     // FIXME: serialize -> deserializeで名前が失われる
     const displayName = getInterpolatorName(interpolator);
+    const id = `d3-${getInterpolatorName(interpolator).toLowerCase()}`;
 
-    return new D3ChromaticPalette(interpolator, displayName, length, mirrored, offset);
+    return new D3ChromaticPalette(interpolator, displayName, id, length, mirrored, offset);
   }
 }
 
 export const d3ChromaticPalettes = [
-  new D3ChromaticPalette(interpolateRdYlBu, "RdYlBu", 128),
-  new D3ChromaticPalette(interpolateTurbo, "Turbo", 128),
-  new D3ChromaticPalette(interpolateInferno, "Inferno", 128),
+  new D3ChromaticPalette(interpolateRdYlBu, "RdYlBu", "d3-rdylbu", 128),
+  new D3ChromaticPalette(interpolateTurbo, "Turbo", "d3-turbo", 128),
+  new D3ChromaticPalette(interpolateInferno, "Inferno", "d3-inferno", 128),
 ] satisfies Palette[];

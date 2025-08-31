@@ -21,6 +21,7 @@ export type Palette = {
 
   serialize(): string;
   getDisplayName(): string;
+  getId(): string;
 };
 
 export const buildRGB = ({ r, g, b }: { r: number; g: number; b: number }): RGB => {

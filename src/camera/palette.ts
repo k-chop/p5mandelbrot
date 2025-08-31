@@ -6,12 +6,16 @@ import {
   type Palette,
 } from "@/color";
 import { updatePaletteData } from "@/rendering/renderer";
-import { updateStore } from "@/store/store";
+import { getStore, updateStore } from "@/store/store";
 
 // 描画時に使うpaletteの状態に関するファイル
 
 /** 数値キーで選択できるpaletteのプリセット */
-const palettePresets: Palette[] = [...d3ChromaticPalettes, ...othersPalettes, ...chromaJsPalettes];
+export const palettePresets: Palette[] = [
+  ...d3ChromaticPalettes,
+  ...othersPalettes,
+  ...chromaJsPalettes,
+];
 
 /** 現在選択中のPalette */
 let currentPalette: Palette = palettePresets[0];
@@ -54,9 +58,34 @@ export const changePaletteFromPresets = (index: number) => {
 
   if (palettePresets[index]) {
     newPalette = palettePresets[index];
+    updateStore("paletteId", newPalette.getId());
   }
 
   setPalette(newPalette);
+};
+
+/**
+ * IDでパレットを選択する
+ */
+export const changePaletteById = (id: string) => {
+  const palette = palettePresets.find((p) => p.getId() === id);
+  if (palette) {
+    updateStore("paletteId", id);
+    setPalette(palette);
+  }
+};
+
+/**
+ * ストアから現在のパレットIDを取得し、対応するパレットに切り替える
+ */
+export const syncPaletteFromStore = () => {
+  const paletteId = getStore("paletteId");
+  const palette = palettePresets.find((p) => p.getId() === paletteId);
+  if (palette) {
+    currentPalette = palette;
+    markNeedsRerender();
+    updatePaletteData(currentPalette);
+  }
 };
 
 /**

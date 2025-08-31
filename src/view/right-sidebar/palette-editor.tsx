@@ -1,8 +1,16 @@
 import { setCurrentPaletteLength, setCurrentPaletteOffset } from "@/camera/palette";
 import { ValueSlider } from "@/components/slider-wrapper";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shadcn/components/ui/select";
 import { Slider } from "@/shadcn/components/ui/slider";
 import { getStore, updateStore, useStoreValue } from "@/store/store";
 import { useEffect, useState } from "react";
+import { usePaletteSelection } from "./use-palette-selection";
 
 const paletteLengthValues = [
   "4",
@@ -21,6 +29,7 @@ const paletteLengthValues = [
 ];
 
 export const PaletteEditor = () => {
+  const { selectedId, paletteOptions, handlePaletteChange } = usePaletteSelection();
   const [paletteLengthValue, setPaletteLengthValue] = useState(() => getStore("paletteLength"));
   const [paletteOffsetValue, setPaletteOffsetValue] = useState(() => getStore("paletteOffset"));
 
@@ -36,6 +45,21 @@ export const PaletteEditor = () => {
 
   return (
     <div className="flex max-w-80 flex-col gap-6">
+      <div>
+        <div className="mb-1 ml-2">Palette</div>
+        <Select value={selectedId} onValueChange={handlePaletteChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a palette" />
+          </SelectTrigger>
+          <SelectContent>
+            {paletteOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <div>
         <div className="mb-1 ml-2">Palette Length: {paletteLengthValue}</div>
         <ValueSlider<number>

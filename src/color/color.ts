@@ -8,10 +8,12 @@ export class BasePalette implements Palette {
   mirrored = true;
   colorLength;
   displayName: string;
+  id: string;
 
-  constructor(length: number, displayName: string, mirrored = true, offsetIndex = 0) {
+  constructor(length: number, displayName: string, id: string, mirrored = true, offsetIndex = 0) {
     this.colorLength = length;
     this.displayName = displayName;
+    this.id = id;
     this.mirrored = mirrored;
     this.offsetIndex = offsetIndex;
 
@@ -47,6 +49,10 @@ export class BasePalette implements Palette {
 
   getDisplayName(): string {
     return this.displayName;
+  }
+
+  getId(): string {
+    return this.id;
   }
 
   public get length(): number {

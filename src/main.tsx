@@ -2,6 +2,7 @@ import { debounce } from "es-toolkit";
 import p5 from "p5";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
+import { syncPaletteFromStore } from "./camera/palette";
 import {
   changeDraggingState,
   changeToMousePressedState,
@@ -92,6 +93,9 @@ const entrypoint = () => {
     }
   });
   updateStore("zoomRate", hydratedSettings.zoomRate);
+
+  // paletteを同期
+  syncPaletteFromStore();
 
   // hydrateしたworkerCountの値でworkerを初期化する
   prepareWorkerPool(getStore("workerCount"), getStore("mode"));

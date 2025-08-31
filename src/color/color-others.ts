@@ -46,6 +46,7 @@ export class OthersPalette extends BasePalette {
 
   constructor(
     displayName: string,
+    id: string,
     length: number,
     interpolator: (t: number) => Hsv,
     mirrored = true,
@@ -53,7 +54,7 @@ export class OthersPalette extends BasePalette {
   ) {
     const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
-    super(colorLength, displayName, mirrored, offsetIndex);
+    super(colorLength, displayName, id, mirrored, offsetIndex);
 
     this.interpolator = interpolator;
 
@@ -92,13 +93,14 @@ export class OthersPalette extends BasePalette {
     const interpolator = getInterpolatorFromName(rawInterpolate);
     // FIXME: serialize -> deserializeで名前が失われる
     const displayName = getInterpolatorName(interpolator);
+    const id = `others-${getInterpolatorName(interpolator).toLowerCase()}`;
 
-    return new OthersPalette(displayName, length, interpolator, mirrored, offset);
+    return new OthersPalette(displayName, id, length, interpolator, mirrored, offset);
   }
 }
 
 export const othersPalettes = [
-  new OthersPalette("Hue360", 128, interpolators.hue360),
-  new OthersPalette("Monochrome", 128, interpolators.monochrome),
-  new OthersPalette("Fire", 128, interpolators.fire),
+  new OthersPalette("Hue360", "others-hue360", 128, interpolators.hue360),
+  new OthersPalette("Monochrome", "others-monochrome", 128, interpolators.monochrome),
+  new OthersPalette("Fire", "others-fire", 128, interpolators.fire),
 ] satisfies Palette[];

@@ -11,13 +11,14 @@ export class ChromaJsPalette extends BasePalette {
   constructor(
     colorConstructor: string[],
     displayName: string,
+    id: string,
     length: number,
     mirrored = true,
     offset = 0,
   ) {
     const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
-    super(colorLength, displayName, mirrored, offsetIndex);
+    super(colorLength, displayName, id, mirrored, offsetIndex);
 
     if (colorConstructor.length === 0) {
       this.colorConstructor = ["black", "white"];
@@ -62,17 +63,28 @@ export class ChromaJsPalette extends BasePalette {
 
     // FIXME: serialize -> deserializeで名前が失われる
     const displayName = colorConstructor.join(" → ");
+    const id = `chromajs-${colorConstructor.join("-").toLowerCase()}`;
 
-    return new ChromaJsPalette(colorConstructor, displayName, colorLength, mirrored, offset);
+    return new ChromaJsPalette(colorConstructor, displayName, id, colorLength, mirrored, offset);
   }
 
   static defaultPalette(): ChromaJsPalette {
-    return new ChromaJsPalette(["lightblue", "navy", "white"], "Icy", 128);
+    return new ChromaJsPalette(["lightblue", "navy", "white"], "Icy", "chromajs-icy", 128);
   }
 }
 
 export const chromaJsPalettes = [
-  new ChromaJsPalette(["black", "red", "yellow", "white"], "Prominence", 128),
-  new ChromaJsPalette(["lightblue", "navy", "white"], "Icy", 128),
-  new ChromaJsPalette(["lightgreen", "green", "#d3b480", "green"], "Forest", 128),
+  new ChromaJsPalette(
+    ["black", "red", "yellow", "white"],
+    "Prominence",
+    "chromajs-prominence",
+    128,
+  ),
+  new ChromaJsPalette(["lightblue", "navy", "white"], "Icy", "chromajs-icy", 128),
+  new ChromaJsPalette(
+    ["lightgreen", "green", "#d3b480", "green"],
+    "Forest",
+    "chromajs-forest",
+    128,
+  ),
 ] satisfies Palette[];
