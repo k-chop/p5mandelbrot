@@ -60,7 +60,6 @@ export const PaletteEditor = () => {
             const palette = Object.values(palettePresets).find((p) => p.id === e);
             if (!palette) return;
             setPalette(palette, { keepLength: true });
-            updateStore("paletteId", palette.id);
           }}
         >
           <SelectTrigger>

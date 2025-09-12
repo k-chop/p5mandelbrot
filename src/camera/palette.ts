@@ -90,6 +90,7 @@ export const setPalette = (
   }
   updatePaletteData(palette);
 
+  updateStore("paletteId", palette.id);
   updateStore("paletteLength", keepLength ? prevLength : palette.length);
   updateStore("paletteOffset", keepLength ? prevOffset : palette.offset);
 };
