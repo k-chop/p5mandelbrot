@@ -2,10 +2,13 @@ import { safeParseInt } from "@/math/util";
 import { samples } from "culori";
 import { color } from "d3-color";
 import {
+  interpolateBrBG,
   interpolateInferno,
+  interpolatePuOr,
   interpolateRdYlBu,
   interpolateSinebow,
   interpolateTurbo,
+  interpolateYlGnBu,
 } from "d3-scale-chromatic";
 import { BasePalette } from "./color";
 import type { Palette, RGB } from "./model";
@@ -24,6 +27,12 @@ const getInterpolatorFromName = (name: string): D3Interpolator => {
       return interpolateTurbo;
     case "Sinebow":
       return interpolateSinebow;
+    case "BrBG":
+      return interpolateBrBG;
+    case "YlGnBu":
+      return interpolateYlGnBu;
+    case "PuOr":
+      return interpolatePuOr;
     default:
       return interpolateRdYlBu;
   }
@@ -38,6 +47,12 @@ const getInterpolatorName = (interpolator: D3Interpolator): string => {
     return "Turbo";
   } else if (interpolator === interpolateSinebow) {
     return "Sinebow";
+  } else if (interpolator === interpolateBrBG) {
+    return "BrBG";
+  } else if (interpolator === interpolateYlGnBu) {
+    return "YlGnBu";
+  } else if (interpolator === interpolatePuOr) {
+    return "PuOr";
   } else {
     return "RdYlBlu";
   }
@@ -102,4 +117,7 @@ export const d3ChromaticPalettes = {
   Turbo: new D3ChromaticPalette(interpolateTurbo, 128),
   Inferno: new D3ChromaticPalette(interpolateInferno, 128),
   SineBow: new D3ChromaticPalette(interpolateSinebow, 128),
+  BrBG: new D3ChromaticPalette(interpolateBrBG, 128),
+  YlGnBu: new D3ChromaticPalette(interpolateYlGnBu, 128),
+  PuOr: new D3ChromaticPalette(interpolatePuOr, 128),
 } satisfies Record<string, Palette>;
