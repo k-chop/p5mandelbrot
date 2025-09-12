@@ -68,14 +68,20 @@ export class D3ChromaticPalette extends BasePalette {
     this.fillCache();
   }
 
-  serialize(): string {
+  public get id(): string {
     const result = ["d3-chromatic"];
     result.push(getInterpolatorName(this.interpolator));
     result.push(this.mirrored ? "1" : "0");
+
+    return result.join(",");
+  }
+
+  serialize(): string {
+    const result = [];
     result.push(`${this.colorLength}`);
     result.push(`${this.offsetIndex}`);
 
-    return result.join(",");
+    return `${this.id},${result.join(",")}`;
   }
 
   static deserialize(serialized: string): D3ChromaticPalette {

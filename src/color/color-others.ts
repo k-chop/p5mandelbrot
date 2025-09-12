@@ -65,14 +65,20 @@ export class OthersPalette extends BasePalette {
     return buildRGB32Byte(convertHsvToRgb(this.colors[index]));
   }
 
-  serialize(): string {
+  public get id(): string {
     const result = ["others"];
     result.push(getInterpolatorName(this.interpolator));
     result.push(`${this.mirrored ? 1 : 0}`);
+
+    return result.join(",");
+  }
+
+  serialize(): string {
+    const result = [];
     result.push(`${this.colorLength}`);
     result.push(`${this.offsetIndex}`);
 
-    return result.join(",");
+    return `${this.id},${result.join(",")}`;
   }
 
   static deserialize(serialized: string): OthersPalette {
