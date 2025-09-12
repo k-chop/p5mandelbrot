@@ -14,12 +14,15 @@ import {
 } from "@/shadcn/components/ui/select";
 import { Slider } from "@/shadcn/components/ui/slider";
 import { getStore, updateStore, useStoreValue } from "@/store/store";
+import { LRUCache } from "@/utils/lru-cache";
 import { useEffect, useRef, useState } from "react";
 
 interface PalettePreviewProps {
   paletteId: string;
   pixelLength?: number;
 }
+
+const palettePreviewCache = new LRUCache<string, ImageData>(50);
 
 const PalettePreview = ({ paletteId, pixelLength = 256 }: PalettePreviewProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -32,27 +35,33 @@ const PalettePreview = ({ paletteId, pixelLength = 256 }: PalettePreviewProps) =
     const ctx = el.getContext("2d");
     if (!ctx) return;
 
-    const length = palette.length;
+    // imagedataよりデカいのは描画しきれないので無駄。切り詰める
+    const length = Math.min(pixelLength, palette.length);
     const w = el.width;
-    const imageData = ctx.createImageData(w, 1);
+    const key = `${palette.id}|${length}|${w}`;
 
-    for (let x = 0; x < w; x++) {
-      const idx = Math.floor(x / (w / length));
-      const [r, g, b] = palette.rgb(idx, true);
-      const base = x * 4;
-      imageData.data[base + 0] = r;
-      imageData.data[base + 1] = g;
-      imageData.data[base + 2] = b;
-      imageData.data[base + 3] = 255;
+    let imageData = palettePreviewCache.get(key);
+    if (!imageData) {
+      imageData = ctx.createImageData(w, 1);
+      for (let x = 0; x < w; x++) {
+        const idx = Math.min(length - 1, Math.floor((x * length) / w));
+        const [r, g, b] = palette.rgb(idx, true);
+        const base = x * 4;
+        imageData.data[base + 0] = r;
+        imageData.data[base + 1] = g;
+        imageData.data[base + 2] = b;
+        imageData.data[base + 3] = 255;
+      }
+      palettePreviewCache.set(key, imageData);
     }
     ctx.putImageData(imageData, 0, 0);
   }, [paletteId, pixelLength]);
   return (
     <canvas
       ref={canvasRef}
-      width={256}
+      width={pixelLength}
       height={1}
-      style={{ width: "256px", height: "16px" }}
+      style={{ width: `${pixelLength}px`, height: "16px" }}
       className="rounded border border-muted/40"
       aria-hidden
     />
