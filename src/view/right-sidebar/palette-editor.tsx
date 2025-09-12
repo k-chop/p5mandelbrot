@@ -34,19 +34,16 @@ const PalettePreview = ({ paletteId, pixelLength = 256 }: PalettePreviewProps) =
 
     const length = palette.length;
     const w = el.width;
-    const h = 16;
-    const imageData = ctx.createImageData(w, h);
+    const imageData = ctx.createImageData(w, 1);
 
     for (let x = 0; x < w; x++) {
       const idx = Math.floor(x / (w / length));
       const [r, g, b] = palette.rgb(idx, true);
-      for (let y = 0; y < h; y++) {
-        const base = (y * w + x) * 4;
-        imageData.data[base + 0] = r;
-        imageData.data[base + 1] = g;
-        imageData.data[base + 2] = b;
-        imageData.data[base + 3] = 255;
-      }
+      const base = x * 4;
+      imageData.data[base + 0] = r;
+      imageData.data[base + 1] = g;
+      imageData.data[base + 2] = b;
+      imageData.data[base + 3] = 255;
     }
     ctx.putImageData(imageData, 0, 0);
   }, [paletteId, pixelLength]);
@@ -54,8 +51,9 @@ const PalettePreview = ({ paletteId, pixelLength = 256 }: PalettePreviewProps) =
     <canvas
       ref={canvasRef}
       width={256}
-      height={16}
-      className="h-4 w-full rounded border border-muted/40"
+      height={1}
+      style={{ width: "256px", height: "16px" }}
+      className="rounded border border-muted/40"
       aria-hidden
     />
   );
