@@ -36,8 +36,9 @@ const PalettePreview = ({ paletteId, pixelLength = 256 }: PalettePreviewProps) =
     const ctx = el.getContext("2d");
     if (!ctx) return;
 
-    const length = palette.length; // paletteの現在の色数（offset無視）
-    const w = el.width; // 物理幅
+    // imagedataよりデカいのは描画しきれないので無駄。切り詰める
+    const length = Math.min(pixelLength, palette.length);
+    const w = el.width;
     const key = `${palette.id}|${length}|${w}`;
 
     let imageData = palettePreviewCache.get(key);
