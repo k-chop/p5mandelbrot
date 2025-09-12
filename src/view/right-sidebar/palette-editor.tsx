@@ -14,7 +14,50 @@ import {
 } from "@/shadcn/components/ui/select";
 import { Slider } from "@/shadcn/components/ui/slider";
 import { getStore, updateStore, useStoreValue } from "@/store/store";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+interface PalettePreviewProps {
+  paletteId: string;
+  pixelLength?: number;
+}
+
+const PalettePreview = ({ paletteId, pixelLength = 256 }: PalettePreviewProps) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const presets = getPalettePreset();
+    const palette = Object.values(presets).find((p) => p.id === paletteId);
+    if (!palette) return;
+    const ctx = el.getContext("2d");
+    if (!ctx) return;
+
+    const length = palette.length;
+    const w = el.width;
+    const imageData = ctx.createImageData(w, 1);
+
+    for (let x = 0; x < w; x++) {
+      const idx = Math.floor(x / (w / length));
+      const [r, g, b] = palette.rgb(idx, true);
+      const base = x * 4;
+      imageData.data[base + 0] = r;
+      imageData.data[base + 1] = g;
+      imageData.data[base + 2] = b;
+      imageData.data[base + 3] = 255;
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }, [paletteId, pixelLength]);
+  return (
+    <canvas
+      ref={canvasRef}
+      width={256}
+      height={1}
+      style={{ width: "256px", height: "16px" }}
+      className="rounded border border-muted/40"
+      aria-hidden
+    />
+  );
+};
 
 const paletteLengthValues = [
   "4",
@@ -62,13 +105,16 @@ export const PaletteEditor = () => {
             setPalette(palette, { keepLength: true });
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger className="flex items-center gap-2">
             <SelectValue placeholder="Select a palette" />
           </SelectTrigger>
           <SelectContent>
             {Object.entries(palettePresets).map(([key, value]) => (
               <SelectItem key={value.id} value={value.id}>
-                {key}
+                <div className="flex flex-col items-start w-full">
+                  <span>{key}</span>
+                  <PalettePreview paletteId={value.id} />
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
