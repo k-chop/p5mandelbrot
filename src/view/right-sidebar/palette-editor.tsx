@@ -18,11 +18,9 @@ import { useEffect, useRef, useState } from "react";
 
 interface PalettePreviewProps {
   paletteId: string;
-  pixelLength?: number; // 生成するキャンバスの物理幅(px)
+  pixelLength?: number;
 }
 
-// パレットプレビューのImageDataキャッシュ
-// key: paletteId|paletteLength|width
 const palettePreviewCache = new Map<string, ImageData>();
 
 const PalettePreview = ({ paletteId, pixelLength = 256 }: PalettePreviewProps) => {
@@ -45,9 +43,8 @@ const PalettePreview = ({ paletteId, pixelLength = 256 }: PalettePreviewProps) =
     if (!imageData) {
       imageData = ctx.createImageData(w, 1);
       for (let x = 0; x < w; x++) {
-        // x位置をpaletteのindexにマッピング（端のズレを抑えるためfloor）
         const idx = Math.min(length - 1, Math.floor((x * length) / w));
-        const [r, g, b] = palette.rgb(idx, true); // offset無視
+        const [r, g, b] = palette.rgb(idx, true);
         const base = x * 4;
         imageData.data[base + 0] = r;
         imageData.data[base + 1] = g;
