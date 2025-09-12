@@ -44,17 +44,10 @@ export class OthersPalette extends BasePalette {
   private interpolator: (t: number) => Hsv;
   colors: Hsv[] = [];
 
-  constructor(
-    displayName: string,
-    id: string,
-    length: number,
-    interpolator: (t: number) => Hsv,
-    mirrored = true,
-    offset = 0,
-  ) {
+  constructor(length: number, interpolator: (t: number) => Hsv, mirrored = true, offset = 0) {
     const { colorLength, offsetIndex } = clampedPaletteParams(length, offset);
 
-    super(colorLength, displayName, id, mirrored, offsetIndex);
+    super(colorLength, mirrored, offsetIndex);
 
     this.interpolator = interpolator;
 
@@ -79,7 +72,6 @@ export class OthersPalette extends BasePalette {
     result.push(`${this.colorLength}`);
     result.push(`${this.offsetIndex}`);
 
-    // FIXME: serialize -> deserializeで名前が失われる
     return result.join(",");
   }
 
@@ -91,16 +83,13 @@ export class OthersPalette extends BasePalette {
     const mirrored = rawMirrored === "1";
 
     const interpolator = getInterpolatorFromName(rawInterpolate);
-    // FIXME: serialize -> deserializeで名前が失われる
-    const displayName = getInterpolatorName(interpolator);
-    const id = `others-${getInterpolatorName(interpolator).toLowerCase()}`;
 
-    return new OthersPalette(displayName, id, length, interpolator, mirrored, offset);
+    return new OthersPalette(length, interpolator, mirrored, offset);
   }
 }
 
 export const othersPalettes = [
-  new OthersPalette("Hue360", "others-hue360", 128, interpolators.hue360),
-  new OthersPalette("Monochrome", "others-monochrome", 128, interpolators.monochrome),
-  new OthersPalette("Fire", "others-fire", 128, interpolators.fire),
+  new OthersPalette(128, interpolators.hue360),
+  new OthersPalette(128, interpolators.monochrome),
+  new OthersPalette(128, interpolators.fire),
 ] satisfies Palette[];

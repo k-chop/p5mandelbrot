@@ -7,13 +7,9 @@ export class BasePalette implements Palette {
   offsetIndex = 0;
   mirrored = true;
   colorLength;
-  displayName: string;
-  id: string;
 
-  constructor(length: number, displayName: string, id: string, mirrored = true, offsetIndex = 0) {
+  constructor(length: number, mirrored = true, offsetIndex = 0) {
     this.colorLength = length;
-    this.displayName = displayName;
-    this.id = id;
     this.mirrored = mirrored;
     this.offsetIndex = offsetIndex;
 
@@ -45,14 +41,6 @@ export class BasePalette implements Palette {
 
   serialize(): string {
     throw new Error("Not implemented");
-  }
-
-  getDisplayName(): string {
-    return this.displayName;
-  }
-
-  getId(): string {
-    return this.id;
   }
 
   public get length(): number {
