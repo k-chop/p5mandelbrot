@@ -38,6 +38,7 @@ type Store = {
   shouldReuseRefOrbit: boolean;
 
   // palette settings
+  paletteId: string;
   paletteLength: number;
   paletteOffset: number;
   animationCycleStep: number;
@@ -77,6 +78,7 @@ const store: Store = {
   // mandelbrot state
   shouldReuseRefOrbit: false,
   // palette settings
+  paletteId: "d3-chromatic,RdYlBlu,1",
   paletteLength: 128,
   paletteOffset: 0,
   animationCycleStep: 1,

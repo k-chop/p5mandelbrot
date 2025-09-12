@@ -33,15 +33,21 @@ export class ChromaJsPalette extends BasePalette {
     this.fillCache();
   }
 
-  serialize(): string {
+  public get id(): string {
     const result = ["chroma-js"];
     result.push(`${this.colorConstructor.length}`);
     result.push(...this.colorConstructor);
     result.push(`${this.mirrored ? 1 : 0}`);
+
+    return result.join(",");
+  }
+
+  serialize(): string {
+    const result = [];
     result.push(`${this.colorLength}`);
     result.push(`${this.offsetIndex}`);
 
-    return result.join(",");
+    return `${this.id},${result.join(",")}`;
   }
 
   static deserialize(serialized: string): ChromaJsPalette {
@@ -61,8 +67,8 @@ export class ChromaJsPalette extends BasePalette {
   }
 }
 
-export const chromaJsPalettes = [
-  // new ChromaJsPalette(["black", "red", "yellow", "white"], 128), // prominence
-  new ChromaJsPalette(["lightblue", "navy", "white"], 128), // icy
-  new ChromaJsPalette(["lightgreen", "green", "#d3b480", "green"], 128), // forest
-] satisfies Palette[];
+export const chromaJsPalettes = {
+  prominence: new ChromaJsPalette(["black", "red", "yellow", "white"], 128),
+  icy: new ChromaJsPalette(["lightblue", "navy", "white"], 128),
+  forest: new ChromaJsPalette(["lightgreen", "green", "#d3b480", "green"], 128),
+} satisfies Record<string, Palette>;

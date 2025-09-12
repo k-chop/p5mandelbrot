@@ -86,7 +86,7 @@ describe("othersPalette", () => {
   });
 
   it("serializeできる", () => {
-    const palette = othersPalettes[0];
+    const palette = othersPalettes.hue360;
     const serialized = palette.serialize();
     expect(serialized).toBe("others,hue360,1,128,0");
   });

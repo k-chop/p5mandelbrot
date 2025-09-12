@@ -6,15 +6,19 @@ import {
   type Palette,
 } from "@/color";
 import { updatePaletteData } from "@/rendering/renderer";
-import { updateStore } from "@/store/store";
+import { getStore, updateStore } from "@/store/store";
 
 // 描画時に使うpaletteの状態に関するファイル
 
-/** 数値キーで選択できるpaletteのプリセット */
-const palettePresets: Palette[] = [...d3ChromaticPalettes, ...othersPalettes, ...chromaJsPalettes];
+/** paletteのプリセット */
+const palettePresets: Record<string, Palette> = {
+  ...d3ChromaticPalettes,
+  ...othersPalettes,
+  ...chromaJsPalettes,
+};
 
 /** 現在選択中のPalette */
-let currentPalette: Palette = palettePresets[0];
+let currentPalette: Palette = palettePresets.RdYlBu;
 /** trueなら次回renderが必要 */
 let renderNext = true;
 
@@ -52,24 +56,43 @@ export const getCurrentPalette = () => currentPalette;
 export const changePaletteFromPresets = (index: number) => {
   let newPalette = currentPalette;
 
-  if (palettePresets[index]) {
-    newPalette = palettePresets[index];
+  const selected = Object.values(palettePresets)[index];
+  if (selected) {
+    newPalette = selected;
   }
 
   setPalette(newPalette);
 };
 
+/** 書き換え防止のためhallo copyして返す */
+export const getPalettePreset = () => {
+  return { ...palettePresets };
+};
+
 /**
  * Paletteを指定して変更する
  */
-export const setPalette = (palette: Palette = currentPalette) => {
+export const setPalette = (
+  palette: Palette = currentPalette,
+  options: { keepLength?: boolean } = {},
+) => {
+  const { keepLength = false } = options;
+
+  const prevLength = getStore("paletteLength");
+  const prevOffset = getStore("paletteOffset");
+
   currentPalette = palette;
   markNeedsRerender();
 
+  if (keepLength) {
+    palette.setLength(prevLength);
+    palette.setOffset(prevOffset);
+  }
   updatePaletteData(palette);
 
-  updateStore("paletteLength", palette.length);
-  updateStore("paletteOffset", palette.offset);
+  updateStore("paletteId", palette.id);
+  updateStore("paletteLength", keepLength ? prevLength : palette.length);
+  updateStore("paletteOffset", keepLength ? prevOffset : palette.offset);
 };
 
 /**

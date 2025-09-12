@@ -13,6 +13,7 @@ export type Palette = {
 
   get offset(): number;
   get length(): number;
+  get id(): string;
 
   setOffset(offsetIndex: number): void;
   cycleOffset(step?: number): void;
