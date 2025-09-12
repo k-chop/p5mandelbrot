@@ -6,7 +6,7 @@ import {
   type Palette,
 } from "@/color";
 import { updatePaletteData } from "@/rendering/renderer";
-import { updateStore } from "@/store/store";
+import { getStore, updateStore } from "@/store/store";
 
 // 描画時に使うpaletteの状態に関するファイル
 
@@ -64,17 +64,34 @@ export const changePaletteFromPresets = (index: number) => {
   setPalette(newPalette);
 };
 
+/** 書き換え防止のためhallo copyして返す */
+export const getPalettePreset = () => {
+  return { ...palettePresets };
+};
+
 /**
  * Paletteを指定して変更する
  */
-export const setPalette = (palette: Palette = currentPalette) => {
+export const setPalette = (
+  palette: Palette = currentPalette,
+  options: { keepLength?: boolean } = {},
+) => {
+  const { keepLength = false } = options;
+
+  const prevLength = getStore("paletteLength");
+  const prevOffset = getStore("paletteOffset");
+
   currentPalette = palette;
   markNeedsRerender();
 
+  if (keepLength) {
+    palette.setLength(prevLength);
+    palette.setOffset(prevOffset);
+  }
   updatePaletteData(palette);
 
-  updateStore("paletteLength", palette.length);
-  updateStore("paletteOffset", palette.offset);
+  updateStore("paletteLength", keepLength ? prevLength : palette.length);
+  updateStore("paletteOffset", keepLength ? prevOffset : palette.offset);
 };
 
 /**

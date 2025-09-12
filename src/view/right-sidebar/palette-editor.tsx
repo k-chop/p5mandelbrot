@@ -1,5 +1,17 @@
-import { setCurrentPaletteLength, setCurrentPaletteOffset } from "@/camera/palette";
+import {
+  getPalettePreset,
+  setCurrentPaletteLength,
+  setCurrentPaletteOffset,
+  setPalette,
+} from "@/camera/palette";
 import { ValueSlider } from "@/components/slider-wrapper";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shadcn/components/ui/select";
 import { Slider } from "@/shadcn/components/ui/slider";
 import { getStore, updateStore, useStoreValue } from "@/store/store";
 import { useEffect, useState } from "react";
@@ -24,6 +36,8 @@ export const PaletteEditor = () => {
   const [paletteLengthValue, setPaletteLengthValue] = useState(() => getStore("paletteLength"));
   const [paletteOffsetValue, setPaletteOffsetValue] = useState(() => getStore("paletteOffset"));
 
+  const paletteId = useStoreValue("paletteId");
+
   // subscribe
   const paletteLength = useStoreValue("paletteLength");
   useEffect(() => {
@@ -34,8 +48,33 @@ export const PaletteEditor = () => {
     setPaletteOffsetValue(paletteOffset);
   }, [paletteOffset]);
 
+  const palettePresets = getPalettePreset();
+
   return (
     <div className="flex max-w-80 flex-col gap-6">
+      <div>
+        <div className="mb-1 ml-2">Palette</div>
+        <Select
+          value={paletteId}
+          onValueChange={(e) => {
+            const palette = Object.values(palettePresets).find((p) => p.id === e);
+            if (!palette) return;
+            setPalette(palette, { keepLength: true });
+            updateStore("paletteId", palette.id);
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a palette" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(palettePresets).map(([key, value]) => (
+              <SelectItem key={value.id} value={value.id}>
+                {key}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <div>
         <div className="mb-1 ml-2">Palette Length: {paletteLengthValue}</div>
         <ValueSlider<number>
