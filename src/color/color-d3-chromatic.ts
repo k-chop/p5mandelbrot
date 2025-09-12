@@ -17,45 +17,26 @@ import { buildRGB, clampedPaletteParams } from "./model";
 type D3Interpolator = (t: number) => string;
 type D3Color = ReturnType<typeof color>;
 
+const interpolatorMap = new Map<string, D3Interpolator>([
+  ["Inferno", interpolateInferno],
+  ["RdYlBlu", interpolateRdYlBu],
+  ["Turbo", interpolateTurbo],
+  ["Sinebow", interpolateSinebow],
+  ["BrBG", interpolateBrBG],
+  ["YlGnBu", interpolateYlGnBu],
+  ["PuOr", interpolatePuOr],
+]);
+
+const nameMap = new Map<D3Interpolator, string>(
+  Array.from(interpolatorMap).map(([name, interpolator]) => [interpolator, name]),
+);
+
 const getInterpolatorFromName = (name: string): D3Interpolator => {
-  switch (name) {
-    case "Inferno":
-      return interpolateInferno;
-    case "RdYlBlu":
-      return interpolateRdYlBu;
-    case "Turbo":
-      return interpolateTurbo;
-    case "Sinebow":
-      return interpolateSinebow;
-    case "BrBG":
-      return interpolateBrBG;
-    case "YlGnBu":
-      return interpolateYlGnBu;
-    case "PuOr":
-      return interpolatePuOr;
-    default:
-      return interpolateRdYlBu;
-  }
+  return interpolatorMap.get(name) ?? interpolateRdYlBu;
 };
 
 const getInterpolatorName = (interpolator: D3Interpolator): string => {
-  if (interpolator === interpolateInferno) {
-    return "Inferno";
-  } else if (interpolator === interpolateRdYlBu) {
-    return "RdYlBlu";
-  } else if (interpolator === interpolateTurbo) {
-    return "Turbo";
-  } else if (interpolator === interpolateSinebow) {
-    return "Sinebow";
-  } else if (interpolator === interpolateBrBG) {
-    return "BrBG";
-  } else if (interpolator === interpolateYlGnBu) {
-    return "YlGnBu";
-  } else if (interpolator === interpolatePuOr) {
-    return "PuOr";
-  } else {
-    return "RdYlBlu";
-  }
+  return nameMap.get(interpolator) ?? "RdYlBlu";
 };
 
 export class D3ChromaticPalette extends BasePalette {
