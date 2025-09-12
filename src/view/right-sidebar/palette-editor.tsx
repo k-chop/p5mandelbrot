@@ -13,17 +13,15 @@ import {
   SelectValue,
 } from "@/shadcn/components/ui/select";
 import { Slider } from "@/shadcn/components/ui/slider";
-import { cn } from "@/shadcn/utils";
 import { getStore, updateStore, useStoreValue } from "@/store/store";
 import { useEffect, useRef, useState } from "react";
 
 interface PalettePreviewProps {
   paletteId: string;
-  className?: string;
-  samples?: number;
+  pixelLength?: number;
 }
 
-const PalettePreview = ({ paletteId, className, samples = 256 }: PalettePreviewProps) => {
+const PalettePreview = ({ paletteId, pixelLength = 256 }: PalettePreviewProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   useEffect(() => {
     const el = canvasRef.current;
@@ -31,14 +29,16 @@ const PalettePreview = ({ paletteId, className, samples = 256 }: PalettePreviewP
     const presets = getPalettePreset();
     const palette = Object.values(presets).find((p) => p.id === paletteId);
     if (!palette) return;
-    const w = el.width; // 物理ピクセル数 (固定 256 等)
-    const h = el.height;
     const ctx = el.getContext("2d");
     if (!ctx) return;
+
+    const length = palette.length;
+    const w = el.width;
+    const h = 16;
     const imageData = ctx.createImageData(w, h);
+
     for (let x = 0; x < w; x++) {
-      const t = w === 1 ? 0 : x / (w - 1);
-      const idx = Math.round(t * (samples - 1));
+      const idx = Math.floor(x / (w / length));
       const [r, g, b] = palette.rgb(idx, true);
       for (let y = 0; y < h; y++) {
         const base = (y * w + x) * 4;
@@ -49,13 +49,13 @@ const PalettePreview = ({ paletteId, className, samples = 256 }: PalettePreviewP
       }
     }
     ctx.putImageData(imageData, 0, 0);
-  }, [paletteId, samples]);
+  }, [paletteId, pixelLength]);
   return (
     <canvas
       ref={canvasRef}
       width={256}
-      height={12}
-      className={cn("h-5 w-full rounded border border-muted/40", className)}
+      height={16}
+      className="h-4 w-full rounded border border-muted/40"
       aria-hidden
     />
   );
