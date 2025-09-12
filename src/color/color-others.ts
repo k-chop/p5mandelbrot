@@ -94,8 +94,8 @@ export class OthersPalette extends BasePalette {
   }
 }
 
-export const othersPalettes = [
-  new OthersPalette(128, interpolators.hue360),
-  new OthersPalette(128, interpolators.monochrome),
-  new OthersPalette(128, interpolators.fire),
-] satisfies Palette[];
+export const othersPalettes = {
+  hue360: new OthersPalette(128, interpolators.hue360),
+  monochrome: new OthersPalette(128, interpolators.monochrome),
+  fire: new OthersPalette(128, interpolators.fire),
+} satisfies Record<string, Palette>;

@@ -97,8 +97,9 @@ export class D3ChromaticPalette extends BasePalette {
   }
 }
 
-export const d3ChromaticPalettes = [
-  new D3ChromaticPalette(interpolateRdYlBu, 128),
-  new D3ChromaticPalette(interpolateTurbo, 128),
-  new D3ChromaticPalette(interpolateInferno, 128),
-] satisfies Palette[];
+export const d3ChromaticPalettes = {
+  RdYlBu: new D3ChromaticPalette(interpolateRdYlBu, 128),
+  Turbo: new D3ChromaticPalette(interpolateTurbo, 128),
+  Inferno: new D3ChromaticPalette(interpolateInferno, 128),
+  SineBow: new D3ChromaticPalette(interpolateSinebow, 128),
+} satisfies Record<string, Palette>;

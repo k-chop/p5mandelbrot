@@ -10,11 +10,15 @@ import { updateStore } from "@/store/store";
 
 // 描画時に使うpaletteの状態に関するファイル
 
-/** 数値キーで選択できるpaletteのプリセット */
-const palettePresets: Palette[] = [...d3ChromaticPalettes, ...othersPalettes, ...chromaJsPalettes];
+/** paletteのプリセット */
+const palettePresets: Record<string, Palette> = {
+  ...d3ChromaticPalettes,
+  ...othersPalettes,
+  ...chromaJsPalettes,
+};
 
 /** 現在選択中のPalette */
-let currentPalette: Palette = palettePresets[0];
+let currentPalette: Palette = palettePresets.RdYlBu;
 /** trueなら次回renderが必要 */
 let renderNext = true;
 
@@ -52,8 +56,9 @@ export const getCurrentPalette = () => currentPalette;
 export const changePaletteFromPresets = (index: number) => {
   let newPalette = currentPalette;
 
-  if (palettePresets[index]) {
-    newPalette = palettePresets[index];
+  const selected = Object.values(palettePresets)[index];
+  if (selected) {
+    newPalette = selected;
   }
 
   setPalette(newPalette);
