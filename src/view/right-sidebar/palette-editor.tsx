@@ -109,7 +109,6 @@ export const PaletteEditor = () => {
         >
           <SelectTrigger className="flex items-center gap-2">
             <SelectValue placeholder="Select a palette" />
-            {paletteId && <PalettePreview paletteId={paletteId} className="w-32 h-3" />}
           </SelectTrigger>
           <SelectContent>
             {Object.entries(palettePresets).map(([key, value]) => (
