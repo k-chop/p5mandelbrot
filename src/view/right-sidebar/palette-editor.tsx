@@ -20,25 +20,26 @@ import { useEffect, useRef, useState } from "react";
 interface PalettePreviewProps {
   paletteId: string;
   className?: string;
-  length?: number;
+  samples?: number;
 }
 
-const PalettePreview = ({ paletteId, className, length = 64 }: PalettePreviewProps) => {
+const PalettePreview = ({ paletteId, className, samples = 256 }: PalettePreviewProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
     const presets = getPalettePreset();
     const palette = Object.values(presets).find((p) => p.id === paletteId);
-    const el = canvasRef.current;
-    if (!el || !palette) return;
-    const w = el.width;
+    if (!palette) return;
+    const w = el.width; // 物理ピクセル数 (固定 256 等)
     const h = el.height;
     const ctx = el.getContext("2d");
     if (!ctx) return;
     const imageData = ctx.createImageData(w, h);
     for (let x = 0; x < w; x++) {
       const t = w === 1 ? 0 : x / (w - 1);
-      const idx = Math.round(t * (length - 1));
-      const [r, g, b] = palette.rgb(idx, true); // offset無視
+      const idx = Math.round(t * (samples - 1));
+      const [r, g, b] = palette.rgb(idx, true);
       for (let y = 0; y < h; y++) {
         const base = (y * w + x) * 4;
         imageData.data[base + 0] = r;
@@ -48,14 +49,13 @@ const PalettePreview = ({ paletteId, className, length = 64 }: PalettePreviewPro
       }
     }
     ctx.putImageData(imageData, 0, 0);
-  }, [paletteId, length]);
-
+  }, [paletteId, samples]);
   return (
     <canvas
       ref={canvasRef}
-      width={length}
+      width={256}
       height={12}
-      className={cn("rounded border border-muted/40", className)}
+      className={cn("h-5 w-full rounded border border-muted/40", className)}
       aria-hidden
     />
   );
@@ -112,9 +112,11 @@ export const PaletteEditor = () => {
           </SelectTrigger>
           <SelectContent>
             {Object.entries(palettePresets).map(([key, value]) => (
-              <SelectItem key={value.id} value={value.id} className="flex items-center gap-2">
-                <span className="flex-1 truncate">{key}</span>
-                <PalettePreview paletteId={value.id} className="w-32 h-3" />
+              <SelectItem key={value.id} value={value.id}>
+                <div className="flex flex-col items-start w-full">
+                  <span>{key}</span>
+                  <PalettePreview paletteId={value.id} />
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
