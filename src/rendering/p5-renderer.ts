@@ -400,6 +400,7 @@ const renderIterationsToPixelSupersampled = (
 
     const imageData = context.getImageData(startX, startY, drawWidth, drawHeight);
     const pixelData = imageData.data;
+    const actualWidth = imageData.width; // device pixel width
 
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
@@ -411,7 +412,7 @@ const renderIterationsToPixelSupersampled = (
         for (let i = 0; i < density; i++) {
           for (let j = 0; j < density; j++) {
             const pixelIndex = Math.floor(
-              4 * ((relativeY * density + j) * drawWidth * density + (relativeX * density + i)),
+              4 * ((relativeY * density + j) * actualWidth + (relativeX * density + i)),
             );
 
             const localX = x - rect.x;
