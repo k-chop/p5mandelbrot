@@ -384,7 +384,7 @@ const renderIterationsToPixelSupersampled = (
 
   // iterationsResultから直接canvasに描画
   for (const iterBuffer of iterationsResult) {
-    const { rect, buffer, resolution, isSuperSampled } = iterBuffer;
+    const { rect, buffer, resolution } = iterBuffer;
 
     // worldRectとiterationのrectが重なっている部分だけ処理
     const startY = Math.max(rect.y, worldRect.y);
@@ -429,67 +429,46 @@ const renderIterationsToPixelSupersampled = (
             let b = 0;
             let iteration = 0;
 
-            if (!isSuperSampled) {
-              const idx = scaledX + scaledY * resolution.width;
-              iteration = buffer[idx];
+            // supersamplingの場合は4点平均
+            const idx00 = scaledX + scaledY * resolution.width;
+            const idx10 = scaledX + 1 + scaledY * resolution.width;
+            const idx01 = scaledX + (scaledY + 1) * resolution.width;
+            const idx11 = scaledX + 1 + (scaledY + 1) * resolution.width;
 
-              r = palette.r(buffer[idx]);
-              g = palette.g(buffer[idx]);
-              b = palette.b(buffer[idx]);
+            iteration = Math.round(
+              (buffer[idx00] + buffer[idx10] + buffer[idx01] + buffer[idx11]) / 4,
+            );
 
-              if (iteration !== params.N) {
-                pixelData[pixelIndex + 0] = r;
-                pixelData[pixelIndex + 1] = g;
-                pixelData[pixelIndex + 2] = b;
-                pixelData[pixelIndex + 3] = 255;
-              } else {
-                pixelData[pixelIndex + 0] = 0;
-                pixelData[pixelIndex + 1] = 0;
-                pixelData[pixelIndex + 2] = 0;
-                pixelData[pixelIndex + 3] = 255;
-              }
+            const r00 = palette.r(buffer[idx00]);
+            const g00 = palette.g(buffer[idx00]);
+            const b00 = palette.b(buffer[idx00]);
+
+            const r10 = palette.r(buffer[idx10]);
+            const g10 = palette.g(buffer[idx10]);
+            const b10 = palette.b(buffer[idx10]);
+
+            const r01 = palette.r(buffer[idx01]);
+            const g01 = palette.g(buffer[idx01]);
+            const b01 = palette.b(buffer[idx01]);
+
+            const r11 = palette.r(buffer[idx11]);
+            const g11 = palette.g(buffer[idx11]);
+            const b11 = palette.b(buffer[idx11]);
+
+            r = (r00 + r10 + r01 + r11) / 4;
+            g = (g00 + g10 + g01 + g11) / 4;
+            b = (b00 + b10 + b01 + b11) / 4;
+
+            if (iteration !== params.N) {
+              pixelData[pixelIndex + 0] = r;
+              pixelData[pixelIndex + 1] = g;
+              pixelData[pixelIndex + 2] = b;
+              pixelData[pixelIndex + 3] = 255;
             } else {
-              // supersamplingの場合は4点平均
-              const idx00 = scaledX + scaledY * resolution.width;
-              const idx10 = scaledX + 1 + scaledY * resolution.width;
-              const idx01 = scaledX + (scaledY + 1) * resolution.width;
-              const idx11 = scaledX + 1 + (scaledY + 1) * resolution.width;
-
-              iteration = Math.round(
-                (buffer[idx00] + buffer[idx10] + buffer[idx01] + buffer[idx11]) / 4,
-              );
-
-              const r00 = palette.r(buffer[idx00]);
-              const g00 = palette.g(buffer[idx00]);
-              const b00 = palette.b(buffer[idx00]);
-
-              const r10 = palette.r(buffer[idx10]);
-              const g10 = palette.g(buffer[idx10]);
-              const b10 = palette.b(buffer[idx10]);
-
-              const r01 = palette.r(buffer[idx01]);
-              const g01 = palette.g(buffer[idx01]);
-              const b01 = palette.b(buffer[idx01]);
-
-              const r11 = palette.r(buffer[idx11]);
-              const g11 = palette.g(buffer[idx11]);
-              const b11 = palette.b(buffer[idx11]);
-
-              r = (r00 + r10 + r01 + r11) / 4;
-              g = (g00 + g10 + g01 + g11) / 4;
-              b = (b00 + b10 + b01 + b11) / 4;
-
-              if (iteration !== params.N) {
-                pixelData[pixelIndex + 0] = r;
-                pixelData[pixelIndex + 1] = g;
-                pixelData[pixelIndex + 2] = b;
-                pixelData[pixelIndex + 3] = 255;
-              } else {
-                pixelData[pixelIndex + 0] = 0;
-                pixelData[pixelIndex + 1] = 0;
-                pixelData[pixelIndex + 2] = 0;
-                pixelData[pixelIndex + 3] = 255;
-              }
+              pixelData[pixelIndex + 0] = 0;
+              pixelData[pixelIndex + 1] = 0;
+              pixelData[pixelIndex + 2] = 0;
+              pixelData[pixelIndex + 3] = 255;
             }
           }
         }
