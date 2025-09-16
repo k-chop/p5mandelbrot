@@ -379,7 +379,7 @@ const renderIterationsToPixelSupersampled = (
   const params = getCurrentParams();
   const palette = getCurrentPalette();
 
-  // HTML canvasのpixel density取得
+  // HTML canvasのpixel density取得（canvasがretina対応で初期化される）
   const density = Math.round(window.devicePixelRatio || 1);
 
   // iterationsResultから直接canvasに描画
@@ -400,20 +400,20 @@ const renderIterationsToPixelSupersampled = (
 
     const imageData = context.getImageData(startX, startY, drawWidth, drawHeight);
     const pixelData = imageData.data;
-    const actualWidth = imageData.width; // device pixel width
+    const actualWidth = imageData.width; // 物理ピクセル幅 (drawWidth * density)
 
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
-        // 部分imageDataでの相対座標
+        // 部分imageDataでの相対座標（論理ピクセル）
         const relativeY = y - startY;
         const relativeX = x - startX;
 
-        // retina対応
+        // retina対応: 各論理ピクセルに対してdensity x density個の物理ピクセルを塗る
         for (let i = 0; i < density; i++) {
           for (let j = 0; j < density; j++) {
-            const pixelIndex = Math.floor(
-              4 * ((relativeY * density + j) * actualWidth + (relativeX * density + i)),
-            );
+            const physicalX = relativeX * density + i;
+            const physicalY = relativeY * density + j;
+            const pixelIndex = 4 * (physicalY * actualWidth + physicalX);
 
             const localX = x - rect.x;
             const localY = y - rect.y;
@@ -436,6 +436,18 @@ const renderIterationsToPixelSupersampled = (
               r = palette.r(buffer[idx]);
               g = palette.g(buffer[idx]);
               b = palette.b(buffer[idx]);
+
+              if (iteration !== params.N) {
+                pixelData[pixelIndex + 0] = r;
+                pixelData[pixelIndex + 1] = g;
+                pixelData[pixelIndex + 2] = b;
+                pixelData[pixelIndex + 3] = 255;
+              } else {
+                pixelData[pixelIndex + 0] = 0;
+                pixelData[pixelIndex + 1] = 0;
+                pixelData[pixelIndex + 2] = 0;
+                pixelData[pixelIndex + 3] = 255;
+              }
             } else {
               // supersamplingの場合は4点平均
               const idx00 = scaledX + scaledY * resolution.width;
