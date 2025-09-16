@@ -47,6 +47,7 @@ export const startCalculation = async (
     // supersampling用のcanvasを用意
     const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement;
     if (canvas) {
+      // FIXME: 真面目にretina対応するときはここでdevicePixelRatio倍する
       canvas.width = supersamplingWidth;
       canvas.height = supersamplingHeight;
 
