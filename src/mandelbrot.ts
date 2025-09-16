@@ -47,15 +47,9 @@ export const startCalculation = async (
     // supersampling用のcanvasを用意
     const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement;
     if (canvas) {
-      const devicePixelRatio = window.devicePixelRatio || 1;
-
-      // retina対応: 物理ピクセルサイズを設定
-      canvas.width = supersamplingWidth * devicePixelRatio;
-      canvas.height = supersamplingHeight * devicePixelRatio;
-
-      // 論理サイズを設定
-      canvas.style.width = supersamplingWidth + "px";
-      canvas.style.height = supersamplingHeight + "px";
+      // FIXME: 真面目にretina対応するときはここでdevicePixelRatio倍する
+      canvas.width = supersamplingWidth;
+      canvas.height = supersamplingHeight;
 
       const overlay = document.getElementById("supersampling-overlay");
       if (overlay) overlay.style.display = "block";

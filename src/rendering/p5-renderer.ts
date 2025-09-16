@@ -379,8 +379,8 @@ const renderIterationsToPixelSupersampled = (
   const params = getCurrentParams();
   const palette = getCurrentPalette();
 
-  // HTML canvasのpixel density取得（canvasがretina対応で初期化される）
-  const density = Math.round(window.devicePixelRatio || 1);
+  // FIXME: ちゃんとしたretina対応はあとでやる
+  const density = 1; // Math.round(window.devicePixelRatio || 1);
 
   // iterationsResultから直接canvasに描画
   for (const iterBuffer of iterationsResult) {
@@ -400,7 +400,8 @@ const renderIterationsToPixelSupersampled = (
 
     const imageData = context.getImageData(startX, startY, drawWidth, drawHeight);
     const pixelData = imageData.data;
-    const actualWidth = imageData.width; // 物理ピクセル幅 (drawWidth * density)
+    // 物理ピクセル幅 (drawWidth * density)、現状は常にdrawWidthと同値。retina対応するとずれる
+    const actualWidth = imageData.width;
 
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
@@ -408,7 +409,6 @@ const renderIterationsToPixelSupersampled = (
         const relativeY = y - startY;
         const relativeX = x - startX;
 
-        // retina対応: 各論理ピクセルに対してdensity x density個の物理ピクセルを塗る
         for (let i = 0; i < density; i++) {
           for (let j = 0; j < density; j++) {
             const physicalX = relativeX * density + i;
