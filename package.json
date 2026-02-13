@@ -42,7 +42,7 @@
     "tsx": "4.20.3",
     "typescript": "5.9.2",
     "typescript-eslint": "8.39.0",
-    "unplugin-typegpu": "0.2.2",
+    "unplugin-typegpu": "0.9.0",
     "vite": "7.1.1",
     "vitest": "3.2.4",
     "windy-radix-palette": "2.0.0-beta.7"
@@ -68,7 +68,7 @@
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "tailwind-merge": "3.3.1",
-    "typegpu": "0.7.0",
+    "typegpu": "0.9.0",
     "ws": "8.18.3"
   }
 }
