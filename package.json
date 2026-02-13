@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@mantine/hooks": "8.2.4",
-    "@tabler/icons-react": "3.34.1",
+    "@tabler/icons-react": "3.36.1",
     "bignumber.js": "9.3.1",
     "chroma-js": "3.1.2",
     "class-variance-authority": "0.7.1",
@@ -61,7 +61,7 @@
     "eventmit": "3.0.3",
     "idb-keyval": "6.2.2",
     "lodash.throttle": "4.1.1",
-    "lucide-react": "0.539.0",
+    "lucide-react": "0.563.0",
     "neverthrow": "8.2.0",
     "p5": "1.11.8",
     "radix-ui": "1.4.2",
