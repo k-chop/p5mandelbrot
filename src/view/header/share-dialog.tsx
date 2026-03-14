@@ -84,7 +84,7 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md overflow-hidden">
+      <DialogContent className="max-w-md overflow-hidden [&>*]:min-w-0">
         <DialogHeader>
           <DialogTitle>Share</DialogTitle>
         </DialogHeader>
@@ -128,18 +128,23 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
           type="text"
           readOnly
           value={shareData.url}
-          className="w-full overflow-hidden rounded border bg-muted px-2 py-1 font-mono text-xs"
+          className="box-border w-full overflow-hidden text-ellipsis rounded border bg-muted px-2 py-1 font-mono text-xs"
           onFocus={(e) => e.target.select()}
         />
 
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="flex-1" onClick={handleCopyAll}>
-            <IconCopy className="mr-1 size-4" />
+        <div className="flex min-w-0 gap-2">
+          <Button variant="outline" size="sm" className="min-w-0 flex-1" onClick={handleCopyAll}>
+            <IconCopy className="mr-1 size-4 shrink-0" />
             Copy All
           </Button>
-          <Button variant="outline" size="sm" className="flex-1" onClick={handleCopyUrlAndImage}>
-            <IconPhoto className="mr-1 size-4" />
-            Copy URL & Image
+          <Button
+            variant="outline"
+            size="sm"
+            className="min-w-0 flex-1"
+            onClick={handleCopyUrlAndImage}
+          >
+            <IconPhoto className="mr-1 size-4 shrink-0" />
+            <span className="truncate">Copy URL & Image</span>
           </Button>
         </div>
       </DialogContent>
