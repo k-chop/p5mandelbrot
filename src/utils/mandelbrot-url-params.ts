@@ -6,6 +6,7 @@ import type { MandelbrotWorkerType } from "@/types";
 import { mandelbrotWorkerTypes } from "@/types";
 import BigNumber from "bignumber.js";
 import { decodeNumber, encodeNumber } from "./number-encoding";
+import { decodePalette, encodePalette, PERTURBATION_THRESHOLD } from "./palette-encoding";
 
 /**
  * URLのquery parameterから描画内容を復元する
@@ -18,7 +19,6 @@ export const extractMandelbrotParams = () => {
   const mode = params.get("mode");
   const palette = params.get("palette");
 
-  // 新形式: ?c=<encodedX>.<encodedY>.<encodedR>.<N>
   const compactParam = params.get("c");
   // 旧形式: ?x=...&y=...&r=...
   const x = params.get("x");
@@ -37,31 +37,49 @@ export const extractMandelbrotParams = () => {
     let safeY: BigNumber;
     let safeR: BigNumber;
     let safeN: number;
+    let safePalette = getCurrentPalette();
 
     if (compactParam !== null) {
       const parts = compactParam.split(".");
-      if (parts.length !== 4) throw new Error(`Invalid compact param: ${compactParam}`);
-      const [encodedX, encodedY, encodedR, nStr] = parts;
-      safeX = new BigNumber(decodeNumber(encodedX));
-      safeY = new BigNumber(decodeNumber(encodedY));
-      safeR = new BigNumber(decodeNumber(encodedR));
-      safeN = isNaN(parseInt(nStr, 10)) ? 500 : parseInt(nStr, 10);
+      if (parts.length === 8) {
+        // 完全圧縮形式: ?c=<X>.<Y>.<R>.<N>.<paletteId>.<mirrored>.<length>.<offset>
+        const [encodedX, encodedY, encodedR, nStr] = parts;
+        safeX = new BigNumber(decodeNumber(encodedX));
+        safeY = new BigNumber(decodeNumber(encodedY));
+        safeR = new BigNumber(decodeNumber(encodedR));
+        safeN = isNaN(parseInt(nStr, 10)) ? 500 : parseInt(nStr, 10);
+        const paletteEncoded = parts.slice(4).join(".");
+        safePalette = decodePalette(paletteEncoded);
+      } else if (parts.length === 4) {
+        // 前回形式: ?c=<X>.<Y>.<R>.<N> + mode/palette別パラメータ
+        const [encodedX, encodedY, encodedR, nStr] = parts;
+        safeX = new BigNumber(decodeNumber(encodedX));
+        safeY = new BigNumber(decodeNumber(encodedY));
+        safeR = new BigNumber(decodeNumber(encodedR));
+        safeN = isNaN(parseInt(nStr, 10)) ? 500 : parseInt(nStr, 10);
+        if (palette != null) {
+          safePalette = deserializePalette(palette);
+        }
+      } else {
+        throw new Error(`Invalid compact param: ${compactParam}`);
+      }
     } else {
       safeX = new BigNumber(x!);
       safeY = new BigNumber(y!);
       safeR = new BigNumber(r!);
       const N = params.get("N") || "NaN";
       safeN = isNaN(parseInt(N, 10)) ? 500 : parseInt(N, 10);
+      if (palette != null) {
+        safePalette = deserializePalette(palette);
+      }
     }
 
-    const safeMode = mandelbrotWorkerTypes.some((t) => t === mode)
-      ? (mode as MandelbrotWorkerType)
-      : "normal";
-
-    // パレットは復元できなければ初期値をそのまま使う
-    let safePalette = getCurrentPalette();
-    if (palette != null) {
-      safePalette = deserializePalette(palette);
+    // modeは明示パラメータがあればそれを使い、なければrから自動判定
+    let safeMode: MandelbrotWorkerType;
+    if (mode != null && mandelbrotWorkerTypes.some((t) => t === mode)) {
+      safeMode = mode as MandelbrotWorkerType;
+    } else {
+      safeMode = safeR.isLessThan(PERTURBATION_THRESHOLD) ? "perturbation" : "normal";
     }
 
     return {
@@ -111,7 +129,7 @@ export const calcCoordPrecision = (r: BigNumber, canvasWidth: number): number =>
  * rはズームレベルなので有効数字6桁で十分（相対精度 2/canvasWidth ≈ 0.001）。
  */
 export const buildCurrentParamsUrl = (): string => {
-  const { x, y, r, N, mode } = getCurrentParams();
+  const { x, y, r, N } = getCurrentParams();
   const palette = getCurrentPalette();
   const { width } = getCanvasSize();
   const coordPrecision = calcCoordPrecision(r, width);
@@ -119,15 +137,19 @@ export const buildCurrentParamsUrl = (): string => {
   const encodedX = encodeNumber(x.toPrecision(coordPrecision));
   const encodedY = encodeNumber(y.toPrecision(coordPrecision));
   const encodedR = encodeNumber(r.toPrecision(6));
-  const compact = `${encodedX}.${encodedY}.${encodedR}.${N}`;
+  const base = `${encodedX}.${encodedY}.${encodedR}.${N}`;
 
-  const params = new URLSearchParams({
-    c: compact,
-    mode,
-    palette: palette.serialize(),
-  });
+  const paletteEncoded = encodePalette(palette);
+  // プリセットパレットは短いID形式（A.1.128.0）、非プリセットはserialize文字列
+  const isPreset = /^[A-M]\./.test(paletteEncoded);
 
-  return `${location.origin}${location.pathname}?${params.toString()}`;
+  if (isPreset) {
+    const params = new URLSearchParams({ c: `${base}.${paletteEncoded}` });
+    return `${location.origin}${location.pathname}?${params.toString()}`;
+  } else {
+    const params = new URLSearchParams({ c: base, palette: paletteEncoded });
+    return `${location.origin}${location.pathname}?${params.toString()}`;
+  }
 };
 
 /**
