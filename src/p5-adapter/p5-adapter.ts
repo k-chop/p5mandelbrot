@@ -605,7 +605,7 @@ export const p5Draw = (p: p5) => {
 
   syncStoreValues(p);
 
-  drawUICurrentParams(p, getCurrentParams());
+  drawUICurrentParams(p, getCurrentParams(), getAutoIterationEnabled());
   drawUIIterationAtCursor(p, getStore("iteration"));
 
   if (shouldSavePOIHistoryNextRender) {

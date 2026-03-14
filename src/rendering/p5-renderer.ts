@@ -186,14 +186,19 @@ export const drawUIScaleRate = (p: p5, scaleFactor: number) => {
 /**
  * 現状の描画位置に関する情報をcanvasにUIとして描画する
  */
-export const drawUICurrentParams = (p: p5, params: MandelbrotParams) => {
+export const drawUICurrentParams = (
+  p: p5,
+  params: MandelbrotParams,
+  autoIterationEnabled: boolean,
+) => {
   p.textAlign(p.LEFT, p.BASELINE);
   p.fill(255);
   p.stroke(0);
   p.strokeWeight(3);
   p.textSize(14);
 
-  p.text(`r: ${params.r.toPrecision(10)}\nN: ${params.N}`, 4, 14);
+  const nLabel = autoIterationEnabled ? `N: ${params.N} [auto]` : `N: ${params.N}`;
+  p.text(`r: ${params.r.toPrecision(10)}\n${nLabel}`, 4, 14);
 
   const isNotEnoughPrecision = params.mode === "normal" && params.r.isLessThan(3.5e-14);
   if (isNotEnoughPrecision) {
