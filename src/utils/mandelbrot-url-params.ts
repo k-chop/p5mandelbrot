@@ -61,11 +61,9 @@ export const extractMandelbrotParams = () => {
 };
 
 /**
- * shareボタン用に現在のパラメータをクリップボードにコピーする
- *
- * mandelbrot setの各種パラメータとpaletteの状態が乗る
+ * 現在のパラメータから共有URLを生成する
  */
-export const copyCurrentParamsToClipboard = () => {
+export const buildCurrentParamsUrl = (): string => {
   const { x, y, r, N, mode } = getCurrentParams();
   const palette = getCurrentPalette();
 
@@ -78,5 +76,14 @@ export const copyCurrentParamsToClipboard = () => {
     palette: palette.serialize(),
   });
 
-  void navigator.clipboard.writeText(`${location.origin}${location.pathname}?${params.toString()}`);
+  return `${location.origin}${location.pathname}?${params.toString()}`;
+};
+
+/**
+ * shareボタン用に現在のパラメータをクリップボードにコピーする
+ *
+ * mandelbrot setの各種パラメータとpaletteの状態が乗る
+ */
+export const copyCurrentParamsToClipboard = () => {
+  void navigator.clipboard.writeText(buildCurrentParamsUrl());
 };
