@@ -48,17 +48,17 @@
     "windy-radix-palette": "2.0.0-beta.7"
   },
   "dependencies": {
-    "@mantine/hooks": "8.2.4",
-    "@tabler/icons-react": "3.36.1",
+    "@mantine/hooks": "8.3.16",
+    "@tabler/icons-react": "3.40.0",
     "bignumber.js": "9.3.1",
-    "chroma-js": "3.1.2",
+    "chroma-js": "3.2.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "culori": "4.0.2",
     "d3-color": "3.1.0",
     "d3-scale-chromatic": "3.1.0",
-    "es-toolkit": "1.39.8",
-    "eventmit": "3.0.3",
+    "es-toolkit": "1.45.1",
+    "eventmit": "3.0.6",
     "idb-keyval": "6.2.2",
     "lodash.throttle": "4.1.1",
     "lucide-react": "0.577.0",
@@ -69,6 +69,6 @@
     "react-dom": "19.2.4",
     "tailwind-merge": "3.5.0",
     "typegpu": "0.10.2",
-    "ws": "8.18.3"
+    "ws": "8.19.0"
   }
 }
