@@ -1,6 +1,6 @@
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { Button } from "@/shadcn/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { toast } from "@/shadcn/hooks/use-toast";
 import { buildCurrentParamsUrl } from "@/utils/mandelbrot-url-params";
 import { IconCircleCheck, IconCopy, IconPhoto } from "@tabler/icons-react";
@@ -75,10 +75,10 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
               <img
                 src={imageDataUrl}
                 alt="Mandelbrot preview"
-                className="h-[200px] rounded border object-contain"
+                className="h-50 rounded border object-contain"
               />
             ) : (
-              <div className="flex h-[200px] w-[200px] items-center justify-center rounded border bg-muted text-muted-foreground">
+              <div className="flex h-50 w-50 items-center justify-center rounded border bg-muted text-muted-foreground">
                 No preview
               </div>
             )}
