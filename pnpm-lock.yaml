@@ -54,8 +54,8 @@ importers:
         specifier: 8.2.0
         version: 8.2.0
       p5:
-        specifier: 1.11.8
-        version: 1.11.8
+        specifier: 1.11.11
+        version: 1.11.11
       radix-ui:
         specifier: 1.4.3
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -2329,8 +2329,8 @@ packages:
       oxlint-tsgolint:
         optional: true
 
-  p5@1.11.8:
-    resolution: {integrity: sha512-owi2+HDP/KQvzc3mAagp74cc6yPalWejMjjDfrIqjsheo6CZ16WjbPRDKjgpuIH9F5eAPVTuTSbLsTawl2Djiw==}
+  p5@1.11.11:
+    resolution: {integrity: sha512-k58mfexvavFb+KNRpi70PbkKE2gCNiWQkzS4kVOyC2F9SKGgYy1jSO+JXZ24ikXV9OvZIAxGusiSVWEijYrmNg==}
 
   path-key@3.1.1:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
@@ -4543,7 +4543,7 @@ snapshots:
       '@oxlint/binding-win32-x64-msvc': 1.55.0
       oxlint-tsgolint: 0.16.0
 
-  p5@1.11.8: {}
+  p5@1.11.11: {}
 
   path-key@3.1.1: {}
 
