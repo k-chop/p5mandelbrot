@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+@import "@radix-ui/colors/sage-dark.css";
+@import "@radix-ui/colors/teal-dark.css";
+@import "@radix-ui/colors/tomato-dark.css";
+@import "@radix-ui/colors/lime-dark.css";
+@import "@radix-ui/colors/red-dark.css";
+@import "@radix-ui/colors/gray-dark.css";
+@import "@radix-ui/colors/iris-dark.css";
+@import "@radix-ui/colors/jade-dark.css";
+@import "@radix-ui/colors/white-alpha.css";
+
 @config "../tailwind.config.ts";
 
 /*
@@ -22,34 +32,34 @@
 
 @layer base {
   :root {
-    --background: var(--sage1);
-    --foreground: var(--sage11);
+    --background: var(--sage-1);
+    --foreground: var(--sage-11);
 
-    --muted: var(--sage3);
-    --muted-foreground: var(--sage11);
+    --muted: var(--sage-3);
+    --muted-foreground: var(--sage-11);
 
-    --popover: var(--sage2);
-    --popover-foreground: var(--sage11);
+    --popover: var(--sage-2);
+    --popover-foreground: var(--sage-11);
 
-    --card: var(--sage2);
-    --card-foreground: var(--sage11);
+    --card: var(--sage-2);
+    --card-foreground: var(--sage-11);
 
-    --border: var(--sage7);
-    --input: var(--sage7);
+    --border: var(--sage-7);
+    --input: var(--sage-7);
 
-    --primary: var(--teal8);
-    --primary-foreground: var(--teal12);
+    --primary: var(--teal-8);
+    --primary-foreground: var(--teal-12);
 
-    --secondary: var(--tomato9);
-    --secondary-foreground: var(--sage12);
+    --secondary: var(--tomato-9);
+    --secondary-foreground: var(--sage-12);
 
-    --accent: var(--lime8);
-    --accent-foreground: var(--sage12);
+    --accent: var(--lime-8);
+    --accent-foreground: var(--sage-12);
 
-    --destructive: var(--red8);
-    --destructive-foreground: var(--red12);
+    --destructive: var(--red-8);
+    --destructive-foreground: var(--red-12);
 
-    --ring: var(--sage8);
+    --ring: var(--sage-8);
 
     --radius: 0.5rem;
   }

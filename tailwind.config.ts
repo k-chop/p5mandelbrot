@@ -1,7 +1,4 @@
 import type { Config } from "tailwindcss";
-import { createPlugin } from "windy-radix-palette";
-
-const colors = createPlugin();
 
 export default {
   darkMode: "class",
@@ -54,6 +51,18 @@ export default {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",
         },
+        gray: {
+          7: "var(--gray-7)",
+        },
+        iris: {
+          7: "var(--iris-7)",
+        },
+        jade: {
+          7: "var(--jade-7)",
+        },
+        white: {
+          "a-12": "var(--white-a12)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -76,5 +85,4 @@ export default {
       },
     },
   },
-  plugins: [colors.plugin],
 } satisfies Config;
