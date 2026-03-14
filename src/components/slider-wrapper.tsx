@@ -11,8 +11,7 @@ interface Props<T> {
   onValueCommit: (value: T) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-function useMarksFromValues<T extends {}>(values: T[]): Mark[] {
+function useMarksFromValues<T extends string>(values: T[]): Mark[] {
   const marks = React.useMemo(() => {
     return values.map((value, index) => ({
       valueForSlider: index,
@@ -23,8 +22,7 @@ function useMarksFromValues<T extends {}>(values: T[]): Mark[] {
   return marks;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export function ValueSlider<T extends {}>({
+export function ValueSlider<T>({
   values,
   defaultValue,
   valueConverter,
