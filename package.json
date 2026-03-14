@@ -65,5 +65,8 @@
     "unplugin-typegpu": "0.10.2",
     "vite": "7.1.1",
     "vitest": "4.1.0"
+  },
+  "engines": {
+    "node": "22.19.0"
   }
 }
