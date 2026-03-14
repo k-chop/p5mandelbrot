@@ -6,8 +6,8 @@ import {
   setCurrentParams,
   setManualN,
 } from "@/mandelbrot-state/mandelbrot-state";
-import { getMatchingHistoryThumbnail } from "@/poi-history/poi-history";
 import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
+import { getMatchingHistoryThumbnail } from "@/poi-history/poi-history";
 import { deletePreview, savePreview } from "@/store/preview-store";
 import { useCallback } from "react";
 import { updateStore, useStoreValue } from "../../store/store";
@@ -75,7 +75,7 @@ export const usePOI = () => {
 
       updateStore("poi", newPOIList);
 
-      deletePreview(del.id);
+      void deletePreview(del.id);
     },
     [poiList],
   );
@@ -89,7 +89,7 @@ export const usePOI = () => {
 
   const copyPOIListToClipboard = useCallback(() => {
     const poiListString = JSON.stringify(poiList);
-    navigator.clipboard.writeText(poiListString);
+    void navigator.clipboard.writeText(poiListString);
   }, [poiList]);
 
   return {

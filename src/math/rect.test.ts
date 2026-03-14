@@ -62,7 +62,7 @@ describe("divideRect", () => {
       },
     ];
 
-    expect(() => divideRect(rects, 1, 100)).toThrowError();
+    expect(() => divideRect(rects, 1, 100)).toThrow("rects.length > expectedDivideCount");
   });
 
   it("対象が1の場合の分割", () => {

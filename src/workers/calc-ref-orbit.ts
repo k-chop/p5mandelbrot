@@ -343,4 +343,4 @@ async function setup() {
   });
 }
 
-setup();
+void setup();

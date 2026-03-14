@@ -75,7 +75,7 @@ export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
 
   if (needModeChange) {
     const workerCount = getStore("workerCount");
-    prepareWorkerPool(workerCount, currentParams.mode);
+    void prepareWorkerPool(workerCount, currentParams.mode);
     resetOffsetParams();
   }
   if (needResetOffset) {

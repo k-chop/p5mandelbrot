@@ -357,7 +357,7 @@ export const p5Setup = async (p: p5) => {
   const { width, height } = initializeCanvasSize();
 
   // p5 renderer
-  initRenderer(width, height, p);
+  await initRenderer(width, height, p);
 
   const canvas = p.createCanvas(width, height);
   // canvas上での右クリックを無効化
@@ -432,7 +432,7 @@ export const p5Setup = async (p: p5) => {
     return true;
   };
 
-  initializePOIHistory();
+  await initializePOIHistory();
 
   // URL共有で飛んできたときに各種パラメータを初期値としてセットする
   const initialParams = extractMandelbrotParams();
@@ -614,7 +614,7 @@ export const p5Draw = (p: p5) => {
   }
 
   if (needsRenderForCurrentParams()) {
-    startCalculation(
+    void startCalculation(
       (elapsed: number) => {
         // elapsed=0は中断時なのでなにもしない
         if (elapsed !== 0) {

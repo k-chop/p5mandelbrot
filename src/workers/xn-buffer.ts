@@ -59,7 +59,7 @@ export class ComplexArrayView {
 
   toArray(limit?: number): Complex[] {
     const length = limit ? Math.min(limit, this.length) : this.length;
-    const result = new Array(length);
+    const result = Array.from<Complex>({ length });
 
     for (let i = 0; i < length; i++) {
       result[i] = this.get(i);

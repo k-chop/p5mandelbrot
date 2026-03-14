@@ -34,7 +34,7 @@ const deserializePOIHistory = (history: any): POIHistory => {
  */
 export const saveHistoriesToStorage = (histories: POIHistory[]) => {
   const serialized = histories.map(serializePOIHistory);
-  set(POI_HISTORY_KEY, serialized);
+  void set(POI_HISTORY_KEY, serialized);
 };
 
 /**

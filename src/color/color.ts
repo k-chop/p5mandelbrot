@@ -18,7 +18,7 @@ export class BasePalette implements Palette {
 
   resetCache(): void {
     this.cache = new Uint8ClampedArray(this.colorLength * 3);
-    this.cacheInitialized = new Array(this.colorLength).fill(false);
+    this.cacheInitialized = Array.from({ length: this.colorLength }, () => false);
   }
 
   fillCache(): void {

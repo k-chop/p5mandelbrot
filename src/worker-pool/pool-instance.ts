@@ -106,10 +106,10 @@ export async function prepareWorkerPool(
     updateStore("shouldReuseRefOrbit", false);
   }
 
-  await resetWorkers();
+  resetWorkers();
 
   fillIterationWorkerPool(count, workerType);
-  fillRefOrbitWorkerPool(1 /* 仮 */, workerType);
+  void fillRefOrbitWorkerPool(1 /* 仮 */, workerType);
 }
 
 /**
@@ -119,7 +119,7 @@ export function resetWorkers() {
   iterateAllWorker((workerFacade) => {
     workerFacade.clearCallbacks();
     // fire and forget
-    workerFacade.terminateAsync();
+    void workerFacade.terminateAsync();
   });
   resetAllWorker();
 
@@ -159,7 +159,7 @@ function fillIterationWorkerPool(
   }
 }
 
-function fillRefOrbitWorkerPool(
+async function fillRefOrbitWorkerPool(
   upTo: number = 1,
   workerType: MandelbrotWorkerType = getStore("mode"),
 ) {
@@ -171,7 +171,7 @@ function fillRefOrbitWorkerPool(
   for (let i = 0; pool.length < upTo && i < upTo; i++) {
     const worker = new RefOrbitWorker();
 
-    worker.init();
+    void worker.init();
 
     worker.onResult((...args) => {
       onRefOrbitWorkerResult(...args);
