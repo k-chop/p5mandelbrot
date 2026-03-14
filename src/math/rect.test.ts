@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateDivideArea, divideRect } from "./rect";
+import { calculateDivideArea, divideRect, getOffsetRects } from "./rect";
 
 describe("calculateDivideArea", () => {
   it("16", () => {
@@ -205,5 +205,75 @@ describe("divideRect", () => {
       },
     ];
     expect(expected).toEqual(result);
+  });
+});
+
+describe("getOffsetRects", () => {
+  const W = 800;
+  const H = 600;
+
+  it("移動量が0の場合は空配列を返す", () => {
+    expect(getOffsetRects(W, H, { x: 0, y: 0 })).toEqual([]);
+  });
+
+  it("右方向のみの移動", () => {
+    const result = getOffsetRects(W, H, { x: 100, y: 0 });
+    expect(result).toEqual([{ x: 700, y: 0, width: 100, height: 600 }]);
+  });
+
+  it("左方向のみの移動", () => {
+    const result = getOffsetRects(W, H, { x: -100, y: 0 });
+    expect(result).toEqual([{ x: 0, y: 0, width: 100, height: 600 }]);
+  });
+
+  it("下方向のみの移動", () => {
+    const result = getOffsetRects(W, H, { x: 0, y: 100 });
+    expect(result).toEqual([{ x: 0, y: 500, width: 800, height: 100 }]);
+  });
+
+  it("上方向のみの移動", () => {
+    const result = getOffsetRects(W, H, { x: 0, y: -100 });
+    expect(result).toEqual([{ x: 0, y: 0, width: 800, height: 100 }]);
+  });
+
+  it("右下方向の移動", () => {
+    const result = getOffsetRects(W, H, { x: 100, y: 80 });
+    expect(result).toEqual([
+      { x: 0, y: 520, width: 800, height: 80 },
+      { x: 700, y: 0, width: 100, height: 520 },
+    ]);
+  });
+
+  it("左上方向の移動", () => {
+    const result = getOffsetRects(W, H, { x: -100, y: -80 });
+    expect(result).toEqual([
+      { x: 0, y: 0, width: 800, height: 80 },
+      { x: 0, y: 80, width: 100, height: 520 },
+    ]);
+  });
+
+  it("極小の移動量でも最小サイズ(50px)が保証される（X方向のみ）", () => {
+    const result = getOffsetRects(W, H, { x: 2, y: 0 });
+    expect(result).toEqual([{ x: 750, y: 0, width: 50, height: 600 }]);
+  });
+
+  it("極小の移動量でも最小サイズ(50px)が保証される（Y方向のみ）", () => {
+    const result = getOffsetRects(W, H, { x: 0, y: -3 });
+    expect(result).toEqual([{ x: 0, y: 0, width: 800, height: 50 }]);
+  });
+
+  it("極小の移動量でも最小サイズ(50px)が保証される（両方向）", () => {
+    const result = getOffsetRects(W, H, { x: 2, y: 3 });
+    expect(result).toEqual([
+      { x: 0, y: 550, width: 800, height: 50 },
+      { x: 750, y: 0, width: 50, height: 550 },
+    ]);
+  });
+
+  it("横長矩形と縦長矩形が重複しない", () => {
+    const result = getOffsetRects(W, H, { x: 1, y: -1 });
+    const [horizontal, vertical] = result;
+    // 横長矩形の下端 === 縦長矩形の上端
+    expect(horizontal.y + horizontal.height).toBe(vertical.y);
   });
 });
