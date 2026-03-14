@@ -50,6 +50,7 @@ let iterationBuffer: TgpuBuffer<d.WgslArray<d.U32>> & StorageFlag;
 const iterationBufferQueue: IterationBuffer[] = [];
 
 let gpuInitialized = false;
+let isFlushing = false;
 
 const UniformSchema = d.struct({
   maxIterations: d.f32,
@@ -121,6 +122,7 @@ export const initRenderer: Renderer["initRenderer"] = async (w, h) => {
 };
 
 export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) => {
+  if (isFlushing) return;
   if (!gpuInitialized) {
     console.warn("WebGPU not yet initialized, skipping render");
     return;
@@ -276,85 +278,90 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
 export const flushIterationBufferQueue = async (): Promise<void> => {
   if (!gpuInitialized || iterationBufferQueue.length === 0) return;
 
-  // iterationBufferを0クリアして古い位置のデータを除去
-  {
-    const encoder = device.createCommandEncoder();
-    encoder.clearBuffer(root.unwrap(iterationBuffer));
-    device.queue.submit([encoder.finish()]);
-  }
-
-  const params = getCurrentParams();
-  const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
-  const palette = getCurrentPalette();
-
-  while (iterationBufferQueue.length > 0) {
-    const maxBufferSize = iterationInputBuffer.buffer.size;
-    let tempByteOffset = 0;
-    let processableCount = 0;
-
-    for (let i = 0; i < iterationBufferQueue.length; i++) {
-      const nextSize = iterationBufferQueue[i].buffer.byteLength;
-      if (tempByteOffset + nextSize > maxBufferSize) break;
-      tempByteOffset += nextSize;
-      processableCount++;
+  isFlushing = true;
+  try {
+    // iterationBufferを0クリアして古い位置のデータを除去
+    {
+      const encoder = device.createCommandEncoder();
+      encoder.clearBuffer(root.unwrap(iterationBuffer));
+      device.queue.submit([encoder.finish()]);
     }
 
-    if (processableCount === 0) break;
+    const params = getCurrentParams();
+    const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
+    const palette = getCurrentPalette();
 
-    uniformBuffer.write({
-      maxIterations: params.N,
-      canvasWidth,
-      canvasHeight,
-      paletteOffset: palette.offset,
-      paletteSize: palette.length,
-      offsetX: 0,
-      offsetY: 0,
-      width: canvasWidth,
-      height: canvasHeight,
-      iterationBufferCount: processableCount,
-    });
+    while (iterationBufferQueue.length > 0) {
+      const maxBufferSize = iterationInputBuffer.buffer.size;
+      let tempByteOffset = 0;
+      let processableCount = 0;
 
-    let bufferByteOffset = 0;
-    for (let idx = 0; idx < processableCount; idx++) {
-      const iteration = iterationBufferQueue.shift()!;
-      const { rect, buffer, resolution, isSuperSampled } = iteration;
+      for (let i = 0; i < iterationBufferQueue.length; i++) {
+        const nextSize = iterationBufferQueue[i].buffer.byteLength;
+        if (tempByteOffset + nextSize > maxBufferSize) break;
+        tempByteOffset += nextSize;
+        processableCount++;
+      }
 
-      iterationInputMetadataBuffer.writePartial([
-        {
-          idx,
-          value: {
-            rectX: rect.x,
-            rectY: rect.y,
-            rectWidth: rect.width,
-            rectHeight: rect.height,
-            resolutionWidth: resolution.width,
-            resolutionHeight: resolution.height,
-            bufferLength: buffer.length,
-            isSuperSampled: isSuperSampled ? 1 : 0,
+      if (processableCount === 0) break;
+
+      uniformBuffer.write({
+        maxIterations: params.N,
+        canvasWidth,
+        canvasHeight,
+        paletteOffset: palette.offset,
+        paletteSize: palette.length,
+        offsetX: 0,
+        offsetY: 0,
+        width: canvasWidth,
+        height: canvasHeight,
+        iterationBufferCount: processableCount,
+      });
+
+      let bufferByteOffset = 0;
+      for (let idx = 0; idx < processableCount; idx++) {
+        const iteration = iterationBufferQueue.shift()!;
+        const { rect, buffer, resolution, isSuperSampled } = iteration;
+
+        iterationInputMetadataBuffer.writePartial([
+          {
+            idx,
+            value: {
+              rectX: rect.x,
+              rectY: rect.y,
+              rectWidth: rect.width,
+              rectHeight: rect.height,
+              resolutionWidth: resolution.width,
+              resolutionHeight: resolution.height,
+              bufferLength: buffer.length,
+              isSuperSampled: isSuperSampled ? 1 : 0,
+            },
           },
-        },
-      ]);
+        ]);
 
-      device.queue.writeBuffer(
-        root.unwrap(iterationInputBuffer),
-        bufferByteOffset,
-        buffer,
-        0,
-        buffer.length,
-      );
+        device.queue.writeBuffer(
+          root.unwrap(iterationInputBuffer),
+          bufferByteOffset,
+          buffer,
+          0,
+          buffer.length,
+        );
 
-      bufferByteOffset += buffer.byteLength;
+        bufferByteOffset += buffer.byteLength;
+      }
+
+      const encoder = device.createCommandEncoder();
+      const computePass = encoder.beginComputePass();
+      computePass.setPipeline(computePipeline);
+      computePass.setBindGroup(0, root.unwrap(bindGroup));
+      computePass.dispatchWorkgroups(64);
+      computePass.end();
+      device.queue.submit([encoder.finish()]);
+
+      await device.queue.onSubmittedWorkDone();
     }
-
-    const encoder = device.createCommandEncoder();
-    const computePass = encoder.beginComputePass();
-    computePass.setPipeline(computePipeline);
-    computePass.setBindGroup(0, root.unwrap(bindGroup));
-    computePass.dispatchWorkgroups(64);
-    computePass.end();
-    device.queue.submit([encoder.finish()]);
-
-    await device.queue.onSubmittedWorkDone();
+  } finally {
+    isFlushing = false;
   }
 };
 

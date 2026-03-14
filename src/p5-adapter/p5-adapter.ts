@@ -495,6 +495,12 @@ export const p5Draw = (p: p5) => {
     }
   }
 
+  if (shouldResetTranslatingNextRender) {
+    isTranslatingMainBuffer = false;
+    shouldResetTranslatingNextRender = false;
+    lastTranslationOffset = { x: 0, y: 0, width: undefined, height: undefined };
+  }
+
   let x = 0;
   let y = 0;
   let width = undefined;
@@ -561,12 +567,6 @@ export const p5Draw = (p: p5) => {
   if (shouldSavePOIHistoryNextRender) {
     shouldSavePOIHistoryNextRender = false;
     addCurrentLocationToPOIHistory();
-  }
-
-  if (shouldResetTranslatingNextRender) {
-    isTranslatingMainBuffer = false;
-    shouldResetTranslatingNextRender = false;
-    lastTranslationOffset = { x: 0, y: 0, width: undefined, height: undefined };
   }
 
   if (needsRenderForCurrentParams()) {
