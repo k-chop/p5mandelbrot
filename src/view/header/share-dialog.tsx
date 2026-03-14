@@ -37,7 +37,12 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
     try {
       const res = await fetch(imageDataUrl);
       const blob = await res.blob();
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/plain": new Blob([shareUrl], { type: "text/plain" }),
+          "image/png": blob,
+        }),
+      ]);
       toast({
         description: (
           <div className="flex items-center justify-center gap-2">
