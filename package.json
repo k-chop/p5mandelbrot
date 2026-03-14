@@ -64,7 +64,6 @@
     "typescript": "5.9.3",
     "unplugin-typegpu": "0.10.2",
     "vite": "7.1.1",
-    "vitest": "4.1.0",
-    "windy-radix-palette": "2.0.0-beta.7"
+    "vitest": "4.1.0"
   }
 }

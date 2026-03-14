@@ -150,9 +150,6 @@ importers:
       vitest:
         specifier: 4.1.0
         version: 4.1.0(@types/node@22.16.4)(vite@7.1.1(@types/node@22.16.4)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.4.2))
-      windy-radix-palette:
-        specifier: 2.0.0-beta.7
-        version: 2.0.0-beta.7(@radix-ui/colors@3.0.0)(tailwindcss@4.2.1)
 
 packages:
 
@@ -594,10 +591,6 @@ packages:
     peerDependencies:
       react: ^18.x || ^19.x
 
-  '@noble/hashes@1.8.0':
-    resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
-    engines: {node: ^14.21.3 || >=16}
-
   '@oxfmt/binding-android-arm-eabi@0.40.0':
     resolution: {integrity: sha512-S6zd5r1w/HmqR8t0CTnGjFTBLDq2QKORPwriCHxo4xFNuhmOTABGjPaNvCJJVnrKBLsohOeiDX3YqQfJPF+FXw==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -871,9 +864,6 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
-
-  '@paralleldrive/cuid2@2.2.2':
-    resolution: {integrity: sha512-ZOBkgDwEdoYVlSeRbYYXs0S9MejQofiVYoTbKzy/6GQa39/q5tQU2IX46+shYnUkpEl3wc+J6wRlar7r2EK2xA==}
 
   '@radix-ui/colors@3.0.0':
     resolution: {integrity: sha512-FUOsGBkHrYJwCSEtWRCIfQbZG7q1e6DgxCIOe1SUQzDe/7rXXeA47s8yCn6fuTNQAj1Zq4oTFi9Yjp3wzElcxg==}
@@ -2651,12 +2641,6 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
-  windy-radix-palette@2.0.0-beta.7:
-    resolution: {integrity: sha512-hkPZFp3efEjvSlrMqmqseaDnAJpAK16No9tvPL2k/AUZTvTCps5kATOKatQG+Z8lewNqx2JVwa9f7eSqicrP6w==}
-    peerDependencies:
-      '@radix-ui/colors': '>=3.0.0'
-      tailwindcss: '>=3.0.0'
-
   ws@8.19.0:
     resolution: {integrity: sha512-blAT2mjOEIi0ZzruJfIhb3nps74PRWTCz1IjglWEEpQl5XS/UNama6u2/rjFkDDouqr4L67ry+1aGIALViWjDg==}
     engines: {node: '>=10.0.0'}
@@ -2991,8 +2975,6 @@ snapshots:
     dependencies:
       react: 19.2.4
 
-  '@noble/hashes@1.8.0': {}
-
   '@oxfmt/binding-android-arm-eabi@0.40.0':
     optional: true
 
@@ -3124,10 +3106,6 @@ snapshots:
 
   '@oxlint/binding-win32-x64-msvc@1.55.0':
     optional: true
-
-  '@paralleldrive/cuid2@2.2.2':
-    dependencies:
-      '@noble/hashes': 1.8.0
 
   '@radix-ui/colors@3.0.0': {}
 
@@ -4871,12 +4849,6 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
-
-  windy-radix-palette@2.0.0-beta.7(@radix-ui/colors@3.0.0)(tailwindcss@4.2.1):
-    dependencies:
-      '@paralleldrive/cuid2': 2.2.2
-      '@radix-ui/colors': 3.0.0
-      tailwindcss: 4.2.1
 
   ws@8.19.0: {}
 
