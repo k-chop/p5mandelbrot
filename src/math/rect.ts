@@ -127,6 +127,16 @@ export const divideRect = (rects: Rect[], expectedDivideCount: number, minSide =
   return result;
 };
 
+const MIN_OFFSET_RECT_SIZE = 50; // px
+
+/**
+ * ドラッグ移動時の差分描画領域を計算する
+ *
+ * offsetParams（移動量）に基づき、キャンバス端に露出した未計算領域を矩形として返す。
+ * 移動量が小さい場合でも各矩形の辺が MIN_OFFSET_RECT_SIZE 以上になるよう拡張する。
+ * これにより極小バッファの生成を防ぎ、描画アーティファクトを回避する。
+ * 拡張分は画面外にはみ出す場合があるが、計算の正確性には影響しない。
+ */
 export const getOffsetRects = (
   canvasWidth: number,
   canvasHeight: number,
@@ -138,21 +148,22 @@ export const getOffsetRects = (
   const rects: Rect[] = [];
 
   if (offsetY !== 0) {
-    // (1) 上下の横長矩形（offsetYが0なら存在しない）
+    const height = Math.max(MIN_OFFSET_RECT_SIZE, Math.abs(offsetY));
     rects.push({
       x: 0,
-      y: offsetY > 0 ? canvasHeight - offsetY : 0,
+      y: offsetY > 0 ? canvasHeight - height : 0,
       width: canvasWidth,
-      height: Math.abs(offsetY),
+      height,
     });
   }
   if (offsetX !== 0) {
-    // (2) 1に含まれる分を除いた左右の縦長矩形（offsetXが0なら存在しない）
+    const width = Math.max(MIN_OFFSET_RECT_SIZE, Math.abs(offsetX));
+    const absOffsetY = offsetY !== 0 ? Math.max(MIN_OFFSET_RECT_SIZE, Math.abs(offsetY)) : 0;
     rects.push({
-      x: offsetX > 0 ? canvasWidth - offsetX : 0,
-      y: offsetY > 0 ? 0 : Math.abs(offsetY),
-      width: Math.abs(offsetX),
-      height: canvasHeight - Math.abs(offsetY),
+      x: offsetX > 0 ? canvasWidth - width : 0,
+      y: offsetY > 0 ? 0 : absOffsetY,
+      width,
+      height: canvasHeight - absOffsetY,
     });
   }
 
