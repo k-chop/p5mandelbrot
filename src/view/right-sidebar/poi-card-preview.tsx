@@ -39,11 +39,11 @@ export const POICardPreview = React.memo(({ poi }: Props) => {
   }, [poi.id]);
 
   if (isLoading) {
-    return <div className="flex size-[100px] items-center justify-center border-2">loading...</div>;
+    return <div className="flex size-25 items-center justify-center border-2">loading...</div>;
   }
 
   if (data == null) {
-    return <div className="flex size-[100px] items-center justify-center border-2">No Image</div>;
+    return <div className="flex size-25 items-center justify-center border-2">No Image</div>;
   }
 
   return <img src={data} />;
