@@ -1,6 +1,15 @@
 {
   "prettier.enable": false,
-  "biome.enabled": true,
+  "biome.enabled": false,
+  "oxc.enable": true,
+
+  "oxc.fmt.configPath": ".oxfmtrc.json",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+
   "files.associations": {
     "*.css": "tailwindcss"
   },
@@ -11,8 +20,5 @@
     ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"],
     ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
   ],
-  "typescript.tsdk": "node_modules\\typescript\\lib",
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit"
-  }
+  "js/ts.tsdk.path": "node_modules\\typescript\\lib",
 }
