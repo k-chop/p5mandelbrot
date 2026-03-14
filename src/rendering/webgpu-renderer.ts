@@ -268,6 +268,96 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
   device.queue.submit([encoder.finish()]);
 };
 
+/**
+ * iterationBufferQueueを全て処理してGPU iterations[]を更新し、完了を待つ
+ *
+ * translate後にGPUバッファを即座に最新化し、次フレームで古いデータが描画されるのを防ぐ
+ */
+export const flushIterationBufferQueue = async (): Promise<void> => {
+  if (!gpuInitialized || iterationBufferQueue.length === 0) return;
+
+  // iterationBufferを0クリアして古い位置のデータを除去
+  {
+    const encoder = device.createCommandEncoder();
+    encoder.clearBuffer(root.unwrap(iterationBuffer));
+    device.queue.submit([encoder.finish()]);
+  }
+
+  const params = getCurrentParams();
+  const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
+  const palette = getCurrentPalette();
+
+  while (iterationBufferQueue.length > 0) {
+    const maxBufferSize = iterationInputBuffer.buffer.size;
+    let tempByteOffset = 0;
+    let processableCount = 0;
+
+    for (let i = 0; i < iterationBufferQueue.length; i++) {
+      const nextSize = iterationBufferQueue[i].buffer.byteLength;
+      if (tempByteOffset + nextSize > maxBufferSize) break;
+      tempByteOffset += nextSize;
+      processableCount++;
+    }
+
+    if (processableCount === 0) break;
+
+    uniformBuffer.write({
+      maxIterations: params.N,
+      canvasWidth,
+      canvasHeight,
+      paletteOffset: palette.offset,
+      paletteSize: palette.length,
+      offsetX: 0,
+      offsetY: 0,
+      width: canvasWidth,
+      height: canvasHeight,
+      iterationBufferCount: processableCount,
+    });
+
+    let bufferByteOffset = 0;
+    for (let idx = 0; idx < processableCount; idx++) {
+      const iteration = iterationBufferQueue.shift()!;
+      const { rect, buffer, resolution, isSuperSampled } = iteration;
+
+      iterationInputMetadataBuffer.writePartial([
+        {
+          idx,
+          value: {
+            rectX: rect.x,
+            rectY: rect.y,
+            rectWidth: rect.width,
+            rectHeight: rect.height,
+            resolutionWidth: resolution.width,
+            resolutionHeight: resolution.height,
+            bufferLength: buffer.length,
+            isSuperSampled: isSuperSampled ? 1 : 0,
+          },
+        },
+      ]);
+
+      device.queue.writeBuffer(
+        root.unwrap(iterationInputBuffer),
+        bufferByteOffset,
+        buffer,
+        0,
+        buffer.length,
+      );
+
+      bufferByteOffset += buffer.byteLength;
+    }
+
+    const encoder = device.createCommandEncoder();
+    const computePass = encoder.beginComputePass();
+    computePass.setPipeline(computePipeline);
+    computePass.setBindGroup(0, root.unwrap(bindGroup));
+    computePass.dispatchWorkgroups(64);
+    computePass.end();
+    device.queue.submit([encoder.finish()]);
+
+    await device.queue.onSubmittedWorkDone();
+  }
+};
+
 export const addIterationBuffer: Renderer["addIterationBuffer"] = (
   _rect = bufferRect,
   iterBuffer,

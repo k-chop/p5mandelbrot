@@ -54,6 +54,10 @@ export type Renderer = {
    * paletteの内容変更時に呼び出す
    */
   updatePaletteData: (palette: Palette) => void;
+  /**
+   * iterationBufferQueueを全て処理してGPU iterations[]を更新し、完了を待つ
+   */
+  flushIterationBufferQueue: () => Promise<void>;
 };
 
 export const initRenderer: Renderer["initRenderer"] = async (w, h, p5Instance?) => {
@@ -147,5 +151,16 @@ export const updatePaletteData: Renderer["updatePaletteData"] = (...args) => {
       break; // do nothing
     case "webgpu":
       return webGPURenderer.updatePaletteData(...args);
+  }
+};
+
+export const flushIterationBufferQueue: Renderer["flushIterationBufferQueue"] = async () => {
+  const rendererType = getRenderer();
+
+  switch (rendererType) {
+    case "p5js":
+      return;
+    case "webgpu":
+      return webGPURenderer.flushIterationBufferQueue();
   }
 };

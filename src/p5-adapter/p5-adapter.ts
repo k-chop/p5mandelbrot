@@ -63,6 +63,13 @@ let draggingMode: "move" | "zoom" | undefined = undefined;
 let elapsed = 0;
 /** canvas内でマウスクリックが開始されたかどうか */
 let mouseClickStartedInside = false;
+/** ドラッグ終了後、isTranslatingMainBufferリセットまで保持する描画オフセット */
+let lastTranslationOffset: {
+  x: number;
+  y: number;
+  width: number | undefined;
+  height: number | undefined;
+} = { x: 0, y: 0, width: undefined, height: undefined };
 /** 次回のcontextmenu表示を妨害する。右クリックドラッグではみ出たときに使う */
 let willBlockNextContextMenu = false;
 /** p5のインスタンス。基本的には直に使わない */
@@ -499,6 +506,7 @@ export const p5Draw = (p: p5) => {
       const { pixelDiffX, pixelDiffY } = getDraggingPixelDiff(p, mouseClickedOn);
       x = pixelDiffX;
       y = pixelDiffY;
+      lastTranslationOffset = { x, y, width: undefined, height: undefined };
     } else if (draggingMode === "zoom") {
       const { mouseX, mouseY } = mouseClickedOn;
       scaleFactor = calcInteractiveScaleFactor(p, mouseClickedOn);
@@ -512,6 +520,13 @@ export const p5Draw = (p: p5) => {
       y = offsetY;
       width = p.width * scaleFactor;
       height = p.height * scaleFactor;
+      lastTranslationOffset = { x, y, width, height };
+    } else {
+      // draggingMode解除後もisTranslatingMainBufferリセットまで前回のオフセットを維持
+      x = lastTranslationOffset.x;
+      y = lastTranslationOffset.y;
+      width = lastTranslationOffset.width;
+      height = lastTranslationOffset.height;
     }
   }
 
@@ -551,6 +566,7 @@ export const p5Draw = (p: p5) => {
   if (shouldResetTranslatingNextRender) {
     isTranslatingMainBuffer = false;
     shouldResetTranslatingNextRender = false;
+    lastTranslationOffset = { x: 0, y: 0, width: undefined, height: undefined };
   }
 
   if (needsRenderForCurrentParams()) {

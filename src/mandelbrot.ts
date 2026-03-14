@@ -18,7 +18,12 @@ import {
 } from "./mandelbrot-state/mandelbrot-state";
 import type { Rect } from "./math/rect";
 import { getCalculationTargetRects } from "./math/rect";
-import { addIterationBuffer, getCanvasSize, getWholeCanvasRect } from "./rendering/renderer";
+import {
+  addIterationBuffer,
+  flushIterationBufferQueue,
+  getCanvasSize,
+  getWholeCanvasRect,
+} from "./rendering/renderer";
 import { getStore } from "./store/store";
 import { getWorkerCount } from "./worker-pool/pool-instance";
 import { cancelBatch, registerBatch, startBatch } from "./worker-pool/worker-pool";
@@ -67,6 +72,9 @@ export const startCalculation = async (
     removeUnusedIterationCache();
     addIterationBuffer(rect);
     markNeedsRerender();
+
+    // GPUのiterations[]を即座に更新し、次フレームで古いデータが描画されるのを防ぐ
+    await flushIterationBufferQueue();
 
     // ドラッグ中に描画をずらしていたのを戻す
     onTranslated();
