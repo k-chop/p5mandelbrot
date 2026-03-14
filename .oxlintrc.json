@@ -1,6 +1,15 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["eslint", "typescript", "unicorn", "react", "react-perf", "node", "promise", "vitest"],
+  "plugins": [
+    "eslint",
+    "typescript",
+    "unicorn",
+    "react",
+    "react-perf",
+    "node",
+    "promise",
+    "vitest"
+  ],
   "options": {
     "typeAware": true,
     "typeCheck": true

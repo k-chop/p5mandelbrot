@@ -1,7 +1,7 @@
 {
   "name": "p5mandelbrot",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_ENV=development vite",
@@ -14,6 +14,30 @@
     "server": "tsx src/server/index.ts",
     "rust-client": "cd rust_client && cargo run && cd ../",
     "dev-all": "run-p dev server rust-client"
+  },
+  "dependencies": {
+    "@mantine/hooks": "8.3.16",
+    "@tabler/icons-react": "3.40.0",
+    "bignumber.js": "9.3.1",
+    "chroma-js": "3.2.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "culori": "4.0.2",
+    "d3-color": "3.1.0",
+    "d3-scale-chromatic": "3.1.0",
+    "es-toolkit": "1.45.1",
+    "eventmit": "3.0.6",
+    "idb-keyval": "6.2.2",
+    "lodash.throttle": "4.1.1",
+    "lucide-react": "0.577.0",
+    "neverthrow": "8.2.0",
+    "p5": "1.11.8",
+    "radix-ui": "1.4.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwind-merge": "3.5.0",
+    "typegpu": "0.10.2",
+    "ws": "8.19.0"
   },
   "devDependencies": {
     "@radix-ui/colors": "3.0.0",
@@ -42,29 +66,5 @@
     "vite": "7.1.1",
     "vitest": "4.1.0",
     "windy-radix-palette": "2.0.0-beta.7"
-  },
-  "dependencies": {
-    "@mantine/hooks": "8.3.16",
-    "@tabler/icons-react": "3.40.0",
-    "bignumber.js": "9.3.1",
-    "chroma-js": "3.2.0",
-    "class-variance-authority": "0.7.1",
-    "clsx": "2.1.1",
-    "culori": "4.0.2",
-    "d3-color": "3.1.0",
-    "d3-scale-chromatic": "3.1.0",
-    "es-toolkit": "1.45.1",
-    "eventmit": "3.0.6",
-    "idb-keyval": "6.2.2",
-    "lodash.throttle": "4.1.1",
-    "lucide-react": "0.577.0",
-    "neverthrow": "8.2.0",
-    "p5": "1.11.8",
-    "radix-ui": "1.4.3",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "tailwind-merge": "3.5.0",
-    "typegpu": "0.10.2",
-    "ws": "8.19.0"
   }
 }
