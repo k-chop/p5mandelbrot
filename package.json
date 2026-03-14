@@ -16,7 +16,6 @@
     "dev-all": "run-p dev server rust-client"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.14",
     "@radix-ui/colors": "3.0.0",
     "@tailwindcss/vite": "4.2.1",
     "@types/chroma-js": "3.1.2",
