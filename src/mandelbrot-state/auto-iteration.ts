@@ -28,26 +28,47 @@ export const calcAutoN = (
     return Math.max(Math.ceil(fallbackN), manualN);
   }
 
-  const halfW = canvasWidth / (2 * scaleFactor);
-  const halfH = canvasHeight / (2 * scaleFactor);
-  const x1 = zoomCenterX - halfW;
-  const y1 = zoomCenterY - halfH;
-  const x2 = zoomCenterX + halfW;
-  const y2 = zoomCenterY + halfH;
+  const narrowHalfW = canvasWidth / (2 * scaleFactor);
+  const narrowHalfH = canvasHeight / (2 * scaleFactor);
+  const narrowSamples = sampleIterationsInRegion(
+    zoomCenterX - narrowHalfW,
+    zoomCenterY - narrowHalfH,
+    zoomCenterX + narrowHalfW,
+    zoomCenterY + narrowHalfH,
+    GRID_SIZE,
+  );
+  const validNarrow = narrowSamples.filter((s) => s >= 0);
 
-  const samples = sampleIterationsInRegion(x1, y1, x2, y2, GRID_SIZE);
-  const validSamples = samples.filter((s) => s >= 0);
-
-  if (validSamples.length === 0) return currentN;
+  if (validNarrow.length === 0) return currentN;
 
   if (scaleFactor >= 1) {
-    return calcForZoomIn(validSamples, currentN, manualN);
+    const wideHalfW = canvasWidth / 4;
+    const wideHalfH = canvasHeight / 4;
+    const wideSamples = sampleIterationsInRegion(
+      zoomCenterX - wideHalfW,
+      zoomCenterY - wideHalfH,
+      zoomCenterX + wideHalfW,
+      zoomCenterY + wideHalfH,
+      GRID_SIZE,
+    );
+    const validWide = wideSamples.filter((s) => s >= 0);
+    const wideMaxedRatio =
+      validWide.length > 0 ? validWide.filter((s) => s >= currentN).length / validWide.length : 0;
+
+    return calcForZoomIn(validNarrow, currentN, manualN, wideMaxedRatio, currentR, scaleFactor);
   } else {
-    return calcForZoomOut(validSamples, currentN, manualN);
+    return calcForZoomOut(validNarrow, currentN, manualN);
   }
 };
 
-const calcForZoomIn = (samples: number[], currentN: number, manualN: number): number => {
+const calcForZoomIn = (
+  samples: number[],
+  currentN: number,
+  manualN: number,
+  wideMaxedRatio: number,
+  currentR: number,
+  scaleFactor: number,
+): number => {
   const maxedCount = samples.filter((s) => s >= currentN).length;
   const maxedRatio = maxedCount / samples.length;
 
@@ -62,9 +83,18 @@ const calcForZoomIn = (samples: number[], currentN: number, manualN: number): nu
     if (highestNonMaxed > 0) {
       suggestedN = Math.max(currentN, highestNonMaxed * 2);
     }
-  } else {
+  } else if (maxedRatio < 1.0) {
     if (highestNonMaxed > 10) {
       suggestedN = Math.max(currentN, Math.ceil(highestNonMaxed * 1.5));
+    }
+  } else {
+    // 狭域の全サンプルがmaxed: 広域サンプルで境界付近か判定
+    if (wideMaxedRatio >= 0.3) {
+      const postZoomR = currentR / scaleFactor;
+      if (postZoomR < INITIAL_R) {
+        const logN = DEFAULT_N + AUTO_N_SCALE_FACTOR * Math.log2(INITIAL_R / postZoomR);
+        suggestedN = Math.max(currentN, Math.ceil(logN));
+      }
     }
   }
 
