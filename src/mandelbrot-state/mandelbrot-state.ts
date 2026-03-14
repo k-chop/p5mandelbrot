@@ -7,6 +7,9 @@ import BigNumber from "bignumber.js";
 
 const DEFAULT_N = 500;
 
+let autoIterationEnabled = true;
+let manualN = DEFAULT_N;
+
 let lastCalc: MandelbrotParams = {
   x: new BigNumber(0),
   y: new BigNumber(0),
@@ -101,9 +104,30 @@ export const resetScaleParams = () => {
   });
 };
 
-export const resetIterationCount = () => setCurrentParams({ N: DEFAULT_N });
+export const setManualN = (n: number) => {
+  manualN = n;
+  setCurrentParams({ N: n });
+};
 
-export const setDeepIterationCount = () => setCurrentParams({ N: DEFAULT_N * 20 });
+export const getManualN = () => manualN;
+
+export const toggleAutoIteration = () => {
+  autoIterationEnabled = !autoIterationEnabled;
+  console.debug(`Auto iteration: ${autoIterationEnabled}`);
+  return autoIterationEnabled;
+};
+
+export const getAutoIterationEnabled = () => autoIterationEnabled;
+
+export const resetIterationCount = () => {
+  manualN = DEFAULT_N;
+  setCurrentParams({ N: DEFAULT_N });
+};
+
+export const setDeepIterationCount = () => {
+  manualN = DEFAULT_N * 20;
+  setCurrentParams({ N: DEFAULT_N * 20 });
+};
 
 export const resetRadius = () => setCurrentParams({ r: new BigNumber("2.0") });
 

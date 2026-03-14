@@ -166,6 +166,31 @@ export const getIterationTimeAt = (worldX: number, worldY: number) => {
   return -1;
 };
 
+/**
+ * 指定矩形内をグリッド状にサンプリングしてiteration値の配列を返す
+ */
+export const sampleIterationsInRegion = (
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  gridSize: number,
+): number[] => {
+  const samples: number[] = [];
+  const stepX = (x2 - x1) / gridSize;
+  const stepY = (y2 - y1) / gridSize;
+
+  for (let gy = 0; gy < gridSize; gy++) {
+    for (let gx = 0; gx < gridSize; gx++) {
+      const sx = x1 + (gx + 0.5) * stepX;
+      const sy = y1 + (gy + 0.5) * stepY;
+      samples.push(getIterationTimeAt(sx, sy));
+    }
+  }
+
+  return samples;
+};
+
 export const translateRectInIterationCache = (offsetX: number, offsetY: number): void => {
   iterationCache = iterationCache.map((iteration) => {
     return {

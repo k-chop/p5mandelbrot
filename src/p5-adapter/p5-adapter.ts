@@ -1,9 +1,12 @@
 import { changePaletteFromPresets, cycleCurrentPaletteOffset, setPalette } from "@/camera/palette";
 import { getIterationTimeAt } from "@/iteration-buffer/iteration-buffer";
 import { startCalculation } from "@/mandelbrot";
+import { calcAutoN } from "@/mandelbrot-state/auto-iteration";
 import {
   cycleMode,
+  getAutoIterationEnabled,
   getCurrentParams,
+  getManualN,
   needsRenderForCurrentParams,
   radiusTimesTo,
   resetIterationCount,
@@ -11,8 +14,10 @@ import {
   resetScaleParams,
   setCurrentParams,
   setDeepIterationCount,
+  setManualN,
   setOffsetParams,
   setScaleParams,
+  toggleAutoIteration,
   togglePinReference,
 } from "@/mandelbrot-state/mandelbrot-state";
 import { addCurrentLocationToPOIHistory, initializePOIHistory } from "@/poi-history/poi-history";
@@ -265,6 +270,8 @@ export const moveTo = (dragOffset: { pixelDiffX: number; pixelDiffY: number }) =
 export const scaleTo = (scaleFactor: number, scaleOrigin: { x: number; y: number }) => {
   const { width, height } = getCanvasSize();
 
+  applyAutoIteration(scaleOrigin.x, scaleOrigin.y, scaleFactor, width, height);
+
   const { complexMouseX, complexMouseY } = calculateComplexMouseXY(
     scaleOrigin.x,
     scaleOrigin.y,
@@ -290,6 +297,9 @@ export const zoomTo = (isZoomOut: boolean) => {
   const rate = getStore("zoomRate");
   const { width, height } = getCanvasSize();
 
+  const scaleFactor = isZoomOut ? 1 / rate : rate;
+  applyAutoIteration(width / 2, height / 2, scaleFactor, width, height);
+
   if (isZoomOut) {
     radiusTimesTo(rate);
   } else {
@@ -301,6 +311,31 @@ export const zoomTo = (isZoomOut: boolean) => {
     scaleAtY: height / 2,
     scale: rate,
   });
+};
+
+const applyAutoIteration = (
+  centerX: number,
+  centerY: number,
+  scaleFactor: number,
+  canvasWidth: number,
+  canvasHeight: number,
+) => {
+  if (!getAutoIterationEnabled()) return;
+
+  const params = getCurrentParams();
+  const newN = calcAutoN(
+    centerX,
+    centerY,
+    scaleFactor,
+    canvasWidth,
+    canvasHeight,
+    params.N,
+    params.r.toNumber(),
+    getManualN(),
+  );
+  if (newN !== params.N) {
+    setCurrentParams({ N: newN });
+  }
 };
 
 /** wrapper elementの高さを取得してcameraのサイズを変える */
@@ -472,14 +507,23 @@ export const keyInputHandler = (event: KeyboardEvent) => {
   if (event.key === "9") setDeepIterationCount();
   if (event.key === "r") resetRadius();
   if (event.key === "m") cycleMode();
-  if (event.key === "ArrowDown") radiusTimesTo(rate);
+  if (event.key === "ArrowDown") {
+    const { width, height } = getCanvasSize();
+    applyAutoIteration(width / 2, height / 2, 1 / rate, width, height);
+    radiusTimesTo(rate);
+  }
   if (event.key === "p") togglePinReference();
-  if (event.key === "ArrowUp") radiusTimesTo(1.0 / rate);
+  if (event.key === "ArrowUp") {
+    const { width, height } = getCanvasSize();
+    applyAutoIteration(width / 2, height / 2, rate, width, height);
+    radiusTimesTo(1.0 / rate);
+  }
+  if (event.key === "a") toggleAutoIteration();
   if (event.key === "s") {
     setCurrentParams({ isSuperSampling: true });
   }
-  if (event.key === "ArrowRight") setCurrentParams({ N: params.N + diff });
-  if (event.key === "ArrowLeft") setCurrentParams({ N: params.N - diff });
+  if (event.key === "ArrowRight") setManualN(params.N + diff);
+  if (event.key === "ArrowLeft") setManualN(params.N - diff);
 };
 
 export const p5Draw = (p: p5) => {
