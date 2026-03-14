@@ -122,35 +122,46 @@ export const calcCoordPrecision = (r: BigNumber, canvasWidth: number): number =>
   return Math.ceil(Math.log10(canvasWidth / 2) - log10r) + 2;
 };
 
+export type ShareData = {
+  url: string;
+  x: string;
+  y: string;
+  r: string;
+  N: number;
+};
+
 /**
- * 現在のパラメータから共有URLを生成する
+ * 現在のパラメータから共有用データを生成する
  *
  * x, yはビューポートの1ピクセル精度を保つ最小限の有効数字に丸める。
  * rはズームレベルなので有効数字6桁で十分（相対精度 2/canvasWidth ≈ 0.001）。
  */
-export const buildCurrentParamsUrl = (): string => {
+export const buildShareData = (): ShareData => {
   const { x, y, r, N } = getCurrentParams();
   const palette = getCurrentPalette();
   const { width } = getCanvasSize();
   const coordPrecision = calcCoordPrecision(r, width);
 
-  const encodedX = encodeNumber(x.toPrecision(coordPrecision));
-  const encodedY = encodeNumber(y.toPrecision(coordPrecision));
-  const encodedR = encodeNumber(r.toPrecision(6));
+  const xStr = x.toPrecision(coordPrecision);
+  const yStr = y.toPrecision(coordPrecision);
+  const rStr = r.toPrecision(6);
+
+  const encodedX = encodeNumber(xStr);
+  const encodedY = encodeNumber(yStr);
+  const encodedR = encodeNumber(rStr);
   const base = `${encodedX}.${encodedY}.${encodedR}.${N}`;
 
   const paletteEncoded = encodePalette(palette);
-  // プリセットパレットは短いID形式（A.1.128.0）、非プリセットはserialize文字列
   const isPreset = /^[A-M]\./.test(paletteEncoded);
 
-  if (isPreset) {
-    const params = new URLSearchParams({ c: `${base}.${paletteEncoded}` });
-    return `${location.origin}${location.pathname}?${params.toString()}`;
-  } else {
-    const params = new URLSearchParams({ c: base, palette: paletteEncoded });
-    return `${location.origin}${location.pathname}?${params.toString()}`;
-  }
+  const url = isPreset
+    ? `${location.origin}${location.pathname}?${new URLSearchParams({ c: `${base}.${paletteEncoded}` }).toString()}`
+    : `${location.origin}${location.pathname}?${new URLSearchParams({ c: base, palette: paletteEncoded }).toString()}`;
+
+  return { url, x: xStr, y: yStr, r: rStr, N };
 };
+
+export const buildCurrentParamsUrl = (): string => buildShareData().url;
 
 /**
  * shareボタン用に現在のパラメータをクリップボードにコピーする

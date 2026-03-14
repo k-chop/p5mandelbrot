@@ -1,8 +1,7 @@
-import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { Button } from "@/shadcn/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { toast } from "@/shadcn/hooks/use-toast";
-import { buildCurrentParamsUrl } from "@/utils/mandelbrot-url-params";
+import { buildShareData } from "@/utils/mandelbrot-url-params";
 import { IconCircleCheck, IconCopy, IconPhoto } from "@tabler/icons-react";
 
 type ShareDialogProps = {
@@ -14,40 +13,28 @@ type ShareDialogProps = {
 export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogProps) => {
   if (!open) return null;
 
-  const { x, y, r, N } = getCurrentParams();
-  const shareUrl = buildCurrentParamsUrl();
+  const shareData = buildShareData();
 
-  const handleCopyText = () => {
-    void navigator.clipboard.writeText(shareUrl).then(() => {
-      toast({
-        description: (
-          <div className="flex items-center justify-center gap-2">
-            <IconCircleCheck />
-            URL copied to clipboard!
-          </div>
-        ),
-        variant: "primary",
-        duration: 2000,
-      });
-    });
-  };
-
-  const handleCopyImage = async () => {
-    if (!imageDataUrl) return;
+  const handleCopyAll = async () => {
+    const text = `x: ${shareData.x}\ny: ${shareData.y}\nr: ${shareData.r}\nN: ${shareData.N}\n${shareData.url}`;
     try {
-      const res = await fetch(imageDataUrl);
-      const blob = await res.blob();
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "text/plain": new Blob([shareUrl], { type: "text/plain" }),
-          "image/png": blob,
-        }),
-      ]);
+      if (imageDataUrl) {
+        const res = await fetch(imageDataUrl);
+        const blob = await res.blob();
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/plain": new Blob([text], { type: "text/plain" }),
+            "image/png": blob,
+          }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(text);
+      }
       toast({
         description: (
           <div className="flex items-center justify-center gap-2">
             <IconCircleCheck />
-            Image copied to clipboard!
+            Copied to clipboard!
           </div>
         ),
         variant: "primary",
@@ -55,7 +42,40 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
       });
     } catch {
       toast({
-        description: "Failed to copy image to clipboard",
+        description: "Failed to copy to clipboard",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleCopyUrlAndImage = async () => {
+    try {
+      if (imageDataUrl) {
+        const res = await fetch(imageDataUrl);
+        const blob = await res.blob();
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/plain": new Blob([shareData.url], { type: "text/plain" }),
+            "image/png": blob,
+          }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+      }
+      toast({
+        description: (
+          <div className="flex items-center justify-center gap-2">
+            <IconCircleCheck />
+            URL & image copied to clipboard!
+          </div>
+        ),
+        variant: "primary",
+        duration: 2000,
+      });
+    } catch {
+      toast({
+        description: "Failed to copy to clipboard",
         variant: "destructive",
         duration: 3000,
       });
@@ -87,19 +107,19 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
           <div className="flex min-w-0 flex-col justify-center gap-1 overflow-hidden font-mono text-sm">
             <div className="truncate">
               <span className="text-muted-foreground">x: </span>
-              {x.toPrecision(10)}
+              {shareData.x}
             </div>
             <div className="truncate">
               <span className="text-muted-foreground">y: </span>
-              {y.toPrecision(10)}
+              {shareData.y}
             </div>
             <div className="truncate">
               <span className="text-muted-foreground">r: </span>
-              {r.toPrecision(3)}
+              {shareData.r}
             </div>
             <div>
               <span className="text-muted-foreground">N: </span>
-              {N}
+              {shareData.N}
             </div>
           </div>
         </div>
@@ -107,19 +127,19 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
         <input
           type="text"
           readOnly
-          value={shareUrl}
+          value={shareData.url}
           className="w-full overflow-hidden rounded border bg-muted px-2 py-1 font-mono text-xs"
           onFocus={(e) => e.target.select()}
         />
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="flex-1" onClick={handleCopyImage}>
-            <IconPhoto className="mr-1 size-4" />
-            Copy Image
-          </Button>
-          <Button variant="outline" size="sm" className="flex-1" onClick={handleCopyText}>
+          <Button variant="outline" size="sm" className="flex-1" onClick={handleCopyAll}>
             <IconCopy className="mr-1 size-4" />
-            Copy URL
+            Copy All
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1" onClick={handleCopyUrlAndImage}>
+            <IconPhoto className="mr-1 size-4" />
+            Copy URL & Image
           </Button>
         </div>
       </DialogContent>
