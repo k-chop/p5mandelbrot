@@ -1,5 +1,6 @@
 import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { getResizedCanvasImageDataURL, requestShareImage } from "@/p5-adapter/p5-adapter";
+import { getCanvasSize } from "@/rendering/renderer";
 import { Button } from "@/shadcn/components/ui/button";
 import { toast } from "@/shadcn/hooks/use-toast";
 import { useModalState } from "@/view/modal/use-modal-state";
@@ -24,7 +25,7 @@ const ShareButton = () => {
 
   useEffect(() => {
     if (opened) {
-      requestShareImage(200, (dataUrl) => {
+      requestShareImage(getCanvasSize().height, (dataUrl) => {
         setImageDataUrl(dataUrl);
       });
     }
