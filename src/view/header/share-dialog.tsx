@@ -2,6 +2,7 @@ import { Button } from "@/shadcn/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { toast } from "@/shadcn/hooks/use-toast";
 import { buildShareData } from "@/utils/mandelbrot-url-params";
+import { ClickFeedback, useClickFeedback } from "@/view/components/click-feedback";
 import { IconCircleCheck, IconCopy, IconPhoto } from "@tabler/icons-react";
 
 type ShareDialogProps = {
@@ -11,6 +12,10 @@ type ShareDialogProps = {
 };
 
 export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogProps) => {
+  const copyAllFeedback = useClickFeedback();
+  const copyUrlImageFeedback = useClickFeedback();
+  const copyUrlFeedback = useClickFeedback();
+
   if (!open) return null;
 
   const shareData = buildShareData();
@@ -30,16 +35,7 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
       } else {
         await navigator.clipboard.writeText(text);
       }
-      toast({
-        description: (
-          <div className="flex items-center justify-center gap-2">
-            <IconCircleCheck />
-            Copied to clipboard!
-          </div>
-        ),
-        variant: "primary",
-        duration: 2000,
-      });
+      copyAllFeedback.trigger();
     } catch {
       toast({
         description: "Failed to copy to clipboard",
@@ -63,16 +59,7 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
       } else {
         await navigator.clipboard.writeText(shareData.url);
       }
-      toast({
-        description: (
-          <div className="flex items-center justify-center gap-2">
-            <IconCircleCheck />
-            URL & image copied to clipboard!
-          </div>
-        ),
-        variant: "primary",
-        duration: 2000,
-      });
+      copyUrlImageFeedback.trigger();
     } catch {
       toast({
         description: "Failed to copy to clipboard",
@@ -132,50 +119,71 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
             className="box-border min-w-0 flex-1 overflow-hidden text-ellipsis rounded border bg-muted px-2 py-1 font-mono text-xs"
             onFocus={(e) => e.target.select()}
           />
-          <Button
-            variant="outline"
-            size="icon"
-            className="size-7 shrink-0"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(shareData.url);
-                toast({
-                  description: (
-                    <div className="flex items-center justify-center gap-2">
-                      <IconCircleCheck />
-                      URL copied!
-                    </div>
-                  ),
-                  variant: "primary",
-                  duration: 2000,
-                });
-              } catch {
-                toast({
-                  description: "Failed to copy to clipboard",
-                  variant: "destructive",
-                  duration: 3000,
-                });
-              }
-            }}
+          <ClickFeedback
+            open={copyUrlFeedback.open}
+            content={
+              <div className="flex items-center gap-1">
+                <IconCircleCheck className="size-4" />
+                Copied!
+              </div>
+            }
           >
-            <IconCopy className="size-3.5" />
-          </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-7 shrink-0"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(shareData.url);
+                  copyUrlFeedback.trigger();
+                } catch {
+                  toast({
+                    description: "Failed to copy to clipboard",
+                    variant: "destructive",
+                    duration: 3000,
+                  });
+                }
+              }}
+            >
+              <IconCopy className="size-3.5" />
+            </Button>
+          </ClickFeedback>
         </div>
 
         <div className="flex min-w-0 gap-2">
-          <Button variant="outline" size="sm" className="min-w-0 flex-1" onClick={handleCopyAll}>
-            <IconCopy className="mr-1 size-4 shrink-0" />
-            Copy All
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="min-w-0 flex-1"
-            onClick={handleCopyUrlAndImage}
+          <ClickFeedback
+            open={copyAllFeedback.open}
+            content={
+              <div className="flex items-center gap-1">
+                <IconCircleCheck className="size-4" />
+                Copied!
+              </div>
+            }
           >
-            <IconPhoto className="mr-1 size-4 shrink-0" />
-            <span className="truncate">Copy URL & Image</span>
-          </Button>
+            <Button variant="outline" size="sm" className="min-w-0 flex-1" onClick={handleCopyAll}>
+              <IconCopy className="mr-1 size-4 shrink-0" />
+              Copy All
+            </Button>
+          </ClickFeedback>
+          <ClickFeedback
+            open={copyUrlImageFeedback.open}
+            content={
+              <div className="flex items-center gap-1">
+                <IconCircleCheck className="size-4" />
+                Copied!
+              </div>
+            }
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              className="min-w-0 flex-1"
+              onClick={handleCopyUrlAndImage}
+            >
+              <IconPhoto className="mr-1 size-4 shrink-0" />
+              <span className="truncate">Copy URL & Image</span>
+            </Button>
+          </ClickFeedback>
         </div>
       </DialogContent>
     </Dialog>
