@@ -1,12 +1,12 @@
 import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
+import { getResizedCanvasImageDataURL, requestShareImage } from "@/p5-adapter/p5-adapter";
 import { Button } from "@/shadcn/components/ui/button";
 import { toast } from "@/shadcn/hooks/use-toast";
 import { useModalState } from "@/view/modal/use-modal-state";
-import { ShareDialog } from "./share-dialog";
 import { IconCircleCheck, IconDownload, IconShare } from "@tabler/icons-react";
 import { Expand } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ShareDialog } from "./share-dialog";
 
 export const Actions = () => {
   return (
@@ -24,7 +24,9 @@ const ShareButton = () => {
 
   useEffect(() => {
     if (opened) {
-      setImageDataUrl(getResizedCanvasImageDataURL(200, false));
+      requestShareImage(200, (dataUrl) => {
+        setImageDataUrl(dataUrl);
+      });
     }
   }, [opened]);
 
