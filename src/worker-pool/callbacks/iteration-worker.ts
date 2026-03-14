@@ -1,5 +1,6 @@
 import { addTraceEvent } from "@/event-viewer/event";
 import {
+  consolidateIterationCache,
   notifyIterationCacheUpdate,
   upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
@@ -67,6 +68,8 @@ export const onIterationWorkerResult: IterationResultCallback = (result, job) =>
 
   // バッチ全体が完了していたらonComplete callbackを呼ぶ
   if (isBatchCompleted(job.batchId)) {
+    consolidateIterationCache();
+
     const finishedAt = performance.now();
     batchContext.finishedAt = finishedAt;
     const elapsed = finishedAt - batchContext.startedAt;
