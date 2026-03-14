@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 const event = eventmit<string>();
 
 export const savePreview = (id: string, imageDataURL: string) => {
-  set(id, imageDataURL);
+  void set(id, imageDataURL);
   event.emit(id);
 };
 

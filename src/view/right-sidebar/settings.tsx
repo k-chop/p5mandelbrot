@@ -140,7 +140,7 @@ export const Settings = () => {
           onValueChange={(value) => setWorkerCountPreview(value)}
           onValueCommit={(value) => {
             updateStore("workerCount", value);
-            prepareWorkerPool();
+            void prepareWorkerPool();
           }}
         />
       </div>
@@ -211,7 +211,7 @@ export const Settings = () => {
         <Button
           variant="default"
           onClick={() => {
-            readPOIListFromClipboard().then((result) => {
+            void readPOIListFromClipboard().then((result) => {
               if (result.isErr()) {
                 toast({
                   description: (

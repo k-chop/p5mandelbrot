@@ -94,7 +94,7 @@ const entrypoint = () => {
   updateStore("zoomRate", hydratedSettings.zoomRate);
 
   // hydrateしたworkerCountの値でworkerを初期化する
-  prepareWorkerPool(getStore("workerCount"), getStore("mode"));
+  void prepareWorkerPool(getStore("workerCount"), getStore("mode"));
 
   const p5root = document.getElementById("p5root");
   new p5(sketch, p5root!);

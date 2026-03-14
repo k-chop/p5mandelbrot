@@ -31,7 +31,7 @@ export const POICardPreview = React.memo(({ poi }: Props) => {
       }
     };
 
-    load();
+    void load();
 
     return () => {
       isCancelled = true;

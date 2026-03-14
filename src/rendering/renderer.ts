@@ -66,7 +66,7 @@ export const initRenderer: Renderer["initRenderer"] = async (w, h, p5Instance?) 
   switch (rendererType) {
     case "p5js": {
       if (p5Instance) {
-        p5Renderer.initRenderer(w, h, p5Instance);
+        await p5Renderer.initRenderer(w, h, p5Instance);
       } else {
         console.error("p5 instance is required for p5js renderer");
       }
