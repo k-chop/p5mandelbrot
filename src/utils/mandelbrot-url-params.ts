@@ -5,6 +5,7 @@ import { getCanvasSize } from "@/rendering/renderer";
 import type { MandelbrotWorkerType } from "@/types";
 import { mandelbrotWorkerTypes } from "@/types";
 import BigNumber from "bignumber.js";
+import { decodeNumber, encodeNumber } from "./number-encoding";
 
 /**
  * URLのquery parameterから描画内容を復元する
@@ -14,15 +15,17 @@ import BigNumber from "bignumber.js";
 export const extractMandelbrotParams = () => {
   const params = new URLSearchParams(location.search);
 
-  const x = params.get("x");
-  const y = params.get("y");
-  const r = params.get("r");
-  const N = params.get("N") || "NaN";
   const mode = params.get("mode");
   const palette = params.get("palette");
 
-  if (x === null || y === null || r === null) {
-    // modeはなければnormal、Nはなければ500
+  // 新形式: ?c=<encodedX>.<encodedY>.<encodedR>.<N>
+  const compactParam = params.get("c");
+  // 旧形式: ?x=...&y=...&r=...
+  const x = params.get("x");
+  const y = params.get("y");
+  const r = params.get("r");
+
+  if (compactParam === null && (x === null || y === null || r === null)) {
     return null;
   }
 
@@ -30,13 +33,30 @@ export const extractMandelbrotParams = () => {
   history.replaceState({}, "", location.origin);
 
   try {
-    const safeN = isNaN(parseInt(N, 10)) ? 500 : parseInt(N, 10);
+    let safeX: BigNumber;
+    let safeY: BigNumber;
+    let safeR: BigNumber;
+    let safeN: number;
+
+    if (compactParam !== null) {
+      const parts = compactParam.split(".");
+      if (parts.length !== 4) throw new Error(`Invalid compact param: ${compactParam}`);
+      const [encodedX, encodedY, encodedR, nStr] = parts;
+      safeX = new BigNumber(decodeNumber(encodedX));
+      safeY = new BigNumber(decodeNumber(encodedY));
+      safeR = new BigNumber(decodeNumber(encodedR));
+      safeN = isNaN(parseInt(nStr, 10)) ? 500 : parseInt(nStr, 10);
+    } else {
+      safeX = new BigNumber(x!);
+      safeY = new BigNumber(y!);
+      safeR = new BigNumber(r!);
+      const N = params.get("N") || "NaN";
+      safeN = isNaN(parseInt(N, 10)) ? 500 : parseInt(N, 10);
+    }
+
     const safeMode = mandelbrotWorkerTypes.some((t) => t === mode)
       ? (mode as MandelbrotWorkerType)
       : "normal";
-    const safeX = new BigNumber(x);
-    const safeY = new BigNumber(y);
-    const safeR = new BigNumber(r);
 
     // パレットは復元できなければ初期値をそのまま使う
     let safePalette = getCurrentPalette();
@@ -96,11 +116,13 @@ export const buildCurrentParamsUrl = (): string => {
   const { width } = getCanvasSize();
   const coordPrecision = calcCoordPrecision(r, width);
 
+  const encodedX = encodeNumber(x.toPrecision(coordPrecision));
+  const encodedY = encodeNumber(y.toPrecision(coordPrecision));
+  const encodedR = encodeNumber(r.toPrecision(6));
+  const compact = `${encodedX}.${encodedY}.${encodedR}.${N}`;
+
   const params = new URLSearchParams({
-    x: x.toPrecision(coordPrecision),
-    y: y.toPrecision(coordPrecision),
-    r: r.toPrecision(6),
-    N: N.toString(),
+    c: compact,
     mode,
     palette: palette.serialize(),
   });
