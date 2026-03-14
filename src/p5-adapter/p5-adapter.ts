@@ -56,6 +56,9 @@ let mouseClickedOn = { mouseX: 0, mouseY: 0 };
 let shouldSavePOIHistoryNextRender = false;
 /** 次のrenderingのタイミングで動かしている状態を解除したいときにtrueにする */
 let shouldResetTranslatingNextRender = false;
+
+let pendingShareImageCallback: ((dataUrl: string) => void) | null = null;
+let pendingShareImageHeight = 0;
 /**
  * mainBufferの表示位置変えているかどうか
  *
@@ -170,7 +173,12 @@ const calculateComplexMouseXY = (
   };
 };
 
-/*
+export const requestShareImage = (height: number, callback: (dataUrl: string) => void) => {
+  pendingShareImageCallback = callback;
+  pendingShareImageHeight = height;
+};
+
+/**
  * canvasの画像をリサイズした後にDataURLを返す
  * 0を指定すると元のサイズで保存する
  * WebGPUレンダリング時はWebGPUキャンバスから画像を取得する
@@ -611,6 +619,12 @@ export const p5Draw = (p: p5) => {
   if (shouldSavePOIHistoryNextRender) {
     shouldSavePOIHistoryNextRender = false;
     addCurrentLocationToPOIHistory();
+  }
+
+  if (pendingShareImageCallback) {
+    const cb = pendingShareImageCallback;
+    pendingShareImageCallback = null;
+    cb(getResizedCanvasImageDataURL(pendingShareImageHeight));
   }
 
   if (needsRenderForCurrentParams()) {

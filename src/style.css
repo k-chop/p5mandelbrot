@@ -10,6 +10,8 @@
 @import "@radix-ui/colors/jade-dark.css";
 @import "@radix-ui/colors/white-alpha.css";
 
+@import "tw-animate-css";
+
 @config "../tailwind.config.ts";
 
 /*

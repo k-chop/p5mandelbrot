@@ -14,6 +14,7 @@ import {
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { clamp } from "@/math/util";
 import { getStore } from "@/store/store";
+import { PERTURBATION_THRESHOLD } from "@/utils/palette-encoding";
 import type p5 from "p5";
 import type { Rect } from "../math/rect";
 import type { IterationBuffer } from "../types";
@@ -200,7 +201,8 @@ export const drawUICurrentParams = (
   const nLabel = autoIterationEnabled ? `N: ${params.N} [auto]` : `N: ${params.N}`;
   p.text(`r: ${params.r.toPrecision(10)}\n${nLabel}`, 4, 14);
 
-  const isNotEnoughPrecision = params.mode === "normal" && params.r.isLessThan(3.5e-14);
+  const isNotEnoughPrecision =
+    params.mode === "normal" && params.r.isLessThan(PERTURBATION_THRESHOLD);
   if (isNotEnoughPrecision) {
     p.textSize(16);
     p.textAlign(p.CENTER, p.CENTER);

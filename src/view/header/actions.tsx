@@ -1,10 +1,13 @@
 import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
+import { getResizedCanvasImageDataURL, requestShareImage } from "@/p5-adapter/p5-adapter";
+import { getCanvasSize } from "@/rendering/renderer";
 import { Button } from "@/shadcn/components/ui/button";
 import { toast } from "@/shadcn/hooks/use-toast";
-import { copyCurrentParamsToClipboard } from "@/utils/mandelbrot-url-params";
+import { useModalState } from "@/view/modal/use-modal-state";
 import { IconCircleCheck, IconDownload, IconShare } from "@tabler/icons-react";
 import { Expand } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ShareDialog } from "./share-dialog";
 
 export const Actions = () => {
   return (
@@ -17,28 +20,31 @@ export const Actions = () => {
 };
 
 const ShareButton = () => {
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => {
-        copyCurrentParamsToClipboard();
+  const [opened, { open, close }] = useModalState();
+  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
 
-        toast({
-          description: (
-            <div className="flex items-center justify-center gap-2">
-              <IconCircleCheck />
-              Current location URL copied to clipboard!
-            </div>
-          ),
-          variant: "primary",
-          duration: 2000,
-        });
-      }}
-    >
-      <IconShare className="mr-1 size-6" />
-      Share
-    </Button>
+  useEffect(() => {
+    if (opened) {
+      requestShareImage(getCanvasSize().height, (dataUrl) => {
+        setImageDataUrl(dataUrl);
+      });
+    }
+  }, [opened]);
+
+  return (
+    <>
+      <ShareDialog
+        open={opened}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) close();
+        }}
+        imageDataUrl={imageDataUrl}
+      />
+      <Button variant="outline" size="sm" onClick={open}>
+        <IconShare className="mr-1 size-6" />
+        Share
+      </Button>
+    </>
   );
 };
 
