@@ -1,12 +1,13 @@
 import { addTraceEvent } from "@/event-viewer/event";
 import {
+  consolidateIterationCache,
   notifyIterationCacheUpdate,
   upsertIterationCache,
 } from "@/iteration-buffer/iteration-buffer";
 import { addIterationBuffer } from "@/rendering/renderer";
 import type { CalcIterationJob, IterationIntermediateResult } from "@/types";
 import { getWorkerId } from "../pool-instance";
-import { completeJob, isBatchCompleted } from "../task-queue";
+import { completeJob, hasWaitingJob, isBatchCompleted } from "../task-queue";
 import type { IterationProgressCallback, IterationResultCallback } from "../worker-facade";
 import { getBatchContext } from "../worker-pool";
 import { removeWorkerReference } from "../worker-reference";
@@ -67,6 +68,11 @@ export const onIterationWorkerResult: IterationResultCallback = (result, job) =>
 
   // バッチ全体が完了していたらonComplete callbackを呼ぶ
   if (isBatchCompleted(job.batchId)) {
+    // 他バッチの待ちジョブがある場合は統合をスキップし、次バッチ完了時に統合する
+    if (!hasWaitingJob()) {
+      consolidateIterationCache();
+    }
+
     const finishedAt = performance.now();
     batchContext.finishedAt = finishedAt;
     const elapsed = finishedAt - batchContext.startedAt;

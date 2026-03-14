@@ -135,6 +135,73 @@ export const removeUnusedIterationCache = (): void => {
 };
 
 /**
+ * 断片化したiterationCacheをキャンバス全体をカバーする1枚のIterationBufferに統合する
+ *
+ * 全workerのバッチ完了後に呼び出すことで、ズーム・移動の繰り返しによる断片化を解消する
+ */
+export const consolidateIterationCache = (canvasWidth?: number, canvasHeight?: number): void => {
+  if (iterationCache.length <= 1) return;
+
+  const { width: cw, height: ch } =
+    canvasWidth != null && canvasHeight != null
+      ? { width: canvasWidth, height: canvasHeight }
+      : getCanvasSize();
+
+  // 最大解像度比率のキャッシュのみ対象
+  const maxRes = iterationCache.reduce((prev, ic) => {
+    const res = ic.resolution.width / ic.rect.width;
+    return res > prev ? res : prev;
+  }, Number.MIN_VALUE);
+
+  const targets = iterationCache.filter((ic) => {
+    const res = ic.resolution.width / ic.rect.width;
+    return Math.abs(res - maxRes) < Number.EPSILON;
+  });
+
+  if (targets.length <= 1) return;
+
+  const mergedBuffer = new Uint32Array(cw * ch);
+
+  for (const ic of targets) {
+    const { rect, buffer, resolution } = ic;
+    const ox = Math.max(0, rect.x);
+    const oy = Math.max(0, rect.y);
+    const ex = Math.min(cw, rect.x + rect.width);
+    const ey = Math.min(ch, rect.y + rect.height);
+    if (ox >= ex || oy >= ey) continue;
+
+    const ratioX = resolution.width / rect.width;
+    const ratioY = resolution.height / rect.height;
+
+    if (ratioX === 1 && ratioY === 1) {
+      for (let py = oy; py < ey; py++) {
+        const srcStart = (py - rect.y) * resolution.width + (ox - rect.x);
+        const dstStart = py * cw + ox;
+        const width = ex - ox;
+        mergedBuffer.set(buffer.subarray(srcStart, srcStart + width), dstStart);
+      }
+    } else {
+      for (let py = oy; py < ey; py++) {
+        for (let px = ox; px < ex; px++) {
+          const srcX = Math.floor((px - rect.x) * ratioX);
+          const srcY = Math.floor((py - rect.y) * ratioY);
+          const srcIdx = srcY * resolution.width + srcX;
+          mergedBuffer[py * cw + px] = buffer[srcIdx];
+        }
+      }
+    }
+  }
+
+  iterationCache = [
+    {
+      rect: { x: 0, y: 0, width: cw, height: ch },
+      buffer: mergedBuffer,
+      resolution: { width: cw, height: ch },
+    },
+  ];
+};
+
+/**
  * iterationキャッシュを全部クリアする
  */
 export const clearIterationCache = (): void => {
