@@ -4,6 +4,7 @@ import {
   cloneParams,
   getCurrentParams,
   setCurrentParams,
+  setManualN,
 } from "@/mandelbrot-state/mandelbrot-state";
 import { getMatchingHistoryThumbnail } from "@/poi-history/poi-history";
 import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
@@ -80,6 +81,7 @@ export const usePOI = () => {
   );
 
   const applyPOI = useCallback((poi: POIData) => {
+    setManualN(poi.N);
     setCurrentParams(cloneParams(poi));
     clearIterationCache();
     setSerializedPalette(poi.serializedPalette);
