@@ -9,8 +9,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "lint": "oxlint",
-    "check-format": "biome format .",
-    "format": "biome format --write .",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "server": "tsx src/server/index.ts",
     "rust-client": "cd rust_client && cargo run && cd ../",
     "dev-all": "run-p dev server rust-client"
@@ -33,6 +33,7 @@
     "@webgpu/types": "0.1.69",
     "cross-env": "10.1.0",
     "npm-run-all2": "8.0.4",
+    "oxfmt": "0.40.0",
     "oxlint": "1.55.0",
     "oxlint-tsgolint": "0.16.0",
     "tailwindcss": "4.2.1",
