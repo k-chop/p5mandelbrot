@@ -84,7 +84,7 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md overflow-hidden [&>*]:min-w-0">
+      <DialogContent className="max-w-md overflow-hidden *:min-w-0">
         <DialogHeader>
           <DialogTitle>Share</DialogTitle>
         </DialogHeader>
