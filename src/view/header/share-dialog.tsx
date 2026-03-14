@@ -124,13 +124,43 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
           </div>
         </div>
 
-        <input
-          type="text"
-          readOnly
-          value={shareData.url}
-          className="box-border w-full overflow-hidden text-ellipsis rounded border bg-muted px-2 py-1 font-mono text-xs"
-          onFocus={(e) => e.target.select()}
-        />
+        <div className="flex gap-1">
+          <input
+            type="text"
+            readOnly
+            value={shareData.url}
+            className="box-border min-w-0 flex-1 overflow-hidden text-ellipsis rounded border bg-muted px-2 py-1 font-mono text-xs"
+            onFocus={(e) => e.target.select()}
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-7 shrink-0"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(shareData.url);
+                toast({
+                  description: (
+                    <div className="flex items-center justify-center gap-2">
+                      <IconCircleCheck />
+                      URL copied!
+                    </div>
+                  ),
+                  variant: "primary",
+                  duration: 2000,
+                });
+              } catch {
+                toast({
+                  description: "Failed to copy to clipboard",
+                  variant: "destructive",
+                  duration: 3000,
+                });
+              }
+            }}
+          >
+            <IconCopy className="size-3.5" />
+          </Button>
+        </div>
 
         <div className="flex min-w-0 gap-2">
           <Button variant="outline" size="sm" className="min-w-0 flex-1" onClick={handleCopyAll}>
