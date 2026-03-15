@@ -49,7 +49,7 @@ export const POI = () => {
         onScroll={handleScroll}
       >
         <div>
-          <div className="flex flex-row flex-wrap gap-2">
+          <div className="flex flex-row flex-wrap gap-2 pt-1 pl-1">
             {poiList.map((poi, index) => (
               <POICard
                 key={poi.id}
