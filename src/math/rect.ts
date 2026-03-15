@@ -2,7 +2,8 @@ import type BigNumber from "bignumber.js";
 import { getOffsetParams } from "../mandelbrot-state/mandelbrot-state";
 import type { OffsetParams } from "../types";
 
-const DIVIDE_MIN_SIZE = 80; // px
+/** workerに渡す領域の最低サイズ。あまり小さくすると計算がうまくいかないことがある */
+const DIVIDE_MIN_SIZE_PIXEL = 80;
 
 /** pixel単位の矩形 */
 export interface Rect {
@@ -20,27 +21,12 @@ export type RealRect = {
   bottomRightY: BigNumber;
 };
 
-export const calculateRealRect = (
-  cx: BigNumber,
-  cy: BigNumber,
-  rect: Rect,
-  canvasWidth: number,
-  canvasHeight: number,
-  r: BigNumber,
-): RealRect => {
-  const topLeftX = cx.plus((rect.x * 2) / canvasWidth - 1.0).times(r);
-  const topLeftY = cy.minus((rect.y * 2) / canvasHeight - 1.0).times(r);
-  const bottomRightX = cx.plus(((rect.x + rect.width) * 2) / canvasWidth - 1.0).times(r);
-  const bottomRightY = cy.minus(((rect.y + rect.height) * 2) / canvasHeight - 1.0).times(r);
-
-  return {
-    topLeftX,
-    topLeftY,
-    bottomRightX,
-    bottomRightY,
-  };
-};
-
+/**
+ * 分割数をなるべく正方形に近い縦横の分割数に分解する
+ *
+ * 因数ペア (i, j) を列挙し、差が最小の組み合わせを選ぶ。
+ * 例: 6 → 3×2, 16 → 4×4, 128 → 16×8
+ */
 export const calculateDivideArea = (
   divideCount: number,
 ): { longSideCount: number; shortSideCount: number } => {
@@ -71,7 +57,20 @@ export const calculateDivideArea = (
   };
 };
 
-export const divideRect = (rects: Rect[], expectedDivideCount: number, minSide = 1): Rect[] => {
+/**
+ * 描画したい領域を受け取り、各workerが計算を実行するため領域を返す
+ *
+ * 返される各領域は `minSide` で一辺の長さが保証されている。
+ * 極端に小さい領域だと計算に失敗してしまうことがあるため
+ * 長さを保証するために、画面外にはみ出したり他の領域と重なることを許容している
+ */
+export const calcTargetRectsFromOffsetRects = (
+  rects: Rect[],
+  expectedDivideCount: number,
+  _minSide = DIVIDE_MIN_SIZE_PIXEL,
+): Rect[] => {
+  const minSide = Math.max(_minSide, DIVIDE_MIN_SIZE_PIXEL);
+
   if (rects.length > expectedDivideCount) {
     throw new Error("rects.length > expectedDivideCount");
   }
@@ -106,36 +105,39 @@ export const divideRect = (rects: Rect[], expectedDivideCount: number, minSide =
 
     const { longSideCount, shortSideCount } = calculateDivideArea(divideCount);
 
-    const endY = rect.y + rect.height;
-    const endX = rect.x + rect.width;
+    // 入力rectの各辺がminSide未満なら拡張（キャンバスはみ出し許容）
+    const width = Math.max(rect.width, minSide);
+    const height = Math.max(rect.height, minSide);
 
-    const sideXCount = rect.width > rect.height ? longSideCount : shortSideCount;
-    const sideYCount = rect.width > rect.height ? shortSideCount : longSideCount;
+    const endY = rect.y + height;
+    const endX = rect.x + width;
 
-    const sideX = Math.max(minSide, Math.ceil(rect.width / sideXCount));
-    const sideY = Math.max(minSide, Math.ceil(rect.height / sideYCount));
+    const sideXCount = width > height ? longSideCount : shortSideCount;
+    const sideYCount = width > height ? shortSideCount : longSideCount;
 
-    for (let y = rect.y; y < endY; y += sideY) {
-      for (let x = rect.x; x < endX; x += sideX) {
-        const width = Math.min(sideX, endX - x);
-        const height = Math.min(sideY, endY - y);
-        result.push({ x, y, width, height });
+    const sideX = Math.max(minSide, Math.ceil(width / sideXCount));
+    const sideY = Math.max(minSide, Math.ceil(height / sideYCount));
+
+    for (let y = rect.y; y < endY; ) {
+      const remainY = endY - y;
+      const h = remainY <= sideY ? remainY : remainY - sideY < minSide ? remainY : sideY;
+      for (let x = rect.x; x < endX; ) {
+        const remainX = endX - x;
+        const w = remainX <= sideX ? remainX : remainX - sideX < minSide ? remainX : sideX;
+        result.push({ x, y, width: w, height: h });
+        x += w;
       }
+      y += h;
     }
   }
 
   return result;
 };
 
-const MIN_OFFSET_RECT_SIZE = 50; // px
-
 /**
  * ドラッグ移動時の差分描画領域を計算する
  *
  * offsetParams（移動量）に基づき、キャンバス端に露出した未計算領域を矩形として返す。
- * 移動量が小さい場合でも各矩形の辺が MIN_OFFSET_RECT_SIZE 以上になるよう拡張する。
- * これにより極小バッファの生成を防ぎ、描画アーティファクトを回避する。
- * 拡張分は画面外にはみ出す場合があるが、計算の正確性には影響しない。
  */
 export const getOffsetRects = (
   canvasWidth: number,
@@ -147,22 +149,22 @@ export const getOffsetRects = (
 
   const rects: Rect[] = [];
 
+  const absOffsetY = Math.abs(offsetY);
+  const absOffsetX = Math.abs(offsetX);
+
   if (offsetY !== 0) {
-    const height = Math.max(MIN_OFFSET_RECT_SIZE, Math.abs(offsetY));
     rects.push({
       x: 0,
-      y: offsetY > 0 ? canvasHeight - height : 0,
+      y: offsetY > 0 ? canvasHeight - absOffsetY : 0,
       width: canvasWidth,
-      height,
+      height: absOffsetY,
     });
   }
   if (offsetX !== 0) {
-    const width = Math.max(MIN_OFFSET_RECT_SIZE, Math.abs(offsetX));
-    const absOffsetY = offsetY !== 0 ? Math.max(MIN_OFFSET_RECT_SIZE, Math.abs(offsetY)) : 0;
     rects.push({
-      x: offsetX > 0 ? canvasWidth - width : 0,
+      x: offsetX > 0 ? canvasWidth - absOffsetX : 0,
       y: offsetY > 0 ? 0 : absOffsetY,
-      width,
+      width: absOffsetX,
       height: canvasHeight - absOffsetY,
     });
   }
@@ -171,9 +173,9 @@ export const getOffsetRects = (
 };
 
 /**
- * 描画対象のRectを計算する
+ * 描画対象のRectを計算して返す。外からは基本これを呼べばよい
  *
- * offsetがある場合は描画範囲を狭くできる
+ * 各workerへ渡すrectは最低保証サイズがあるため、画面外にはみだしたり他のrectと重なり得る。
  */
 export const getCalculationTargetRects = (
   canvasWidth: number,
@@ -182,18 +184,16 @@ export const getCalculationTargetRects = (
   offsetParams: OffsetParams,
 ) => {
   if (offsetParams.x !== 0 || offsetParams.y !== 0) {
+    // offsetがある(moveした)場合は動かした部分だけ描画すればよい
     const expectedDivideCount = Math.max(divideRectCount, 2);
-    return divideRect(
+    return calcTargetRectsFromOffsetRects(
       getOffsetRects(canvasWidth, canvasHeight),
       expectedDivideCount,
-      DIVIDE_MIN_SIZE,
     );
   } else {
-    // FIXME: 縮小する場合にもっと小さくできる
-    return divideRect(
+    return calcTargetRectsFromOffsetRects(
       [{ x: 0, y: 0, width: canvasWidth, height: canvasHeight }],
       divideRectCount,
-      DIVIDE_MIN_SIZE,
     );
   }
 };
