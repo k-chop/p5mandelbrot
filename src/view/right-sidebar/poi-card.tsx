@@ -53,7 +53,7 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
   const handleThumbnailClick = isInSamePlace ? onRegenerateThumbnail : onApply;
 
   return (
-    <Card className={`p-2 ${isInSamePlace ? "ring-2 ring-primary/50" : ""}`}>
+    <Card className={`w-52 p-2 ${isInSamePlace ? "ring-2 ring-primary/50" : ""}`}>
       <div className="flex">
         <div className="group relative size-25 cursor-pointer" onClick={handleThumbnailClick}>
           <POICardPreview poi={poi} />
@@ -63,12 +63,12 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
         </div>
         <div className="ml-2 flex grow flex-col justify-between">
           <div>
-            <div className="flex justify-between">
-              <div className="mr-2">r</div>
+            <div className="flex justify-between text-sm">
+              <div>r</div>
               <div>{r.toPrecision(3)}</div>
             </div>
-            <div className="flex justify-between">
-              <div className="mr-2">N</div>
+            <div className="flex justify-between text-sm">
+              <div>N</div>
               <div>{N.toFixed(0)}</div>
             </div>
           </div>
