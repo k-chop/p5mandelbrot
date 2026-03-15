@@ -20,27 +20,6 @@ export type RealRect = {
   bottomRightY: BigNumber;
 };
 
-export const calculateRealRect = (
-  cx: BigNumber,
-  cy: BigNumber,
-  rect: Rect,
-  canvasWidth: number,
-  canvasHeight: number,
-  r: BigNumber,
-): RealRect => {
-  const topLeftX = cx.plus((rect.x * 2) / canvasWidth - 1.0).times(r);
-  const topLeftY = cy.minus((rect.y * 2) / canvasHeight - 1.0).times(r);
-  const bottomRightX = cx.plus(((rect.x + rect.width) * 2) / canvasWidth - 1.0).times(r);
-  const bottomRightY = cy.minus(((rect.y + rect.height) * 2) / canvasHeight - 1.0).times(r);
-
-  return {
-    topLeftX,
-    topLeftY,
-    bottomRightX,
-    bottomRightY,
-  };
-};
-
 export const calculateDivideArea = (
   divideCount: number,
 ): { longSideCount: number; shortSideCount: number } => {
