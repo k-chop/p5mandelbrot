@@ -61,24 +61,26 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
             {overlayText}
           </div>
         </div>
-        <div className="ml-2 flex grow flex-col">
-          <div className="flex justify-between">
-            <div className="mr-2">r</div>
-            <div>{r.toPrecision(3)}</div>
-          </div>
-          <div className="flex justify-between">
-            <div className="mr-2">N</div>
-            <div>{N.toFixed(0)}</div>
+        <div className="ml-2 flex grow flex-col justify-between">
+          <div>
+            <div className="flex justify-between">
+              <div className="mr-2">r</div>
+              <div>{r.toPrecision(3)}</div>
+            </div>
+            <div className="flex justify-between">
+              <div className="mr-2">N</div>
+              <div>{N.toFixed(0)}</div>
+            </div>
           </div>
 
           <div className="mt-2 flex justify-between gap-2">
             <SimpleTooltip content="Share">
-              <Button variant="secondary" size="icon" onClick={openShare}>
+              <Button variant="default" size="icon-sm" onClick={openShare}>
                 <IconShare />
               </Button>
             </SimpleTooltip>
             <SimpleTooltip content="Delete">
-              <Button variant="destructive" size="icon" onClick={onDelete}>
+              <Button variant="destructive" size="icon-sm" onClick={onDelete}>
                 <IconTrash />
               </Button>
             </SimpleTooltip>
