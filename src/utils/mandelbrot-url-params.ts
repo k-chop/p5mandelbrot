@@ -1,7 +1,6 @@
 import { getCurrentPalette } from "@/camera/palette";
 import { deserializePalette } from "@/color";
-import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { getCanvasSize } from "@/rendering/renderer";
+import type { Palette } from "@/color/model";
 import type { MandelbrotWorkerType } from "@/types";
 import { mandelbrotWorkerTypes } from "@/types";
 import BigNumber from "bignumber.js";
@@ -130,17 +129,24 @@ export type ShareData = {
   N: number;
 };
 
+type BuildShareDataParams = {
+  x: BigNumber;
+  y: BigNumber;
+  r: BigNumber;
+  N: number;
+  palette: Palette;
+  canvasWidth: number;
+};
+
 /**
- * 現在のパラメータから共有用データを生成する
+ * パラメータから共有用データを生成する
  *
  * x, yはビューポートの1ピクセル精度を保つ最小限の有効数字に丸める。
  * rはズームレベルなので有効数字6桁で十分（相対精度 2/canvasWidth ≈ 0.001）。
  */
-export const buildShareData = (): ShareData => {
-  const { x, y, r, N } = getCurrentParams();
-  const palette = getCurrentPalette();
-  const { width } = getCanvasSize();
-  const coordPrecision = calcCoordPrecision(r, width);
+export const buildShareData = (params: BuildShareDataParams): ShareData => {
+  const { x, y, r, N, palette, canvasWidth } = params;
+  const coordPrecision = calcCoordPrecision(r, canvasWidth);
 
   const xStr = x.toPrecision(coordPrecision);
   const yStr = y.toPrecision(coordPrecision);
@@ -159,15 +165,4 @@ export const buildShareData = (): ShareData => {
     : `${location.origin}${location.pathname}?${new URLSearchParams({ c: base, palette: paletteEncoded }).toString()}`;
 
   return { url, x: xStr, y: yStr, r: rStr, N };
-};
-
-export const buildCurrentParamsUrl = (): string => buildShareData().url;
-
-/**
- * shareボタン用に現在のパラメータをクリップボードにコピーする
- *
- * mandelbrot setの各種パラメータとpaletteの状態が乗る
- */
-export const copyCurrentParamsToClipboard = () => {
-  void navigator.clipboard.writeText(buildCurrentParamsUrl());
 };

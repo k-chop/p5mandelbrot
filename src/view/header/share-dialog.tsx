@@ -1,29 +1,35 @@
 import { Button } from "@/shadcn/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { toast } from "@/shadcn/hooks/use-toast";
-import { buildShareData } from "@/utils/mandelbrot-url-params";
+import type { ShareData } from "@/utils/mandelbrot-url-params";
 import { ClickFeedback, useClickFeedback } from "@/view/components/click-feedback";
 import { IconCircleCheck, IconCopy, IconPhoto } from "@tabler/icons-react";
 
 type ShareDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  shareData: ShareData;
   imageDataUrl: string | null;
+  showCopyImage?: boolean;
 };
 
-export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogProps) => {
+export const ShareDialog = ({
+  open,
+  onOpenChange,
+  shareData,
+  imageDataUrl,
+  showCopyImage = true,
+}: ShareDialogProps) => {
   const copyAllFeedback = useClickFeedback();
   const copyUrlImageFeedback = useClickFeedback();
   const copyUrlFeedback = useClickFeedback();
 
   if (!open) return null;
 
-  const shareData = buildShareData();
-
   const handleCopyAll = async () => {
     const text = `x: ${shareData.x}\ny: ${shareData.y}\nr: ${shareData.r}\nN: ${shareData.N}\n${shareData.url}`;
     try {
-      if (imageDataUrl) {
+      if (showCopyImage && imageDataUrl) {
         const res = await fetch(imageDataUrl);
         const blob = await res.blob();
         await navigator.clipboard.write([
@@ -165,25 +171,27 @@ export const ShareDialog = ({ open, onOpenChange, imageDataUrl }: ShareDialogPro
               Copy All
             </Button>
           </ClickFeedback>
-          <ClickFeedback
-            open={copyUrlImageFeedback.open}
-            content={
-              <div className="flex items-center gap-1">
-                <IconCircleCheck className="size-4" />
-                Copied!
-              </div>
-            }
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              className="min-w-0 flex-1"
-              onClick={handleCopyUrlAndImage}
+          {showCopyImage && (
+            <ClickFeedback
+              open={copyUrlImageFeedback.open}
+              content={
+                <div className="flex items-center gap-1">
+                  <IconCircleCheck className="size-4" />
+                  Copied!
+                </div>
+              }
             >
-              <IconPhoto className="mr-1 size-4 shrink-0" />
-              <span className="truncate">Copy URL & Image</span>
-            </Button>
-          </ClickFeedback>
+              <Button
+                variant="outline"
+                size="sm"
+                className="min-w-0 flex-1"
+                onClick={handleCopyUrlAndImage}
+              >
+                <IconPhoto className="mr-1 size-4 shrink-0" />
+                <span className="truncate">Copy URL & Image</span>
+              </Button>
+            </ClickFeedback>
+          )}
         </div>
       </DialogContent>
     </Dialog>

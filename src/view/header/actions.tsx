@@ -1,8 +1,10 @@
-import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { getCurrentPalette } from "@/camera/palette";
+import { getCurrentParams, setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { getResizedCanvasImageDataURL, requestShareImage } from "@/p5-adapter/p5-adapter";
 import { getCanvasSize } from "@/rendering/renderer";
 import { Button } from "@/shadcn/components/ui/button";
 import { toast } from "@/shadcn/hooks/use-toast";
+import { buildShareData } from "@/utils/mandelbrot-url-params";
 import { useModalState } from "@/view/modal/use-modal-state";
 import { IconCircleCheck, IconDownload, IconShare } from "@tabler/icons-react";
 import { Expand } from "lucide-react";
@@ -31,6 +33,14 @@ const ShareButton = () => {
     }
   }, [opened]);
 
+  const shareData = opened
+    ? buildShareData({
+        ...getCurrentParams(),
+        palette: getCurrentPalette(),
+        canvasWidth: getCanvasSize().width,
+      })
+    : { url: "", x: "", y: "", r: "", N: 0 };
+
   return (
     <>
       <ShareDialog
@@ -38,6 +48,7 @@ const ShareButton = () => {
         onOpenChange={(isOpen) => {
           if (!isOpen) close();
         }}
+        shareData={shareData}
         imageDataUrl={imageDataUrl}
       />
       <Button variant="outline" size="sm" onClick={open}>
