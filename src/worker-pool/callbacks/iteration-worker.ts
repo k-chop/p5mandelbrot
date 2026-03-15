@@ -80,7 +80,7 @@ export const onIterationWorkerResult: IterationResultCallback = (result, job) =>
     batchContext.finishedAt = finishedAt;
     const elapsed = finishedAt - batchContext.startedAt;
 
-    finalizeBatch(job.batchId, batchContext.startedAt);
+    finalizeBatch(job.batchId, elapsed);
 
     batchContext.onComplete(elapsed);
   }

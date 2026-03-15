@@ -9,12 +9,14 @@ export interface WorkerRenderArea {
 
 export interface BatchRenderEntry {
   batchId: string;
-  startedAt: number;
+  seq: number;
+  elapsed: number;
   workers: WorkerRenderArea[];
 }
 
 const MAX_HISTORY = 10;
 
+let batchSeq = 0;
 const pendingBatches = new Map<string, WorkerRenderArea[]>();
 let history: BatchRenderEntry[] = [];
 let snapshot: BatchRenderEntry[] = [];
@@ -47,15 +49,16 @@ export const recordWorkerResult = (
 /**
  * バッチ完了時にpendingから履歴へ移動し、subscriberに通知する
  *
- * 履歴はMAX_HISTORY件を超えると古いものから削除される
+ * 通し番号(seq)を採番し、履歴はMAX_HISTORY件を超えると古いものから削除される
  */
-export const finalizeBatch = (batchId: string, startedAt: number): void => {
+export const finalizeBatch = (batchId: string, elapsed: number): void => {
   const workers = pendingBatches.get(batchId);
   if (workers == null) return;
 
   pendingBatches.delete(batchId);
+  batchSeq++;
 
-  history = [{ batchId, startedAt, workers }, ...history].slice(0, MAX_HISTORY);
+  history = [{ batchId, seq: batchSeq, elapsed, workers }, ...history].slice(0, MAX_HISTORY);
 
   notify();
 };

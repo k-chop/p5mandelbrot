@@ -175,9 +175,9 @@ export const BatchRenderViewer = () => {
           {history.map((entry, index) => (
             <div key={entry.batchId} className="space-y-2 rounded-lg border p-3">
               <div className="text-sm font-medium">
-                Batch #{history.length - index}
+                Batch #{entry.seq}
                 <span className="text-muted-foreground ml-2 text-xs">
-                  {new Date(entry.startedAt).toLocaleTimeString()}
+                  {entry.elapsed.toFixed(0)}ms
                 </span>
               </div>
               <BatchMinimap entry={entry} index={index} />
