@@ -106,36 +106,39 @@ export const divideRect = (rects: Rect[], expectedDivideCount: number, minSide =
 
     const { longSideCount, shortSideCount } = calculateDivideArea(divideCount);
 
-    const endY = rect.y + rect.height;
-    const endX = rect.x + rect.width;
+    // 入力rectの各辺がminSide未満なら拡張（キャンバスはみ出し許容）
+    const width = Math.max(rect.width, minSide);
+    const height = Math.max(rect.height, minSide);
 
-    const sideXCount = rect.width > rect.height ? longSideCount : shortSideCount;
-    const sideYCount = rect.width > rect.height ? shortSideCount : longSideCount;
+    const endY = rect.y + height;
+    const endX = rect.x + width;
 
-    const sideX = Math.max(minSide, Math.ceil(rect.width / sideXCount));
-    const sideY = Math.max(minSide, Math.ceil(rect.height / sideYCount));
+    const sideXCount = width > height ? longSideCount : shortSideCount;
+    const sideYCount = width > height ? shortSideCount : longSideCount;
 
-    for (let y = rect.y; y < endY; y += sideY) {
-      for (let x = rect.x; x < endX; x += sideX) {
-        const width = Math.min(sideX, endX - x);
-        const height = Math.min(sideY, endY - y);
-        result.push({ x, y, width, height });
+    const sideX = Math.max(minSide, Math.ceil(width / sideXCount));
+    const sideY = Math.max(minSide, Math.ceil(height / sideYCount));
+
+    for (let y = rect.y; y < endY; ) {
+      const remainY = endY - y;
+      const h = remainY <= sideY ? remainY : remainY - sideY < minSide ? remainY : sideY;
+      for (let x = rect.x; x < endX; ) {
+        const remainX = endX - x;
+        const w = remainX <= sideX ? remainX : remainX - sideX < minSide ? remainX : sideX;
+        result.push({ x, y, width: w, height: h });
+        x += w;
       }
+      y += h;
     }
   }
 
   return result;
 };
 
-const MIN_OFFSET_RECT_SIZE = 50; // px
-
 /**
  * ドラッグ移動時の差分描画領域を計算する
  *
  * offsetParams（移動量）に基づき、キャンバス端に露出した未計算領域を矩形として返す。
- * 移動量が小さい場合でも各矩形の辺が MIN_OFFSET_RECT_SIZE 以上になるよう拡張する。
- * これにより極小バッファの生成を防ぎ、描画アーティファクトを回避する。
- * 拡張分は画面外にはみ出す場合があるが、計算の正確性には影響しない。
  */
 export const getOffsetRects = (
   canvasWidth: number,
@@ -147,22 +150,22 @@ export const getOffsetRects = (
 
   const rects: Rect[] = [];
 
+  const absOffsetY = Math.abs(offsetY);
+  const absOffsetX = Math.abs(offsetX);
+
   if (offsetY !== 0) {
-    const height = Math.max(MIN_OFFSET_RECT_SIZE, Math.abs(offsetY));
     rects.push({
       x: 0,
-      y: offsetY > 0 ? canvasHeight - height : 0,
+      y: offsetY > 0 ? canvasHeight - absOffsetY : 0,
       width: canvasWidth,
-      height,
+      height: absOffsetY,
     });
   }
   if (offsetX !== 0) {
-    const width = Math.max(MIN_OFFSET_RECT_SIZE, Math.abs(offsetX));
-    const absOffsetY = offsetY !== 0 ? Math.max(MIN_OFFSET_RECT_SIZE, Math.abs(offsetY)) : 0;
     rects.push({
-      x: offsetX > 0 ? canvasWidth - width : 0,
+      x: offsetX > 0 ? canvasWidth - absOffsetX : 0,
       y: offsetY > 0 ? 0 : absOffsetY,
-      width,
+      width: absOffsetX,
       height: canvasHeight - absOffsetY,
     });
   }
