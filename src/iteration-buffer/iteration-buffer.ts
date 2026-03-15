@@ -79,7 +79,7 @@ export const notifyIterationCacheUpdate = debounce(() => {
 /**
  * 以下の条件でもはや描画に使用できないiterationキャッシュを削除する
  *
- * 0. 現状存在する最も解像度が高いcache以外
+ * 0. 解像度比率が1に最も近いcache以外
  * 1. 完全に画面外にいる
  * 2. 小さすぎて描画に使えない
  * 3. でかすぎて描画に使えるピクセルが少ない
@@ -96,14 +96,14 @@ export const removeUnusedIterationCache = (): void => {
 
   const beforeCount = iterationCache.length;
 
-  // 現状存在する最大解像度以外のcacheは消す
-  const maxRes = iterationCache.reduce((prev, iterCache) => {
+  // 解像度比率が1に最も近いもの以外のcacheは消す
+  const targetRes = iterationCache.reduce((prev, iterCache) => {
     const res = iterCache.resolution.width / iterCache.rect.width;
-    return res > prev ? res : prev;
-  }, Number.MIN_VALUE);
+    return Math.abs(res - 1) < Math.abs(prev - 1) ? res : prev;
+  }, Number.MAX_VALUE);
   iterationCache = iterationCache.filter((iterCache) => {
     const res = iterCache.resolution.width / iterCache.rect.width;
-    return Math.abs(res - maxRes) < Number.EPSILON;
+    return Math.abs(res - targetRes) < Number.EPSILON;
   });
 
   iterationCache = iterationCache.filter((iterCache) => {
@@ -147,15 +147,15 @@ export const consolidateIterationCache = (canvasWidth?: number, canvasHeight?: n
       ? { width: canvasWidth, height: canvasHeight }
       : getCanvasSize();
 
-  // 最大解像度比率のキャッシュのみ対象
-  const maxRes = iterationCache.reduce((prev, ic) => {
+  // 解像度比率が1に最も近いキャッシュのみ対象
+  const targetRes = iterationCache.reduce((prev, ic) => {
     const res = ic.resolution.width / ic.rect.width;
-    return res > prev ? res : prev;
-  }, Number.MIN_VALUE);
+    return Math.abs(res - 1) < Math.abs(prev - 1) ? res : prev;
+  }, Number.MAX_VALUE);
 
   const targets = iterationCache.filter((ic) => {
     const res = ic.resolution.width / ic.rect.width;
-    return Math.abs(res - maxRes) < Number.EPSILON;
+    return Math.abs(res - targetRes) < Number.EPSILON;
   });
 
   if (targets.length <= 1) return;
