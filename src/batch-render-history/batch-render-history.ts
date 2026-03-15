@@ -13,7 +13,7 @@ export interface BatchRenderEntry {
   workers: WorkerRenderArea[];
 }
 
-const MAX_HISTORY = 5;
+const MAX_HISTORY = 10;
 
 const pendingBatches = new Map<string, WorkerRenderArea[]>();
 let history: BatchRenderEntry[] = [];
