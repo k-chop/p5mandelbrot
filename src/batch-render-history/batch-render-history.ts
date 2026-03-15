@@ -26,6 +26,11 @@ const notify = () => {
   subscribers.forEach((cb) => cb());
 };
 
+/**
+ * worker完了時に描画エリアを記録する
+ *
+ * バッチが進行中の間pendingBatchesに蓄積され、finalizeBatchで確定される
+ */
 export const recordWorkerResult = (
   batchId: string,
   workerId: string,
@@ -39,6 +44,11 @@ export const recordWorkerResult = (
   pendingBatches.get(batchId)!.push({ workerId, workerIdx, rect, elapsed });
 };
 
+/**
+ * バッチ完了時にpendingから履歴へ移動し、subscriberに通知する
+ *
+ * 履歴はMAX_HISTORY件を超えると古いものから削除される
+ */
 export const finalizeBatch = (batchId: string, startedAt: number): void => {
   const workers = pendingBatches.get(batchId);
   if (workers == null) return;
@@ -50,6 +60,9 @@ export const finalizeBatch = (batchId: string, startedAt: number): void => {
   notify();
 };
 
+/**
+ * useSyncExternalStore用のsubscribe関数
+ */
 export const subscribeToBatchRenderHistory = (callback: () => void): (() => void) => {
   subscribers.add(callback);
   return () => {
@@ -57,6 +70,11 @@ export const subscribeToBatchRenderHistory = (callback: () => void): (() => void
   };
 };
 
+/**
+ * useSyncExternalStore用のsnapshotを返す
+ *
+ * 未変化のときに参照が変わらないように取っておいたsnapshotを返す
+ */
 export const getBatchRenderHistorySnapshot = (): BatchRenderEntry[] => {
   return snapshot;
 };
