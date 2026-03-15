@@ -21,6 +21,12 @@ export type RealRect = {
   bottomRightY: BigNumber;
 };
 
+/**
+ * 分割数をなるべく正方形に近い縦横の分割数に分解する
+ *
+ * 因数ペア (i, j) を列挙し、差が最小の組み合わせを選ぶ。
+ * 例: 6 → 3×2, 16 → 4×4, 128 → 16×8
+ */
 export const calculateDivideArea = (
   divideCount: number,
 ): { longSideCount: number; shortSideCount: number } => {
