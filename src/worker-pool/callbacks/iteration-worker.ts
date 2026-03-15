@@ -1,3 +1,4 @@
+import { finalizeBatch, recordWorkerResult } from "@/batch-render-history/batch-render-history";
 import { addTraceEvent } from "@/event-viewer/event";
 import {
   consolidateIterationCache,
@@ -59,6 +60,8 @@ export const onIterationWorkerResult: IterationResultCallback = (result, job) =>
     elapsed: Math.floor(elapsed),
   });
 
+  recordWorkerResult(job.batchId, getWorkerId(job), job.workerIdx ?? 0, rect, elapsed);
+
   batchContext.onChangeProgress();
 
   addIterationBuffer(rect, [iterBuffer], isSuperSampled);
@@ -76,6 +79,8 @@ export const onIterationWorkerResult: IterationResultCallback = (result, job) =>
     const finishedAt = performance.now();
     batchContext.finishedAt = finishedAt;
     const elapsed = finishedAt - batchContext.startedAt;
+
+    finalizeBatch(job.batchId, batchContext.startedAt);
 
     batchContext.onComplete(elapsed);
   }
