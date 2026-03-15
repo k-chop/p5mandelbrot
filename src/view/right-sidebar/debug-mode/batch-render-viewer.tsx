@@ -171,7 +171,7 @@ export const BatchRenderViewer = () => {
       {history.length === 0 ? (
         <div className="text-muted-foreground text-sm italic">バッチ履歴はありません</div>
       ) : (
-        <div className="space-y-4">
+        <div className="flex flex-wrap gap-4">
           {history.map((entry, index) => (
             <div key={entry.batchId} className="space-y-2 rounded-lg border p-3">
               <div className="text-sm font-medium">
