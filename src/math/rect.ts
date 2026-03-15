@@ -2,7 +2,8 @@ import type BigNumber from "bignumber.js";
 import { getOffsetParams } from "../mandelbrot-state/mandelbrot-state";
 import type { OffsetParams } from "../types";
 
-const DIVIDE_MIN_SIZE = 80; // px
+/** workerに渡す領域の最低サイズ。あまり小さくすると計算がうまくいかないことがある */
+const DIVIDE_MIN_SIZE_PIXEL = 80;
 
 /** pixel単位の矩形 */
 export interface Rect {
@@ -50,7 +51,20 @@ export const calculateDivideArea = (
   };
 };
 
-export const divideRect = (rects: Rect[], expectedDivideCount: number, minSide = 1): Rect[] => {
+/**
+ * 描画したい領域を受け取り、各workerが計算を実行するため領域を返す
+ *
+ * 返される各領域は `minSide` で一辺の長さが保証されている。
+ * 極端に小さい領域だと計算に失敗してしまうことがあるため
+ * 長さを保証するために、画面外にはみ出したり他の領域と重なることを許容している
+ */
+export const calcTargetRectsFromOffsetRects = (
+  rects: Rect[],
+  expectedDivideCount: number,
+  _minSide = DIVIDE_MIN_SIZE_PIXEL,
+): Rect[] => {
+  const minSide = Math.max(_minSide, DIVIDE_MIN_SIZE_PIXEL);
+
   if (rects.length > expectedDivideCount) {
     throw new Error("rects.length > expectedDivideCount");
   }
@@ -153,9 +167,9 @@ export const getOffsetRects = (
 };
 
 /**
- * 描画対象のRectを計算する
+ * 描画対象のRectを計算して返す。外からは基本これを呼べばよい
  *
- * offsetがある場合は描画範囲を狭くできる
+ * 各workerへ渡すrectは最低保証サイズがあるため、画面外にはみだしたり他のrectと重なり得る。
  */
 export const getCalculationTargetRects = (
   canvasWidth: number,
@@ -164,18 +178,16 @@ export const getCalculationTargetRects = (
   offsetParams: OffsetParams,
 ) => {
   if (offsetParams.x !== 0 || offsetParams.y !== 0) {
+    // offsetがある(moveした)場合は動かした部分だけ描画すればよい
     const expectedDivideCount = Math.max(divideRectCount, 2);
-    return divideRect(
+    return calcTargetRectsFromOffsetRects(
       getOffsetRects(canvasWidth, canvasHeight),
       expectedDivideCount,
-      DIVIDE_MIN_SIZE,
     );
   } else {
-    // FIXME: 縮小する場合にもっと小さくできる
-    return divideRect(
+    return calcTargetRectsFromOffsetRects(
       [{ x: 0, y: 0, width: canvasWidth, height: canvasHeight }],
       divideRectCount,
-      DIVIDE_MIN_SIZE,
     );
   }
 };

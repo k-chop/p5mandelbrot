@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateDivideArea, divideRect, getOffsetRects } from "./rect";
+import { calcTargetRectsFromOffsetRects, calculateDivideArea, getOffsetRects } from "./rect";
 
 describe("calculateDivideArea", () => {
   it("16", () => {
@@ -62,7 +62,9 @@ describe("divideRect", () => {
       },
     ];
 
-    expect(() => divideRect(rects, 1, 100)).toThrow("rects.length > expectedDivideCount");
+    expect(() => calcTargetRectsFromOffsetRects(rects, 1, 100)).toThrow(
+      "rects.length > expectedDivideCount",
+    );
   });
 
   it("対象が1の場合の分割", () => {
@@ -75,7 +77,7 @@ describe("divideRect", () => {
       },
     ];
     // 端数20pxはminSide(100)未満なので手前のタイルに統合される
-    const result = divideRect(rects, 100, 100);
+    const result = calcTargetRectsFromOffsetRects(rects, 100, 100);
     const expected = [{ x: 0, y: 0, width: 100, height: 120 }];
     expect(expected).toEqual(result);
   });
@@ -97,7 +99,7 @@ describe("divideRect", () => {
     ];
     // 端数20pxはminSide(100)未満なので統合される
     // 2つ目のrectは50x50だがminSide=100に拡張される
-    const result = divideRect(rects, 100, 100);
+    const result = calcTargetRectsFromOffsetRects(rects, 100, 100);
     const expected = [
       { x: 0, y: 0, width: 100, height: 120 },
       { x: 100, y: 120, width: 100, height: 100 },
@@ -114,7 +116,7 @@ describe("divideRect", () => {
         height: 800,
       },
     ];
-    const result = divideRect(rects, 2, 100);
+    const result = calcTargetRectsFromOffsetRects(rects, 2, 100);
     const expected = [
       { x: 0, y: 0, width: 800, height: 400 },
       { x: 0, y: 400, width: 800, height: 400 },
@@ -137,7 +139,7 @@ describe("divideRect", () => {
         height: 300,
       },
     ];
-    const result = divideRect(rects, 2, 1);
+    const result = calcTargetRectsFromOffsetRects(rects, 2, 1);
     const expected = [
       {
         x: 0,
@@ -168,7 +170,7 @@ describe("divideRect", () => {
       },
     ];
     // 250 / 2 = 125, 端数なし
-    const result = divideRect(rects, 2, 80);
+    const result = calcTargetRectsFromOffsetRects(rects, 2, 80);
     for (const r of result) {
       expect(r.width).toBeGreaterThanOrEqual(80);
       expect(r.height).toBeGreaterThanOrEqual(80);
@@ -179,7 +181,7 @@ describe("divideRect", () => {
     // 幅180pxをminSide=80で2分割しようとすると sideX=90
     // 残り90px >= minSide なので統合されない → 90, 90
     const rects = [{ x: 0, y: 0, width: 180, height: 100 }];
-    const result = divideRect(rects, 2, 80);
+    const result = calcTargetRectsFromOffsetRects(rects, 2, 80);
     expect(result).toEqual([
       { x: 0, y: 0, width: 90, height: 100 },
       { x: 90, y: 0, width: 90, height: 100 },
@@ -196,14 +198,14 @@ describe("divideRect", () => {
     // 幅150pxをminSide=80で2分割: sideX=75→minSideで80に
     // 残り70px < minSide → 統合 → 150px 1タイル
     const rects = [{ x: 0, y: 0, width: 150, height: 100 }];
-    const result = divideRect(rects, 2, 80);
+    const result = calcTargetRectsFromOffsetRects(rects, 2, 80);
     expect(result).toEqual([{ x: 0, y: 0, width: 150, height: 100 }]);
   });
 
   it("入力rectの辺がminSide未満の場合にminSideに拡張される", () => {
     // 高さ9pxのrectはminSide=80に拡張される
     const rects = [{ x: 0, y: 591, width: 800, height: 9 }];
-    const result = divideRect(rects, 2, 80);
+    const result = calcTargetRectsFromOffsetRects(rects, 2, 80);
     for (const r of result) {
       expect(r.width).toBeGreaterThanOrEqual(80);
       expect(r.height).toBeGreaterThanOrEqual(80);
@@ -215,7 +217,7 @@ describe("divideRect", () => {
 
   it("入力rectの両辺がminSide未満の場合に両方拡張される", () => {
     const rects = [{ x: 750, y: 550, width: 30, height: 20 }];
-    const result = divideRect(rects, 1, 80);
+    const result = calcTargetRectsFromOffsetRects(rects, 1, 80);
     expect(result).toEqual([{ x: 750, y: 550, width: 80, height: 80 }]);
   });
 
@@ -234,7 +236,7 @@ describe("divideRect", () => {
         height: 300,
       },
     ];
-    const result = divideRect(rects, 6, 10);
+    const result = calcTargetRectsFromOffsetRects(rects, 6, 10);
     const expected = [
       {
         x: 0,
