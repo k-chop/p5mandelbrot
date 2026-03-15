@@ -23,6 +23,9 @@ const baseToPresetId = new Map<string, string>(
   Array.from(presetIdToBase).map(([id, base]) => [base, id]),
 );
 
+/**
+ * シリアライズされたパレット文字列からプリセット判定に使うベース識別子を抽出する
+ */
 const extractBaseIdentifier = (serialized: string): string => {
   const parts = serialized.split(",");
   const type = parts[0];
@@ -40,6 +43,12 @@ const extractBaseIdentifier = (serialized: string): string => {
   }
 };
 
+/**
+ * PaletteをURL用の短縮文字列にエンコードする
+ *
+ * プリセットに該当する場合は短いID表記（例: "A.1.256.0"）に変換し、
+ * それ以外はシリアライズ文字列をそのまま返す
+ */
 export const encodePalette = (palette: Palette): string => {
   const serialized = palette.serialize();
   const base = extractBaseIdentifier(serialized);
@@ -56,6 +65,12 @@ export const encodePalette = (palette: Palette): string => {
   return `${presetId}.${mirrored}.${length}.${offset}`;
 };
 
+/**
+ * エンコードされた文字列からPaletteを復元する
+ *
+ * プリセットID表記（例: "A.1.256.0"）の場合はベース文字列に展開してからデシリアライズし、
+ * それ以外はそのままデシリアライズする
+ */
 export const decodePalette = (encoded: string): Palette => {
   const firstChar = encoded.charAt(0);
 

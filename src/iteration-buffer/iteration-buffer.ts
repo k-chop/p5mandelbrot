@@ -12,6 +12,11 @@ let iterationCacheSnapshot: IterationBuffer[] = [];
 // Subscription system for iteration cache updates
 const subscribers: Set<() => void> = new Set();
 
+/**
+ * iterationキャッシュにrectを追加、または同じ位置の既存エントリをより高解像度のもので更新する
+ *
+ * isSuperSampledがtrueの場合はキャッシュに積まずアイテムをそのまま返す
+ */
 export const upsertIterationCache = (
   rect: Rect,
   buffer: Uint32Array<ArrayBuffer>,
@@ -258,6 +263,9 @@ export const sampleIterationsInRegion = (
   return samples;
 };
 
+/**
+ * iterationキャッシュ内の全rectを指定オフセット分だけ平行移動する
+ */
 export const translateRectInIterationCache = (offsetX: number, offsetY: number): void => {
   iterationCache = iterationCache.map((iteration) => {
     return {
