@@ -147,7 +147,6 @@ const BatchMinimap = ({ entry, index }: { entry: BatchRenderEntry; index: number
         )}
       </div>
 
-      {/* 凡例 */}
       <div className="flex flex-wrap gap-2 text-xs">
         <div className="flex items-center gap-1">
           <div className="h-3 w-3 border-2 border-dashed" style={{ borderColor: "#ef4444" }} />
@@ -155,15 +154,6 @@ const BatchMinimap = ({ entry, index }: { entry: BatchRenderEntry; index: number
             Canvas ({canvasSize.width}×{canvasSize.height})
           </span>
         </div>
-        {uniqueWorkerIdxs.map((workerIdx) => {
-          const color = WORKER_COLORS[workerIdx % WORKER_COLORS.length];
-          return (
-            <div key={workerIdx} className="flex items-center gap-1">
-              <div className="h-3 w-3 border" style={{ backgroundColor: color, opacity: 0.6 }} />
-              <span>iteration-{workerIdx}</span>
-            </div>
-          );
-        })}
       </div>
     </div>
   );
