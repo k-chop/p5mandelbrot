@@ -46,6 +46,6 @@ export const POICardPreview = React.memo(({ poi }: Props) => {
     return <div className="flex size-25 items-center justify-center border-2">No Image</div>;
   }
 
-  return <img src={data} />;
+  return <img src={data} className="size-25 object-cover" />;
 });
 POICardPreview.displayName = "POICardPreview";

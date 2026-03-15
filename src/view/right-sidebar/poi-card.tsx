@@ -55,9 +55,9 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
   return (
     <Card className={`p-2 ${isInSamePlace ? "ring-2 ring-primary/50" : ""}`}>
       <div className="flex">
-        <div className="group relative cursor-pointer" onClick={handleThumbnailClick}>
+        <div className="group relative size-25 cursor-pointer" onClick={handleThumbnailClick}>
           <POICardPreview poi={poi} />
-          <div className="absolute inset-0 flex items-center justify-center rounded bg-black/70 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="absolute inset-0 flex items-center justify-center rounded bg-black/70 text-xs text-center font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
             {overlayText}
           </div>
         </div>
