@@ -16,6 +16,7 @@ import { clamp } from "@/math/util";
 import { getStore } from "@/store/store";
 import { PERTURBATION_THRESHOLD } from "@/utils/palette-encoding";
 import type p5 from "p5";
+import type { InterestingPoint } from "../interesting-points/find-interesting-points";
 import type { Rect } from "../math/rect";
 import type { IterationBuffer } from "../types";
 import { type MandelbrotParams } from "../types";
@@ -225,6 +226,39 @@ export const drawUIIterationAtCursor = (p: p5, iteration: string | number) => {
   p.textSize(14);
 
   p.text(`iteration: ${iteration}`, p.width - 2, 2);
+};
+
+/** マーカーの基本半径 */
+const MARKER_BASE_RADIUS = 6;
+/** マーカーの最大半径 */
+const MARKER_MAX_RADIUS = 14;
+
+/**
+ * 興味深いポイントをcanvas上にマーカーとして描画する
+ *
+ * スコアに応じてサイズ変動し、白ストローク＋黒の影で視認性を確保する。
+ */
+export const drawUIInterestingPoints = (p: p5, points: InterestingPoint[]): void => {
+  if (points.length === 0) return;
+
+  const maxScore = points[0].score;
+
+  p.noFill();
+
+  for (const point of points) {
+    const ratio = maxScore > 0 ? point.score / maxScore : 0;
+    const radius = MARKER_BASE_RADIUS + (MARKER_MAX_RADIUS - MARKER_BASE_RADIUS) * ratio;
+
+    // 黒の影（太め）
+    p.stroke(0, 0, 0, 60);
+    p.strokeWeight(3);
+    p.circle(point.x, point.y, radius * 2);
+
+    // 白のリング
+    p.stroke(0, 0, 100);
+    p.strokeWeight(1.5);
+    p.circle(point.x, point.y, radius * 2);
+  }
 };
 
 /**
