@@ -87,6 +87,45 @@ export const calcBoundaryProximity = (
   return 1 / (1 + searchRadius);
 };
 
+/** ミニブロットスコアのブースト倍率 */
+const MINIBROT_WEIGHT = 5;
+
+/**
+ * ピーク座標の周囲にあるN点の孤立度からミニブロットらしさを算出する
+ *
+ * searchRadius内にN点が存在し、かつその密度が低い（孤立した小クラスタ）ほど高スコア。
+ * ミニブロット（集合の小さな島）の近くでは高い値、大きな連続境界の近くでは低い値を返す。
+ */
+export const calcMinibrotScore = (
+  buffer: Uint32Array,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  maxIteration: number,
+  searchRadius: number = DEFAULT_SEARCH_RADIUS,
+): number => {
+  let nCount = 0;
+  let totalCount = 0;
+
+  for (let dy = -searchRadius; dy <= searchRadius; dy++) {
+    for (let dx = -searchRadius; dx <= searchRadius; dx++) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+
+      totalCount++;
+      if (buffer[ny * width + nx] === maxIteration) {
+        nCount++;
+      }
+    }
+  }
+
+  if (nCount === 0) return 0;
+
+  return 1 - nCount / totalCount;
+};
+
 /**
  * ブロック内のiteration値の多様性（局所エントロピー）を算出する
  *
@@ -203,9 +242,10 @@ export const findInterestingPoints = (
 
       const gradient = calcGradientMagnitude(buffer, peak.x, peak.y, width, height, maxIteration);
       const proximity = calcBoundaryProximity(buffer, peak.x, peak.y, width, height, maxIteration);
+      const minibrot = calcMinibrotScore(buffer, peak.x, peak.y, width, height, maxIteration);
       const entropy = calcLocalEntropy(buffer, bx, by, blockSize, width, height, maxIteration);
 
-      const score = proximity * entropy * gradient;
+      const score = proximity * (1 + minibrot * MINIBROT_WEIGHT) * entropy * gradient;
       if (score > 0) {
         candidates.push({
           x: peak.x,

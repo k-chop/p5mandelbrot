@@ -11,7 +11,7 @@ iterationBuffer (Uint32Array, width×height)
   ↓
 2. 各ブロックからピーク候補を1つ選出 (findBlockPeak)
   ↓
-3. 各候補に3つの因子からスコアを計算
+3. 各候補に4つの因子からスコアを計算
   ↓
 4. スコア上位K件を返す
 ```
@@ -19,10 +19,13 @@ iterationBuffer (Uint32Array, width×height)
 ## スコア式
 
 ```
-score = boundaryProximity × localEntropy × gradientMagnitude
+score = boundaryProximity × (1 + minibrotScore × MINIBROT_WEIGHT) × localEntropy × gradientMagnitude
 ```
 
-3つの因子はそれぞれ異なる「面白さ」の側面を捉える。
+- `MINIBROT_WEIGHT = 5`（ミニブロット近傍へのブースト倍率）
+- ミニブロットがない場合は `(1 + 0) = 1` で他の因子のみで評価される
+
+4つの因子はそれぞれ異なる「面白さ」の側面を捉える。
 
 ### boundaryProximity（集合境界への近さ）
 
@@ -34,6 +37,17 @@ score = boundaryProximity × localEntropy × gradientMagnitude
 - 見つからない場合: `1 / (1 + searchRadius)`（フォールバック）
 
 **なぜ必要か:** `iteration === N` は集合の内部（黒い領域）。その境界付近は無限に複雑な構造があるため、拡大すると必ず面白い。境界から遠い点は単調な色の繰り返しになりがち。
+
+### minibrotScore（ミニブロットの孤立度）
+
+`calcMinibrotScore(buffer, x, y, width, height, maxIteration, searchRadius)`
+
+- ピーク座標の周囲 `searchRadius` 内のN点の数と全ピクセル数をカウント
+- N点が0個なら0（ミニブロットなし、ブーストなし）
+- N点があれば `1 - (nCount / totalPixels)` を返す
+- 範囲: 0〜1（N点が少ないほど1に近い）
+
+**なぜ必要か:** ミニブロットは集合の小さな「島」で、拡大するとマンデルブロ集合の完全なコピーが現れる。N点の密度が低い（孤立した小クラスタ）ほどミニブロットである可能性が高い。一方、大きな連続境界の近くではN点の密度が高く、拡大しても似たパターンの繰り返しになりやすい。
 
 ### localEntropy（局所的な複雑さ）
 
@@ -67,22 +81,24 @@ score = boundaryProximity × localEntropy × gradientMagnitude
 
 ## デフォルトパラメータ
 
-| パラメータ | デフォルト値 | 説明 |
-|---|---|---|
-| `blockSize` | 32 | グリッドブロックサイズ（px） |
-| `topK` | 5 | 返す最大ポイント数 |
-| `minIteration` | 10 | ピーク候補の最低iteration閾値 |
-| `searchRadius` | 16 | 境界近接性の探索半径（px） |
+| パラメータ        | デフォルト値 | 説明                                         |
+| ----------------- | ------------ | -------------------------------------------- |
+| `blockSize`       | 32           | グリッドブロックサイズ（px）                 |
+| `topK`            | 5            | 返す最大ポイント数                           |
+| `minIteration`    | 10           | ピーク候補の最低iteration閾値                |
+| `searchRadius`    | 16           | 境界近接性・ミニブロット検出の探索半径（px） |
+| `MINIBROT_WEIGHT` | 5            | ミニブロットスコアのブースト倍率（定数）     |
 
 ## パフォーマンス特性
 
 - 1920×1080、blockSize=32 → 約2000ブロック
 - findBlockPeak: 各ブロック最大1024px走査
 - calcBoundaryProximity: ピーク候補のみ。最悪ケースでsearchRadius²だが、early returnで通常は数px
+- calcMinibrotScore: ピーク候補のみ。searchRadius=16で最大33×33=1089ピクセル走査
 - calcLocalEntropy: findBlockPeakと同じブロックを走査（Set使用）
 - バッチ計算完了時に1回だけ実行。描画ループには影響しない
 
 ## 既知の課題
 
 - 画面全体が集合の境界付近にある場面（深いズーム時）では、boundaryProximityがどのポイントでも高くなり差がつきにくい
-- ミニブロット（集合内部の小さな島）の検出には特化していない
+- minibrotScoreは密度ベースのヒューリスティクスであり、連結成分解析のような厳密なミニブロット判定ではない

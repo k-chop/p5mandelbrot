@@ -3,6 +3,7 @@ import {
   calcBoundaryProximity,
   calcGradientMagnitude,
   calcLocalEntropy,
+  calcMinibrotScore,
   findBlockPeak,
   findInterestingPoints,
 } from "./find-interesting-points";
@@ -157,6 +158,36 @@ describe("findInterestingPoints", () => {
     // 境界に近いブロック(0,0)が先に来る
     expect(result[0].x).toBe(2);
     expect(result[0].y).toBe(2);
+    expect(result[0].score).toBeGreaterThan(result[1].score);
+  });
+
+  it("ミニブロット近傍のポイントが大きな連続境界近傍より優先される", () => {
+    const N = 1000;
+    const width = 32;
+    const height = 16;
+    const buffer = new Uint32Array(width * height).fill(50);
+
+    // 左ブロック(0,0): 大きな連続境界（上辺がすべてN）
+    for (let x = 0; x < 16; x++) {
+      buffer[0 * width + x] = N;
+      buffer[1 * width + x] = N;
+    }
+    buffer[4 * width + 4] = 200;
+
+    // 右ブロック(16,0): ミニブロット（N点が2個だけ）
+    buffer[2 * width + 20] = N;
+    buffer[3 * width + 20] = N;
+    buffer[4 * width + 20] = 200;
+
+    const result = findInterestingPoints(buffer, width, height, N, {
+      blockSize: 16,
+      topK: 2,
+      minIteration: 5,
+    });
+
+    expect(result.length).toBeGreaterThanOrEqual(2);
+    // ミニブロット側（右ブロック）が先に来る
+    expect(result[0].x).toBe(20);
     expect(result[0].score).toBeGreaterThan(result[1].score);
   });
 
@@ -317,6 +348,77 @@ describe("calcLocalEntropy", () => {
     const result = calcLocalEntropy(buffer, 0, 0, 4, width, height, N);
 
     expect(result).toBe(0);
+  });
+});
+
+describe("calcMinibrotScore", () => {
+  it("周囲にN点がなければ0", () => {
+    const N = 100;
+    const width = 8;
+    const height = 8;
+    const buffer = new Uint32Array(width * height).fill(50);
+
+    const result = calcMinibrotScore(buffer, 4, 4, width, height, N, 3);
+
+    expect(result).toBe(0);
+  });
+
+  it("少数のN点（ミニブロット）なら高スコア", () => {
+    const N = 100;
+    const width = 32;
+    const height = 32;
+    const buffer = new Uint32Array(width * height).fill(50);
+    // (16,16)の近くに小さなN点クラスタ（ミニブロット）
+    buffer[15 * width + 16] = N;
+    buffer[16 * width + 16] = N;
+    buffer[16 * width + 17] = N;
+
+    const result = calcMinibrotScore(buffer, 14, 14, width, height, N, 8);
+
+    // N点が3個、searchRadius=8なら全体17*17=289ピクセル中3個 → density低い → 高スコア
+    expect(result).toBeGreaterThan(0.9);
+  });
+
+  it("大量のN点（大きな連続境界）なら低スコア", () => {
+    const N = 100;
+    const width = 32;
+    const height = 32;
+    const buffer = new Uint32Array(width * height).fill(50);
+    // 上半分をすべてNに（大きな連続境界）
+    for (let y = 0; y < 16; y++) {
+      for (let x = 0; x < 32; x++) {
+        buffer[y * width + x] = N;
+      }
+    }
+
+    // 境界付近のピクセルで計測
+    const result = calcMinibrotScore(buffer, 16, 16, width, height, N, 8);
+
+    expect(result).toBeLessThan(0.6);
+  });
+
+  it("ミニブロットの方が大きな境界よりスコアが高い", () => {
+    const N = 100;
+    const width = 32;
+    const height = 32;
+
+    // ミニブロット盤面: 少数のN点
+    const bufferMini = new Uint32Array(width * height).fill(50);
+    bufferMini[15 * width + 15] = N;
+    bufferMini[15 * width + 16] = N;
+
+    // 大境界盤面: 大量のN点
+    const bufferLarge = new Uint32Array(width * height).fill(50);
+    for (let y = 10; y < 20; y++) {
+      for (let x = 10; x < 20; x++) {
+        bufferLarge[y * width + x] = N;
+      }
+    }
+
+    const miniScore = calcMinibrotScore(bufferMini, 14, 14, width, height, N, 8);
+    const largeScore = calcMinibrotScore(bufferLarge, 14, 14, width, height, N, 8);
+
+    expect(miniScore).toBeGreaterThan(largeScore);
   });
 });
 
