@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  calcBoundaryProximity,
   calcGradientMagnitude,
+  calcLocalEntropy,
   findBlockPeak,
   findInterestingPoints,
 } from "./find-interesting-points";
@@ -97,21 +99,21 @@ describe("findInterestingPoints", () => {
     expect(result[0].score).toBeGreaterThan(0);
   });
 
-  it("同iteration値でも勾配が大きい点が優先される", () => {
+  it("エントロピー・境界近接性が同等なら勾配が大きい点が優先される", () => {
     const N = 1000;
     const width = 16;
     const height = 8;
     const buffer = new Uint32Array(width * height).fill(50);
 
+    // 両ブロックにN点を配置して境界近接性を同等にする
+    buffer[0 * width + 0] = N;
+    buffer[0 * width + 8] = N;
+
     // ブロック(0,0): iteration=200、周囲は全部50 → 大きい勾配
     buffer[2 * width + 2] = 200;
 
-    // ブロック(8,0): iteration=200、周囲も近い値 → 小さい勾配
-    buffer[2 * width + 10] = 200;
-    buffer[2 * width + 9] = 190;
-    buffer[2 * width + 11] = 195;
-    buffer[1 * width + 10] = 185;
-    buffer[3 * width + 10] = 192;
+    // ブロック(8,0): iteration=120、周囲は全部50 → 小さい勾配
+    buffer[2 * width + 10] = 120;
 
     const result = findInterestingPoints(buffer, width, height, N, {
       blockSize: 8,
@@ -128,6 +130,34 @@ describe("findInterestingPoints", () => {
     expect(second.x).toBe(10);
     expect(second.y).toBe(2);
     expect(first.score).toBeGreaterThan(second.score);
+  });
+
+  it("集合境界に近い点が境界から遠い点より優先される", () => {
+    const N = 1000;
+    const width = 16;
+    const height = 8;
+    const buffer = new Uint32Array(width * height).fill(50);
+
+    // 両ブロックとも同じ勾配・エントロピー条件にするため同じiteration値のピークを配置
+    buffer[2 * width + 2] = 200;
+    buffer[2 * width + 10] = 200;
+
+    // ブロック(0,0): 近くにN点がある → 境界に近い
+    buffer[0 * width + 0] = N;
+
+    // ブロック(8,0): N点が遠い（searchRadius外）
+
+    const result = findInterestingPoints(buffer, width, height, N, {
+      blockSize: 8,
+      topK: 5,
+      minIteration: 5,
+    });
+
+    expect(result.length).toBeGreaterThanOrEqual(2);
+    // 境界に近いブロック(0,0)が先に来る
+    expect(result[0].x).toBe(2);
+    expect(result[0].y).toBe(2);
+    expect(result[0].score).toBeGreaterThan(result[1].score);
   });
 
   it("minIteration未満のピクセルは無視される", () => {
@@ -188,6 +218,103 @@ describe("calcGradientMagnitude", () => {
     buffer[1 * width + 1] = 0;
 
     const result = calcGradientMagnitude(buffer, 1, 1, width, height, 100);
+
+    expect(result).toBe(0);
+  });
+});
+
+describe("calcBoundaryProximity", () => {
+  it("N点が隣接していれば高スコア", () => {
+    const N = 100;
+    const width = 8;
+    const height = 8;
+    const buffer = new Uint32Array(width * height).fill(50);
+    // (3,3)の隣(4,3)にN点
+    buffer[3 * width + 4] = N;
+
+    const result = calcBoundaryProximity(buffer, 3, 3, width, height, N);
+
+    // 距離1 → 1/(1+1) = 0.5
+    expect(result).toBe(0.5);
+  });
+
+  it("N点が遠いと低スコア", () => {
+    const N = 100;
+    const width = 16;
+    const height = 16;
+    const buffer = new Uint32Array(width * height).fill(50);
+    // (13,3)にN点 → (3,3)から距離10
+    buffer[3 * width + 13] = N;
+
+    const result = calcBoundaryProximity(buffer, 3, 3, width, height, N);
+
+    // 距離10 → 1/(1+10)
+    expect(result).toBeCloseTo(1 / 11);
+  });
+
+  it("searchRadius内にN点がなければフォールバック値", () => {
+    const N = 100;
+    const width = 8;
+    const height = 8;
+    const buffer = new Uint32Array(width * height).fill(50);
+
+    const searchRadius = 16;
+    const result = calcBoundaryProximity(buffer, 3, 3, width, height, N, searchRadius);
+
+    expect(result).toBeCloseTo(1 / (1 + searchRadius));
+  });
+});
+
+describe("calcLocalEntropy", () => {
+  it("全ピクセルが同じ値なら低エントロピー", () => {
+    const N = 100;
+    const width = 8;
+    const height = 8;
+    const buffer = new Uint32Array(width * height).fill(50);
+
+    const result = calcLocalEntropy(buffer, 0, 0, 4, width, height, N);
+
+    // 16ピクセル全て50 → unique=1, valid=16 → 1/16
+    expect(result).toBeCloseTo(1 / 16);
+  });
+
+  it("多様な値があれば高エントロピー", () => {
+    const N = 100;
+    const width = 4;
+    const height = 4;
+    const buffer = new Uint32Array(width * height);
+    // 全ピクセルに異なる値を設定
+    for (let i = 0; i < width * height; i++) {
+      buffer[i] = i + 1; // 1~16
+    }
+
+    const result = calcLocalEntropy(buffer, 0, 0, 4, width, height, N);
+
+    // 16ピクセル全て異なる → unique=16, valid=16 → 1.0
+    expect(result).toBe(1);
+  });
+
+  it("0とNは有効ピクセルに含まれない", () => {
+    const N = 100;
+    const width = 4;
+    const height = 4;
+    const buffer = new Uint32Array(width * height).fill(50);
+    buffer[0] = 0;
+    buffer[1] = N;
+
+    const result = calcLocalEntropy(buffer, 0, 0, 4, width, height, N);
+
+    // 14ピクセルが50 → unique=1, valid=14 → 1/14
+    expect(result).toBeCloseTo(1 / 14);
+  });
+
+  it("有効ピクセルがなければ0", () => {
+    const N = 100;
+    const width = 4;
+    const height = 4;
+    const buffer = new Uint32Array(width * height).fill(N);
+
+    const result = calcLocalEntropy(buffer, 0, 0, 4, width, height, N);
 
     expect(result).toBe(0);
   });

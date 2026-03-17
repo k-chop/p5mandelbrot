@@ -51,6 +51,78 @@ export const calcGradientMagnitude = (
   return Math.sqrt(sumSq);
 };
 
+const DEFAULT_SEARCH_RADIUS = 16;
+
+/**
+ * 指定座標から最も近いiteration===maxIterationのピクセルまでの距離に基づくスコアを算出する
+ *
+ * 集合の境界に近いほど高い値を返す。
+ * 見つかれば `1 / (1 + distance)`、searchRadius内に無ければ `1 / (1 + searchRadius)`。
+ */
+export const calcBoundaryProximity = (
+  buffer: Uint32Array,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  maxIteration: number,
+  searchRadius: number = DEFAULT_SEARCH_RADIUS,
+): number => {
+  for (let d = 1; d <= searchRadius; d++) {
+    for (let dy = -d; dy <= d; dy++) {
+      for (let dx = -d; dx <= d; dx++) {
+        if (Math.abs(dx) !== d && Math.abs(dy) !== d) continue;
+
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+
+        if (buffer[ny * width + nx] === maxIteration) {
+          return 1 / (1 + d);
+        }
+      }
+    }
+  }
+
+  return 1 / (1 + searchRadius);
+};
+
+/**
+ * ブロック内のiteration値の多様性（局所エントロピー）を算出する
+ *
+ * ユニークなiteration値の数 / 有効ピクセル数で正規化。
+ * 多様な値が混在する複雑な領域ほど高い値を返す。
+ */
+export const calcLocalEntropy = (
+  buffer: Uint32Array,
+  bx: number,
+  by: number,
+  blockSize: number,
+  width: number,
+  height: number,
+  maxIteration: number,
+): number => {
+  const uniqueValues = new Set<number>();
+  let validCount = 0;
+
+  const endX = Math.min(bx + blockSize, width);
+  const endY = Math.min(by + blockSize, height);
+
+  for (let py = by; py < endY; py++) {
+    for (let px = bx; px < endX; px++) {
+      const iter = buffer[py * width + px];
+      if (iter === 0 || iter === maxIteration) continue;
+
+      uniqueValues.add(iter);
+      validCount++;
+    }
+  }
+
+  if (validCount === 0) return 0;
+
+  return uniqueValues.size / validCount;
+};
+
 interface BlockPeak {
   x: number;
   y: number;
@@ -130,8 +202,10 @@ export const findInterestingPoints = (
       if (!peak) continue;
 
       const gradient = calcGradientMagnitude(buffer, peak.x, peak.y, width, height, maxIteration);
+      const proximity = calcBoundaryProximity(buffer, peak.x, peak.y, width, height, maxIteration);
+      const entropy = calcLocalEntropy(buffer, bx, by, blockSize, width, height, maxIteration);
 
-      const score = (peak.iteration / maxIteration) * gradient;
+      const score = proximity * entropy * gradient;
       if (score > 0) {
         candidates.push({
           x: peak.x,
