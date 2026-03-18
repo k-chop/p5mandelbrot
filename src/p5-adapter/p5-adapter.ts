@@ -654,16 +654,20 @@ export const p5Draw = (p: p5) => {
 
   drawUICurrentParams(p, getCurrentParams(), getAutoIterationEnabled());
   drawUIIterationAtCursor(p, getStore("iteration"));
-  const hoveredPoint =
-    draggingMode === undefined
-      ? findHitInterestingPoint(p.mouseX, p.mouseY, currentInterestingPoints)
-      : null;
-  if (hoveredPoint) {
-    changeCursor(p, "pointer");
+  if (getStore("showInterestingPoints")) {
+    const hoveredPoint =
+      draggingMode === undefined
+        ? findHitInterestingPoint(p.mouseX, p.mouseY, currentInterestingPoints)
+        : null;
+    if (hoveredPoint) {
+      changeCursor(p, "pointer");
+    } else if (draggingMode === undefined) {
+      changeCursor(p, p.CROSS);
+    }
+    drawUIInterestingPoints(p, currentInterestingPoints, hoveredPoint);
   } else if (draggingMode === undefined) {
     changeCursor(p, p.CROSS);
   }
-  drawUIInterestingPoints(p, currentInterestingPoints, hoveredPoint);
 
   if (shouldSavePOIHistoryNextRender) {
     shouldSavePOIHistoryNextRender = false;
@@ -685,12 +689,16 @@ export const p5Draw = (p: p5) => {
           shouldSavePOIHistoryNextRender = true;
 
           // 興味深いポイントを検出する
-          const { width: cw, height: ch } = getCanvasSize();
-          consolidateIterationCache(cw, ch);
-          const cache = getIterationCache();
-          if (cache.length > 0 && cache[0].buffer.length === cw * ch) {
-            const params = getCurrentParams();
-            currentInterestingPoints = findInterestingPoints(cache[0].buffer, cw, ch, params.N);
+          if (getStore("showInterestingPoints")) {
+            const { width: cw, height: ch } = getCanvasSize();
+            consolidateIterationCache(cw, ch);
+            const cache = getIterationCache();
+            if (cache.length > 0 && cache[0].buffer.length === cw * ch) {
+              const params = getCurrentParams();
+              currentInterestingPoints = findInterestingPoints(cache[0].buffer, cw, ch, params.N);
+            } else {
+              currentInterestingPoints = [];
+            }
           } else {
             currentInterestingPoints = [];
           }

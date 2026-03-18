@@ -53,6 +53,8 @@ type Store = {
   rendererType: "webgpu" | "p5js";
   /** Debug Mode中か否か */
   isDebugMode: boolean;
+  /** 興味深いポイントマーカーを表示するか */
+  showInterestingPoints: boolean;
 };
 
 const store: Store = {
@@ -89,6 +91,7 @@ const store: Store = {
   progress: "",
   rendererType: "p5js",
   isDebugMode: false,
+  showInterestingPoints: false,
 };
 
 const event = eventmit<string>();
