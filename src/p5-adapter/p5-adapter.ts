@@ -258,6 +258,7 @@ export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
 
   draggingMode = state;
   changeCursor(p, state === "move" ? "grabbing" : "zoom-in");
+  currentInterestingPoints = [];
 
   mouseDragged = true;
   isTranslatingMainBuffer = true;
@@ -509,6 +510,7 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
   } else {
     // クリック時 — マーカー範囲内ならそのポイントを中心にズーム
     const hitPoint = findHitInterestingPoint(p.mouseX, p.mouseY, currentInterestingPoints);
+    currentInterestingPoints = [];
     if (hitPoint) {
       scaleTo(getStore("zoomRate"), { x: hitPoint.x, y: hitPoint.y });
     } else {
