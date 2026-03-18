@@ -238,7 +238,11 @@ const MARKER_MAX_RADIUS = 14;
  *
  * スコアに応じてサイズ変動し、白ストローク＋黒の影で視認性を確保する。
  */
-export const drawUIInterestingPoints = (p: p5, points: InterestingPoint[]): void => {
+export const drawUIInterestingPoints = (
+  p: p5,
+  points: InterestingPoint[],
+  hoveredPoint: InterestingPoint | null,
+): void => {
   if (points.length === 0) return;
 
   const maxScore = points[0].score;
@@ -248,16 +252,22 @@ export const drawUIInterestingPoints = (p: p5, points: InterestingPoint[]): void
   for (const point of points) {
     const ratio = maxScore > 0 ? point.score / maxScore : 0;
     const radius = MARKER_BASE_RADIUS + (MARKER_MAX_RADIUS - MARKER_BASE_RADIUS) * ratio;
+    const isHovered = point === hoveredPoint;
 
     // 黒の影（太め）
     p.stroke(0, 0, 0, 60);
-    p.strokeWeight(3);
-    p.circle(point.x, point.y, radius * 2);
+    p.strokeWeight(isHovered ? 4 : 3);
+    p.circle(point.x, point.y, (isHovered ? radius + 2 : radius) * 2);
 
-    // 白のリング
-    p.stroke(0, 0, 100);
-    p.strokeWeight(1.5);
-    p.circle(point.x, point.y, radius * 2);
+    // リング（ホバー時はシアン、通常は白）
+    if (isHovered) {
+      p.stroke(0, 200, 255);
+      p.strokeWeight(2.5);
+    } else {
+      p.stroke(0, 0, 100);
+      p.strokeWeight(1.5);
+    }
+    p.circle(point.x, point.y, (isHovered ? radius + 2 : radius) * 2);
   }
 };
 

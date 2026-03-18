@@ -652,7 +652,16 @@ export const p5Draw = (p: p5) => {
 
   drawUICurrentParams(p, getCurrentParams(), getAutoIterationEnabled());
   drawUIIterationAtCursor(p, getStore("iteration"));
-  drawUIInterestingPoints(p, currentInterestingPoints);
+  const hoveredPoint =
+    draggingMode === undefined
+      ? findHitInterestingPoint(p.mouseX, p.mouseY, currentInterestingPoints)
+      : null;
+  if (hoveredPoint) {
+    changeCursor(p, "pointer");
+  } else if (draggingMode === undefined) {
+    changeCursor(p, p.CROSS);
+  }
+  drawUIInterestingPoints(p, currentInterestingPoints, hoveredPoint);
 
   if (shouldSavePOIHistoryNextRender) {
     shouldSavePOIHistoryNextRender = false;
