@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@radix-ui/colors": "3.0.0",
-    "@tailwindcss/vite": "4.2.1",
+    "@tailwindcss/vite": "4.2.2",
     "@types/chroma-js": "3.1.2",
     "@types/culori": "4.0.1",
     "@types/d3-color": "3.1.3",
