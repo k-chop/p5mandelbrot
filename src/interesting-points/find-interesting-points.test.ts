@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   calcGradientMagnitude,
   calcLocalEntropy,
+  calcRotationalSymmetry,
   findBlockPeak,
   findCandidatesAtScale,
   findInterestingPoints,
   mergeCandidatesAcrossScales,
+  mergeProximityCandidates,
 } from "./find-interesting-points";
 
 describe("findInterestingPoints", () => {
@@ -364,14 +366,17 @@ describe("findInterestingPoints マルチスケール", () => {
     expect(multiScale[0].score).toBeGreaterThan(singleScale[0].score);
   });
 
-  it("デフォルト（オプションなし）はマルチスケールで動作する", () => {
+  it("scoring: 'entropy-gradient' + scales指定でマルチスケールで動作する", () => {
     const N = 1000;
     const width = 128;
     const height = 128;
     const buffer = new Uint32Array(width * height).fill(10);
     buffer[32 * width + 32] = 500;
 
-    const result = findInterestingPoints(buffer, width, height, N);
+    const result = findInterestingPoints(buffer, width, height, N, {
+      scoring: "entropy-gradient",
+      scales: [64, 32, 16],
+    });
 
     expect(result.length).toBeGreaterThanOrEqual(1);
   });
@@ -413,5 +418,213 @@ describe("findBlockPeak", () => {
     const result = findBlockPeak(buffer, 4, 4, 4, width, height, N, 10);
 
     expect(result).toEqual({ x: 5, y: 5, iteration: 80 });
+  });
+});
+
+/**
+ * n回回転対称のパターンをバッファに描画するヘルパー
+ *
+ * 中心(cx, cy)の周囲に iter = baseVal + amplitude * cos(n * angle) のパターンを生成する。
+ */
+const fillRadialPattern = (
+  buffer: Uint32Array,
+  width: number,
+  height: number,
+  cx: number,
+  cy: number,
+  n: number,
+  baseVal: number,
+  amplitude: number,
+  maxRadius: number,
+) => {
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const dx = x - cx;
+      const dy = y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > maxRadius || dist === 0) continue;
+
+      const angle = Math.atan2(dy, dx);
+      const val = Math.round(baseVal + amplitude * Math.cos(n * angle));
+      buffer[y * width + x] = Math.max(1, val);
+    }
+  }
+};
+
+describe("calcRotationalSymmetry", () => {
+  it("flat region（全ピクセル同一値）→ スコア0", () => {
+    const width = 80;
+    const height = 80;
+    const buffer = new Uint32Array(width * height).fill(50);
+
+    const result = calcRotationalSymmetry(buffer, 40, 40, width, height, 100);
+
+    expect(result).toBe(0);
+  });
+
+  it("2-fold対称パターン → 正のスコア", () => {
+    const width = 80;
+    const height = 80;
+    const buffer = new Uint32Array(width * height).fill(50);
+    fillRadialPattern(buffer, width, height, 40, 40, 2, 50, 30, 35);
+
+    const result = calcRotationalSymmetry(buffer, 40, 40, width, height, 200);
+
+    expect(result).toBeGreaterThan(0);
+  });
+
+  it("4-fold対称パターン → 正のスコア", () => {
+    const width = 80;
+    const height = 80;
+    const buffer = new Uint32Array(width * height).fill(50);
+    fillRadialPattern(buffer, width, height, 40, 40, 4, 50, 30, 35);
+
+    const result = calcRotationalSymmetry(buffer, 40, 40, width, height, 200);
+
+    expect(result).toBeGreaterThan(0);
+  });
+
+  it("非対称パターン → 対称パターンよりスコアが低い", () => {
+    const width = 80;
+    const height = 80;
+    const maxIter = 200;
+
+    // 4-fold対称パターン
+    const symBuffer = new Uint32Array(width * height).fill(50);
+    fillRadialPattern(symBuffer, width, height, 40, 40, 4, 50, 30, 35);
+    const symScore = calcRotationalSymmetry(symBuffer, 40, 40, width, height, maxIter);
+
+    // ランダム風パターン（非対称）
+    const asymBuffer = new Uint32Array(width * height).fill(50);
+    for (let y = 10; y < 70; y++) {
+      for (let x = 10; x < 70; x++) {
+        // 対称性がない不規則パターン
+        asymBuffer[y * width + x] = 20 + ((x * 7 + y * 13 + x * y) % 160);
+      }
+    }
+    const asymScore = calcRotationalSymmetry(asymBuffer, 40, 40, width, height, maxIter);
+
+    expect(symScore).toBeGreaterThan(asymScore);
+  });
+
+  it("境界付近の中心(0,0) → エラーなし", () => {
+    const width = 80;
+    const height = 80;
+    const buffer = new Uint32Array(width * height).fill(50);
+
+    expect(() => calcRotationalSymmetry(buffer, 0, 0, width, height, 100)).not.toThrow();
+  });
+
+  it("0とmaxIterationピクセルは無視される", () => {
+    const width = 80;
+    const height = 80;
+    const maxIter = 100;
+    // 全ピクセルが0またはmaxIteration
+    const buffer = new Uint32Array(width * height);
+    for (let i = 0; i < buffer.length; i++) {
+      buffer[i] = i % 2 === 0 ? 0 : maxIter;
+    }
+
+    const result = calcRotationalSymmetry(buffer, 40, 40, width, height, maxIter);
+
+    expect(result).toBe(0);
+  });
+});
+
+describe("mergeProximityCandidates", () => {
+  it("閾値内の候補 → 1クラスタ", () => {
+    const candidates = [
+      { x: 10, y: 10, iteration: 50, score: 100 },
+      { x: 12, y: 11, iteration: 55, score: 80 },
+      { x: 11, y: 10, iteration: 52, score: 90 },
+    ];
+
+    const result = mergeProximityCandidates(candidates, 16);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].score).toBe(100);
+    expect(result[0].x).toBe(10);
+    expect(result[0].y).toBe(10);
+  });
+
+  it("閾値外の候補 → 2クラスタ", () => {
+    const candidates = [
+      { x: 10, y: 10, iteration: 50, score: 100 },
+      { x: 100, y: 100, iteration: 60, score: 90 },
+    ];
+
+    const result = mergeProximityCandidates(candidates, 16);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].score).toBe(100);
+    expect(result[1].score).toBe(90);
+  });
+});
+
+describe("findInterestingPoints symmetryモード", () => {
+  it("対称パターンが検出される", () => {
+    const width = 128;
+    const height = 128;
+    const maxIter = 500;
+    const buffer = new Uint32Array(width * height).fill(50);
+    fillRadialPattern(buffer, width, height, 64, 64, 4, 100, 80, 40);
+
+    const result = findInterestingPoints(buffer, width, height, maxIter, {
+      scoring: "symmetry",
+      topK: 5,
+      minIteration: 5,
+    });
+
+    expect(result.length).toBeGreaterThanOrEqual(1);
+    expect(result[0].score).toBeGreaterThan(0);
+  });
+
+  it("デフォルト（オプションなし）→ symmetryで動作する", () => {
+    const width = 128;
+    const height = 128;
+    const maxIter = 500;
+    const buffer = new Uint32Array(width * height).fill(50);
+    fillRadialPattern(buffer, width, height, 64, 64, 4, 100, 80, 40);
+
+    const result = findInterestingPoints(buffer, width, height, maxIter);
+
+    expect(result.length).toBeGreaterThanOrEqual(1);
+    expect(result[0].score).toBeGreaterThan(0);
+  });
+
+  it("blockSize指定 → entropy-gradientで動作（後方互換）", () => {
+    const N = 100;
+    const width = 8;
+    const height = 8;
+    const buffer = new Uint32Array(width * height).fill(10);
+    buffer[3 * width + 3] = 50;
+
+    const result = findInterestingPoints(buffer, width, height, N, {
+      blockSize: 8,
+      topK: 5,
+      minIteration: 5,
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].x).toBe(3);
+    expect(result[0].y).toBe(3);
+  });
+
+  it("scoring: 'entropy-gradient' → entropy-gradientで動作", () => {
+    const N = 100;
+    const width = 8;
+    const height = 8;
+    const buffer = new Uint32Array(width * height).fill(10);
+    buffer[3 * width + 3] = 50;
+
+    const result = findInterestingPoints(buffer, width, height, N, {
+      scoring: "entropy-gradient",
+      topK: 5,
+      minIteration: 5,
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].x).toBe(3);
+    expect(result[0].y).toBe(3);
   });
 });

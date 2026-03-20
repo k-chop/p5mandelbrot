@@ -12,6 +12,8 @@ export interface FindInterestingPointsOptions {
   scales?: number[];
   topK?: number;
   minIteration?: number;
+  /** スコアリング方式。デフォルト 'symmetry' */
+  scoring?: "symmetry" | "entropy-gradient";
 }
 
 /**
@@ -265,11 +267,221 @@ export const mergeCandidatesAcrossScales = (
     .sort((a, b) => b.score - a.score);
 };
 
+/** 回転対称性の検査に使う半径リスト */
+const SYMMETRY_RADII = [4, 8, 16, 32];
+
+/** 回転次数の範囲 */
+const MIN_ROTATION_ORDER = 2;
+const MAX_ROTATION_ORDER = 8;
+
+/**
+ * Pearson相関係数を計算する
+ *
+ * 有効ペアが不足している場合は0を返す。
+ */
+const calcPearsonCorrelation = (xs: number[], ys: number[]): number => {
+  const n = xs.length;
+  if (n < 2) return 0;
+
+  let sumX = 0;
+  let sumY = 0;
+  for (let i = 0; i < n; i++) {
+    sumX += xs[i];
+    sumY += ys[i];
+  }
+  const meanX = sumX / n;
+  const meanY = sumY / n;
+
+  let covXY = 0;
+  let varX = 0;
+  let varY = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = xs[i] - meanX;
+    const dy = ys[i] - meanY;
+    covXY += dx * dy;
+    varX += dx * dx;
+    varY += dy * dy;
+  }
+
+  const denom = Math.sqrt(varX * varY);
+  if (denom === 0) return 0;
+
+  return covXY / denom;
+};
+
+/**
+ * 指定した中心点における回転対称性スコアを計算する
+ *
+ * 複数の半径で円周上のiteration値をサンプリングし、
+ * 各回転次数(2..8)でPearson相関を求めて最大値を取る。
+ * 全半径の最大相関を平均し、構造量（標準偏差/maxIteration）を乗じて最終スコアとする。
+ */
+export const calcRotationalSymmetry = (
+  buffer: Uint32Array,
+  cx: number,
+  cy: number,
+  width: number,
+  height: number,
+  maxIteration: number,
+): number => {
+  let totalBestCorrelation = 0;
+  let validRadiusCount = 0;
+  let allValidSum = 0;
+  let allValidSumSq = 0;
+  let allValidCount = 0;
+
+  for (const r of SYMMETRY_RADII) {
+    const sampleCount = Math.max(16, Math.round((2 * Math.PI * r) / 2));
+    const samples: number[] = [];
+    const valid: boolean[] = [];
+
+    for (let k = 0; k < sampleCount; k++) {
+      const angle = (2 * Math.PI * k) / sampleCount;
+      const sx = Math.round(cx + r * Math.cos(angle));
+      const sy = Math.round(cy + r * Math.sin(angle));
+
+      if (sx < 0 || sx >= width || sy < 0 || sy >= height) {
+        samples.push(0);
+        valid.push(false);
+      } else {
+        const val = buffer[sy * width + sx];
+        if (val === 0 || val === maxIteration) {
+          samples.push(0);
+          valid.push(false);
+        } else {
+          samples.push(val);
+          valid.push(true);
+          allValidSum += val;
+          allValidSumSq += val * val;
+          allValidCount++;
+        }
+      }
+    }
+
+    let bestCorrelation = 0;
+
+    for (let n = MIN_ROTATION_ORDER; n <= MAX_ROTATION_ORDER; n++) {
+      const shift = Math.round(sampleCount / n);
+      if (shift === 0) continue;
+
+      const xs: number[] = [];
+      const ys: number[] = [];
+
+      for (let k = 0; k < sampleCount; k++) {
+        const k2 = (k + shift) % sampleCount;
+        if (valid[k] && valid[k2]) {
+          xs.push(samples[k]);
+          ys.push(samples[k2]);
+        }
+      }
+
+      const minPairs = Math.floor(sampleCount / n / 2);
+      if (xs.length < minPairs) continue;
+
+      const correlation = calcPearsonCorrelation(xs, ys);
+      if (correlation > bestCorrelation) {
+        bestCorrelation = correlation;
+      }
+    }
+
+    totalBestCorrelation += bestCorrelation;
+    validRadiusCount++;
+  }
+
+  if (validRadiusCount === 0 || allValidCount === 0) return 0;
+
+  const symmetryScore = totalBestCorrelation / validRadiusCount;
+
+  const mean = allValidSum / allValidCount;
+  const variance = allValidSumSq / allValidCount - mean * mean;
+  const structureAmount = Math.sqrt(Math.max(0, variance)) / maxIteration;
+
+  return symmetryScore * structureAmount;
+};
+
+/**
+ * dense gridスキャンで回転対称性の候補を検出する
+ *
+ * stride間隔でグリッドスキャンし、各点でcalcRotationalSymmetryを計算。
+ * スコア > 0 の候補を収集する。
+ */
+const findSymmetryCandidates = (
+  buffer: Uint32Array,
+  width: number,
+  height: number,
+  maxIteration: number,
+  stride: number,
+  minIteration: number,
+): InterestingPoint[] => {
+  const candidates: InterestingPoint[] = [];
+
+  for (let y = 0; y < height; y += stride) {
+    for (let x = 0; x < width; x += stride) {
+      const iter = buffer[y * width + x];
+      if (iter < minIteration && iter !== 0) continue;
+
+      const score = calcRotationalSymmetry(buffer, x, y, width, height, maxIteration);
+      if (score > 0) {
+        candidates.push({
+          x,
+          y,
+          iteration: iter,
+          score,
+        });
+      }
+    }
+  }
+
+  return candidates;
+};
+
+/**
+ * 近接する候補をクラスタリングし、各クラスタの最高スコア候補を返す
+ *
+ * スコア降順でgreedy clusteringを行い、proximityThreshold以内の候補は
+ * 同一クラスタに統合される。
+ */
+export const mergeProximityCandidates = (
+  candidates: InterestingPoint[],
+  proximityThreshold: number,
+): InterestingPoint[] => {
+  const sorted = [...candidates].sort((a, b) => b.score - a.score);
+  const clusters: InterestingPoint[] = [];
+
+  for (const candidate of sorted) {
+    let merged = false;
+    for (const cluster of clusters) {
+      const dx = candidate.x - cluster.x;
+      const dy = candidate.y - cluster.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist <= proximityThreshold) {
+        if (candidate.score > cluster.score) {
+          cluster.x = candidate.x;
+          cluster.y = candidate.y;
+          cluster.iteration = candidate.iteration;
+          cluster.score = candidate.score;
+        }
+        merged = true;
+        break;
+      }
+    }
+
+    if (!merged) {
+      clusters.push({ ...candidate });
+    }
+  }
+
+  return clusters.sort((a, b) => b.score - a.score);
+};
+
 /**
  * iterationバッファから興味深いポイントを検出する
  *
- * 複数のブロックサイズ（デフォルト 64, 32, 16）でスコアリングし、
- * スケール横断で安定して高スコアな点を優先する。
+ * スコアリング方式:
+ * - 'symmetry'（デフォルト）: 回転対称性に基づく検出
+ * - 'entropy-gradient': entropy × gradient に基づく検出（blockSize/scales指定時も自動選択）
+ *
  * blockSize指定時は単一スケールで後方互換動作する。
  */
 export const findInterestingPoints = (
@@ -282,7 +494,22 @@ export const findInterestingPoints = (
   const topK = options?.topK ?? 5;
   const minIteration = options?.minIteration ?? 10;
 
-  // scales指定 → マルチスケール、blockSize指定 → 単一スケール、両方なし → デフォルトマルチスケール
+  // スコアリング方式の決定:
+  // blockSize指定 → entropy-gradient
+  // scales指定 → entropy-gradient
+  // scoring: 'entropy-gradient' → entropy-gradient
+  // それ以外（デフォルト） → symmetry
+  const useSymmetry =
+    options?.scoring === "symmetry" ||
+    (options?.scoring == null && options?.blockSize == null && options?.scales == null);
+
+  if (useSymmetry) {
+    const candidates = findSymmetryCandidates(buffer, width, height, maxIteration, 8, minIteration);
+    const merged = mergeProximityCandidates(candidates, 16);
+    return merged.slice(0, topK);
+  }
+
+  // entropy-gradient パス
   const scales =
     options?.scales ?? (options?.blockSize != null ? [options.blockSize] : DEFAULT_SCALES);
 

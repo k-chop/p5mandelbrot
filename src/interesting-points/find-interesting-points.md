@@ -4,7 +4,21 @@
 
 ## 全体の流れ
 
-### マルチスケール検出（デフォルト）
+### 回転対称性検出（デフォルト）
+
+```
+iterationBuffer (Uint32Array, width×height)
+  ↓
+1. stride=8 でdense gridスキャン (findSymmetryCandidates)
+  ↓
+2. 各点で回転対称性スコアを計算 (calcRotationalSymmetry)
+  ↓
+3. 近接クラスタリング (mergeProximityCandidates, threshold=16)
+  ↓
+4. スコア上位K件を返す
+```
+
+### entropy-gradient マルチスケール検出（scales指定時）
 
 ```
 iterationBuffer (Uint32Array, width×height)
@@ -36,9 +50,35 @@ iterationBuffer (Uint32Array, width×height)
 4. スコア上位K件を返す
 ```
 
+## スコアリング方式の選択ロジック
+
+- `blockSize` 指定 → entropy-gradient
+- `scales` 指定 → entropy-gradient + マルチスケール
+- `scoring: 'entropy-gradient'` → 明示的にentropy-gradient（デフォルトscales使用）
+- `scoring: 'symmetry'` または指定なし → 回転対称性
+
 ## スコア式
 
-### 基本スコア
+### 回転対称性スコア（デフォルト）
+
+`calcRotationalSymmetry(buffer, cx, cy, width, height, maxIteration)`
+
+1. 半径 `[4, 8, 16, 32]` でループ
+2. 各半径 r で円周上に `max(16, round(2πr / 2))` 個のサンプル点を取得（2px間隔相当）
+3. 各回転次数 n (2..8) について:
+   - `v[k]` と `v[(k + S/n) % S]` のペアでPearson相関を計算
+   - 無効ピクセル（0, maxIteration, 境界外）はスキップ
+   - 有効ペアが `S/n/2` 未満ならスコア0
+4. 全 n の最大Pearson相関 → その半径の `bestCorrelation`
+5. 全半径の `bestCorrelation` を平均 → `symmetryScore`
+6. 構造量: 全有効サンプルの標準偏差 / maxIteration → `structureAmount`
+7. **最終スコア = symmetryScore × structureAmount**
+
+flat regionは分散0でPearson相関が未定義→0になるため、自然にスコア0になる。
+
+**なぜ必要か:** マンデルブロ集合の構造的に面白いポイントはn回回転対称（n=2: ミニブロコピー, n=3〜8: 多腕渦巻き）の中心であることが多い。iteration値の空間パターンとして回転対称性を直接測定することで、「色帯がたくさん通る場所」ではなく構造の中心を捉える。
+
+### entropy-gradient スコア
 
 ```
 score = localEntropy × gradientMagnitude
@@ -66,8 +106,6 @@ finalScore = maxScore × (1 + 0.5 × (uniqueScaleCount - 1))
 - 有効ピクセルが1以下の場合は 0 を返す
 - 範囲: 0（全ピクセル同じ値 or 有効ピクセルなし）〜 1.0（全ピクセルが異なる値）
 
-**なぜ必要か:** ユニーク値の比率だけでは「15個が同じ値、1個だけ違う」と「8個ずつ均等に2値」が同スコアになってしまう。Shannon entropyは値の分布の偏りまで反映し、真に多様な領域を高く評価する。渦巻きやフラクタル模様が集中している領域はエントロピーが高い。
-
 ### gradientMagnitude（勾配の大きさ）
 
 `calcGradientMagnitude(buffer, x, y, width, height, maxIteration)`
@@ -76,53 +114,43 @@ finalScore = maxScore × (1 + 0.5 × (uniqueScaleCount - 1))
 - `sqrt(Σ(center - neighbor)²)`（8方向のRMS的な値）
 - 境界外・`0`・`N` の隣接ピクセルは `center` と同値として扱う（端でも安定）
 
-**なぜ必要か:** 勾配が大きい＝iteration値が急激に変化している＝拡大するとさらに複雑な構造が現れる可能性が高い。ピーク1点のミクロな変化の激しさを測る。
+## 近接クラスタリング
 
-## ブロックピーク選出
+### mergeProximityCandidates（symmetryモード用）
 
-`findBlockPeak(buffer, bx, by, blockSize, width, height, maxIteration, minIteration)`
+スコア降順でgreedy clusteringし、各クラスタの最高スコア候補を採用。スケールブーストなし。
 
-- ブロック内で最大iteration値を持つピクセルを1つ返す
-- 除外条件:
-  - `iteration === N`（集合内部。拡大しても黒）
-  - `iteration === 0`（未計算）
-  - `iteration < minIteration`（デフォルト10。ノイズ除去）
-
-## マルチスケール近接クラスタリング
-
-`mergeCandidatesAcrossScales` が行う処理:
+### mergeCandidatesAcrossScales（entropy-gradientマルチスケール用）
 
 1. 全スケールの候補をスコア降順ソート
 2. 上位から処理: 既存クラスタ中心から `proximityThreshold` 以内なら合流、なければ新クラスタ
 3. クラスタ内で最高スコアの候補の座標・iterationを採用
 4. `finalScore = maxScore × (1 + 0.5 × (uniqueScaleCount - 1))` を算出
 
-| 定数                   | 値                | 根拠                 |
-| ---------------------- | ----------------- | -------------------- |
-| proximityThreshold     | `max(scales) / 2` | 最大ブロック半径     |
-| multiScaleBoost        | `0.5`             | 3スケール全出現で2倍 |
-| スケールあたり候補上限 | `topK × 3`        | マージ前の計算量制御 |
-
 ## デフォルトパラメータ
 
-| パラメータ     | デフォルト値   | 説明                                         |
-| -------------- | -------------- | -------------------------------------------- |
-| `scales`       | `[64, 32, 16]` | マルチスケール検出のブロックサイズ配列       |
-| `blockSize`    | 32             | 単一スケール時のブロックサイズ（scales優先） |
-| `topK`         | 5              | 返す最大ポイント数                           |
-| `minIteration` | 10             | ピーク候補の最低iteration閾値                |
-
-**スケール選択ロジック:**
-
-- `scales` 指定あり → マルチスケール
-- `scales` なし、`blockSize` あり → 単一スケール（後方互換）
-- 両方なし → デフォルトでマルチスケール `[64, 32, 16]`
+| パラメータ     | デフォルト値   | 説明                                           |
+| -------------- | -------------- | ---------------------------------------------- |
+| `scoring`      | `'symmetry'`   | スコアリング方式                               |
+| `scales`       | `[64, 32, 16]` | entropy-gradientマルチスケールのブロックサイズ |
+| `topK`         | 5              | 返す最大ポイント数                             |
+| `minIteration` | 10             | ピーク候補の最低iteration閾値                  |
 
 ## パフォーマンス特性
+
+### symmetryモード（デフォルト）
+
+- stride=8, 1920×1080 → ~32,400候補点
+- 各候補: 4半径 × ~30サンプル × 7回転次数 ≈ 840サンプルアクセス
+- 合計: ~27M 配列アクセス（Uint32Arrayなので高速）
+- 推定: 50-200ms
+
+### entropy-gradientモード
 
 - 1920×1080、デフォルト3スケール → 約2000+500+130 = 約2630ブロック
 - findBlockPeak: 各ブロック最大 blockSize² px走査
 - calcGradientMagnitude: ピーク候補のみ。周囲8ピクセルの比較
 - calcLocalEntropy: findBlockPeakと同じブロックを走査（Map使用）
 - mergeCandidatesAcrossScales: topK×3 の候補に対する O(n×k) のクラスタリング
-- バッチ計算完了時に1回だけ実行。描画ループには影響しない
+
+いずれもバッチ計算完了時に1回だけ実行。描画ループには影響しない。
