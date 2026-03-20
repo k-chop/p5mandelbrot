@@ -6,7 +6,10 @@ export interface InterestingPoint {
 }
 
 export interface FindInterestingPointsOptions {
+  /** scalesが指定されたら無視される */
   blockSize?: number;
+  /** マルチスケール検出に使うブロックサイズ配列。デフォルト [64, 32, 16] */
+  scales?: number[];
   topK?: number;
   minIteration?: number;
 }
@@ -139,23 +142,30 @@ export const findBlockPeak = (
   return { x: bestX, y: bestY, iteration: bestIter };
 };
 
+/** マルチスケールブースト係数。3スケール全出現で2倍 */
+const MULTI_SCALE_BOOST = 0.5;
+
+/** デフォルトのスケール配列 */
+const DEFAULT_SCALES = [64, 32, 16];
+
+/** スケール情報付きの候補 */
+interface ScaledCandidate extends InterestingPoint {
+  scale: number;
+}
+
 /**
- * iterationバッファから興味深いポイントを検出する
+ * 指定blockSizeで全候補（score > 0）を返す
  *
- * グリッドベースのピーク検出と勾配スコアリングにより、
- * 集合の境界付近の視覚的に複雑な領域を特定する。
+ * topKフィルタリングは行わない。
  */
-export const findInterestingPoints = (
+export const findCandidatesAtScale = (
   buffer: Uint32Array,
   width: number,
   height: number,
   maxIteration: number,
-  options?: FindInterestingPointsOptions,
+  blockSize: number,
+  minIteration: number,
 ): InterestingPoint[] => {
-  const blockSize = options?.blockSize ?? 32;
-  const topK = options?.topK ?? 5;
-  const minIteration = options?.minIteration ?? 10;
-
   const candidates: InterestingPoint[] = [];
 
   for (let by = 0; by < height; by += blockSize) {
@@ -187,6 +197,121 @@ export const findInterestingPoints = (
     }
   }
 
-  candidates.sort((a, b) => b.score - a.score);
-  return candidates.slice(0, topK);
+  return candidates;
+};
+
+/** クラスタリング結果 */
+interface Cluster {
+  x: number;
+  y: number;
+  iteration: number;
+  maxScore: number;
+  scales: Set<number>;
+}
+
+/**
+ * 複数スケールの候補を近接クラスタリングし、スケール横断ブーストを適用する
+ *
+ * アルゴリズム:
+ * 1. 全候補をスコア降順ソート
+ * 2. 上位から処理: 既存クラスタ中心からproximityThreshold以内なら合流、なければ新クラスタ
+ * 3. finalScore = maxScore × (1 + MULTI_SCALE_BOOST × (uniqueScaleCount - 1))
+ */
+export const mergeCandidatesAcrossScales = (
+  candidates: ScaledCandidate[],
+  proximityThreshold: number,
+): InterestingPoint[] => {
+  const sorted = [...candidates].sort((a, b) => b.score - a.score);
+  const clusters: Cluster[] = [];
+
+  for (const candidate of sorted) {
+    let merged = false;
+    for (const cluster of clusters) {
+      const dx = candidate.x - cluster.x;
+      const dy = candidate.y - cluster.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist <= proximityThreshold) {
+        cluster.scales.add(candidate.scale);
+        if (candidate.score > cluster.maxScore) {
+          cluster.maxScore = candidate.score;
+          cluster.x = candidate.x;
+          cluster.y = candidate.y;
+          cluster.iteration = candidate.iteration;
+        }
+        merged = true;
+        break;
+      }
+    }
+
+    if (!merged) {
+      clusters.push({
+        x: candidate.x,
+        y: candidate.y,
+        iteration: candidate.iteration,
+        maxScore: candidate.score,
+        scales: new Set([candidate.scale]),
+      });
+    }
+  }
+
+  return clusters
+    .map((cluster) => ({
+      x: cluster.x,
+      y: cluster.y,
+      iteration: cluster.iteration,
+      score: cluster.maxScore * (1 + MULTI_SCALE_BOOST * (cluster.scales.size - 1)),
+    }))
+    .sort((a, b) => b.score - a.score);
+};
+
+/**
+ * iterationバッファから興味深いポイントを検出する
+ *
+ * 複数のブロックサイズ（デフォルト 64, 32, 16）でスコアリングし、
+ * スケール横断で安定して高スコアな点を優先する。
+ * blockSize指定時は単一スケールで後方互換動作する。
+ */
+export const findInterestingPoints = (
+  buffer: Uint32Array,
+  width: number,
+  height: number,
+  maxIteration: number,
+  options?: FindInterestingPointsOptions,
+): InterestingPoint[] => {
+  const topK = options?.topK ?? 5;
+  const minIteration = options?.minIteration ?? 10;
+
+  // scales指定 → マルチスケール、blockSize指定 → 単一スケール、両方なし → デフォルトマルチスケール
+  const scales =
+    options?.scales ?? (options?.blockSize != null ? [options.blockSize] : DEFAULT_SCALES);
+
+  const perScaleLimit = topK * 3;
+  const allCandidates: ScaledCandidate[] = [];
+
+  for (const scale of scales) {
+    const candidates = findCandidatesAtScale(
+      buffer,
+      width,
+      height,
+      maxIteration,
+      scale,
+      minIteration,
+    );
+    candidates.sort((a, b) => b.score - a.score);
+    const limited = candidates.slice(0, perScaleLimit);
+    for (const c of limited) {
+      allCandidates.push({ ...c, scale });
+    }
+  }
+
+  if (scales.length === 1) {
+    // 単一スケール: クラスタリングなし（後方互換）
+    allCandidates.sort((a, b) => b.score - a.score);
+    return allCandidates.slice(0, topK).map(({ scale: _, ...rest }) => rest);
+  }
+
+  const proximityThreshold = Math.max(...scales) / 2;
+  const merged = mergeCandidatesAcrossScales(allCandidates, proximityThreshold);
+  return merged.slice(0, topK);
 };
