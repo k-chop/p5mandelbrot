@@ -30,10 +30,12 @@ score = localEntropy × gradientMagnitude
 `calcLocalEntropy(buffer, bx, by, blockSize, width, height, maxIteration)`
 
 - ブロック内の有効ピクセル（`iteration !== 0` かつ `iteration !== N`）を走査
-- `ユニークなiteration値の数 / 有効ピクセル数` で正規化
-- 範囲: 0（有効ピクセルなし）〜 1.0（全ピクセルが異なる値）
+- 各iteration値の出現回数を集計し、Shannon entropyを計算: `H = −Σ (count_i / total) × log₂(count_i / total)`
+- `H / log₂(validCount)` で正規化して 0〜1 の範囲に収める
+- 有効ピクセルが1以下の場合は 0 を返す
+- 範囲: 0（全ピクセル同じ値 or 有効ピクセルなし）〜 1.0（全ピクセルが異なる値）
 
-**なぜ必要か:** iteration値が多様＝色が多様＝視覚的に複雑な構造がある。渦巻きやフラクタル模様が集中している領域はエントロピーが高い。ブロック全体のマクロな複雑さを測る。
+**なぜ必要か:** ユニーク値の比率だけでは「15個が同じ値、1個だけ違う」と「8個ずつ均等に2値」が同スコアになってしまう。Shannon entropyは値の分布の偏りまで反映し、真に多様な領域を高く評価する。渦巻きやフラクタル模様が集中している領域はエントロピーが高い。
 
 ### gradientMagnitude（勾配の大きさ）
 
@@ -68,5 +70,5 @@ score = localEntropy × gradientMagnitude
 - 1920×1080、blockSize=32 → 約2000ブロック
 - findBlockPeak: 各ブロック最大1024px走査
 - calcGradientMagnitude: ピーク候補のみ。周囲8ピクセルの比較
-- calcLocalEntropy: findBlockPeakと同じブロックを走査（Set使用）
+- calcLocalEntropy: findBlockPeakと同じブロックを走査（Map使用）
 - バッチ計算完了時に1回だけ実行。描画ループには影響しない

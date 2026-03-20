@@ -52,10 +52,11 @@ export const calcGradientMagnitude = (
 };
 
 /**
- * ブロック内のiteration値の多様性（局所エントロピー）を算出する
+ * ブロック内のiteration値のShannon entropyを算出する
  *
- * ユニークなiteration値の数 / 有効ピクセル数で正規化。
- * 多様な値が混在する複雑な領域ほど高い値を返す。
+ * H = −Σ (count_i / total) × log₂(count_i / total) を計算し、
+ * log₂(validCount) で正規化して 0〜1 の範囲に収める。
+ * 値の分布の偏りまで反映したスコアリングが可能。
  */
 export const calcLocalEntropy = (
   buffer: Uint32Array,
@@ -66,7 +67,7 @@ export const calcLocalEntropy = (
   height: number,
   maxIteration: number,
 ): number => {
-  const uniqueValues = new Set<number>();
+  const counts = new Map<number, number>();
   let validCount = 0;
 
   const endX = Math.min(bx + blockSize, width);
@@ -77,14 +78,20 @@ export const calcLocalEntropy = (
       const iter = buffer[py * width + px];
       if (iter === 0 || iter === maxIteration) continue;
 
-      uniqueValues.add(iter);
+      counts.set(iter, (counts.get(iter) ?? 0) + 1);
       validCount++;
     }
   }
 
-  if (validCount === 0) return 0;
+  if (validCount <= 1) return 0;
 
-  return uniqueValues.size / validCount;
+  let entropy = 0;
+  for (const count of counts.values()) {
+    const p = count / validCount;
+    entropy -= p * Math.log2(p);
+  }
+
+  return entropy / Math.log2(validCount);
 };
 
 interface BlockPeak {

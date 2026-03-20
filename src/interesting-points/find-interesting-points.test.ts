@@ -199,8 +199,8 @@ describe("calcLocalEntropy", () => {
 
     const result = calcLocalEntropy(buffer, 0, 0, 4, width, height, N);
 
-    // 16ピクセル全て50 → unique=1, valid=16 → 1/16
-    expect(result).toBeCloseTo(1 / 16);
+    // 16ピクセル全て50 → Shannon entropy = 0
+    expect(result).toBe(0);
   });
 
   it("多様な値があれば高エントロピー", () => {
@@ -215,7 +215,7 @@ describe("calcLocalEntropy", () => {
 
     const result = calcLocalEntropy(buffer, 0, 0, 4, width, height, N);
 
-    // 16ピクセル全て異なる → unique=16, valid=16 → 1.0
+    // 16ピクセル全て異なる → Shannon entropy = log₂(16)/log₂(16) = 1.0
     expect(result).toBe(1);
   });
 
@@ -229,8 +229,8 @@ describe("calcLocalEntropy", () => {
 
     const result = calcLocalEntropy(buffer, 0, 0, 4, width, height, N);
 
-    // 14ピクセルが50 → unique=1, valid=14 → 1/14
-    expect(result).toBeCloseTo(1 / 14);
+    // 14ピクセルが50 → Shannon entropy = 0
+    expect(result).toBe(0);
   });
 
   it("有効ピクセルがなければ0", () => {
