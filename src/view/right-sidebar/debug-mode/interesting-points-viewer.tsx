@@ -1,4 +1,6 @@
 import type { BlockDebugInfo } from "@/interesting-points/find-interesting-points";
+import { Label } from "@/shadcn/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -69,18 +71,20 @@ export const InterestingPointsViewer = () => {
       <div className="flex flex-wrap gap-2">
         <div className="flex items-center gap-1">
           <span className="text-xs text-muted-foreground">Factor:</span>
-          <Select value={selectedFactor} onValueChange={setSelectedFactor}>
-            <SelectTrigger className="h-7 w-32 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {factorNames.map((name) => (
-                <SelectItem key={name} value={name}>
+          <RadioGroup
+            value={selectedFactor}
+            onValueChange={setSelectedFactor}
+            className="flex flex-wrap gap-2"
+          >
+            {factorNames.map((name) => (
+              <div key={name} className="flex items-center gap-1">
+                <RadioGroupItem value={name} id={`factor-${name}`} className="h-3 w-3" />
+                <Label htmlFor={`factor-${name}`} className="text-xs cursor-pointer">
                   {name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
         </div>
 
         {debugData.scoring === "entropy-gradient" && debugData.scaleBlocks.length > 1 && (
