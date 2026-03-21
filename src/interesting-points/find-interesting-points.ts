@@ -817,9 +817,8 @@ const calcStructureCenterScore = (
 /**
  * ブロックスコア分布から構造の中心点を検出する
  *
- * 各グリッド位置について、周囲に放射状に高スコアブロックが広がっているかを調べ、
- * 方位カバレッジが最も高い点を中心点として返す。
- * 中心点自身のスコアは低くてもよい（集合内部でも可）。
+ * 各グリッド位置のcenterScore（coverage × density）を算出し、
+ * 高centerScoreブロック群（最大値の50%以上）の重み付き重心を中心点とする。
  * 各ブロックのfactorsに `centerScore` を追加する（ヒートマップ出力用）。
  */
 export const findStructureCenter = (
@@ -843,9 +842,8 @@ export const findStructureCenter = (
   const thresholdIndex = Math.floor(nonZeroScores.length * 0.25);
   const scoreThreshold = nonZeroScores[Math.min(thresholdIndex, nonZeroScores.length - 1)];
 
-  let bestPoint: InterestingPoint | null = null;
-  let bestCenterScore = 0;
-
+  // 全ブロックのcenterScoreを算出してfactorsに記録
+  let maxCenterScore = 0;
   for (const block of blocks) {
     const { coverage, centerScore } = calcStructureCenterScore(
       block.bx,
@@ -855,22 +853,41 @@ export const findStructureCenter = (
       scoreThreshold,
     );
 
-    // factorsにcenterScoreを追加（ヒートマップ用）
     block.factors.centerScore = coverage >= CENTER_MIN_COVERAGE ? centerScore : 0;
-
-    if (coverage < CENTER_MIN_COVERAGE) continue;
-    if (centerScore <= bestCenterScore) continue;
-
-    bestCenterScore = centerScore;
-    bestPoint = {
-      x: block.peak ? block.peak.x : block.bx + Math.floor(stride / 2),
-      y: block.peak ? block.peak.y : block.by + Math.floor(stride / 2),
-      iteration: block.peak?.iteration ?? 0,
-      score: centerScore,
-    };
+    if (block.factors.centerScore > maxCenterScore) {
+      maxCenterScore = block.factors.centerScore;
+    }
   }
 
-  return bestPoint;
+  if (maxCenterScore === 0) return null;
+
+  // 最大centerScoreの80%以上のブロックで重み付き重心を計算
+  const centroidThreshold = maxCenterScore * 0.8;
+  let weightedX = 0;
+  let weightedY = 0;
+  let totalWeight = 0;
+  for (const block of blocks) {
+    const cs = block.factors.centerScore;
+    if (cs < centroidThreshold) continue;
+
+    const bx = block.bx + Math.floor(stride / 2);
+    const by = block.by + Math.floor(stride / 2);
+    weightedX += bx * cs;
+    weightedY += by * cs;
+    totalWeight += cs;
+  }
+
+  if (totalWeight === 0) return null;
+
+  const cx = Math.round(weightedX / totalWeight);
+  const cy = Math.round(weightedY / totalWeight);
+
+  return {
+    x: cx,
+    y: cy,
+    iteration: 0,
+    score: maxCenterScore,
+  };
 };
 
 /**
