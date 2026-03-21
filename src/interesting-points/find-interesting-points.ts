@@ -644,6 +644,37 @@ export const mergeProximityCandidates = (
 };
 
 /**
+ * Greedy Non-Maximum Suppressionで空間的に分散したポイントを選出する
+ *
+ * スコア降順で1つずつ選出し、選出済みポイントからsuppressionRadius以内の
+ * 候補を除外する。topK個に満たない場合はそのまま少なく返す。
+ */
+export const applyNMS = (
+  candidates: InterestingPoint[],
+  topK: number,
+  suppressionRadius: number,
+): InterestingPoint[] => {
+  const sorted = [...candidates].sort((a, b) => b.score - a.score);
+  const selected: InterestingPoint[] = [];
+
+  for (const candidate of sorted) {
+    if (selected.length >= topK) break;
+
+    const isSuppressed = selected.some((s) => {
+      const dx = candidate.x - s.x;
+      const dy = candidate.y - s.y;
+      return Math.sqrt(dx * dx + dy * dy) <= suppressionRadius;
+    });
+
+    if (!isSuppressed) {
+      selected.push(candidate);
+    }
+  }
+
+  return selected;
+};
+
+/**
  * iterationバッファから興味深いポイントを検出する
  *
  * スコアリング方式:
@@ -677,6 +708,7 @@ export function findInterestingPoints(
   const topK = options?.topK ?? 5;
   const minIteration = options?.minIteration ?? 10;
   const debug = options?.debug ?? false;
+  const suppressionRadius = Math.min(width, height) * 0.15;
 
   // スコアリング方式の決定:
   // blockSize指定 → entropy-gradient
@@ -699,7 +731,7 @@ export function findInterestingPoints(
       debugBlocks,
     );
     const merged = mergeProximityCandidates(candidates, 16);
-    const selected = merged.slice(0, topK);
+    const selected = applyNMS(merged, topK, suppressionRadius);
 
     if (debug) {
       return {
@@ -750,9 +782,9 @@ export function findInterestingPoints(
   const rawCandidates = allCandidates.map(({ scale: _, ...rest }) => rest);
 
   if (scales.length === 1) {
-    // 単一スケール: クラスタリングなし（後方互換）
-    allCandidates.sort((a, b) => b.score - a.score);
-    const selected = allCandidates.slice(0, topK).map(({ scale: _, ...rest }) => rest);
+    // 単一スケール: クラスタリングなし
+    const singleScaleCandidates = allCandidates.map(({ scale: _, ...rest }) => rest);
+    const selected = applyNMS(singleScaleCandidates, topK, suppressionRadius);
 
     if (debug) {
       return {
@@ -762,7 +794,7 @@ export function findInterestingPoints(
           gridBlocks: [],
           scaleBlocks: debugScaleBlocks,
           rawCandidates,
-          mergedCandidates: selected,
+          mergedCandidates: singleScaleCandidates,
           selectedPoints: selected,
         },
       };
@@ -773,7 +805,7 @@ export function findInterestingPoints(
 
   const proximityThreshold = Math.max(...scales) / 2;
   const merged = mergeCandidatesAcrossScales(allCandidates, proximityThreshold);
-  const selected = merged.slice(0, topK);
+  const selected = applyNMS(merged, topK, suppressionRadius);
 
   if (debug) {
     return {

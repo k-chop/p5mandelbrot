@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyNMS,
   calcGradientMagnitude,
   calcLocalEntropy,
   calcRotationalSymmetry,
@@ -626,5 +627,51 @@ describe("findInterestingPoints symmetryモード", () => {
     expect(result).toHaveLength(1);
     expect(result[0].x).toBe(3);
     expect(result[0].y).toBe(3);
+  });
+});
+
+describe("applyNMS", () => {
+  it("全候補が十分離れている → topK個そのまま返る", () => {
+    const candidates = [
+      { x: 0, y: 0, iteration: 50, score: 10 },
+      { x: 100, y: 0, iteration: 50, score: 8 },
+      { x: 200, y: 0, iteration: 50, score: 6 },
+    ];
+    const result = applyNMS(candidates, 3, 30);
+    expect(result).toHaveLength(3);
+  });
+
+  it("密集候補 → suppressionRadius以内のものが除外される", () => {
+    const candidates = [
+      { x: 50, y: 50, iteration: 50, score: 10 },
+      { x: 55, y: 50, iteration: 50, score: 9 },
+      { x: 200, y: 200, iteration: 50, score: 5 },
+    ];
+    const result = applyNMS(candidates, 3, 30);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({ x: 50, y: 50, score: 10 });
+    expect(result[1]).toMatchObject({ x: 200, y: 200, score: 5 });
+  });
+
+  it("topKに満たない → 候補数そのまま返る", () => {
+    const candidates = [{ x: 0, y: 0, iteration: 50, score: 10 }];
+    const result = applyNMS(candidates, 5, 30);
+    expect(result).toHaveLength(1);
+  });
+
+  it("空配列 → 空配列", () => {
+    const result = applyNMS([], 5, 30);
+    expect(result).toHaveLength(0);
+  });
+
+  it("スコア順に選出される（低スコアの近接候補が抑制される）", () => {
+    const candidates = [
+      { x: 100, y: 100, iteration: 50, score: 3 },
+      { x: 10, y: 10, iteration: 50, score: 5 },
+      { x: 12, y: 10, iteration: 50, score: 8 },
+    ];
+    const result = applyNMS(candidates, 2, 30);
+    expect(result[0]).toMatchObject({ x: 12, y: 10, score: 8 });
+    expect(result[1]).toMatchObject({ x: 100, y: 100, score: 3 });
   });
 });
