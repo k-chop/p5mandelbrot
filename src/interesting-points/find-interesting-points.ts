@@ -769,11 +769,12 @@ const CENTER_RADII = [24, 48, 72, 96, 128];
 const CENTER_MIN_COVERAGE = 0.5;
 
 /**
- * ある点を中心として、周囲の方位に高スコアブロックがどれだけ分布しているかを算出する
+ * ある点を中心として、周囲の方位に構造がどれだけ広く分布しているかを算出する
  *
  * CENTER_DIRECTIONS方向 × CENTER_RADII半径でスコアグリッドをサンプリングし、
- * 各方向で閾値以上のスコアが1つでもあれば「構造あり」と判定する。
- * coverage（構造がある方向の割合）と周囲の平均スコアを返す。
+ * 閾値以上のスコアを持つブロックを二値的にカウントする（スコアの大きさは無視）。
+ * coverage（構造がある方向の割合）とdensity（全サンプルのうちヒットした割合）を返す。
+ * centerScore = coverage × density で、広い構造の中心ほど高くなる。
  */
 const calcStructureCenterScore = (
   cx: number,
@@ -783,8 +784,8 @@ const calcStructureCenterScore = (
   scoreThreshold: number,
 ): { coverage: number; centerScore: number } => {
   let directionsWithStructure = 0;
-  let totalScore = 0;
-  let totalSamples = 0;
+  let totalHits = 0;
+  const totalProbes = CENTER_DIRECTIONS * CENTER_RADII.length;
 
   for (let d = 0; d < CENTER_DIRECTIONS; d++) {
     const angle = (2 * Math.PI * d) / CENTER_DIRECTIONS;
@@ -800,8 +801,7 @@ const calcStructureCenterScore = (
 
       if (score >= scoreThreshold) {
         foundInDirection = true;
-        totalScore += score;
-        totalSamples++;
+        totalHits++;
       }
     }
 
@@ -809,9 +809,9 @@ const calcStructureCenterScore = (
   }
 
   const coverage = directionsWithStructure / CENTER_DIRECTIONS;
-  const avgScore = totalSamples > 0 ? totalScore / totalSamples : 0;
+  const density = totalHits / totalProbes;
 
-  return { coverage, centerScore: coverage * avgScore };
+  return { coverage, centerScore: coverage * density };
 };
 
 /**
@@ -834,13 +834,13 @@ export const findStructureCenter = (
     scoreGrid.set(`${b.bx},${b.by}`, b.score);
   }
 
-  // 閾値: 非ゼロスコアのp75
+  // 閾値: 非ゼロスコアのp25（「構造がある」程度の低いハードル）
   const nonZeroScores = blocks
     .map((b) => b.score)
     .filter((s) => s > 0)
     .sort((a, b) => a - b);
   if (nonZeroScores.length === 0) return null;
-  const thresholdIndex = Math.floor(nonZeroScores.length * 0.75);
+  const thresholdIndex = Math.floor(nonZeroScores.length * 0.25);
   const scoreThreshold = nonZeroScores[Math.min(thresholdIndex, nonZeroScores.length - 1)];
 
   let bestPoint: InterestingPoint | null = null;

@@ -251,10 +251,11 @@ export const drawUIInterestingPoints = (
   p.noFill();
 
   for (const point of points) {
-    const ratio = maxScore > 0 ? point.score / maxScore : 0;
-    const radius = MARKER_BASE_RADIUS + (MARKER_MAX_RADIUS - MARKER_BASE_RADIUS) * ratio;
     const isHovered = point === hoveredPoint;
     const isCenter = point === centerPoint;
+    // centerPointはスコアのスケールが異なるため固定サイズ
+    const ratio = isCenter ? 1 : maxScore > 0 ? point.score / maxScore : 0;
+    const radius = MARKER_BASE_RADIUS + (MARKER_MAX_RADIUS - MARKER_BASE_RADIUS) * ratio;
 
     // 黒の影（太め）
     p.stroke(0, 0, 0, 60);
