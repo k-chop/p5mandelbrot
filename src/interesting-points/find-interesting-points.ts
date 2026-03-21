@@ -384,6 +384,9 @@ export const calcNeighborhoodGradientDensity = (
 /** 回転対称性の検査に使う半径リスト */
 const SYMMETRY_RADII = [4, 8, 16, 32];
 
+/** 円周サンプルの変動係数がこの閾値未満なら対称性計算をスキップ（平坦領域の偽高スコアを防ぐ） */
+const SYMMETRY_MIN_CV = 0.05;
+
 /** 回転次数の範囲 */
 const MIN_ROTATION_ORDER = 2;
 const MAX_ROTATION_ORDER = 8;
@@ -473,29 +476,40 @@ export const calcRotationalSymmetry = (
       }
     }
 
+    // 円周サンプルの変動係数が小さい（平坦）なら対称性0とみなす
+    const validSamples = samples.filter((_, i) => valid[i]);
     let bestCorrelation = 0;
 
-    for (let n = MIN_ROTATION_ORDER; n <= MAX_ROTATION_ORDER; n++) {
-      const shift = Math.round(sampleCount / n);
-      if (shift === 0) continue;
+    if (validSamples.length >= 4) {
+      const rMean = validSamples.reduce((a, b) => a + b, 0) / validSamples.length;
+      const rVar =
+        validSamples.reduce((a, b) => a + (b - rMean) ** 2, 0) / validSamples.length;
+      const cv = rMean > 0 ? Math.sqrt(rVar) / rMean : 0;
 
-      const xs: number[] = [];
-      const ys: number[] = [];
+      if (cv >= SYMMETRY_MIN_CV) {
+        for (let n = MIN_ROTATION_ORDER; n <= MAX_ROTATION_ORDER; n++) {
+          const shift = Math.round(sampleCount / n);
+          if (shift === 0) continue;
 
-      for (let k = 0; k < sampleCount; k++) {
-        const k2 = (k + shift) % sampleCount;
-        if (valid[k] && valid[k2]) {
-          xs.push(samples[k]);
-          ys.push(samples[k2]);
+          const xs: number[] = [];
+          const ys: number[] = [];
+
+          for (let k = 0; k < sampleCount; k++) {
+            const k2 = (k + shift) % sampleCount;
+            if (valid[k] && valid[k2]) {
+              xs.push(samples[k]);
+              ys.push(samples[k2]);
+            }
+          }
+
+          const minPairs = Math.floor(sampleCount / n / 2);
+          if (xs.length < minPairs) continue;
+
+          const correlation = calcPearsonCorrelation(xs, ys);
+          if (correlation > bestCorrelation) {
+            bestCorrelation = correlation;
+          }
         }
-      }
-
-      const minPairs = Math.floor(sampleCount / n / 2);
-      if (xs.length < minPairs) continue;
-
-      const correlation = calcPearsonCorrelation(xs, ys);
-      if (correlation > bestCorrelation) {
-        bestCorrelation = correlation;
       }
     }
 
@@ -580,29 +594,40 @@ const calcRotationalSymmetryFactors = (
       }
     }
 
+    // 円周サンプルの変動係数が小さい（平坦）なら対称性0とみなす
+    const validSamples = samples.filter((_, i) => valid[i]);
     let bestCorrelation = 0;
 
-    for (let n = MIN_ROTATION_ORDER; n <= MAX_ROTATION_ORDER; n++) {
-      const shift = Math.round(sampleCount / n);
-      if (shift === 0) continue;
+    if (validSamples.length >= 4) {
+      const rMean = validSamples.reduce((a, b) => a + b, 0) / validSamples.length;
+      const rVar =
+        validSamples.reduce((a, b) => a + (b - rMean) ** 2, 0) / validSamples.length;
+      const cv = rMean > 0 ? Math.sqrt(rVar) / rMean : 0;
 
-      const xs: number[] = [];
-      const ys: number[] = [];
+      if (cv >= SYMMETRY_MIN_CV) {
+        for (let n = MIN_ROTATION_ORDER; n <= MAX_ROTATION_ORDER; n++) {
+          const shift = Math.round(sampleCount / n);
+          if (shift === 0) continue;
 
-      for (let k = 0; k < sampleCount; k++) {
-        const k2 = (k + shift) % sampleCount;
-        if (valid[k] && valid[k2]) {
-          xs.push(samples[k]);
-          ys.push(samples[k2]);
+          const xs: number[] = [];
+          const ys: number[] = [];
+
+          for (let k = 0; k < sampleCount; k++) {
+            const k2 = (k + shift) % sampleCount;
+            if (valid[k] && valid[k2]) {
+              xs.push(samples[k]);
+              ys.push(samples[k2]);
+            }
+          }
+
+          const minPairs = Math.floor(sampleCount / n / 2);
+          if (xs.length < minPairs) continue;
+
+          const correlation = calcPearsonCorrelation(xs, ys);
+          if (correlation > bestCorrelation) {
+            bestCorrelation = correlation;
+          }
         }
-      }
-
-      const minPairs = Math.floor(sampleCount / n / 2);
-      if (xs.length < minPairs) continue;
-
-      const correlation = calcPearsonCorrelation(xs, ys);
-      if (correlation > bestCorrelation) {
-        bestCorrelation = correlation;
       }
     }
 
