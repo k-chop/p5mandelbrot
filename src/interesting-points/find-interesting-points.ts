@@ -775,19 +775,18 @@ const CENTER_EROSION_MAX_ROUNDS = 50;
  * ある点を中心として、周囲の方位に構造がどれだけ広く分布しているかを算出する
  *
  * CENTER_DIRECTIONS方向 × CENTER_RADII半径でスコアグリッドをサンプリングし、
- * 閾値以上のスコアを持つブロックを二値的にカウントする（スコアの大きさは無視）。
- * coverage（構造がある方向の割合）とdensity（全サンプルのうちヒットした割合）を返す。
+ * rank正規化されたスコアグリッドをサンプリングし、
+ * coverage（構造がある方向の割合）とdensity（サンプルのrank値平均）を返す。
  * centerScore = coverage × density で、広い構造の中心ほど高くなる。
  */
 const calcStructureCenterScore = (
   cx: number,
   cy: number,
-  scoreGrid: Map<string, number>,
+  rankGrid: Map<string, number>,
   stride: number,
-  scoreThreshold: number,
 ): { coverage: number; centerScore: number } => {
   let directionsWithStructure = 0;
-  let totalHits = 0;
+  let totalRankSum = 0;
   const totalProbes = CENTER_DIRECTIONS * CENTER_RADII.length;
 
   for (let d = 0; d < CENTER_DIRECTIONS; d++) {
@@ -800,11 +799,11 @@ const calcStructureCenterScore = (
       // グリッドにスナップ
       const gx = Math.round(sx / stride) * stride;
       const gy = Math.round(sy / stride) * stride;
-      const score = scoreGrid.get(`${gx},${gy}`) ?? 0;
+      const rank = rankGrid.get(`${gx},${gy}`) ?? 0;
 
-      if (score >= scoreThreshold) {
+      totalRankSum += rank;
+      if (rank > 0) {
         foundInDirection = true;
-        totalHits++;
       }
     }
 
@@ -812,7 +811,7 @@ const calcStructureCenterScore = (
   }
 
   const coverage = directionsWithStructure / CENTER_DIRECTIONS;
-  const density = totalHits / totalProbes;
+  const density = totalRankSum / totalProbes;
 
   return { coverage, centerScore: coverage * density };
 };
@@ -874,20 +873,16 @@ export const findStructureCenter = (
 ): InterestingPoint | null => {
   if (blocks.length === 0) return null;
 
-  // スコアグリッドを構築
-  const scoreGrid = new Map<string, number>();
-  for (const b of blocks) {
-    scoreGrid.set(`${b.bx},${b.by}`, b.score);
+  // rank正規化グリッドを構築（スコア順位を0-1に正規化）
+  const sorted = blocks
+    .map((b) => ({ key: `${b.bx},${b.by}`, score: b.score }))
+    .sort((a, b) => a.score - b.score);
+  const rankGrid = new Map<string, number>();
+  for (let i = 0; i < sorted.length; i++) {
+    // スコア0のブロックはrank 0
+    const rank = sorted[i].score > 0 ? (i + 1) / sorted.length : 0;
+    rankGrid.set(sorted[i].key, rank);
   }
-
-  // 閾値: 非ゼロスコアのp25（「構造がある」程度の低いハードル）
-  const nonZeroScores = blocks
-    .map((b) => b.score)
-    .filter((s) => s > 0)
-    .sort((a, b) => a - b);
-  if (nonZeroScores.length === 0) return null;
-  const thresholdIndex = Math.floor(nonZeroScores.length * 0.25);
-  const scoreThreshold = nonZeroScores[Math.min(thresholdIndex, nonZeroScores.length - 1)];
 
   // 全ブロックのcenterScoreを算出してfactorsに記録
   let maxCenterScore = 0;
@@ -895,9 +890,8 @@ export const findStructureCenter = (
     const { coverage, centerScore } = calcStructureCenterScore(
       block.bx,
       block.by,
-      scoreGrid,
+      rankGrid,
       stride,
-      scoreThreshold,
     );
 
     block.factors.centerScore = coverage >= CENTER_MIN_COVERAGE ? centerScore : 0;
