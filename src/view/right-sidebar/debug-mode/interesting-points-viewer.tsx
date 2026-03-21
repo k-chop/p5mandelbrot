@@ -12,7 +12,8 @@ import {
   SelectValue,
 } from "@/shadcn/components/ui/select";
 import { toast } from "@/shadcn/hooks/use-toast";
-import { useStoreValue } from "@/store/store";
+import { Switch } from "@/shadcn/components/ui/switch";
+import { updateStoreWith, useStoreValue } from "@/store/store";
 import { useMemo, useState } from "react";
 import { BlockHeatmap } from "./block-heatmap";
 import { PointDetailPanel } from "./point-detail-panel";
@@ -24,6 +25,7 @@ import { PointDetailPanel } from "./point-detail-panel";
  */
 export const InterestingPointsViewer = () => {
   const debugData = useStoreValue("interestingPointsDebugData");
+  const alwaysDebug = useStoreValue("alwaysComputeIPDebugData");
   const [selectedFactor, setSelectedFactor] = useState("score");
   const [selectedBlock, setSelectedBlock] = useState<BlockDebugInfo | null>(null);
   const [selectedScale, setSelectedScale] = useState<string>("all");
@@ -57,11 +59,23 @@ export const InterestingPointsViewer = () => {
     return [...names];
   }, [blocks]);
 
+  const alwaysDebugToggle = (
+    <div className="flex items-center space-x-2">
+      <Switch
+        id="always-compute-ip-debug"
+        checked={alwaysDebug}
+        onCheckedChange={() => updateStoreWith("alwaysComputeIPDebugData", (v) => !v)}
+      />
+      <Label htmlFor="always-compute-ip-debug">Always compute debug data</Label>
+    </div>
+  );
+
   if (!debugData) {
     return (
       <div className="space-y-2 p-2">
+        {alwaysDebugToggle}
         <div className="text-muted-foreground text-sm italic">
-          Interesting Points を有効にして盤面を描画すると、デバッグデータが表示されます
+          デバッグデータを有効にして盤面を描画すると、ここに表示されます
         </div>
       </div>
     );
@@ -69,6 +83,7 @@ export const InterestingPointsViewer = () => {
 
   return (
     <div className="space-y-3 p-2">
+      {alwaysDebugToggle}
       <div className="text-sm font-medium">
         Scoring: {debugData.scoring} | Points: {debugData.selectedPoints.length}
       </div>

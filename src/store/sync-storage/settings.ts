@@ -12,6 +12,10 @@ export type Settings = {
   supersamplingWidth: number;
   supersamplingHeight: number;
   showInterestingPoints: boolean;
+  /** 常にIP debugデータを計算するか */
+  alwaysComputeIPDebugData: boolean;
+  /** Debug Modeで選択中のタブ */
+  debugModeTab: string;
 };
 
 export const DEFAULT_WORKER_COUNT =
@@ -27,6 +31,8 @@ const defaultSettings = {
   supersamplingWidth: 1920,
   supersamplingHeight: 1080,
   showInterestingPoints: false,
+  alwaysComputeIPDebugData: false,
+  debugModeTab: "batch-render",
 } satisfies Settings;
 
 export const isSettingField = (key: string): key is keyof Settings => key in defaultSettings;
@@ -42,6 +48,8 @@ export const writeSettingsToStorage = () => {
     supersamplingWidth: getStore("supersamplingWidth"),
     supersamplingHeight: getStore("supersamplingHeight"),
     showInterestingPoints: getStore("showInterestingPoints"),
+    alwaysComputeIPDebugData: getStore("alwaysComputeIPDebugData"),
+    debugModeTab: getStore("debugModeTab"),
   } satisfies Settings;
 
   const serialized = JSON.stringify(settings);

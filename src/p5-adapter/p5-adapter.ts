@@ -695,13 +695,13 @@ export const p5Draw = (p: p5) => {
           shouldSavePOIHistoryNextRender = true;
 
           // 興味深いポイントを検出する
-          if (getStore("showInterestingPoints")) {
+          if (getStore("showInterestingPoints") || getStore("alwaysComputeIPDebugData")) {
             const { width: cw, height: ch } = getCanvasSize();
             consolidateIterationCache(cw, ch);
             const cache = getIterationCache();
             if (cache.length > 0 && cache[0].buffer.length === cw * ch) {
               const params = getCurrentParams();
-              if (getStore("isDebugMode")) {
+              if (getStore("isDebugMode") || getStore("alwaysComputeIPDebugData")) {
                 const result = findInterestingPoints(cache[0].buffer, cw, ch, params.N, {
                   debug: true,
                 });
