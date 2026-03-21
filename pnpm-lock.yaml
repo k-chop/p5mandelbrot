@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@hono/node-server':
+        specifier: 1.19.11
+        version: 1.19.11(hono@4.12.8)
       '@mantine/hooks':
         specifier: 8.3.16
         version: 8.3.16(react@19.2.4)
@@ -41,6 +44,9 @@ importers:
       eventmit:
         specifier: 3.0.6
         version: 3.0.6
+      hono:
+        specifier: 4.12.8
+        version: 4.12.8
       idb-keyval:
         specifier: 6.2.2
         version: 6.2.2
@@ -342,6 +348,12 @@ packages:
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@hono/node-server@1.19.11':
+    resolution: {integrity: sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      hono: ^4
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1767,6 +1779,10 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
+  hono@4.12.8:
+    resolution: {integrity: sha512-VJCEvtrezO1IAR+kqEYnxUOoStaQPGrCmX3j4wDTNOcD1uRPFpGlwQUIW8niPuvHXaTUxeOUl5MMDGrl+tmO9A==}
+    engines: {node: '>=16.9.0'}
+
   idb-keyval@6.2.2:
     resolution: {integrity: sha512-yjD9nARJ/jb1g+CvD0tlhUHOrJ9Sy0P8T9MF3YaLlHnSRpwPfpTX0XIvpmw3gAJUmEu3FiICLBDPXVwyEvrleg==}
 
@@ -2369,6 +2385,10 @@ snapshots:
       react-dom: 19.2.4(react@19.2.4)
 
   '@floating-ui/utils@0.2.11': {}
+
+  '@hono/node-server@1.19.11(hono@4.12.8)':
+    dependencies:
+      hono: 4.12.8
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
@@ -3627,6 +3647,8 @@ snapshots:
       resolve-pkg-maps: 1.0.0
 
   graceful-fs@4.2.11: {}
+
+  hono@4.12.8: {}
 
   idb-keyval@6.2.2: {}
 
