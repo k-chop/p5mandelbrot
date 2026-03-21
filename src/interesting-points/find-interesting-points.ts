@@ -384,8 +384,8 @@ export const calcNeighborhoodGradientDensity = (
 /** 回転対称性の検査に使う半径リスト */
 const SYMMETRY_RADII = [4, 8, 16, 32];
 
-/** 円周サンプルの変動係数がこの閾値未満なら対称性計算をスキップ（平坦領域の偽高スコアを防ぐ） */
-const SYMMETRY_MIN_CV = 0.05;
+/** 円周サンプルの正規化標準偏差（std/maxIteration）がこの閾値未満なら対称性計算をスキップ（平坦領域の偽高スコアを防ぐ） */
+const SYMMETRY_MIN_NORMALIZED_STD = 0.01;
 
 /** 回転次数の範囲 */
 const MIN_ROTATION_ORDER = 2;
@@ -484,9 +484,9 @@ export const calcRotationalSymmetry = (
       const rMean = validSamples.reduce((a, b) => a + b, 0) / validSamples.length;
       const rVar =
         validSamples.reduce((a, b) => a + (b - rMean) ** 2, 0) / validSamples.length;
-      const cv = rMean > 0 ? Math.sqrt(rVar) / rMean : 0;
+      const normalizedStd = Math.sqrt(rVar) / maxIteration;
 
-      if (cv >= SYMMETRY_MIN_CV) {
+      if (normalizedStd >= SYMMETRY_MIN_NORMALIZED_STD) {
         for (let n = MIN_ROTATION_ORDER; n <= MAX_ROTATION_ORDER; n++) {
           const shift = Math.round(sampleCount / n);
           if (shift === 0) continue;
@@ -602,9 +602,9 @@ const calcRotationalSymmetryFactors = (
       const rMean = validSamples.reduce((a, b) => a + b, 0) / validSamples.length;
       const rVar =
         validSamples.reduce((a, b) => a + (b - rMean) ** 2, 0) / validSamples.length;
-      const cv = rMean > 0 ? Math.sqrt(rVar) / rMean : 0;
+      const normalizedStd = Math.sqrt(rVar) / maxIteration;
 
-      if (cv >= SYMMETRY_MIN_CV) {
+      if (normalizedStd >= SYMMETRY_MIN_NORMALIZED_STD) {
         for (let n = MIN_ROTATION_ORDER; n <= MAX_ROTATION_ORDER; n++) {
           const shift = Math.round(sampleCount / n);
           if (shift === 0) continue;
