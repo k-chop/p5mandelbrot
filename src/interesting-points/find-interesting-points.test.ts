@@ -3,6 +3,7 @@ import {
   applyNMS,
   calcGradientMagnitude,
   calcLocalEntropy,
+  calcNeighborhoodGradientDensity,
   calcRotationalSymmetry,
   findBlockPeak,
   findCandidatesAtScale,
@@ -451,6 +452,63 @@ const fillRadialPattern = (
     }
   }
 };
+
+describe("calcNeighborhoodGradientDensity", () => {
+  it("全ピクセル同一値 → 0", () => {
+    const width = 160;
+    const height = 160;
+    const buffer = new Uint32Array(width * height).fill(50);
+
+    const result = calcNeighborhoodGradientDensity(buffer, 80, 80, width, height, 100);
+
+    expect(result).toBe(0);
+  });
+
+  it("周囲に勾配がある → 正の値", () => {
+    const width = 160;
+    const height = 160;
+    const buffer = new Uint32Array(width * height).fill(50);
+
+    // 中心付近にグラデーション的な構造を配置
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const dx = x - 80;
+        const dy = y - 80;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 0 && dist < 70) {
+          buffer[y * width + x] = Math.round(50 + dist);
+        }
+      }
+    }
+
+    const result = calcNeighborhoodGradientDensity(buffer, 80, 80, width, height, 200);
+
+    expect(result).toBeGreaterThan(0);
+  });
+
+  it("中心付近が平坦でも周辺に構造があれば正の値を返す", () => {
+    const width = 160;
+    const height = 160;
+    const buffer = new Uint32Array(width * height).fill(50);
+
+    // 中心(80,80)の半径5以内は平坦だが、半径10-60に構造がある
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const dx = x - 80;
+        const dy = y - 80;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist >= 10 && dist < 60) {
+          const angle = Math.atan2(dy, dx);
+          buffer[y * width + x] = Math.round(50 + 30 * Math.cos(4 * angle));
+        }
+      }
+    }
+
+    const result = calcNeighborhoodGradientDensity(buffer, 80, 80, width, height, 200);
+
+    expect(result).toBeGreaterThan(0);
+  });
+});
 
 describe("calcRotationalSymmetry", () => {
   it("flat region（全ピクセル同一値）→ スコア0", () => {

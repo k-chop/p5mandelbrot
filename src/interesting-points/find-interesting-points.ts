@@ -229,7 +229,7 @@ export const findCandidatesAtScale = (
           ? calcGradientMagnitude(buffer, peak.x, peak.y, width, height, maxIteration)
           : 0;
         const entropy = calcLocalEntropy(buffer, bx, by, blockSize, width, height, maxIteration);
-        const score = peak ? entropy * gradient : 0;
+        const score = peak ? entropy * Math.log2(1 + gradient) : 0;
 
         debugBlocks.push({
           bx,
@@ -249,7 +249,7 @@ export const findCandidatesAtScale = (
         const gradient = calcGradientMagnitude(buffer, peak.x, peak.y, width, height, maxIteration);
         const entropy = calcLocalEntropy(buffer, bx, by, blockSize, width, height, maxIteration);
 
-        const score = entropy * gradient;
+        const score = entropy * Math.log2(1 + gradient);
         if (score > 0) {
           candidates.push({ x: peak.x, y: peak.y, iteration: peak.iteration, score });
         }
@@ -325,6 +325,60 @@ export const mergeCandidatesAcrossScales = (
     .sort((a, b) => b.score - a.score);
 };
 
+/** 周辺構造密度の検査に使う半径リスト */
+const NEIGHBORHOOD_RADII = [8, 16, 32, 64];
+
+/** 周辺構造密度の各半径でのサンプル数 */
+const NEIGHBORHOOD_SAMPLES_PER_RADIUS = 16;
+
+/**
+ * neighborhoodGradientの減衰係数。
+ * structureAmountが極端に低い場合のみ救済するため、
+ * max(structureAmount, neighborhoodGradient * WEIGHT) で適用する。
+ */
+const NEIGHBORHOOD_RESCUE_WEIGHT = 0.1;
+
+/**
+ * 中心点の周辺におけるgradient密度を算出する
+ *
+ * 複数半径の円周上でgradient magnitudeをサンプリングし、
+ * 平均値をmaxIterationで正規化して返す。
+ * 放射状構造の中心点のように局所的には平坦だが
+ * 周囲に複雑な構造が広がっている場所を検出できる。
+ */
+export const calcNeighborhoodGradientDensity = (
+  buffer: Uint32Array,
+  cx: number,
+  cy: number,
+  width: number,
+  height: number,
+  maxIteration: number,
+): number => {
+  let totalGradient = 0;
+  let sampleCount = 0;
+
+  for (const r of NEIGHBORHOOD_RADII) {
+    for (let k = 0; k < NEIGHBORHOOD_SAMPLES_PER_RADIUS; k++) {
+      const angle = (2 * Math.PI * k) / NEIGHBORHOOD_SAMPLES_PER_RADIUS;
+      const sx = Math.round(cx + r * Math.cos(angle));
+      const sy = Math.round(cy + r * Math.sin(angle));
+
+      if (sx < 1 || sx >= width - 1 || sy < 1 || sy >= height - 1) continue;
+
+      const val = buffer[sy * width + sx];
+      if (val === 0 || val === maxIteration) continue;
+
+      const gradient = calcGradientMagnitude(buffer, sx, sy, width, height, maxIteration);
+      totalGradient += gradient;
+      sampleCount++;
+    }
+  }
+
+  if (sampleCount === 0) return 0;
+
+  return totalGradient / sampleCount / maxIteration;
+};
+
 /** 回転対称性の検査に使う半径リスト */
 const SYMMETRY_RADII = [4, 8, 16, 32];
 
@@ -372,7 +426,8 @@ const calcPearsonCorrelation = (xs: number[], ys: number[]): number => {
  *
  * 複数の半径で円周上のiteration値をサンプリングし、
  * 各回転次数(2..8)でPearson相関を求めて最大値を取る。
- * 全半径の最大相関を平均し、構造量（標準偏差/maxIteration）を乗じて最終スコアとする。
+ * 全半径の最大相関を平均し、構造量（標準偏差/maxIteration）と周辺構造密度の
+ * 大きい方を乗じて最終スコアとする。
  */
 export const calcRotationalSymmetry = (
   buffer: Uint32Array,
@@ -454,20 +509,32 @@ export const calcRotationalSymmetry = (
   const variance = allValidSumSq / allValidCount - mean * mean;
   const structureAmount = Math.sqrt(Math.max(0, variance)) / maxIteration;
 
-  return symmetryScore * structureAmount;
+  const neighborhoodGradient = calcNeighborhoodGradientDensity(
+    buffer,
+    cx,
+    cy,
+    width,
+    height,
+    maxIteration,
+  );
+
+  return (
+    symmetryScore * Math.max(structureAmount, neighborhoodGradient * NEIGHBORHOOD_RESCUE_WEIGHT)
+  );
 };
 
 /** calcRotationalSymmetryの分解結果 */
 interface SymmetryFactors {
   symmetryScore: number;
   structureAmount: number;
+  neighborhoodGradient: number;
   score: number;
 }
 
 /**
  * 回転対称性スコアの個別要因を返す
  *
- * calcRotationalSymmetryと同じ計算を行い、symmetryScoreとstructureAmountを個別に返す。
+ * calcRotationalSymmetryと同じ計算を行い、symmetryScore・structureAmount・neighborhoodGradientを個別に返す。
  */
 const calcRotationalSymmetryFactors = (
   buffer: Uint32Array,
@@ -542,7 +609,7 @@ const calcRotationalSymmetryFactors = (
   }
 
   if (validRadiusCount === 0 || allValidCount === 0) {
-    return { symmetryScore: 0, structureAmount: 0, score: 0 };
+    return { symmetryScore: 0, structureAmount: 0, neighborhoodGradient: 0, score: 0 };
   }
 
   const symmetryScore = totalBestCorrelation / validRadiusCount;
@@ -550,7 +617,22 @@ const calcRotationalSymmetryFactors = (
   const variance = allValidSumSq / allValidCount - mean * mean;
   const structureAmount = Math.sqrt(Math.max(0, variance)) / maxIteration;
 
-  return { symmetryScore, structureAmount, score: symmetryScore * structureAmount };
+  const neighborhoodGradient = calcNeighborhoodGradientDensity(
+    buffer,
+    cx,
+    cy,
+    width,
+    height,
+    maxIteration,
+  );
+
+  return {
+    symmetryScore,
+    structureAmount,
+    neighborhoodGradient,
+    score:
+      symmetryScore * Math.max(structureAmount, neighborhoodGradient * NEIGHBORHOOD_RESCUE_WEIGHT),
+  };
 };
 
 /**
@@ -584,6 +666,7 @@ const findSymmetryCandidates = (
           factors: {
             symmetryScore: factors.symmetryScore,
             structureAmount: factors.structureAmount,
+            neighborhoodGradient: factors.neighborhoodGradient,
           },
           score: factors.score,
           peak: { x, y, iteration: iter },
