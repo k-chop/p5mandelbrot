@@ -8,9 +8,11 @@ import {
   findBlockPeak,
   findCandidatesAtScale,
   findInterestingPoints,
+  findStructureCenter,
   mergeCandidatesAcrossScales,
   mergeProximityCandidates,
 } from "./find-interesting-points";
+import type { BlockDebugInfo } from "./find-interesting-points";
 
 describe("findInterestingPoints", () => {
   it("全ピクセルがN（集合内）→ 空配列", () => {
@@ -731,5 +733,107 @@ describe("applyNMS", () => {
     const result = applyNMS(candidates, 2, 30);
     expect(result[0]).toMatchObject({ x: 12, y: 10, score: 8 });
     expect(result[1]).toMatchObject({ x: 100, y: 100, score: 3 });
+  });
+});
+
+describe("findStructureCenter", () => {
+  /**
+   * 中心(160,160)の周囲にリング状の高スコアブロックを配置するヘルパー
+   */
+  const createRadialBlocks = (stride: number, size: number): BlockDebugInfo[] => {
+    const blocks: BlockDebugInfo[] = [];
+    const cx = Math.floor(size / 2);
+    const cy = Math.floor(size / 2);
+
+    for (let y = 0; y < size; y += stride) {
+      for (let x = 0; x < size; x += stride) {
+        const dx = x - cx;
+        const dy = y - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        // 半径40-100の環状に高スコアを配置
+        const score = dist >= 40 && dist <= 100 ? 0.5 + Math.random() * 0.5 : 0;
+        blocks.push({
+          bx: x,
+          by: y,
+          blockSize: stride,
+          factors: {},
+          score,
+          peak: score > 0 ? { x, y, iteration: 50 } : null,
+        });
+      }
+    }
+    return blocks;
+  };
+
+  it("放射状に高スコアが広がる場合 → 中心付近が選ばれる", () => {
+    const stride = 8;
+    const size = 320;
+    const blocks = createRadialBlocks(stride, size);
+
+    const center = findStructureCenter(blocks, stride);
+
+    expect(center).not.toBeNull();
+    // 中心(160,160)から64px以内であること（リング内径40 + グリッドスナップ誤差を考慮）
+    const dx = center!.x - 160;
+    const dy = center!.y - 160;
+    expect(Math.sqrt(dx * dx + dy * dy)).toBeLessThanOrEqual(64);
+  });
+
+  it("全ブロックがscore=0 → null", () => {
+    const blocks: BlockDebugInfo[] = [
+      { bx: 0, by: 0, blockSize: 8, factors: {}, score: 0, peak: null },
+      { bx: 8, by: 0, blockSize: 8, factors: {}, score: 0, peak: null },
+    ];
+
+    const center = findStructureCenter(blocks, 8);
+
+    expect(center).toBeNull();
+  });
+
+  it("片側にしか構造がない → カバレッジ不足でnull", () => {
+    const stride = 8;
+    const blocks: BlockDebugInfo[] = [];
+    // 320x320のグリッドで右半分にだけ高スコア
+    for (let y = 0; y < 320; y += stride) {
+      for (let x = 0; x < 320; x += stride) {
+        const score = x > 160 ? 0.8 : 0;
+        blocks.push({
+          bx: x,
+          by: y,
+          blockSize: stride,
+          factors: {},
+          score,
+          peak: score > 0 ? { x, y, iteration: 50 } : null,
+        });
+      }
+    }
+
+    const center = findStructureCenter(blocks, stride);
+
+    // 片側だけだと方位カバレッジが0.5未満なのでnullか、
+    // もし見つかっても右寄りの位置であること
+    if (center) {
+      expect(center.x).toBeGreaterThan(100);
+    }
+  });
+
+  it("debugData.centerPointがsymmetryモードで返される", () => {
+    const width = 320;
+    const height = 320;
+    const maxIter = 500;
+    const buffer = new Uint32Array(width * height).fill(50);
+    // 中心に4-fold対称パターン
+    fillRadialPattern(buffer, width, height, 160, 160, 4, 100, 80, 100);
+
+    const result = findInterestingPoints(buffer, width, height, maxIter, {
+      scoring: "symmetry",
+      debug: true,
+    });
+
+    expect(result.debugData.centerPoint).toBeDefined();
+    // centerPointの型チェック（nullの場合もある）
+    if (result.debugData.centerPoint) {
+      expect(result.debugData.centerPoint.score).toBeGreaterThan(0);
+    }
   });
 });

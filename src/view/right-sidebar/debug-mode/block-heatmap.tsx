@@ -27,11 +27,13 @@ const scoreToColor = (normalizedValue: number): string => {
 export const BlockHeatmap = ({
   blocks,
   selectedPoints,
+  centerPoint,
   selectedFactor,
   onBlockClick,
 }: {
   blocks: BlockDebugInfo[];
   selectedPoints: InterestingPoint[];
+  centerPoint?: InterestingPoint | null;
   selectedFactor: string;
   onBlockClick: (block: BlockDebugInfo) => void;
 }) => {
@@ -113,6 +115,18 @@ export const BlockHeatmap = ({
               className="pointer-events-none"
             />
           ))}
+
+          {centerPoint && (
+            <circle
+              cx={centerPoint.x * scaleX}
+              cy={centerPoint.y * scaleY}
+              r={5}
+              fill="none"
+              stroke="#648cdc"
+              strokeWidth={2}
+              className="pointer-events-none"
+            />
+          )}
         </svg>
 
         {hoveredBlock && (
@@ -142,8 +156,17 @@ export const BlockHeatmap = ({
             className="h-3 w-3 rounded-full border-2"
             style={{ borderColor: "#fbbf24", backgroundColor: "transparent" }}
           />
-          <span className="text-amber-400">Selected Points</span>
+          <span className="text-amber-400">Selected</span>
         </div>
+        {centerPoint && (
+          <div className="flex items-center gap-1">
+            <div
+              className="h-3 w-3 rounded-full border-2"
+              style={{ borderColor: "#648cdc", backgroundColor: "transparent" }}
+            />
+            <span style={{ color: "#648cdc" }}>Center</span>
+          </div>
+        )}
         <div className="flex items-center gap-1">
           <div
             className="h-3 w-3"

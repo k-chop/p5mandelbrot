@@ -670,7 +670,8 @@ export const p5Draw = (p: p5) => {
     } else if (draggingMode === undefined) {
       changeCursor(p, p.CROSS);
     }
-    drawUIInterestingPoints(p, currentInterestingPoints, hoveredPoint);
+    const centerPoint = getStore("interestingPointsDebugData")?.centerPoint ?? null;
+    drawUIInterestingPoints(p, currentInterestingPoints, hoveredPoint, centerPoint);
   } else if (draggingMode === undefined) {
     changeCursor(p, p.CROSS);
   }
@@ -705,7 +706,9 @@ export const p5Draw = (p: p5) => {
                 const result = findInterestingPoints(cache[0].buffer, cw, ch, params.N, {
                   debug: true,
                 });
-                currentInterestingPoints = result.points;
+                currentInterestingPoints = result.debugData.centerPoint
+                  ? [...result.points, result.debugData.centerPoint]
+                  : result.points;
                 updateStore("interestingPointsDebugData", result.debugData);
               } else {
                 currentInterestingPoints = findInterestingPoints(cache[0].buffer, cw, ch, params.N);

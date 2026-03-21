@@ -36,6 +36,7 @@ export interface EvalSummary {
   scoring: string;
   selectedPoints: EvalPointData[];
   nearMissPoints: EvalPointData[];
+  centerPoint: EvalPointData | null;
   scoreStats: ScoreStats;
 }
 
@@ -145,6 +146,9 @@ export const buildEvalSummary = (debugData: InterestingPointsDebugData): EvalSum
     scoring: debugData.scoring,
     selectedPoints: debugData.selectedPoints.map((p, i) => toEvalPointData(p, i + 1, allBlocks)),
     nearMissPoints: nearMiss.map((p, i) => toEvalPointData(p, selectedCount + i + 1, allBlocks)),
+    centerPoint: debugData.centerPoint
+      ? toEvalPointData(debugData.centerPoint, 0, allBlocks)
+      : null,
     scoreStats: calcScoreStats(allBlocks),
   };
 };
@@ -295,28 +299,58 @@ const drawMarkersOnCanvas = (
   scaleY: number,
 ) => {
   const points = debugData.selectedPoints;
-  if (points.length === 0) return;
 
-  const maxScore = points[0].score;
+  if (points.length > 0) {
+    const maxScore = points[0].score;
 
-  for (const point of points) {
-    const ratio = maxScore > 0 ? point.score / maxScore : 0;
-    const radius = MARKER_BASE_RADIUS + (MARKER_MAX_RADIUS - MARKER_BASE_RADIUS) * ratio;
-    const x = point.x * scaleX;
-    const y = point.y * scaleY;
+    for (const point of points) {
+      const ratio = maxScore > 0 ? point.score / maxScore : 0;
+      const radius = MARKER_BASE_RADIUS + (MARKER_MAX_RADIUS - MARKER_BASE_RADIUS) * ratio;
+      const x = point.x * scaleX;
+      const y = point.y * scaleY;
+
+      // 黒の影
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.24)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // 白リング
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgb(0, 0, 100)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+
+  // 構造中心点（黄色のダイヤモンド）
+  if (debugData.centerPoint) {
+    const x = debugData.centerPoint.x * scaleX;
+    const y = debugData.centerPoint.y * scaleY;
+    const r = MARKER_MAX_RADIUS;
 
     // 黒の影
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.24)";
+    ctx.moveTo(x, y - r);
+    ctx.lineTo(x + r, y);
+    ctx.lineTo(x, y + r);
+    ctx.lineTo(x - r, y);
+    ctx.closePath();
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.32)";
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    // 白リング
+    // 黄色のダイヤモンド
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgb(0, 0, 100)";
-    ctx.lineWidth = 1.5;
+    ctx.moveTo(x, y - r);
+    ctx.lineTo(x + r, y);
+    ctx.lineTo(x, y + r);
+    ctx.lineTo(x - r, y);
+    ctx.closePath();
+    ctx.strokeStyle = "rgb(255, 220, 0)";
+    ctx.lineWidth = 2;
     ctx.stroke();
   }
 };

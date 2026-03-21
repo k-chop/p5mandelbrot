@@ -86,6 +86,7 @@ export const InterestingPointsViewer = () => {
       {alwaysDebugToggle}
       <div className="text-sm font-medium">
         Scoring: {debugData.scoring} | Points: {debugData.selectedPoints.length}
+        {debugData.centerPoint && " | Center: ◆"}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -130,6 +131,7 @@ export const InterestingPointsViewer = () => {
       <BlockHeatmap
         blocks={blocks}
         selectedPoints={debugData.selectedPoints}
+        centerPoint={debugData.centerPoint}
         selectedFactor={selectedFactor}
         onBlockClick={setSelectedBlock}
       />
@@ -142,6 +144,12 @@ export const InterestingPointsViewer = () => {
             Candidates: {debugData.rawCandidates.length} raw → {debugData.mergedCandidates.length}{" "}
             merged → {debugData.selectedPoints.length} selected
           </div>
+          {debugData.centerPoint && (
+            <div className="text-xs text-yellow-400">
+              ◆ Center: ({debugData.centerPoint.x}, {debugData.centerPoint.y}) score=
+              {debugData.centerPoint.score.toFixed(6)}
+            </div>
+          )}
         </div>
 
         <Button

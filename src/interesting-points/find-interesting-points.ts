@@ -48,6 +48,8 @@ export interface InterestingPointsDebugData {
   mergedCandidates: InterestingPoint[];
   /** 最終選出ポイント */
   selectedPoints: InterestingPoint[];
+  /** 構造中心点（別枠選出）。周囲に放射状に高スコアが広がる収束点 */
+  centerPoint: InterestingPoint | null;
 }
 
 /** findInterestingPointsの戻り値（debug: true時） */
@@ -757,6 +759,120 @@ export const applyNMS = (
   return selected;
 };
 
+/** 中心点検出で使う方向数 */
+const CENTER_DIRECTIONS = 16;
+
+/** 中心点検出のサンプリング半径（ピクセル単位） */
+const CENTER_RADII = [24, 48, 72, 96, 128];
+
+/** 中心点と認めるための最低方位カバレッジ（0-1）。半数以上の方向に構造が必要 */
+const CENTER_MIN_COVERAGE = 0.5;
+
+/**
+ * ある点を中心として、周囲の方位に高スコアブロックがどれだけ分布しているかを算出する
+ *
+ * CENTER_DIRECTIONS方向 × CENTER_RADII半径でスコアグリッドをサンプリングし、
+ * 各方向で閾値以上のスコアが1つでもあれば「構造あり」と判定する。
+ * coverage（構造がある方向の割合）と周囲の平均スコアを返す。
+ */
+const calcStructureCenterScore = (
+  cx: number,
+  cy: number,
+  scoreGrid: Map<string, number>,
+  stride: number,
+  scoreThreshold: number,
+): { coverage: number; centerScore: number } => {
+  let directionsWithStructure = 0;
+  let totalScore = 0;
+  let totalSamples = 0;
+
+  for (let d = 0; d < CENTER_DIRECTIONS; d++) {
+    const angle = (2 * Math.PI * d) / CENTER_DIRECTIONS;
+    let foundInDirection = false;
+
+    for (const r of CENTER_RADII) {
+      const sx = Math.round(cx + r * Math.cos(angle));
+      const sy = Math.round(cy + r * Math.sin(angle));
+      // グリッドにスナップ
+      const gx = Math.round(sx / stride) * stride;
+      const gy = Math.round(sy / stride) * stride;
+      const score = scoreGrid.get(`${gx},${gy}`) ?? 0;
+
+      if (score >= scoreThreshold) {
+        foundInDirection = true;
+        totalScore += score;
+        totalSamples++;
+      }
+    }
+
+    if (foundInDirection) directionsWithStructure++;
+  }
+
+  const coverage = directionsWithStructure / CENTER_DIRECTIONS;
+  const avgScore = totalSamples > 0 ? totalScore / totalSamples : 0;
+
+  return { coverage, centerScore: coverage * avgScore };
+};
+
+/**
+ * ブロックスコア分布から構造の中心点を検出する
+ *
+ * 各グリッド位置について、周囲に放射状に高スコアブロックが広がっているかを調べ、
+ * 方位カバレッジが最も高い点を中心点として返す。
+ * 中心点自身のスコアは低くてもよい（集合内部でも可）。
+ * 各ブロックのfactorsに `centerScore` を追加する（ヒートマップ出力用）。
+ */
+export const findStructureCenter = (
+  blocks: BlockDebugInfo[],
+  stride: number,
+): InterestingPoint | null => {
+  if (blocks.length === 0) return null;
+
+  // スコアグリッドを構築
+  const scoreGrid = new Map<string, number>();
+  for (const b of blocks) {
+    scoreGrid.set(`${b.bx},${b.by}`, b.score);
+  }
+
+  // 閾値: 非ゼロスコアのp75
+  const nonZeroScores = blocks
+    .map((b) => b.score)
+    .filter((s) => s > 0)
+    .sort((a, b) => a - b);
+  if (nonZeroScores.length === 0) return null;
+  const thresholdIndex = Math.floor(nonZeroScores.length * 0.75);
+  const scoreThreshold = nonZeroScores[Math.min(thresholdIndex, nonZeroScores.length - 1)];
+
+  let bestPoint: InterestingPoint | null = null;
+  let bestCenterScore = 0;
+
+  for (const block of blocks) {
+    const { coverage, centerScore } = calcStructureCenterScore(
+      block.bx,
+      block.by,
+      scoreGrid,
+      stride,
+      scoreThreshold,
+    );
+
+    // factorsにcenterScoreを追加（ヒートマップ用）
+    block.factors.centerScore = coverage >= CENTER_MIN_COVERAGE ? centerScore : 0;
+
+    if (coverage < CENTER_MIN_COVERAGE) continue;
+    if (centerScore <= bestCenterScore) continue;
+
+    bestCenterScore = centerScore;
+    bestPoint = {
+      x: block.peak ? block.peak.x : block.bx + Math.floor(stride / 2),
+      y: block.peak ? block.peak.y : block.by + Math.floor(stride / 2),
+      iteration: block.peak?.iteration ?? 0,
+      score: centerScore,
+    };
+  }
+
+  return bestPoint;
+};
+
 /**
  * iterationバッファから興味深いポイントを検出する
  *
@@ -817,6 +933,7 @@ export function findInterestingPoints(
     const selected = applyNMS(merged, topK, suppressionRadius);
 
     if (debug) {
+      const centerPoint = findStructureCenter(debugBlocks!, 8);
       return {
         points: selected,
         debugData: {
@@ -826,6 +943,7 @@ export function findInterestingPoints(
           rawCandidates: candidates,
           mergedCandidates: merged,
           selectedPoints: selected,
+          centerPoint,
         },
       };
     }
@@ -879,6 +997,7 @@ export function findInterestingPoints(
           rawCandidates,
           mergedCandidates: singleScaleCandidates,
           selectedPoints: selected,
+          centerPoint: null,
         },
       };
     }
@@ -900,6 +1019,7 @@ export function findInterestingPoints(
         rawCandidates,
         mergedCandidates: merged,
         selectedPoints: selected,
+        centerPoint: null,
       },
     };
   }
