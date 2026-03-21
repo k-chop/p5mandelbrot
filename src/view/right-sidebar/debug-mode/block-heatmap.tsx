@@ -5,8 +5,8 @@ import type {
 import { getCanvasSize } from "@/rendering/renderer";
 import { useState } from "react";
 
-const MINIMAP_WIDTH = 300;
-const MINIMAP_HEIGHT = 300;
+const MINIMAP_WIDTH = 600;
+const MINIMAP_HEIGHT = 600;
 
 /**
  * スコア値を青→赤のグラデーション色に変換する
