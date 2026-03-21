@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shadcn/components/ui/tabs";
 import { BatchRenderViewer } from "./batch-render-viewer";
 import { EventViewer } from "./event-viewer";
+import { InterestingPointsViewer } from "./interesting-points-viewer";
 
 export const DebugMode = () => {
   return (
@@ -8,12 +9,16 @@ export const DebugMode = () => {
       <TabsList>
         <TabsTrigger value="batch-render">Batch Render</TabsTrigger>
         <TabsTrigger value="event-viewer">Event Viewer</TabsTrigger>
+        <TabsTrigger value="ip-debug">IP Debug</TabsTrigger>
       </TabsList>
       <TabsContent value="batch-render">
         <BatchRenderViewer />
       </TabsContent>
       <TabsContent value="event-viewer">
         <EventViewer />
+      </TabsContent>
+      <TabsContent value="ip-debug">
+        <InterestingPointsViewer />
       </TabsContent>
     </Tabs>
   );

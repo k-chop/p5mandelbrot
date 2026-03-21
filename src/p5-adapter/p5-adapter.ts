@@ -1,5 +1,13 @@
 import { changePaletteFromPresets, cycleCurrentPaletteOffset, setPalette } from "@/camera/palette";
-import { getIterationTimeAt } from "@/iteration-buffer/iteration-buffer";
+import {
+  type InterestingPoint,
+  findInterestingPoints,
+} from "@/interesting-points/find-interesting-points";
+import {
+  consolidateIterationCache,
+  getIterationCache,
+  getIterationTimeAt,
+} from "@/iteration-buffer/iteration-buffer";
 import { startCalculation } from "@/mandelbrot";
 import { calcAutoN } from "@/mandelbrot-state/auto-iteration";
 import {
@@ -34,6 +42,7 @@ import {
 import {
   drawUICrossHair,
   drawUICurrentParams,
+  drawUIInterestingPoints,
   drawUIIterationAtCursor,
   drawUIScaleRate,
 } from "@/rendering/p5-renderer";
@@ -82,6 +91,8 @@ let lastTranslationOffset: {
 let willBlockNextContextMenu = false;
 /** p5のインスタンス。基本的には直に使わない */
 let UNSAFE_p5Instance: p5;
+/** 検出された興味深いポイント */
+let currentInterestingPoints: InterestingPoint[] = [];
 
 /**
  * 開始地点からのドラッグ量を取得
@@ -247,6 +258,7 @@ export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
 
   draggingMode = state;
   changeCursor(p, state === "move" ? "grabbing" : "zoom-in");
+  currentInterestingPoints = [];
 
   mouseDragged = true;
   isTranslatingMainBuffer = true;
@@ -450,6 +462,27 @@ export const p5Setup = async (p: p5) => {
   }
 };
 
+/** マーカーのヒット判定半径（最大半径 + マージン） */
+const MARKER_HIT_RADIUS = 18;
+
+/**
+ * クリック位置が興味深いポイントのマーカー範囲内かを判定する
+ */
+const findHitInterestingPoint = (
+  mouseX: number,
+  mouseY: number,
+  points: InterestingPoint[],
+): InterestingPoint | null => {
+  for (const point of points) {
+    const dx = mouseX - point.x;
+    const dy = mouseY - point.y;
+    if (dx * dx + dy * dy <= MARKER_HIT_RADIUS * MARKER_HIT_RADIUS) {
+      return point;
+    }
+  }
+  return null;
+};
+
 export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
   if (!ev) return;
   if (getStore("canvasLocked")) return;
@@ -475,8 +508,14 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
       willBlockNextContextMenu = true;
     }
   } else {
-    // クリック時
-    scaleTo(getStore("zoomRate"), { x: p.mouseX, y: p.mouseY });
+    // クリック時 — マーカー範囲内ならそのポイントを中心にズーム
+    const hitPoint = findHitInterestingPoint(p.mouseX, p.mouseY, currentInterestingPoints);
+    currentInterestingPoints = [];
+    if (hitPoint) {
+      scaleTo(getStore("zoomRate"), { x: hitPoint.x, y: hitPoint.y });
+    } else {
+      scaleTo(getStore("zoomRate"), { x: p.mouseX, y: p.mouseY });
+    }
   }
 
   changeCursor(p, p.CROSS);
@@ -615,6 +654,20 @@ export const p5Draw = (p: p5) => {
 
   drawUICurrentParams(p, getCurrentParams(), getAutoIterationEnabled());
   drawUIIterationAtCursor(p, getStore("iteration"));
+  if (getStore("showInterestingPoints")) {
+    const hoveredPoint =
+      draggingMode === undefined
+        ? findHitInterestingPoint(p.mouseX, p.mouseY, currentInterestingPoints)
+        : null;
+    if (hoveredPoint) {
+      changeCursor(p, "pointer");
+    } else if (draggingMode === undefined) {
+      changeCursor(p, p.CROSS);
+    }
+    drawUIInterestingPoints(p, currentInterestingPoints, hoveredPoint);
+  } else if (draggingMode === undefined) {
+    changeCursor(p, p.CROSS);
+  }
 
   if (shouldSavePOIHistoryNextRender) {
     shouldSavePOIHistoryNextRender = false;
@@ -634,6 +687,30 @@ export const p5Draw = (p: p5) => {
         if (elapsed !== 0) {
           // 次回のrendering後にPOIHistoryを更新する
           shouldSavePOIHistoryNextRender = true;
+
+          // 興味深いポイントを検出する
+          if (getStore("showInterestingPoints")) {
+            const { width: cw, height: ch } = getCanvasSize();
+            consolidateIterationCache(cw, ch);
+            const cache = getIterationCache();
+            if (cache.length > 0 && cache[0].buffer.length === cw * ch) {
+              const params = getCurrentParams();
+              if (getStore("isDebugMode")) {
+                const result = findInterestingPoints(cache[0].buffer, cw, ch, params.N, {
+                  debug: true,
+                });
+                currentInterestingPoints = result.points;
+                updateStore("interestingPointsDebugData", result.debugData);
+              } else {
+                currentInterestingPoints = findInterestingPoints(cache[0].buffer, cw, ch, params.N);
+                updateStore("interestingPointsDebugData", null);
+              }
+            } else {
+              currentInterestingPoints = [];
+            }
+          } else {
+            currentInterestingPoints = [];
+          }
         }
       },
       // onTranslated - cacheのtranslateとmainBufferへの書き込みが済んでから描画位置を戻す

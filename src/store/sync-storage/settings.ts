@@ -11,6 +11,7 @@ export type Settings = {
   rendererType: RendererType;
   supersamplingWidth: number;
   supersamplingHeight: number;
+  showInterestingPoints: boolean;
 };
 
 export const DEFAULT_WORKER_COUNT =
@@ -25,6 +26,7 @@ const defaultSettings = {
   rendererType: "p5js" as RendererType,
   supersamplingWidth: 1920,
   supersamplingHeight: 1080,
+  showInterestingPoints: false,
 } satisfies Settings;
 
 export const isSettingField = (key: string): key is keyof Settings => key in defaultSettings;
@@ -39,6 +41,7 @@ export const writeSettingsToStorage = () => {
     rendererType: getStore("rendererType"),
     supersamplingWidth: getStore("supersamplingWidth"),
     supersamplingHeight: getStore("supersamplingHeight"),
+    showInterestingPoints: getStore("showInterestingPoints"),
   } satisfies Settings;
 
   const serialized = JSON.stringify(settings);

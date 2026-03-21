@@ -1,3 +1,4 @@
+import type { InterestingPointsDebugData } from "@/interesting-points/find-interesting-points";
 import type { POIData, ResultSpans } from "@/types";
 import BigNumber from "bignumber.js";
 import { eventmit } from "eventmit";
@@ -53,6 +54,10 @@ type Store = {
   rendererType: "webgpu" | "p5js";
   /** Debug Mode中か否か */
   isDebugMode: boolean;
+  /** 興味深いポイントマーカーを表示するか */
+  showInterestingPoints: boolean;
+  /** 興味深いポイント検出のデバッグデータ */
+  interestingPointsDebugData: InterestingPointsDebugData | null;
 };
 
 const store: Store = {
@@ -89,6 +94,8 @@ const store: Store = {
   progress: "",
   rendererType: "p5js",
   isDebugMode: false,
+  showInterestingPoints: false,
+  interestingPointsDebugData: null,
 };
 
 const event = eventmit<string>();
