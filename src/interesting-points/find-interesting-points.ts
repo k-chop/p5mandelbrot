@@ -763,10 +763,13 @@ export const applyNMS = (
 const CENTER_DIRECTIONS = 16;
 
 /** 中心点検出のサンプリング半径（ピクセル単位） */
-const CENTER_RADII = [24, 48, 72, 96, 128];
+const CENTER_RADII = [16, 32, 48, 64, 80, 96, 112, 128];
 
 /** 中心点と認めるための最低方位カバレッジ（0-1）。半数以上の方向に構造が必要 */
 const CENTER_MIN_COVERAGE = 0.5;
+
+/** centerScoreに適用するエロージョンのラウンド数。小さいピークを消して大きいピークを残す */
+const CENTER_EROSION_ROUNDS = 5;
 
 /**
  * ある点を中心として、周囲の方位に構造がどれだけ広く分布しているかを算出する
@@ -817,9 +820,10 @@ const calcStructureCenterScore = (
 /**
  * ブロックスコア分布から構造の中心点を検出する
  *
- * 各グリッド位置のcenterScore（coverage × density）を算出し、
- * 高centerScoreブロック群（最大値の50%以上）の重み付き重心を中心点とする。
- * 各ブロックのfactorsに `centerScore` を追加する（ヒートマップ出力用）。
+ * 各グリッド位置のcenterScore（coverage × density）を算出した後、
+ * エロージョン（収縮）を適用して小さいピークを除去する。
+ * エロージョン後のスコアをfactorsに記録（ヒートマップ出力用）し、
+ * 高スコアブロック群（最大値の90%以上）の重み付き重心を中心点とする。
  */
 export const findStructureCenter = (
   blocks: BlockDebugInfo[],
@@ -861,8 +865,40 @@ export const findStructureCenter = (
 
   if (maxCenterScore === 0) return null;
 
-  // 最大centerScoreの80%以上のブロックで重み付き重心を計算
-  const centroidThreshold = maxCenterScore * 0.8;
+  // エロージョン: 各ラウンドで各ブロックのスコアを自分と上下左右の最小値に置き換える
+  // 小さいピークが消え、大きいピークの中心部だけが残る
+  const centerScoreGrid = new Map<string, number>();
+  for (const block of blocks) {
+    centerScoreGrid.set(`${block.bx},${block.by}`, block.factors.centerScore);
+  }
+
+  for (let round = 0; round < CENTER_EROSION_ROUNDS; round++) {
+    const prevGrid = new Map(centerScoreGrid);
+    for (const block of blocks) {
+      const { bx, by } = block;
+      const self = prevGrid.get(`${bx},${by}`) ?? 0;
+      const up = prevGrid.get(`${bx},${by - stride}`) ?? 0;
+      const down = prevGrid.get(`${bx},${by + stride}`) ?? 0;
+      const left = prevGrid.get(`${bx - stride},${by}`) ?? 0;
+      const right = prevGrid.get(`${bx + stride},${by}`) ?? 0;
+      const eroded = Math.min(self, up, down, left, right);
+      centerScoreGrid.set(`${bx},${by}`, eroded);
+    }
+  }
+
+  // エロージョン後のスコアをfactorsに書き戻し（ヒートマップ反映）
+  let maxErodedScore = 0;
+  for (const block of blocks) {
+    block.factors.centerScore = centerScoreGrid.get(`${block.bx},${block.by}`) ?? 0;
+    if (block.factors.centerScore > maxErodedScore) {
+      maxErodedScore = block.factors.centerScore;
+    }
+  }
+
+  if (maxErodedScore === 0) return null;
+
+  // 最大centerScoreの90%以上のブロックで重み付き重心を計算
+  const centroidThreshold = maxErodedScore * 0.9;
   let weightedX = 0;
   let weightedY = 0;
   let totalWeight = 0;
@@ -886,7 +922,7 @@ export const findStructureCenter = (
     x: cx,
     y: cy,
     iteration: 0,
-    score: maxCenterScore,
+    score: maxErodedScore,
   };
 };
 
