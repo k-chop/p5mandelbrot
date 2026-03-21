@@ -13,6 +13,19 @@ export interface ScoreStats {
   min: number;
   max: number;
   mean: number;
+  p50: number;
+  p90: number;
+  p99: number;
+}
+
+/** ポイントデータの型 */
+export interface EvalPointData {
+  rank: number;
+  x: number;
+  y: number;
+  iteration: number;
+  score: number;
+  factors: Record<string, number>;
 }
 
 /** summary.jsonの型 */
@@ -21,23 +34,29 @@ export interface EvalSummary {
   params: { centerX: string; centerY: string; r: string; N: number };
   canvasSize: { width: number; height: number };
   scoring: string;
-  selectedPoints: Array<{
-    rank: number;
-    x: number;
-    y: number;
-    iteration: number;
-    score: number;
-    factors: Record<string, number>;
-  }>;
+  selectedPoints: EvalPointData[];
+  nearMissPoints: EvalPointData[];
   scoreStats: ScoreStats;
 }
+
+/**
+ * ソート済み配列からパーセンタイル値を取得する
+ */
+const percentile = (sorted: number[], p: number): number => {
+  if (sorted.length === 0) return 0;
+  const index = (p / 100) * (sorted.length - 1);
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+  if (lower === upper) return sorted[lower];
+  return sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower);
+};
 
 /**
  * ブロックデバッグデータからスコア統計を算出する
  */
 export const calcScoreStats = (blocks: BlockDebugInfo[]): ScoreStats => {
   if (blocks.length === 0) {
-    return { totalBlocks: 0, nonZeroCount: 0, min: 0, max: 0, mean: 0 };
+    return { totalBlocks: 0, nonZeroCount: 0, min: 0, max: 0, mean: 0, p50: 0, p90: 0, p99: 0 };
   }
 
   let min = Infinity;
@@ -45,7 +64,9 @@ export const calcScoreStats = (blocks: BlockDebugInfo[]): ScoreStats => {
   let sum = 0;
   let nonZeroCount = 0;
 
+  const scores: number[] = [];
   for (const block of blocks) {
+    scores.push(block.score);
     if (block.score > 0) {
       nonZeroCount++;
       if (block.score < min) min = block.score;
@@ -54,12 +75,39 @@ export const calcScoreStats = (blocks: BlockDebugInfo[]): ScoreStats => {
     sum += block.score;
   }
 
+  scores.sort((a, b) => a - b);
+
   return {
     totalBlocks: blocks.length,
     nonZeroCount,
     min: nonZeroCount === 0 ? 0 : min,
     max: max === -Infinity ? 0 : max,
     mean: sum / blocks.length,
+    p50: percentile(scores, 50),
+    p90: percentile(scores, 90),
+    p99: percentile(scores, 99),
+  };
+};
+
+/**
+ * InterestingPointsDebugDataからEvalSummaryを生成する
+ */
+/**
+ * ポイントに対応するブロックのfactorsを取得してEvalPointDataを生成する
+ */
+const toEvalPointData = (
+  p: { x: number; y: number; iteration: number; score: number },
+  rank: number,
+  allBlocks: BlockDebugInfo[],
+): EvalPointData => {
+  const matchingBlock = allBlocks.find((b) => b.peak && b.peak.x === p.x && b.peak.y === p.y);
+  return {
+    rank,
+    x: p.x,
+    y: p.y,
+    iteration: p.iteration,
+    score: p.score,
+    factors: matchingBlock?.factors ?? {},
   };
 };
 
@@ -75,6 +123,16 @@ export const buildEvalSummary = (debugData: InterestingPointsDebugData): EvalSum
       ? debugData.gridBlocks
       : debugData.scaleBlocks.flatMap((sb) => sb.blocks);
 
+  const selectedSet = new Set(debugData.selectedPoints.map((p) => `${p.x},${p.y}`));
+
+  // mergedCandidatesからselectedPointsを除外し、スコア降順でrank 6-10を取得
+  const nearMiss = debugData.mergedCandidates
+    .filter((p) => !selectedSet.has(`${p.x},${p.y}`))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+
+  const selectedCount = debugData.selectedPoints.length;
+
   return {
     timestamp: new Date().toISOString(),
     params: {
@@ -85,20 +143,79 @@ export const buildEvalSummary = (debugData: InterestingPointsDebugData): EvalSum
     },
     canvasSize: { width: canvasSize.width, height: canvasSize.height },
     scoring: debugData.scoring,
-    selectedPoints: debugData.selectedPoints.map((p, i) => {
-      // 対応するブロックのfactorsを取得
-      const matchingBlock = allBlocks.find((b) => b.peak && b.peak.x === p.x && b.peak.y === p.y);
-      return {
-        rank: i + 1,
-        x: p.x,
-        y: p.y,
-        iteration: p.iteration,
-        score: p.score,
-        factors: matchingBlock?.factors ?? {},
-      };
-    }),
+    selectedPoints: debugData.selectedPoints.map((p, i) => toEvalPointData(p, i + 1, allBlocks)),
+    nearMissPoints: nearMiss.map((p, i) => toEvalPointData(p, selectedCount + i + 1, allBlocks)),
     scoreStats: calcScoreStats(allBlocks),
   };
+};
+
+/**
+ * スコア値(0-1)をヒートマップ色(RGB)に変換する
+ *
+ * 0=黒 → 青 → シアン → 緑 → 黄 → 赤 → 白のグラデーション。
+ */
+const scoreToColor = (t: number): [number, number, number] => {
+  if (t <= 0) return [0, 0, 0];
+  if (t >= 1) return [255, 255, 255];
+
+  // 5段階のグラデーション
+  if (t < 0.2) {
+    const s = t / 0.2;
+    return [0, 0, Math.round(s * 255)];
+  }
+  if (t < 0.4) {
+    const s = (t - 0.2) / 0.2;
+    return [0, Math.round(s * 255), 255];
+  }
+  if (t < 0.6) {
+    const s = (t - 0.4) / 0.2;
+    return [0, 255, Math.round(255 * (1 - s))];
+  }
+  if (t < 0.8) {
+    const s = (t - 0.6) / 0.2;
+    return [Math.round(s * 255), 255, 0];
+  }
+  const s = (t - 0.8) / 0.2;
+  return [255, Math.round(255 * (1 - s)), 0];
+};
+
+/**
+ * ブロックスコアからヒートマップ画像のDataURLを生成する
+ *
+ * 各ブロックのスコアを正規化し、色に変換してキャンバスに描画する。
+ */
+export const createHeatmapImage = (
+  blocks: BlockDebugInfo[],
+  canvasWidth: number,
+  canvasHeight: number,
+): string => {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Failed to get 2d context for heatmap");
+
+  // 黒背景
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  if (blocks.length === 0) return canvas.toDataURL("image/png");
+
+  // 最大スコアで正規化
+  let maxScore = 0;
+  for (const block of blocks) {
+    if (block.score > maxScore) maxScore = block.score;
+  }
+  if (maxScore === 0) return canvas.toDataURL("image/png");
+
+  for (const block of blocks) {
+    const t = block.score / maxScore;
+    const [r, g, b] = scoreToColor(t);
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(block.bx, block.by, block.blockSize, block.blockSize);
+  }
+
+  return canvas.toDataURL("image/png");
 };
 
 const MARKER_BASE_RADIUS = 6;
@@ -184,6 +301,12 @@ export const createCompositeImage = (
  * 合成画像とsummary JSONを生成し、POST /api/eval-exportに送信する。
  * 保存されたpointIndexを返す。
  */
+/**
+ * 評価データをローカルサーバーにエクスポートする
+ *
+ * 合成画像・ヒートマップ・summary JSONを生成し、POST /api/eval-exportに送信する。
+ * 保存されたpointIndexを返す。
+ */
 export const exportEvalData = async (getImageDataURL: () => Promise<string>): Promise<number> => {
   const debugData = getStore("interestingPointsDebugData");
   if (!debugData) {
@@ -199,6 +322,12 @@ export const exportEvalData = async (getImageDataURL: () => Promise<string>): Pr
     canvasSize.height,
   );
 
+  const allBlocks =
+    debugData.scoring === "symmetry"
+      ? debugData.gridBlocks
+      : debugData.scaleBlocks.flatMap((sb) => sb.blocks);
+
+  const heatmapDataURL = createHeatmapImage(allBlocks, canvasSize.width, canvasSize.height);
   const summary = buildEvalSummary(debugData);
 
   const response = await fetch("http://localhost:8080/api/eval-export", {
@@ -206,6 +335,7 @@ export const exportEvalData = async (getImageDataURL: () => Promise<string>): Pr
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       image: compositeImageDataURL,
+      heatmap: heatmapDataURL,
       summary,
     }),
   });
