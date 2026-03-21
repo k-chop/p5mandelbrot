@@ -1,4 +1,7 @@
+import { exportEvalData } from "@/interesting-points/export-eval-data";
 import type { BlockDebugInfo } from "@/interesting-points/find-interesting-points";
+import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
+import { Button } from "@/shadcn/components/ui/button";
 import { Label } from "@/shadcn/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
 import {
@@ -8,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shadcn/components/ui/select";
+import { toast } from "@/shadcn/hooks/use-toast";
 import { useStoreValue } from "@/store/store";
 import { useMemo, useState } from "react";
 import { BlockHeatmap } from "./block-heatmap";
@@ -23,6 +27,7 @@ export const InterestingPointsViewer = () => {
   const [selectedFactor, setSelectedFactor] = useState("score");
   const [selectedBlock, setSelectedBlock] = useState<BlockDebugInfo | null>(null);
   const [selectedScale, setSelectedScale] = useState<string>("all");
+  const [isExporting, setIsExporting] = useState(false);
 
   // 表示対象のブロック一覧を取得
   const blocks = useMemo(() => {
@@ -123,6 +128,32 @@ export const InterestingPointsViewer = () => {
             merged → {debugData.selectedPoints.length} selected
           </div>
         </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={isExporting}
+          onClick={async () => {
+            setIsExporting(true);
+            try {
+              const pointIndex = await exportEvalData(() => getResizedCanvasImageDataURL(400));
+              toast({
+                title: "Export complete",
+                description: `Saved to tmp/eval/point-${pointIndex}/`,
+              });
+            } catch (e) {
+              toast({
+                title: "Export failed",
+                description: e instanceof Error ? e.message : "Unknown error",
+                variant: "destructive",
+              });
+            } finally {
+              setIsExporting(false);
+            }
+          }}
+        >
+          {isExporting ? "Exporting..." : "Export for Eval"}
+        </Button>
       </div>
     </div>
   );
