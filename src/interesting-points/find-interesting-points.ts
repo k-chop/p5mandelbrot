@@ -818,12 +818,13 @@ const calcStructureCenterScore = (
 };
 
 /**
- * グリッド上でスコア > 0 のブロックの連結成分数を数える（4近傍flood fill）
+ * グリッド上で閾値以上のスコアを持つブロックの連結成分数を数える（4近傍flood fill）
  */
 const countConnectedComponents = (
   blocks: BlockDebugInfo[],
   grid: Map<string, number>,
   stride: number,
+  threshold: number,
 ): number => {
   const visited = new Set<string>();
   let count = 0;
@@ -831,7 +832,7 @@ const countConnectedComponents = (
   for (const block of blocks) {
     const key = `${block.bx},${block.by}`;
     if (visited.has(key)) continue;
-    if ((grid.get(key) ?? 0) <= 0) continue;
+    if ((grid.get(key) ?? 0) < threshold) continue;
 
     // flood fill
     count++;
@@ -849,7 +850,7 @@ const countConnectedComponents = (
         [cx + stride, cy],
       ]) {
         const nKey = `${nx},${ny}`;
-        if (!visited.has(nKey) && (grid.get(nKey) ?? 0) > 0) {
+        if (!visited.has(nKey) && (grid.get(nKey) ?? 0) >= threshold) {
           stack.push(nKey);
         }
       }
@@ -930,7 +931,15 @@ export const findStructureCenter = (
       centerScoreGrid.set(`${bx},${by}`, eroded);
     }
 
-    const peakCount = countConnectedComponents(blocks, centerScoreGrid, stride);
+    // ピーク判定: 現在の最大値の50%以上をピークとみなして連結成分を数える
+    let currentMax = 0;
+    for (const val of centerScoreGrid.values()) {
+      if (val > currentMax) currentMax = val;
+    }
+    const peakThreshold = currentMax * 0.5;
+    const peakCount = peakThreshold > 0
+      ? countConnectedComponents(blocks, centerScoreGrid, stride, peakThreshold)
+      : 0;
 
     if (peakCount === 0) {
       // 全消滅 → 1つ前の状態を採用
