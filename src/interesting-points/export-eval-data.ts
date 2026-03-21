@@ -184,14 +184,14 @@ export const createCompositeImage = (
  * 合成画像とsummary JSONを生成し、POST /api/eval-exportに送信する。
  * 保存されたpointIndexを返す。
  */
-export const exportEvalData = async (getImageDataURL: () => string): Promise<number> => {
+export const exportEvalData = async (getImageDataURL: () => Promise<string>): Promise<number> => {
   const debugData = getStore("interestingPointsDebugData");
   if (!debugData) {
     throw new Error("No debug data available");
   }
 
   const canvasSize = getCanvasSize();
-  const baseImageDataURL = getImageDataURL();
+  const baseImageDataURL = await getImageDataURL();
   const compositeImageDataURL = await createCompositeImage(
     baseImageDataURL,
     debugData,

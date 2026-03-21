@@ -1,6 +1,6 @@
 import { getCurrentPalette } from "@/camera/palette";
 import { getCurrentParams, setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { getResizedCanvasImageDataURL, requestShareImage } from "@/p5-adapter/p5-adapter";
+import { getResizedCanvasImageDataURL, requestCanvasImage } from "@/p5-adapter/p5-adapter";
 import { getCanvasSize } from "@/rendering/renderer";
 import { Button } from "@/shadcn/components/ui/button";
 import { Label } from "@/shadcn/components/ui/label";
@@ -46,7 +46,7 @@ const ShareButton = () => {
 
   useEffect(() => {
     if (opened) {
-      requestShareImage(getCanvasSize().height, (dataUrl) => {
+      requestCanvasImage(getCanvasSize().height, (dataUrl) => {
         setImageDataUrl(dataUrl);
       });
     }

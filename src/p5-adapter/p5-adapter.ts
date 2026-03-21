@@ -66,8 +66,8 @@ let shouldSavePOIHistoryNextRender = false;
 /** 次のrenderingのタイミングで動かしている状態を解除したいときにtrueにする */
 let shouldResetTranslatingNextRender = false;
 
-let pendingShareImageCallback: ((dataUrl: string) => void) | null = null;
-let pendingShareImageHeight = 0;
+let pendingCanvasImageCallback: ((dataUrl: string) => void) | null = null;
+let pendingCanvasImageHeight = 0;
 /**
  * mainBufferの表示位置変えているかどうか
  *
@@ -184,9 +184,15 @@ const calculateComplexMouseXY = (
   };
 };
 
-export const requestShareImage = (height: number, callback: (dataUrl: string) => void) => {
-  pendingShareImageCallback = callback;
-  pendingShareImageHeight = height;
+/**
+ * 次のdrawループ内でキャンバス画像をキャプチャし、コールバックで返す
+ *
+ * WebGPUではフレーム描画後にテクスチャがexpireするため、
+ * drawループ内でtoDataURLを呼ぶ必要がある。
+ */
+export const requestCanvasImage = (height: number, callback: (dataUrl: string) => void) => {
+  pendingCanvasImageCallback = callback;
+  pendingCanvasImageHeight = height;
 };
 
 /**
@@ -674,10 +680,10 @@ export const p5Draw = (p: p5) => {
     addCurrentLocationToPOIHistory();
   }
 
-  if (pendingShareImageCallback) {
-    const cb = pendingShareImageCallback;
-    pendingShareImageCallback = null;
-    cb(getResizedCanvasImageDataURL(pendingShareImageHeight));
+  if (pendingCanvasImageCallback) {
+    const cb = pendingCanvasImageCallback;
+    pendingCanvasImageCallback = null;
+    cb(getResizedCanvasImageDataURL(pendingCanvasImageHeight));
   }
 
   if (needsRenderForCurrentParams()) {

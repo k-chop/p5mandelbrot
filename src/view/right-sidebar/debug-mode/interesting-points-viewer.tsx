@@ -1,6 +1,6 @@
 import { exportEvalData } from "@/interesting-points/export-eval-data";
 import type { BlockDebugInfo } from "@/interesting-points/find-interesting-points";
-import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
+import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
 import { Button } from "@/shadcn/components/ui/button";
 import { Label } from "@/shadcn/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
@@ -136,7 +136,12 @@ export const InterestingPointsViewer = () => {
           onClick={async () => {
             setIsExporting(true);
             try {
-              const pointIndex = await exportEvalData(() => getResizedCanvasImageDataURL(400));
+              const pointIndex = await exportEvalData(
+                () =>
+                  new Promise<string>((resolve) => {
+                    requestCanvasImage(400, resolve);
+                  }),
+              );
               toast({
                 title: "Export complete",
                 description: `Saved to tmp/eval/point-${pointIndex}/`,
