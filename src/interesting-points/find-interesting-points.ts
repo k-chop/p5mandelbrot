@@ -976,10 +976,9 @@ export const findStructureCenter = (
     const cs = block.factors.centerScore;
     if (cs < centroidThreshold) continue;
 
-    const bx = block.bx + Math.floor(stride / 2);
-    const by = block.by + Math.floor(stride / 2);
-    weightedX += bx * cs;
-    weightedY += by * cs;
+    // bx/byはサンプリング点そのもの（ブロック左上角ではない）なのでオフセット不要
+    weightedX += block.bx * cs;
+    weightedY += block.by * cs;
     totalWeight += cs;
   }
 
