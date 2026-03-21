@@ -189,33 +189,95 @@ export const createHeatmapImage = (
   canvasWidth: number,
   canvasHeight: number,
 ): string => {
+  return createHeatmapFromValues(
+    blocks.map((b) => ({ bx: b.bx, by: b.by, blockSize: b.blockSize, value: b.score })),
+    canvasWidth,
+    canvasHeight,
+  );
+};
+
+/**
+ * 値の配列からヒートマップ画像のDataURLを生成する
+ *
+ * 各ブロックの値を最大値で正規化し、色に変換してキャンバスに描画する。
+ */
+const createHeatmapFromValues = (
+  entries: { bx: number; by: number; blockSize: number; value: number }[],
+  canvasWidth: number,
+  canvasHeight: number,
+): string => {
   const canvas = document.createElement("canvas");
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Failed to get 2d context for heatmap");
 
-  // 黒背景
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  if (blocks.length === 0) return canvas.toDataURL("image/png");
+  if (entries.length === 0) return canvas.toDataURL("image/png");
 
-  // 最大スコアで正規化
-  let maxScore = 0;
-  for (const block of blocks) {
-    if (block.score > maxScore) maxScore = block.score;
+  let maxValue = 0;
+  for (const entry of entries) {
+    if (entry.value > maxValue) maxValue = entry.value;
   }
-  if (maxScore === 0) return canvas.toDataURL("image/png");
+  if (maxValue === 0) return canvas.toDataURL("image/png");
 
-  for (const block of blocks) {
-    const t = block.score / maxScore;
+  for (const entry of entries) {
+    const t = entry.value / maxValue;
     const [r, g, b] = scoreToColor(t);
     ctx.fillStyle = `rgb(${r},${g},${b})`;
-    ctx.fillRect(block.bx, block.by, block.blockSize, block.blockSize);
+    ctx.fillRect(entry.bx, entry.by, entry.blockSize, entry.blockSize);
   }
 
   return canvas.toDataURL("image/png");
+};
+
+/**
+ * 特定のfactorキーについてヒートマップ画像のDataURLを生成する
+ *
+ * ブロックのfactors内の指定キーの値を使ってヒートマップを描画する。
+ */
+export const createFactorHeatmapImage = (
+  blocks: BlockDebugInfo[],
+  factorKey: string,
+  canvasWidth: number,
+  canvasHeight: number,
+): string => {
+  return createHeatmapFromValues(
+    blocks.map((b) => ({
+      bx: b.bx,
+      by: b.by,
+      blockSize: b.blockSize,
+      value: b.factors[factorKey] ?? 0,
+    })),
+    canvasWidth,
+    canvasHeight,
+  );
+};
+
+/**
+ * 全factorキーのヒートマップを一括生成する
+ *
+ * ブロック群からfactorキーの一覧を抽出し、各factorのヒートマップDataURLをRecord形式で返す。
+ */
+export const createAllFactorHeatmaps = (
+  blocks: BlockDebugInfo[],
+  canvasWidth: number,
+  canvasHeight: number,
+): Record<string, string> => {
+  const factorKeys = new Set<string>();
+  for (const block of blocks) {
+    for (const key of Object.keys(block.factors)) {
+      factorKeys.add(key);
+    }
+  }
+
+  const result: Record<string, string> = {};
+  for (const key of factorKeys) {
+    result[key] = createFactorHeatmapImage(blocks, key, canvasWidth, canvasHeight);
+  }
+  return result;
 };
 
 const MARKER_BASE_RADIUS = 6;
@@ -328,6 +390,7 @@ export const exportEvalData = async (getImageDataURL: () => Promise<string>): Pr
       : debugData.scaleBlocks.flatMap((sb) => sb.blocks);
 
   const heatmapDataURL = createHeatmapImage(allBlocks, canvasSize.width, canvasSize.height);
+  const factorHeatmaps = createAllFactorHeatmaps(allBlocks, canvasSize.width, canvasSize.height);
   const summary = buildEvalSummary(debugData);
 
   const response = await fetch("http://localhost:8080/api/eval-export", {
@@ -336,6 +399,7 @@ export const exportEvalData = async (getImageDataURL: () => Promise<string>): Pr
     body: JSON.stringify({
       image: compositeImageDataURL,
       heatmap: heatmapDataURL,
+      factorHeatmaps,
       summary,
     }),
   });

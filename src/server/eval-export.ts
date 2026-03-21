@@ -10,6 +10,7 @@ const EVAL_DIR = join(process.cwd(), "tmp", "eval");
 interface EvalExportBody {
   image: string;
   heatmap?: string;
+  factorHeatmaps?: Record<string, string>;
   summary: Record<string, unknown>;
 }
 
@@ -54,7 +55,8 @@ export const decodeDataURL = (dataURL: string): Buffer => {
 /**
  * 評価データをファイルシステムに保存する
  *
- * evalDir内に point-{N}/ ディレクトリを作成し、screenshot.png, heatmap.png, summary.json を書き込む。
+ * evalDir内に point-{N}/ ディレクトリを作成し、screenshot.png, heatmap.png,
+ * 各factorのheatmap-{name}.png, summary.json を書き込む。
  * 返り値は採番されたpointIndex。
  */
 export const saveEvalData = (
@@ -62,6 +64,7 @@ export const saveEvalData = (
   imageDataURL: string,
   summary: Record<string, unknown>,
   heatmapDataURL?: string,
+  factorHeatmaps?: Record<string, string>,
 ): number => {
   const pointIndex = getNextPointIndex(evalDir);
   const pointDir = join(evalDir, `point-${pointIndex}`);
@@ -74,6 +77,13 @@ export const saveEvalData = (
   if (heatmapDataURL) {
     const heatmapBuffer = decodeDataURL(heatmapDataURL);
     writeFileSync(join(pointDir, "heatmap.png"), heatmapBuffer);
+  }
+
+  if (factorHeatmaps) {
+    for (const [factorName, dataURL] of Object.entries(factorHeatmaps)) {
+      const buffer = decodeDataURL(dataURL);
+      writeFileSync(join(pointDir, `heatmap-${factorName}.png`), buffer);
+    }
   }
 
   writeFileSync(join(pointDir, "summary.json"), JSON.stringify(summary, null, 2));
@@ -102,7 +112,13 @@ export const createEvalExportApp = (evalDir: string = EVAL_DIR): Hono => {
       return c.json({ error: "summary field is required (object)" }, 400);
     }
 
-    const pointIndex = saveEvalData(evalDir, body.image, body.summary, body.heatmap);
+    const pointIndex = saveEvalData(
+      evalDir,
+      body.image,
+      body.summary,
+      body.heatmap,
+      body.factorHeatmaps,
+    );
 
     console.log(`Eval data saved to point-${pointIndex}`);
 

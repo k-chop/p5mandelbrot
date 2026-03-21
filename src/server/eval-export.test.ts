@@ -81,6 +81,29 @@ describe("saveEvalData", () => {
     expect(json.scoring).toBe("symmetry");
   });
 
+  it("factorHeatmapsを各factor名のpngとして保存する", () => {
+    const summary = { scoring: "symmetry", selectedPoints: [] };
+    const factorHeatmaps = {
+      symmetryScore: TINY_PNG_DATA_URL,
+      structureAmount: TINY_PNG_DATA_URL,
+    };
+
+    const pointIndex = saveEvalData(
+      TEST_DIR,
+      TINY_PNG_DATA_URL,
+      summary,
+      undefined,
+      factorHeatmaps,
+    );
+
+    expect(pointIndex).toBe(1);
+    expect(existsSync(join(TEST_DIR, "point-1", "heatmap-symmetryScore.png"))).toBe(true);
+    expect(existsSync(join(TEST_DIR, "point-1", "heatmap-structureAmount.png"))).toBe(true);
+
+    const png = readFileSync(join(TEST_DIR, "point-1", "heatmap-symmetryScore.png"));
+    expect(png[0]).toBe(0x89);
+  });
+
   it("連番で保存される", () => {
     const summary = { test: true };
 
