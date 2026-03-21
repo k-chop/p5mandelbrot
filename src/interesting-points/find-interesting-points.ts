@@ -768,8 +768,8 @@ const CENTER_RADII = [16, 32, 48, 64, 80, 96, 112, 128];
 /** 中心点と認めるための最低方位カバレッジ（0-1）。半数以上の方向に構造が必要 */
 const CENTER_MIN_COVERAGE = 0.5;
 
-/** centerScoreに適用するエロージョンのラウンド数。小さいピークを消して大きいピークを残す */
-const CENTER_EROSION_ROUNDS = 5;
+/** エロージョンの最大ラウンド数。ピークが1つになったら早期停止する */
+const CENTER_EROSION_MAX_ROUNDS = 50;
 
 /**
  * ある点を中心として、周囲の方位に構造がどれだけ広く分布しているかを算出する
@@ -818,10 +818,52 @@ const calcStructureCenterScore = (
 };
 
 /**
+ * グリッド上でスコア > 0 のブロックの連結成分数を数える（4近傍flood fill）
+ */
+const countConnectedComponents = (
+  blocks: BlockDebugInfo[],
+  grid: Map<string, number>,
+  stride: number,
+): number => {
+  const visited = new Set<string>();
+  let count = 0;
+
+  for (const block of blocks) {
+    const key = `${block.bx},${block.by}`;
+    if (visited.has(key)) continue;
+    if ((grid.get(key) ?? 0) <= 0) continue;
+
+    // flood fill
+    count++;
+    const stack = [key];
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
+
+      const [cx, cy] = current.split(',').map(Number);
+      for (const [nx, ny] of [
+        [cx, cy - stride],
+        [cx, cy + stride],
+        [cx - stride, cy],
+        [cx + stride, cy],
+      ]) {
+        const nKey = `${nx},${ny}`;
+        if (!visited.has(nKey) && (grid.get(nKey) ?? 0) > 0) {
+          stack.push(nKey);
+        }
+      }
+    }
+  }
+
+  return count;
+};
+
+/**
  * ブロックスコア分布から構造の中心点を検出する
  *
  * 各グリッド位置のcenterScore（coverage × density）を算出した後、
- * エロージョン（収縮）を適用して小さいピークを除去する。
+ * エロージョン（収縮）を適用して小さいピークを除去する（ピークが1つになるまで）。
  * エロージョン後のスコアをfactorsに記録（ヒートマップ出力用）し、
  * 高スコアブロック群（最大値の90%以上）の重み付き重心を中心点とする。
  */
@@ -867,12 +909,15 @@ export const findStructureCenter = (
 
   // エロージョン: 各ラウンドで各ブロックのスコアを自分と上下左右の最小値に置き換える
   // 小さいピークが消え、大きいピークの中心部だけが残る
+  // ピークが1つになったら停止、全消滅なら1つ前の状態を採用
   const centerScoreGrid = new Map<string, number>();
   for (const block of blocks) {
     centerScoreGrid.set(`${block.bx},${block.by}`, block.factors.centerScore);
   }
 
-  for (let round = 0; round < CENTER_EROSION_ROUNDS; round++) {
+  let lastGoodGrid = new Map(centerScoreGrid);
+
+  for (let round = 0; round < CENTER_EROSION_MAX_ROUNDS; round++) {
     const prevGrid = new Map(centerScoreGrid);
     for (const block of blocks) {
       const { bx, by } = block;
@@ -883,6 +928,22 @@ export const findStructureCenter = (
       const right = prevGrid.get(`${bx + stride},${by}`) ?? 0;
       const eroded = Math.min(self, up, down, left, right);
       centerScoreGrid.set(`${bx},${by}`, eroded);
+    }
+
+    const peakCount = countConnectedComponents(blocks, centerScoreGrid, stride);
+
+    if (peakCount === 0) {
+      // 全消滅 → 1つ前の状態を採用
+      for (const [key, val] of lastGoodGrid) {
+        centerScoreGrid.set(key, val);
+      }
+      break;
+    }
+
+    lastGoodGrid = new Map(centerScoreGrid);
+
+    if (peakCount === 1) {
+      break;
     }
   }
 
