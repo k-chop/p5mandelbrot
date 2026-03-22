@@ -71,6 +71,16 @@
   @apply border-border;
 }
 
+button,
+[role="switch"],
+[role="checkbox"],
+[role="radio"],
+select,
+label[for],
+summary {
+  cursor: pointer;
+}
+
 :root {
   @apply bg-background text-foreground;
 
