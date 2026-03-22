@@ -779,8 +779,123 @@ const countConnectedComponents = (
 const STRUCTURE_ISLAND_THRESHOLD = 0.5;
 
 /**
+ * structureAmountグリッドとflood fill閾値を事前計算して返す。
+ */
+const buildStructureAmountGrid = (
+  blocks: BlockDebugInfo[],
+): { saGrid: Map<number, number>; floodFillThreshold: number } => {
+  const saGrid = new Map<number, number>();
+  const values: number[] = [];
+  for (const block of blocks) {
+    const sa = block.factors.structureAmount ?? 0;
+    saGrid.set(gridKey(block.bx, block.by), sa);
+    if (sa > 0) values.push(sa);
+  }
+  values.sort((a, b) => a - b);
+  const floodFillThreshold = values.length > 0 ? values[Math.floor(values.length / 2)] : 0;
+  return { saGrid, floodFillThreshold };
+};
+
+/**
+ * 指定座標から最も近い、floodFillThreshold以上のstructureAmountを持つブロックを探す。
+ */
+const findNearestAboveThreshold = (
+  blocks: BlockDebugInfo[],
+  cx: number,
+  cy: number,
+  saGrid: Map<number, number>,
+  floodFillThreshold: number,
+): { bx: number; by: number } | null => {
+  let bestBx = 0;
+  let bestBy = 0;
+  let bestDist = Infinity;
+  for (const block of blocks) {
+    const sa = saGrid.get(gridKey(block.bx, block.by)) ?? 0;
+    if (sa < floodFillThreshold) continue;
+    const dx = block.bx - cx;
+    const dy = block.by - cy;
+    const dist = dx * dx + dy * dy;
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestBx = block.bx;
+      bestBy = block.by;
+    }
+  }
+  return bestDist < Infinity ? { bx: bestBx, by: bestBy } : null;
+};
+
+/**
+ * 起点からflood fillで島を特定し、島内のstructureAmount重み付き重心を返す。
+ * 島が見つからない場合はnullを返す。
+ */
+const floodFillIslandCentroid = (
+  saGrid: Map<number, number>,
+  startBx: number,
+  startBy: number,
+  stride: number,
+  floodFillThreshold: number,
+): { x: number; y: number } | null => {
+  const visited = new Set<number>();
+  const islandBlocks: Array<{ x: number; y: number }> = [];
+  const queue: Array<{ x: number; y: number }> = [{ x: startBx, y: startBy }];
+  visited.add(gridKey(startBx, startBy));
+
+  while (queue.length > 0) {
+    const { x: bx, y: by } = queue.shift()!;
+    islandBlocks.push({ x: bx, y: by });
+
+    for (const [nx, ny] of [
+      [bx - stride, by],
+      [bx + stride, by],
+      [bx, by - stride],
+      [bx, by + stride],
+    ]) {
+      const nKey = gridKey(nx, ny);
+      if (visited.has(nKey)) continue;
+      const nSa = saGrid.get(nKey) ?? 0;
+      if (nSa >= floodFillThreshold) {
+        visited.add(nKey);
+        queue.push({ x: nx, y: ny });
+      }
+    }
+  }
+
+  if (islandBlocks.length === 0) return null;
+
+  // 島内の最大structureAmountを求め、その50%以上でフィルタして重心を計算
+  let maxSa = 0;
+  for (const block of islandBlocks) {
+    const sa = saGrid.get(gridKey(block.x, block.y))!;
+    if (sa > maxSa) maxSa = sa;
+  }
+  const threshold = maxSa * STRUCTURE_ISLAND_THRESHOLD;
+
+  let wX = 0;
+  let wY = 0;
+  let wTotal = 0;
+  for (const block of islandBlocks) {
+    const sa = saGrid.get(gridKey(block.x, block.y))!;
+    if (sa < threshold) continue;
+    wX += block.x * sa;
+    wY += block.y * sa;
+    wTotal += sa;
+  }
+
+  if (wTotal === 0) return null;
+
+  return {
+    x: Math.round(wX / wTotal),
+    y: Math.round(wY / wTotal),
+  };
+};
+
+/**
  * 仮centerPointに最も近いstructureAmountの島（連続した高スコア領域）を
  * flood fillで特定し、島内のstructureAmountで重み付き重心を返す。
+ *
+ * flood fillの閾値はstructureAmountのp50（非ゼロ値の中央値）を使用する。
+ * 仮centerPoint付近に閾値以上のブロックがない場合、最も近い閾値以上の
+ * ブロックを起点に再補正する。
  * 島が見つからない場合は元の座標をそのまま返す。
  */
 const adjustCenterByStructureIsland = (
@@ -789,11 +904,8 @@ const adjustCenterByStructureIsland = (
   cy: number,
   stride: number,
 ): { x: number; y: number } => {
-  // structureAmountのグリッドを構築
-  const saGrid = new Map<number, number>();
-  for (const block of blocks) {
-    saGrid.set(gridKey(block.bx, block.by), block.factors.structureAmount ?? 0);
-  }
+  const { saGrid, floodFillThreshold } = buildStructureAmountGrid(blocks);
+  if (floodFillThreshold === 0) return { x: cx, y: cy };
 
   // 仮centerPointに最も近いブロックを探す
   let closestBx = 0;
@@ -811,64 +923,20 @@ const adjustCenterByStructureIsland = (
   }
 
   const startSa = saGrid.get(gridKey(closestBx, closestBy)) ?? 0;
-  if (startSa === 0) return { x: cx, y: cy };
 
-  // flood fillで島を特定（島内の最大値の50%以上を閾値とする）
-  // まず島全体を探索して最大値を求め、その後閾値でフィルタする
-  const visited = new Set<number>();
-  const islandBlocks: Array<{ x: number; y: number }> = [];
-  const queue: Array<{ x: number; y: number }> = [{ x: closestBx, y: closestBy }];
-  visited.add(gridKey(closestBx, closestBy));
+  let startBx = closestBx;
+  let startBy = closestBy;
 
-  // 第1パス: structureAmount > 0 の連続領域を探索
-  while (queue.length > 0) {
-    const { x: bx, y: by } = queue.shift()!;
-    islandBlocks.push({ x: bx, y: by });
-
-    for (const [nx, ny] of [
-      [bx - stride, by],
-      [bx + stride, by],
-      [bx, by - stride],
-      [bx, by + stride],
-    ]) {
-      const nKey = gridKey(nx, ny);
-      if (visited.has(nKey)) continue;
-      const nSa = saGrid.get(nKey) ?? 0;
-      if (nSa > 0) {
-        visited.add(nKey);
-        queue.push({ x: nx, y: ny });
-      }
-    }
+  if (startSa < floodFillThreshold) {
+    // 仮centerPoint付近のstructureAmountが閾値未満 → 最寄りの閾値以上ブロックに再補正
+    const nearest = findNearestAboveThreshold(blocks, cx, cy, saGrid, floodFillThreshold);
+    if (!nearest) return { x: cx, y: cy };
+    startBx = nearest.bx;
+    startBy = nearest.by;
   }
 
-  if (islandBlocks.length === 0) return { x: cx, y: cy };
-
-  // 島内の最大structureAmountを求め、閾値でフィルタ
-  let maxSa = 0;
-  for (const block of islandBlocks) {
-    const sa = saGrid.get(gridKey(block.x, block.y))!;
-    if (sa > maxSa) maxSa = sa;
-  }
-  const threshold = maxSa * STRUCTURE_ISLAND_THRESHOLD;
-
-  // 閾値以上のブロックでstructureAmount重み付き重心を計算
-  let wX = 0;
-  let wY = 0;
-  let wTotal = 0;
-  for (const block of islandBlocks) {
-    const sa = saGrid.get(gridKey(block.x, block.y))!;
-    if (sa < threshold) continue;
-    wX += block.x * sa;
-    wY += block.y * sa;
-    wTotal += sa;
-  }
-
-  if (wTotal === 0) return { x: cx, y: cy };
-
-  return {
-    x: Math.round(wX / wTotal),
-    y: Math.round(wY / wTotal),
-  };
+  const centroid = floodFillIslandCentroid(saGrid, startBx, startBy, stride, floodFillThreshold);
+  return centroid ?? { x: cx, y: cy };
 };
 
 /**
