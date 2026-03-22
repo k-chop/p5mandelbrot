@@ -47,7 +47,7 @@ describe("valueToKeyMap（値からキーの逆引き）", () => {
 
   it("マップから逆引きしたキーでenを引くと元の値が得られる", () => {
     const map = buildValueToKeyMap();
-    for (const [key, value] of Object.entries(en)) {
+    for (const [_key, value] of Object.entries(en)) {
       const reversedKey = map.get(value);
       expect(reversedKey).toBeDefined();
       // 重複がなければreversedKey === key、重複があれば最初に登録されたキーになる
