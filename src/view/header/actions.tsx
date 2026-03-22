@@ -1,4 +1,6 @@
 import { getCurrentPalette } from "@/camera/palette";
+import { useT } from "@/i18n/context";
+import { Trans } from "@/i18n/trans";
 import { getCurrentParams, setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { getResizedCanvasImageDataURL, requestCanvasImage } from "@/p5-adapter/p5-adapter";
 import { getCanvasSize } from "@/rendering/renderer";
@@ -29,13 +31,14 @@ export const Actions = () => {
 /** 興味深いポイントマーカーの表示切り替えスイッチ */
 const InterestingPointsToggle = () => {
   const show = useStoreValue("showInterestingPoints");
+  const t = useT();
   return (
     <SimpleTooltip
       content={
         <>
-          Marks interesting points on the fractal.
+          <Trans>Marks interesting points on the fractal.</Trans>
           <br />
-          Click a marker to zoom into its center.
+          <Trans>Click a marker to zoom into its center.</Trans>
         </>
       }
     >
@@ -45,7 +48,7 @@ const InterestingPointsToggle = () => {
           checked={show}
           onCheckedChange={() => updateStoreWith("showInterestingPoints", (v) => !v)}
         />
-        <Label htmlFor="interesting-points">Show point marker</Label>
+        <Label htmlFor="interesting-points">{t("Show point marker")}</Label>
       </div>
     </SimpleTooltip>
   );
@@ -83,13 +86,14 @@ const ShareButton = () => {
       />
       <Button variant="outline" size="sm" onClick={open}>
         <IconShare className="mr-1 size-6" />
-        Share
+        <Trans id="header.share">Share</Trans>
       </Button>
     </>
   );
 };
 
 const SaveImageButton = () => {
+  const t = useT();
   return (
     <Button
       variant="outline"
@@ -105,7 +109,7 @@ const SaveImageButton = () => {
           description: (
             <div className="flex items-center justify-center gap-2">
               <IconCircleCheck />
-              Image saved!
+              {t("Image saved!")}
             </div>
           ),
           variant: "primary",
@@ -114,7 +118,7 @@ const SaveImageButton = () => {
       }}
     >
       <IconDownload className="mr-1 size-6" />
-      Save Image
+      <Trans>Save Image</Trans>
     </Button>
   );
 };
@@ -129,7 +133,7 @@ const SupersamplingButton = () => {
       }}
     >
       <Expand className="mr-1 size-6" />
-      Supersampling x2
+      <Trans>Supersampling x2</Trans>
     </Button>
   );
 };
