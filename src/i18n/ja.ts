@@ -39,8 +39,8 @@ export const ja: Dictionary = {
   // palette editor
   "palette.palette": "パレット",
   "palette.selectPalette": "パレットを選択",
-  "palette.paletteLength": "パレットの長さ",
-  "palette.paletteOffset": "パレットのオフセット",
+  "palette.paletteLength": "パレット周期の長さ",
+  "palette.paletteOffset": "オフセット",
 
   // poi
   "poi.savePOI": "POIを保存",
