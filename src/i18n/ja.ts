@@ -42,6 +42,12 @@ export const ja: Dictionary = {
   "palette.paletteLength": "パレット長",
   "palette.paletteOffset": "パレットオフセット",
 
+  // poi
+  "poi.savePOI": "POIを保存",
+  "poi.regenerateThumbnail": "サムネイルを再生成",
+  "poi.apply": "適用",
+  "poi.delete": "削除",
+
   // instructions
   "instructions.mouse": "マウス",
   "instructions.keys": "キー",

@@ -42,6 +42,12 @@ export const en = {
   "palette.paletteLength": "Palette Length",
   "palette.paletteOffset": "Palette Offset",
 
+  // poi
+  "poi.savePOI": "Save POI",
+  "poi.regenerateThumbnail": "Regenerate thumbnail",
+  "poi.apply": "Apply",
+  "poi.delete": "Delete",
+
   // instructions
   "instructions.mouse": "Mouse",
   "instructions.keys": "Keys",
