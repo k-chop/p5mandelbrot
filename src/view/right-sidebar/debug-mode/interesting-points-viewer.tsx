@@ -73,7 +73,7 @@ export const InterestingPointsViewer = () => {
         </>
       }
     >
-      <div className="flex items-center space-x-2">
+      <div className="flex w-fit items-center space-x-2">
         <Switch
           id="always-compute-ip-debug"
           checked={alwaysDebug}
