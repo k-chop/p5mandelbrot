@@ -1,4 +1,7 @@
+import { serve } from "@hono/node-server";
+import type { Server } from "node:http";
 import { WebSocketServer, type WebSocket } from "ws";
+import { createEvalExportApp } from "./eval-export";
 
 interface CalculationClient {
   ws: WebSocket;
@@ -18,7 +21,9 @@ interface CalculationRequest {
 const MAX_QUEUE_SIZE = 10;
 const CALCULATION_RESULT = 0x03 as const;
 
-const wss = new WebSocketServer({ port: 8080 });
+const app = createEvalExportApp();
+const httpServer = serve({ fetch: app.fetch, port: 8080 }) as Server;
+const wss = new WebSocketServer({ server: httpServer });
 
 let calculationClients: CalculationClient[] = [];
 

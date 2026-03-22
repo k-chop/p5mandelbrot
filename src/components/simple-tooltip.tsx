@@ -1,22 +1,18 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/shadcn/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shadcn/components/ui/tooltip";
 
 type Props = {
   children: React.ReactNode;
   content: React.ReactNode;
+  side?: "top" | "right" | "bottom" | "left";
 };
 
-export const SimpleTooltip = ({ children, content }: Props) => {
+export const SimpleTooltip = ({ children, content, side }: Props) => {
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent align="center">{content}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent align="center" side={side}>
+        {content}
+      </TooltipContent>
+    </Tooltip>
   );
 };

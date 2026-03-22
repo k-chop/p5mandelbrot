@@ -16,6 +16,7 @@ import { clamp } from "@/math/util";
 import { getStore } from "@/store/store";
 import { PERTURBATION_THRESHOLD } from "@/utils/palette-encoding";
 import type p5 from "p5";
+import type { InterestingPoint } from "../interesting-points/find-interesting-points";
 import type { Rect } from "../math/rect";
 import type { IterationBuffer } from "../types";
 import { type MandelbrotParams } from "../types";
@@ -225,6 +226,54 @@ export const drawUIIterationAtCursor = (p: p5, iteration: string | number) => {
   p.textSize(14);
 
   p.text(`iteration: ${iteration}`, p.width - 2, 2);
+};
+
+/** マーカーの基本半径 */
+const MARKER_BASE_RADIUS = 6;
+/** マーカーの最大半径 */
+const MARKER_MAX_RADIUS = 14;
+
+/**
+ * 興味深いポイントをcanvas上にマーカーとして描画する
+ *
+ * スコアに応じてサイズ変動し、白ストローク＋黒の影で視認性を確保する。
+ */
+export const drawUIInterestingPoints = (
+  p: p5,
+  points: InterestingPoint[],
+  hoveredPoint: InterestingPoint | null,
+): void => {
+  if (points.length === 0) return;
+
+  const maxScore = points[0].score;
+
+  p.noFill();
+
+  for (const point of points) {
+    const isHovered = point === hoveredPoint;
+    const isCenter = point.isCenter === true;
+    // centerPointはスコアのスケールが異なるため固定サイズ
+    const ratio = isCenter ? 1 : maxScore > 0 ? point.score / maxScore : 0;
+    const radius = MARKER_BASE_RADIUS + (MARKER_MAX_RADIUS - MARKER_BASE_RADIUS) * ratio;
+
+    // 黒の影（太め）
+    p.stroke(0, 0, 0, 60);
+    p.strokeWeight(isHovered ? 4 : 3);
+    p.circle(point.x, point.y, (isHovered ? radius + 2 : radius) * 2);
+
+    // リング（ホバー時はシアン、中心点は淡い青、通常は白系）
+    if (isHovered) {
+      p.stroke(0, 200, 255);
+      p.strokeWeight(2.5);
+    } else if (isCenter) {
+      p.stroke(100, 140, 220);
+      p.strokeWeight(1.5);
+    } else {
+      p.stroke(0, 0, 100);
+      p.strokeWeight(1.5);
+    }
+    p.circle(point.x, point.y, (isHovered ? radius + 2 : radius) * 2);
+  }
 };
 
 /**

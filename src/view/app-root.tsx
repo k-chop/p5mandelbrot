@@ -1,4 +1,5 @@
 import { Toaster } from "@/shadcn/components/ui/toaster";
+import { TooltipProvider } from "@/shadcn/components/ui/tooltip";
 import ReactDOM from "react-dom";
 import { CanvasOverlay } from "./canvas-overlay";
 import { Footer } from "./footer";
@@ -8,7 +9,7 @@ import { SupersamplingOverlay } from "./supersampling-overlay";
 
 export const AppRoot = () => {
   return (
-    <>
+    <TooltipProvider delayDuration={0}>
       {ReactDOM.createPortal(<Header />, document.getElementById("header")!)}
       {ReactDOM.createPortal(<RightSidebar />, document.getElementById("sidebar-right")!)}
       {ReactDOM.createPortal(<Footer />, document.getElementById("footer")!)}
@@ -18,6 +19,6 @@ export const AppRoot = () => {
         document.getElementById("supersampling-overlay")!,
       )}
       <Toaster />
-    </>
+    </TooltipProvider>
   );
 };

@@ -1,9 +1,4 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/shadcn/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shadcn/components/ui/tooltip";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 
 export const useClickFeedback = (duration = 2000) => {
@@ -33,10 +28,8 @@ type ClickFeedbackProps = {
 };
 
 export const ClickFeedback = ({ open, content, children, side = "top" }: ClickFeedbackProps) => (
-  <TooltipProvider delayDuration={0}>
-    <Tooltip open={open}>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side={side}>{content}</TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
+  <Tooltip open={open}>
+    <TooltipTrigger asChild>{children}</TooltipTrigger>
+    <TooltipContent side={side}>{content}</TooltipContent>
+  </Tooltip>
 );
