@@ -8,12 +8,15 @@
 export const en = {
   // header
   "header.debugMode": "Debug Mode",
+  "header.switchLanguage": "Switch language",
+  "header.debugModeTooltip": "Shows debug data obtained from rendering results.",
   "header.instructions": "Instructions",
 
   // header actions
   "header.share": "Share",
   "header.saveImage": "Save Image",
   "header.imageSaved": "Image saved!",
+  "header.saveImageTooltip": "Downloads the canvas content as a PNG image.",
   "header.supersamplingX2": "Supersampling x2",
   "header.showPointMarker": "Show point marker",
   "header.interestingPointsTooltip1": "Marks interesting points on the fractal.",

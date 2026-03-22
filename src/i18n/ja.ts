@@ -8,12 +8,15 @@ import type { Dictionary } from "./types";
 export const ja: Dictionary = {
   // header
   "header.debugMode": "デバッグモード",
+  "header.switchLanguage": "言語を切り替え",
+  "header.debugModeTooltip": "レンダリング結果から得られるデバッグデータを表示します。",
   "header.instructions": "操作説明",
 
   // header actions
   "header.share": "共有",
   "header.saveImage": "画像を保存",
   "header.imageSaved": "画像を保存しました！",
+  "header.saveImageTooltip": "canvasの内容をPNG画像としてダウンロードします。",
   "header.supersamplingX2": "スーパーサンプリング x2",
   "header.showPointMarker": "マーカーを表示",
   "header.interestingPointsTooltip1": "拡大すると面白そうなポイントをマークします。",

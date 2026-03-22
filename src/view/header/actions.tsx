@@ -95,31 +95,33 @@ const ShareButton = () => {
 const SaveImageButton = () => {
   const t = useT();
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => {
-        const imageDataURL = getResizedCanvasImageDataURL(0, true);
-        const link = document.createElement("a");
-        link.download = `mandelbrot-${Date.now()}.png`;
-        link.href = imageDataURL;
-        link.click();
+    <SimpleTooltip content={t("Downloads the canvas content as a PNG image.")}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          const imageDataURL = getResizedCanvasImageDataURL(0, true);
+          const link = document.createElement("a");
+          link.download = `mandelbrot-${Date.now()}.png`;
+          link.href = imageDataURL;
+          link.click();
 
-        toast({
-          description: (
-            <div className="flex items-center justify-center gap-2">
-              <IconCircleCheck />
-              {t("Image saved!")}
-            </div>
-          ),
-          variant: "primary",
-          duration: 2000,
-        });
-      }}
-    >
-      <IconDownload className="mr-1 size-6" />
-      {t("Save Image")}
-    </Button>
+          toast({
+            description: (
+              <div className="flex items-center justify-center gap-2">
+                <IconCircleCheck />
+                {t("Image saved!")}
+              </div>
+            ),
+            variant: "primary",
+            duration: 2000,
+          });
+        }}
+      >
+        <IconDownload className="mr-1 size-6" />
+        {t("Save Image")}
+      </Button>
+    </SimpleTooltip>
   );
 };
 

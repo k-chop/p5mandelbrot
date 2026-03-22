@@ -1,3 +1,4 @@
+import { SimpleTooltip } from "@/components/simple-tooltip";
 import { useT } from "@/i18n/context";
 import { Button } from "@/shadcn/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
@@ -11,16 +12,19 @@ import { Instructions } from "./instructions";
 
 /** 言語切り替えボタン */
 const LanguageToggle = () => {
+  const t = useT();
   const locale = useStoreValue("locale");
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => updateStore("locale", locale === "en" ? "ja" : "en")}
-    >
-      {locale === "en" ? "JA" : "EN"}
-    </Button>
+    <SimpleTooltip content={t("Switch language")}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => updateStore("locale", locale === "en" ? "ja" : "en")}
+      >
+        {locale === "en" ? "JA" : "EN"}
+      </Button>
+    </SimpleTooltip>
   );
 };
 
@@ -45,14 +49,16 @@ export const Header = () => {
         <Actions />
         <div className="col-end-7 flex items-center gap-1 pb-1">
           <LanguageToggle />
-          <div className="flex items-center space-x-2 px-2">
-            <Switch
-              id="debug-mode"
-              checked={isDebugMode}
-              onCheckedChange={() => toggleDebugMode()}
-            />
-            <Label htmlFor="debug-mode">{t("Debug Mode")}</Label>
-          </div>
+          <SimpleTooltip content={t("Shows debug data obtained from rendering results.")}>
+            <div className="flex items-center space-x-2 px-2">
+              <Switch
+                id="debug-mode"
+                checked={isDebugMode}
+                onCheckedChange={() => toggleDebugMode()}
+              />
+              <Label htmlFor="debug-mode">{t("Debug Mode")}</Label>
+            </div>
+          </SimpleTooltip>
           <Button variant="outline" size="icon-sm" asChild>
             <a href="https://github.com/k-chop/p5mandelbrot" target="_blank" rel="noreferrer">
               <img src="github-mark-white.svg" className="p-1" />
