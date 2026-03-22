@@ -2,7 +2,7 @@ import { getCurrentPalette } from "@/camera/palette";
 import { SimpleTooltip } from "@/components/simple-tooltip";
 import { useT } from "@/i18n/context";
 import { getCurrentParams, setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { getResizedCanvasImageDataURL, requestCanvasImage } from "@/p5-adapter/p5-adapter";
+import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
 import { getCanvasSize } from "@/rendering/renderer";
 import { Button } from "@/shadcn/components/ui/button";
 import { Label } from "@/shadcn/components/ui/label";
@@ -100,21 +100,22 @@ const SaveImageButton = () => {
         variant="outline"
         size="sm"
         onClick={() => {
-          const imageDataURL = getResizedCanvasImageDataURL(0, true);
-          const link = document.createElement("a");
-          link.download = `mandelbrot-${Date.now()}.png`;
-          link.href = imageDataURL;
-          link.click();
+          requestCanvasImage(0, (imageDataURL) => {
+            const link = document.createElement("a");
+            link.download = `mandelbrot-${Date.now()}.png`;
+            link.href = imageDataURL;
+            link.click();
 
-          toast({
-            description: (
-              <div className="flex items-center justify-center gap-2">
-                <IconCircleCheck />
-                {t("Image saved!")}
-              </div>
-            ),
-            variant: "primary",
-            duration: 2000,
+            toast({
+              description: (
+                <div className="flex items-center justify-center gap-2">
+                  <IconCircleCheck />
+                  {t("Image saved!")}
+                </div>
+              ),
+              variant: "primary",
+              duration: 2000,
+            });
           });
         }}
       >
