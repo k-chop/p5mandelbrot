@@ -1,6 +1,6 @@
 import { getCurrentPalette } from "@/camera/palette";
+import { SimpleTooltip } from "@/components/simple-tooltip";
 import { useT } from "@/i18n/context";
-import { Trans } from "@/i18n/trans";
 import { getCurrentParams, setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { getResizedCanvasImageDataURL, requestCanvasImage } from "@/p5-adapter/p5-adapter";
 import { getCanvasSize } from "@/rendering/renderer";
@@ -8,7 +8,6 @@ import { Button } from "@/shadcn/components/ui/button";
 import { Label } from "@/shadcn/components/ui/label";
 import { Switch } from "@/shadcn/components/ui/switch";
 import { toast } from "@/shadcn/hooks/use-toast";
-import { SimpleTooltip } from "@/components/simple-tooltip";
 import { updateStoreWith, useStoreValue } from "@/store/store";
 import { buildShareData } from "@/utils/mandelbrot-url-params";
 import { useModalState } from "@/view/modal/use-modal-state";
@@ -36,9 +35,9 @@ const InterestingPointsToggle = () => {
     <SimpleTooltip
       content={
         <>
-          <Trans>Marks interesting points on the fractal.</Trans>
+          {t("Marks interesting points on the fractal.")}
           <br />
-          <Trans>Click a marker to zoom into its center.</Trans>
+          {t("Click a marker to zoom into its center.")}
         </>
       }
     >
@@ -55,6 +54,7 @@ const InterestingPointsToggle = () => {
 };
 
 const ShareButton = () => {
+  const t = useT();
   const [opened, { open, close }] = useModalState();
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
 
@@ -86,7 +86,7 @@ const ShareButton = () => {
       />
       <Button variant="outline" size="sm" onClick={open}>
         <IconShare className="mr-1 size-6" />
-        <Trans id="header.share">Share</Trans>
+        {t("Share", "header.share")}
       </Button>
     </>
   );
@@ -118,12 +118,13 @@ const SaveImageButton = () => {
       }}
     >
       <IconDownload className="mr-1 size-6" />
-      <Trans>Save Image</Trans>
+      {t("Save Image")}
     </Button>
   );
 };
 
 const SupersamplingButton = () => {
+  const t = useT();
   return (
     <Button
       variant="outline"
@@ -133,7 +134,7 @@ const SupersamplingButton = () => {
       }}
     >
       <Expand className="mr-1 size-6" />
-      <Trans>Supersampling x2</Trans>
+      {t("Supersampling x2")}
     </Button>
   );
 };
