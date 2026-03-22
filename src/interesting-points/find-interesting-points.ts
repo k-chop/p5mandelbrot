@@ -798,7 +798,7 @@ const buildStructureGrids = (
     if (sa > 0) values.push(sa);
   }
   values.sort((a, b) => a - b);
-  const floodFillThreshold = values.length > 0 ? values[Math.floor(values.length * 0.75)] : 0;
+  const floodFillThreshold = values.length > 0 ? values[Math.floor(values.length * 0.8)] : 0;
   return { saGrid, ngGrid, floodFillThreshold };
 };
 
@@ -909,7 +909,7 @@ const floodFillIslandCentroid = (
  * flood fillで特定し、島内のstructureAmountとneighborhoodGradientの
  * 複合重み付き重心を返す。
  *
- * flood fillの閾値はstructureAmountのp75（非ゼロ値の上位25%）を使用する。
+ * flood fillの閾値はstructureAmountのp80（非ゼロ値の上位20%）を使用する。
  * 仮centerPoint付近に閾値以上のブロックがない場合、最も近い閾値以上の
  * ブロックを起点に再補正する。
  * 島が見つからない場合は元の座標をそのまま返す。
