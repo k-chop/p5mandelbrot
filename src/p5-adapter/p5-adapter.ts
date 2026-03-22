@@ -705,9 +705,7 @@ export const p5Draw = (p: p5) => {
                 const result = findInterestingPoints(cache[0].buffer, cw, ch, params.N, {
                   debug: true,
                 });
-                currentInterestingPoints = result.debugData.centerPoint
-                  ? [...result.points, result.debugData.centerPoint]
-                  : result.points;
+                currentInterestingPoints = result.points;
                 updateStore("interestingPointsDebugData", result.debugData);
               } else {
                 currentInterestingPoints = findInterestingPoints(cache[0].buffer, cw, ch, params.N);

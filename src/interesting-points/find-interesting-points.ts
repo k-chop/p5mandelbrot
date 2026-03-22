@@ -1194,10 +1194,11 @@ export function findInterestingPoints(
     const selected = applyNMS(merged, topK, suppressionRadius);
     const centerPoint = findStructureCenter(blocks, 8);
     const filtered = centerPoint ? excludeOverlappingWithCenter(selected, centerPoint) : selected;
+    const points = centerPoint ? [...filtered, centerPoint] : filtered;
 
     if (debug) {
       return {
-        points: filtered,
+        points,
         debugData: {
           scoring: "symmetry",
           gridBlocks: blocks,
@@ -1210,7 +1211,7 @@ export function findInterestingPoints(
       };
     }
 
-    return centerPoint ? [...filtered, centerPoint] : filtered;
+    return points;
   }
 
   // entropy-gradient パス
