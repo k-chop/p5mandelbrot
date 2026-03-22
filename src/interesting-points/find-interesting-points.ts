@@ -662,6 +662,14 @@ export const applyNMS = (
   return selected;
 };
 
+/**
+ * 2つのピクセル座標から一意な数値キーを生成する
+ *
+ * Mapの文字列キー `${x},${y}` の代わりに使い、文字列生成・GC負荷を回避する。
+ * 座標は0〜99999の範囲（ピクセル座標）を前提とする。
+ */
+const gridKey = (x: number, y: number): number => x * 100000 + y;
+
 /** 中心点検出で使う方向数 */
 const CENTER_DIRECTIONS = 16;
 
@@ -685,7 +693,7 @@ const CENTER_EROSION_MAX_ROUNDS = 50;
 const calcStructureCenterScore = (
   cx: number,
   cy: number,
-  rankGrid: Map<string, number>,
+  rankGrid: Map<number, number>,
   stride: number,
 ): { coverage: number; centerScore: number } => {
   let directionsWithStructure = 0;
@@ -702,7 +710,7 @@ const calcStructureCenterScore = (
       // グリッドにスナップ
       const gx = Math.round(sx / stride) * stride;
       const gy = Math.round(sy / stride) * stride;
-      const rank = rankGrid.get(`${gx},${gy}`) ?? 0;
+      const rank = rankGrid.get(gridKey(gx, gy)) ?? 0;
 
       totalRankSum += rank;
       if (rank > 0) {
@@ -724,36 +732,36 @@ const calcStructureCenterScore = (
  */
 const countConnectedComponents = (
   blocks: BlockDebugInfo[],
-  grid: Map<string, number>,
+  grid: Map<number, number>,
   stride: number,
   threshold: number,
 ): number => {
-  const visited = new Set<string>();
+  const visited = new Set<number>();
   let count = 0;
 
   for (const block of blocks) {
-    const key = `${block.bx},${block.by}`;
+    const key = gridKey(block.bx, block.by);
     if (visited.has(key)) continue;
     if ((grid.get(key) ?? 0) < threshold) continue;
 
     // flood fill
     count++;
-    const stack = [key];
+    const stack: Array<{ x: number; y: number }> = [{ x: block.bx, y: block.by }];
     while (stack.length > 0) {
-      const current = stack.pop()!;
-      if (visited.has(current)) continue;
-      visited.add(current);
+      const { x: cx, y: cy } = stack.pop()!;
+      const currentKey = gridKey(cx, cy);
+      if (visited.has(currentKey)) continue;
+      visited.add(currentKey);
 
-      const [cx, cy] = current.split(",").map(Number);
       for (const [nx, ny] of [
         [cx, cy - stride],
         [cx, cy + stride],
         [cx - stride, cy],
         [cx + stride, cy],
       ]) {
-        const nKey = `${nx},${ny}`;
+        const nKey = gridKey(nx, ny);
         if (!visited.has(nKey) && (grid.get(nKey) ?? 0) >= threshold) {
-          stack.push(nKey);
+          stack.push({ x: nx, y: ny });
         }
       }
     }
@@ -777,13 +785,14 @@ const adjustCenterByStructureIsland = (
   stride: number,
 ): { x: number; y: number } => {
   // structureAmountのグリッドを構築
-  const saGrid = new Map<string, number>();
+  const saGrid = new Map<number, number>();
   for (const block of blocks) {
-    saGrid.set(`${block.bx},${block.by}`, block.factors.structureAmount ?? 0);
+    saGrid.set(gridKey(block.bx, block.by), block.factors.structureAmount ?? 0);
   }
 
   // 仮centerPointに最も近いブロックを探す
-  let closestKey = "";
+  let closestBx = 0;
+  let closestBy = 0;
   let closestDist = Infinity;
   for (const block of blocks) {
     const dx = block.bx - cx;
@@ -791,28 +800,25 @@ const adjustCenterByStructureIsland = (
     const dist = dx * dx + dy * dy;
     if (dist < closestDist) {
       closestDist = dist;
-      closestKey = `${block.bx},${block.by}`;
+      closestBx = block.bx;
+      closestBy = block.by;
     }
   }
 
-  const startSa = saGrid.get(closestKey) ?? 0;
+  const startSa = saGrid.get(gridKey(closestBx, closestBy)) ?? 0;
   if (startSa === 0) return { x: cx, y: cy };
 
   // flood fillで島を特定（島内の最大値の50%以上を閾値とする）
   // まず島全体を探索して最大値を求め、その後閾値でフィルタする
-  const visited = new Set<string>();
-  const islandKeys: string[] = [];
-  const queue: string[] = [closestKey];
-  visited.add(closestKey);
+  const visited = new Set<number>();
+  const islandBlocks: Array<{ x: number; y: number }> = [];
+  const queue: Array<{ x: number; y: number }> = [{ x: closestBx, y: closestBy }];
+  visited.add(gridKey(closestBx, closestBy));
 
   // 第1パス: structureAmount > 0 の連続領域を探索
   while (queue.length > 0) {
-    const key = queue.shift()!;
-    islandKeys.push(key);
-
-    const [bxStr, byStr] = key.split(",");
-    const bx = Number(bxStr);
-    const by = Number(byStr);
+    const { x: bx, y: by } = queue.shift()!;
+    islandBlocks.push({ x: bx, y: by });
 
     for (const [nx, ny] of [
       [bx - stride, by],
@@ -820,22 +826,22 @@ const adjustCenterByStructureIsland = (
       [bx, by - stride],
       [bx, by + stride],
     ]) {
-      const nKey = `${nx},${ny}`;
+      const nKey = gridKey(nx, ny);
       if (visited.has(nKey)) continue;
       const nSa = saGrid.get(nKey) ?? 0;
       if (nSa > 0) {
         visited.add(nKey);
-        queue.push(nKey);
+        queue.push({ x: nx, y: ny });
       }
     }
   }
 
-  if (islandKeys.length === 0) return { x: cx, y: cy };
+  if (islandBlocks.length === 0) return { x: cx, y: cy };
 
   // 島内の最大structureAmountを求め、閾値でフィルタ
   let maxSa = 0;
-  for (const key of islandKeys) {
-    const sa = saGrid.get(key)!;
+  for (const block of islandBlocks) {
+    const sa = saGrid.get(gridKey(block.x, block.y))!;
     if (sa > maxSa) maxSa = sa;
   }
   const threshold = maxSa * STRUCTURE_ISLAND_THRESHOLD;
@@ -844,12 +850,11 @@ const adjustCenterByStructureIsland = (
   let wX = 0;
   let wY = 0;
   let wTotal = 0;
-  for (const key of islandKeys) {
-    const sa = saGrid.get(key)!;
+  for (const block of islandBlocks) {
+    const sa = saGrid.get(gridKey(block.x, block.y))!;
     if (sa < threshold) continue;
-    const [bxStr, byStr] = key.split(",");
-    wX += Number(bxStr) * sa;
-    wY += Number(byStr) * sa;
+    wX += block.x * sa;
+    wY += block.y * sa;
     wTotal += sa;
   }
 
@@ -878,9 +883,9 @@ export const findStructureCenter = (
 
   // rank正規化グリッドを構築（スコア順位を0-1に正規化）
   const sorted = blocks
-    .map((b) => ({ key: `${b.bx},${b.by}`, score: b.score }))
+    .map((b) => ({ key: gridKey(b.bx, b.by), score: b.score }))
     .sort((a, b) => a.score - b.score);
-  const rankGrid = new Map<string, number>();
+  const rankGrid = new Map<number, number>();
   for (let i = 0; i < sorted.length; i++) {
     // スコア0のブロックはrank 0
     const rank = sorted[i].score > 0 ? (i + 1) / sorted.length : 0;
@@ -908,9 +913,9 @@ export const findStructureCenter = (
   // エロージョン: 各ラウンドで各ブロックのスコアを自分と上下左右の最小値に置き換える
   // 小さいピークが消え、大きいピークの中心部だけが残る
   // ピークが1つになったら停止、全消滅なら1つ前の状態を採用
-  const centerScoreGrid = new Map<string, number>();
+  const centerScoreGrid = new Map<number, number>();
   for (const block of blocks) {
-    centerScoreGrid.set(`${block.bx},${block.by}`, block.factors.centerScore);
+    centerScoreGrid.set(gridKey(block.bx, block.by), block.factors.centerScore);
   }
 
   let lastGoodGrid = new Map(centerScoreGrid);
@@ -919,13 +924,13 @@ export const findStructureCenter = (
     const prevGrid = new Map(centerScoreGrid);
     for (const block of blocks) {
       const { bx, by } = block;
-      const self = prevGrid.get(`${bx},${by}`) ?? 0;
-      const up = prevGrid.get(`${bx},${by - stride}`) ?? 0;
-      const down = prevGrid.get(`${bx},${by + stride}`) ?? 0;
-      const left = prevGrid.get(`${bx - stride},${by}`) ?? 0;
-      const right = prevGrid.get(`${bx + stride},${by}`) ?? 0;
+      const self = prevGrid.get(gridKey(bx, by)) ?? 0;
+      const up = prevGrid.get(gridKey(bx, by - stride)) ?? 0;
+      const down = prevGrid.get(gridKey(bx, by + stride)) ?? 0;
+      const left = prevGrid.get(gridKey(bx - stride, by)) ?? 0;
+      const right = prevGrid.get(gridKey(bx + stride, by)) ?? 0;
       const eroded = Math.min(self, up, down, left, right);
-      centerScoreGrid.set(`${bx},${by}`, eroded);
+      centerScoreGrid.set(gridKey(bx, by), eroded);
     }
 
     // ピーク判定: 現在の最大値の50%以上をピークとみなして連結成分を数える
@@ -957,7 +962,7 @@ export const findStructureCenter = (
   // エロージョン後のスコアをfactorsに書き戻し（ヒートマップ反映）
   let maxErodedScore = 0;
   for (const block of blocks) {
-    block.factors.centerScore = centerScoreGrid.get(`${block.bx},${block.by}`) ?? 0;
+    block.factors.centerScore = centerScoreGrid.get(gridKey(block.bx, block.by)) ?? 0;
     if (block.factors.centerScore > maxErodedScore) {
       maxErodedScore = block.factors.centerScore;
     }
