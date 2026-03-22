@@ -1,4 +1,5 @@
 import { SimpleTooltip } from "@/components/simple-tooltip";
+import { useT } from "@/i18n/context";
 import { exportEvalData } from "@/interesting-points/export-eval-data";
 import type { BlockDebugInfo } from "@/interesting-points/find-interesting-points";
 import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
@@ -25,6 +26,7 @@ import { PointDetailPanel } from "./point-detail-panel";
  * ヒートマップ、factor選択、ポイント詳細パネルを統合する。
  */
 export const InterestingPointsViewer = () => {
+  const t = useT();
   const debugData = useStoreValue("interestingPointsDebugData");
   const alwaysDebug = useStoreValue("alwaysComputeIPDebugData");
   const [selectedFactor, setSelectedFactor] = useState("score");
@@ -65,9 +67,9 @@ export const InterestingPointsViewer = () => {
       side="bottom"
       content={
         <>
-          Computes debug data even when this tab is closed.
+          {t("Computes debug data even when this tab is closed.")}
           <br />
-          May slow down rendering.
+          {t("May slow down rendering.")}
         </>
       }
     >
@@ -77,7 +79,7 @@ export const InterestingPointsViewer = () => {
           checked={alwaysDebug}
           onCheckedChange={() => updateStoreWith("alwaysComputeIPDebugData", (v) => !v)}
         />
-        <Label htmlFor="always-compute-ip-debug">Always compute debug data</Label>
+        <Label htmlFor="always-compute-ip-debug">{t("Always compute debug data")}</Label>
       </div>
     </SimpleTooltip>
   );

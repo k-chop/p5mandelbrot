@@ -1,3 +1,4 @@
+import { useT } from "@/i18n/context";
 import type {
   BlockDebugInfo,
   InterestingPoint,
@@ -15,9 +16,13 @@ export const PointDetailPanel = ({
   block: BlockDebugInfo | null;
   selectedPoints: InterestingPoint[];
 }) => {
+  const t = useT();
+
   if (!block) {
     return (
-      <div className="text-muted-foreground text-xs italic">ブロックをクリックすると詳細を表示</div>
+      <div className="text-muted-foreground text-xs italic">
+        {t("Click a block to show details")}
+      </div>
     );
   }
 

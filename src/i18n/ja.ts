@@ -100,4 +100,10 @@ export const ja: Dictionary = {
   "settings.importFromClipboard": "クリップボードからインポート",
   "settings.poiImportFailed": "クリップボードからPOIリストのインポートに失敗しました！",
   "settings.poiImportSuccess": "クリップボードからPOIリストをインポートしました！",
+
+  // debug mode
+  "debug.alwaysComputeDebugData": "常にデバッグデータを計算",
+  "debug.alwaysComputeTooltip1": "このタブが閉じていてもデバッグデータを計算します。",
+  "debug.alwaysComputeTooltip2": "描画が遅くなる場合があります。",
+  "debug.clickBlockToShowDetail": "ブロックをクリックすると詳細を表示",
 };

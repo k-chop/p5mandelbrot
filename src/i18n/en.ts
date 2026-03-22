@@ -100,4 +100,9 @@ export const en = {
   "settings.importFromClipboard": "Import from clipboard",
   "settings.poiImportFailed": "Failed to import POI List from clipboard!",
   "settings.poiImportSuccess": "POI List imported from clipboard!",
+  // debug mode
+  "debug.alwaysComputeDebugData": "Always compute debug data",
+  "debug.alwaysComputeTooltip1": "Computes debug data even when this tab is closed.",
+  "debug.alwaysComputeTooltip2": "May slow down rendering.",
+  "debug.clickBlockToShowDetail": "Click a block to show details",
 } as const;
