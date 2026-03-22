@@ -164,36 +164,38 @@ export const InterestingPointsViewer = () => {
           )}
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isExporting}
-          onClick={async () => {
-            setIsExporting(true);
-            try {
-              const pointIndex = await exportEvalData(
-                () =>
-                  new Promise<string>((resolve) => {
-                    requestCanvasImage(400, resolve);
-                  }),
-              );
-              toast({
-                title: "Export complete",
-                description: `Saved to tmp/eval/point-${pointIndex}/`,
-              });
-            } catch (e) {
-              toast({
-                title: "Export failed",
-                description: e instanceof Error ? e.message : "Unknown error",
-                variant: "destructive",
-              });
-            } finally {
-              setIsExporting(false);
-            }
-          }}
-        >
-          {isExporting ? "Exporting..." : "Export for Eval"}
-        </Button>
+        {location.hostname === "localhost" && (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isExporting}
+            onClick={async () => {
+              setIsExporting(true);
+              try {
+                const pointIndex = await exportEvalData(
+                  () =>
+                    new Promise<string>((resolve) => {
+                      requestCanvasImage(400, resolve);
+                    }),
+                );
+                toast({
+                  title: "Export complete",
+                  description: `Saved to tmp/eval/point-${pointIndex}/`,
+                });
+              } catch (e) {
+                toast({
+                  title: "Export failed",
+                  description: e instanceof Error ? e.message : "Unknown error",
+                  variant: "destructive",
+                });
+              } finally {
+                setIsExporting(false);
+              }
+            }}
+          >
+            {isExporting ? "Exporting..." : "Export for Eval"}
+          </Button>
+        )}
       </div>
     </div>
   );
