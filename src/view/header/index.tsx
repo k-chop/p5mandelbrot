@@ -2,11 +2,26 @@ import { Button } from "@/shadcn/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { Label } from "@/shadcn/components/ui/label";
 import { Switch } from "@/shadcn/components/ui/switch";
-import { updateStoreWith, useStoreValue } from "@/store/store";
+import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
 import { IconHelp } from "@tabler/icons-react";
 import { useModalState } from "../modal/use-modal-state";
 import { Actions } from "./actions";
 import { Instructions } from "./instructions";
+
+/** 言語切り替えボタン */
+const LanguageToggle = () => {
+  const locale = useStoreValue("locale");
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => updateStore("locale", locale === "en" ? "ja" : "en")}
+    >
+      {locale === "en" ? "JA" : "EN"}
+    </Button>
+  );
+};
 
 export const Header = () => {
   const [opened, { open, toggle }] = useModalState();
@@ -27,6 +42,7 @@ export const Header = () => {
       <div className="grid grid-cols-2">
         <Actions />
         <div className="col-end-7 flex items-center gap-1">
+          <LanguageToggle />
           <div className="flex items-center space-x-2 px-2">
             <Switch
               id="debug-mode"
