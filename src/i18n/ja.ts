@@ -26,6 +26,22 @@ export const ja: Dictionary = {
   "share.copyUrlAndImage": "URL & 画像をコピー",
   "share.copyFailed": "クリップボードへのコピーに失敗しました",
 
+  // instructions
+  "instructions.mouse": "マウス",
+  "instructions.keys": "キー",
+  "instructions.zoom": "ズーム",
+  "instructions.zoomAtClickedPoint": "クリック位置でズーム",
+  "instructions.changeCenter": "中心を移動",
+  "instructions.interactiveZoom": "インタラクティブなズームと中心移動",
+  "instructions.changePalette": "パレット変更",
+  "instructions.toggleMode": "モード切替",
+  "instructions.resetR": "r を 2.0 にリセット",
+  "instructions.supersampling": "現在位置をスーパーサンプリング(x2)",
+  "instructions.changeMaxIteration": "最大反復回数を変更 (±100)",
+  "instructions.changeMaxIterationWisely": "最大反復回数を賢く変更 (たぶん)",
+  "instructions.resetIteration10000": "反復回数を10000にリセット",
+  "instructions.resetIteration500": "反復回数を500にリセット",
+
   // settings
   "settings.rendererType": "レンダラー",
   "settings.switchedToWebGPU": "WebGPUレンダラーに切り替えました",

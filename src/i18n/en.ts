@@ -26,6 +26,22 @@ export const en = {
   "share.copyUrlAndImage": "Copy URL & Image",
   "share.copyFailed": "Failed to copy to clipboard",
 
+  // instructions
+  "instructions.mouse": "Mouse",
+  "instructions.keys": "Keys",
+  "instructions.zoom": "Zoom",
+  "instructions.zoomAtClickedPoint": "Zoom at clicked point",
+  "instructions.changeCenter": "Change center",
+  "instructions.interactiveZoom": "Interactive zoom and change center",
+  "instructions.changePalette": "Change Palette",
+  "instructions.toggleMode": "Toggle mode",
+  "instructions.resetR": "Reset r to 2.0",
+  "instructions.supersampling": "Supersampling(x2) current location",
+  "instructions.changeMaxIteration": "Change max iteration (±100)",
+  "instructions.changeMaxIterationWisely": "Change max iteration wisely (maybe)",
+  "instructions.resetIteration10000": "Reset iteration count to 10000",
+  "instructions.resetIteration500": "Reset iteration count to 500",
+
   // settings
   "settings.rendererType": "Renderer Type",
   "settings.switchedToWebGPU": "Switched to WebGPU renderer",
