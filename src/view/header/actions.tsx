@@ -6,6 +6,7 @@ import { Button } from "@/shadcn/components/ui/button";
 import { Label } from "@/shadcn/components/ui/label";
 import { Switch } from "@/shadcn/components/ui/switch";
 import { toast } from "@/shadcn/hooks/use-toast";
+import { SimpleTooltip } from "@/components/simple-tooltip";
 import { updateStoreWith, useStoreValue } from "@/store/store";
 import { buildShareData } from "@/utils/mandelbrot-url-params";
 import { useModalState } from "@/view/modal/use-modal-state";
@@ -29,14 +30,24 @@ export const Actions = () => {
 const InterestingPointsToggle = () => {
   const show = useStoreValue("showInterestingPoints");
   return (
-    <div className="flex items-center space-x-2 px-2">
-      <Switch
-        id="interesting-points"
-        checked={show}
-        onCheckedChange={() => updateStoreWith("showInterestingPoints", (v) => !v)}
-      />
-      <Label htmlFor="interesting-points">Show point marker</Label>
-    </div>
+    <SimpleTooltip
+      content={
+        <>
+          Marks interesting points on the fractal.
+          <br />
+          Click a marker to zoom into its center.
+        </>
+      }
+    >
+      <div className="flex items-center space-x-2 px-2">
+        <Switch
+          id="interesting-points"
+          checked={show}
+          onCheckedChange={() => updateStoreWith("showInterestingPoints", (v) => !v)}
+        />
+        <Label htmlFor="interesting-points">Show point marker</Label>
+      </div>
+    </SimpleTooltip>
   );
 };
 
