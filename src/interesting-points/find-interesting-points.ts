@@ -228,13 +228,15 @@ export const findCandidatesAtScale = (
         minIteration,
       );
 
-      if (debugBlocks) {
-        const gradient = peak
-          ? calcGradientMagnitude(buffer, peak.x, peak.y, width, height, maxIteration)
-          : 0;
-        const entropy = calcLocalEntropy(buffer, bx, by, blockSize, width, height, maxIteration);
-        const score = peak ? entropy * Math.log2(1 + gradient) : 0;
+      if (!peak && !debugBlocks) continue;
 
+      const gradient = peak
+        ? calcGradientMagnitude(buffer, peak.x, peak.y, width, height, maxIteration)
+        : 0;
+      const entropy = calcLocalEntropy(buffer, bx, by, blockSize, width, height, maxIteration);
+      const score = peak ? entropy * Math.log2(1 + gradient) : 0;
+
+      if (debugBlocks) {
         debugBlocks.push({
           bx,
           by,
@@ -243,20 +245,10 @@ export const findCandidatesAtScale = (
           score,
           peak: peak ? { x: peak.x, y: peak.y, iteration: peak.iteration } : null,
         });
+      }
 
-        if (peak && score > 0) {
-          candidates.push({ x: peak.x, y: peak.y, iteration: peak.iteration, score });
-        }
-      } else {
-        if (!peak) continue;
-
-        const gradient = calcGradientMagnitude(buffer, peak.x, peak.y, width, height, maxIteration);
-        const entropy = calcLocalEntropy(buffer, bx, by, blockSize, width, height, maxIteration);
-
-        const score = entropy * Math.log2(1 + gradient);
-        if (score > 0) {
-          candidates.push({ x: peak.x, y: peak.y, iteration: peak.iteration, score });
-        }
+      if (peak && score > 0) {
+        candidates.push({ x: peak.x, y: peak.y, iteration: peak.iteration, score });
       }
     }
   }
@@ -293,9 +285,8 @@ export const mergeCandidatesAcrossScales = (
     for (const cluster of clusters) {
       const dx = candidate.x - cluster.x;
       const dy = candidate.y - cluster.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if (dist <= proximityThreshold) {
+      if (dx * dx + dy * dy <= proximityThreshold * proximityThreshold) {
         cluster.scales.add(candidate.scale);
         if (candidate.score > cluster.maxScore) {
           cluster.maxScore = candidate.score;
@@ -428,117 +419,6 @@ const calcPearsonCorrelation = (xs: number[], ys: number[]): number => {
   return covXY / denom;
 };
 
-/**
- * 指定した中心点における回転対称性スコアを計算する
- *
- * 複数の半径で円周上のiteration値をサンプリングし、
- * 各回転次数(2..8)でPearson相関を求めて最大値を取る。
- * 全半径の最大相関を平均し、構造量（標準偏差/maxIteration）と周辺構造密度の
- * 大きい方を乗じて最終スコアとする。
- */
-export const calcRotationalSymmetry = (
-  buffer: Uint32Array,
-  cx: number,
-  cy: number,
-  width: number,
-  height: number,
-  maxIteration: number,
-): number => {
-  const correlations: number[] = [];
-  let validRadiusCount = 0;
-  let allValidSum = 0;
-  let allValidSumSq = 0;
-  let allValidCount = 0;
-
-  for (const r of SYMMETRY_RADII) {
-    const sampleCount = Math.max(16, Math.round((2 * Math.PI * r) / 2));
-    const samples: number[] = [];
-    const valid: boolean[] = [];
-
-    for (let k = 0; k < sampleCount; k++) {
-      const angle = (2 * Math.PI * k) / sampleCount;
-      const sx = Math.round(cx + r * Math.cos(angle));
-      const sy = Math.round(cy + r * Math.sin(angle));
-
-      if (sx < 0 || sx >= width || sy < 0 || sy >= height) {
-        samples.push(0);
-        valid.push(false);
-      } else {
-        const val = buffer[sy * width + sx];
-        if (val === 0 || val === maxIteration) {
-          samples.push(0);
-          valid.push(false);
-        } else {
-          samples.push(val);
-          valid.push(true);
-          allValidSum += val;
-          allValidSumSq += val * val;
-          allValidCount++;
-        }
-      }
-    }
-
-    // 円周サンプルの変動係数が小さい（平坦）なら対称性0とみなす
-    const validSamples = samples.filter((_, i) => valid[i]);
-    let bestCorrelation = 0;
-
-    if (validSamples.length >= 4) {
-      const uniqueCount = new Set(validSamples).size;
-
-      if (uniqueCount >= SYMMETRY_MIN_UNIQUE_VALUES) {
-        for (let n = MIN_ROTATION_ORDER; n <= MAX_ROTATION_ORDER; n++) {
-          const shift = Math.round(sampleCount / n);
-          if (shift === 0) continue;
-
-          const xs: number[] = [];
-          const ys: number[] = [];
-
-          for (let k = 0; k < sampleCount; k++) {
-            const k2 = (k + shift) % sampleCount;
-            if (valid[k] && valid[k2]) {
-              xs.push(samples[k]);
-              ys.push(samples[k2]);
-            }
-          }
-
-          const minPairs = Math.floor(sampleCount / n / 2);
-          if (xs.length < minPairs) continue;
-
-          const correlation = calcPearsonCorrelation(xs, ys);
-          if (correlation > bestCorrelation) {
-            bestCorrelation = correlation;
-          }
-        }
-      }
-    }
-
-    correlations.push(bestCorrelation);
-    validRadiusCount++;
-  }
-
-  if (validRadiusCount === 0 || allValidCount === 0) return 0;
-
-  const sorted = [...correlations].sort((a, b) => a - b);
-  const symmetryScore = sorted[Math.floor(sorted.length * 0.25)];
-
-  const mean = allValidSum / allValidCount;
-  const variance = allValidSumSq / allValidCount - mean * mean;
-  const structureAmount = Math.sqrt(Math.max(0, variance)) / maxIteration;
-
-  const neighborhoodGradient = calcNeighborhoodGradientDensity(
-    buffer,
-    cx,
-    cy,
-    width,
-    height,
-    maxIteration,
-  );
-
-  return (
-    symmetryScore * Math.max(structureAmount, neighborhoodGradient * NEIGHBORHOOD_RESCUE_WEIGHT)
-  );
-};
-
 /** calcRotationalSymmetryの分解結果 */
 interface SymmetryFactors {
   symmetryScore: number;
@@ -548,11 +428,14 @@ interface SymmetryFactors {
 }
 
 /**
- * 回転対称性スコアの個別要因を返す
+ * 指定した中心点における回転対称性スコアと個別要因を計算する
  *
- * calcRotationalSymmetryと同じ計算を行い、symmetryScore・structureAmount・neighborhoodGradientを個別に返す。
+ * 複数の半径で円周上のiteration値をサンプリングし、
+ * 各回転次数(2..8)でPearson相関を求めて最大値を取る。
+ * 全半径の最大相関を平均し、構造量（標準偏差/maxIteration）と周辺構造密度の
+ * 大きい方を乗じて最終スコアとする。
  */
-const calcRotationalSymmetryFactors = (
+export const calcRotationalSymmetry = (
   buffer: Uint32Array,
   cx: number,
   cy: number,
@@ -682,8 +565,9 @@ const findSymmetryCandidates = (
       const iter = buffer[y * width + x];
       if (iter < minIteration && iter !== 0) continue;
 
+      const factors = calcRotationalSymmetry(buffer, x, y, width, height, maxIteration);
+
       if (debugBlocks) {
-        const factors = calcRotationalSymmetryFactors(buffer, x, y, width, height, maxIteration);
         debugBlocks.push({
           bx: x,
           by: y,
@@ -696,14 +580,10 @@ const findSymmetryCandidates = (
           score: factors.score,
           peak: { x, y, iteration: iter },
         });
-        if (factors.score > 0) {
-          candidates.push({ x, y, iteration: iter, score: factors.score });
-        }
-      } else {
-        const score = calcRotationalSymmetry(buffer, x, y, width, height, maxIteration);
-        if (score > 0) {
-          candidates.push({ x, y, iteration: iter, score });
-        }
+      }
+
+      if (factors.score > 0) {
+        candidates.push({ x, y, iteration: iter, score: factors.score });
       }
     }
   }
@@ -729,9 +609,8 @@ export const mergeProximityCandidates = (
     for (const cluster of clusters) {
       const dx = candidate.x - cluster.x;
       const dy = candidate.y - cluster.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if (dist <= proximityThreshold) {
+      if (dx * dx + dy * dy <= proximityThreshold * proximityThreshold) {
         if (candidate.score > cluster.score) {
           cluster.x = candidate.x;
           cluster.y = candidate.y;
@@ -768,10 +647,11 @@ export const applyNMS = (
   for (const candidate of sorted) {
     if (selected.length >= topK) break;
 
+    const suppressionRadiusSq = suppressionRadius * suppressionRadius;
     const isSuppressed = selected.some((s) => {
       const dx = candidate.x - s.x;
       const dy = candidate.y - s.y;
-      return Math.sqrt(dx * dx + dy * dy) <= suppressionRadius;
+      return dx * dx + dy * dy <= suppressionRadiusSq;
     });
 
     if (!isSuppressed) {

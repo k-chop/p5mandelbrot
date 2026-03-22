@@ -394,12 +394,6 @@ export const createCompositeImage = (
 /**
  * 評価データをローカルサーバーにエクスポートする
  *
- * 合成画像とsummary JSONを生成し、POST /api/eval-exportに送信する。
- * 保存されたpointIndexを返す。
- */
-/**
- * 評価データをローカルサーバーにエクスポートする
- *
  * 合成画像・ヒートマップ・summary JSONを生成し、POST /api/eval-exportに送信する。
  * 保存されたpointIndexを返す。
  */

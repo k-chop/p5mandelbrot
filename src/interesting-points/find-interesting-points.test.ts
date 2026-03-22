@@ -520,7 +520,7 @@ describe("calcRotationalSymmetry", () => {
 
     const result = calcRotationalSymmetry(buffer, 40, 40, width, height, 100);
 
-    expect(result).toBe(0);
+    expect(result.score).toBe(0);
   });
 
   it("2-fold対称パターン → 正のスコア", () => {
@@ -531,7 +531,7 @@ describe("calcRotationalSymmetry", () => {
 
     const result = calcRotationalSymmetry(buffer, 125, 125, width, height, 200);
 
-    expect(result).toBeGreaterThan(0);
+    expect(result.score).toBeGreaterThan(0);
   });
 
   it("4-fold対称パターン → 正のスコア", () => {
@@ -542,7 +542,7 @@ describe("calcRotationalSymmetry", () => {
 
     const result = calcRotationalSymmetry(buffer, 125, 125, width, height, 200);
 
-    expect(result).toBeGreaterThan(0);
+    expect(result.score).toBeGreaterThan(0);
   });
 
   it("非対称パターン → 対称パターンよりスコアが低い", () => {
@@ -553,7 +553,7 @@ describe("calcRotationalSymmetry", () => {
     // 4-fold対称パターン
     const symBuffer = new Uint32Array(width * height).fill(50);
     fillRadialPattern(symBuffer, width, height, 125, 125, 4, 50, 30, 120);
-    const symScore = calcRotationalSymmetry(symBuffer, 125, 125, width, height, maxIter);
+    const symResult = calcRotationalSymmetry(symBuffer, 125, 125, width, height, maxIter);
 
     // ランダム風パターン（非対称）
     const asymBuffer = new Uint32Array(width * height).fill(50);
@@ -563,9 +563,9 @@ describe("calcRotationalSymmetry", () => {
         asymBuffer[y * width + x] = 20 + ((x * 7 + y * 13 + x * y) % 160);
       }
     }
-    const asymScore = calcRotationalSymmetry(asymBuffer, 125, 125, width, height, maxIter);
+    const asymResult = calcRotationalSymmetry(asymBuffer, 125, 125, width, height, maxIter);
 
-    expect(symScore).toBeGreaterThan(asymScore);
+    expect(symResult.score).toBeGreaterThan(asymResult.score);
   });
 
   it("境界付近の中心(0,0) → エラーなし", () => {
@@ -588,7 +588,7 @@ describe("calcRotationalSymmetry", () => {
 
     const result = calcRotationalSymmetry(buffer, 40, 40, width, height, maxIter);
 
-    expect(result).toBe(0);
+    expect(result.score).toBe(0);
   });
 });
 
