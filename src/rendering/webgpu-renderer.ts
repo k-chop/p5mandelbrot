@@ -1,12 +1,8 @@
-import { getCurrentPalette, markNeedsRerender, setPalette } from "@/camera/palette";
+import { getCurrentPalette, setPalette } from "@/camera/palette";
 import type { Palette } from "@/color";
 import { addTraceEvent } from "@/event-viewer/event";
-import {
-  getIterationCache,
-  scaleIterationCacheAroundPoint,
-  setIterationCache,
-  translateRectInIterationCache,
-} from "@/iteration-buffer/iteration-buffer";
+import { getIterationCache } from "@/iteration-buffer/iteration-buffer";
+import { rescaleIterationCacheForResize } from "@/rendering/common";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { Rect } from "@/math/rect";
 import { getStore } from "@/store/store";
@@ -407,26 +403,7 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
 
   bindGroup = createBindGroup(bindGroupLayout);
 
-  const scaleFactor = Math.min(width, height) / Math.min(from.width, from.height);
-
-  console.debug("Resize scale factor", scaleFactor);
-
-  // サイズ差の分trasnlateしてからscale
-  const offsetX = Math.round((width - from.width) / 2);
-  const offsetY = Math.round((height - from.height) / 2);
-  translateRectInIterationCache(-offsetX, -offsetY);
-
-  const translated = scaleIterationCacheAroundPoint(
-    width / 2,
-    height / 2,
-    scaleFactor,
-    width,
-    height,
-  );
-  setIterationCache(translated);
-  addIterationBuffer();
-
-  markNeedsRerender();
+  rescaleIterationCacheForResize(from, { width, height });
 };
 
 export const updatePaletteData: Renderer["updatePaletteData"] = (palette: Palette) => {

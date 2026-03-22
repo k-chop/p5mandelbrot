@@ -1,3 +1,10 @@
+import { markNeedsRerender } from "@/camera/palette";
+import {
+  addIterationBuffer,
+  scaleIterationCacheAroundPoint,
+  setIterationCache,
+  translateRectInIterationCache,
+} from "@/iteration-buffer/iteration-buffer";
 import type { Rect } from "@/math/rect";
 import { getStore, updateStore } from "@/store/store";
 import type { Resolution } from "./p5-renderer";
@@ -108,6 +115,35 @@ export const bufferLocalLogicalIndex = (
     const idx11 = scaledX + 1 + (scaledY + 1) * resolution.width;
     return [idx00, idx10, idx01, idx11];
   }
+};
+
+/**
+ * リサイズ時にイテレーションキャッシュをスケーリング・再配置する
+ */
+export const rescaleIterationCacheForResize = (
+  from: { width: number; height: number },
+  to: { width: number; height: number },
+) => {
+  const scaleFactor = Math.min(to.width, to.height) / Math.min(from.width, from.height);
+
+  console.debug("Resize scale factor", scaleFactor);
+
+  // サイズ差の分translateしてからscale
+  const offsetX = Math.round((to.width - from.width) / 2);
+  const offsetY = Math.round((to.height - from.height) / 2);
+  translateRectInIterationCache(-offsetX, -offsetY);
+
+  const translated = scaleIterationCacheAroundPoint(
+    to.width / 2,
+    to.height / 2,
+    scaleFactor,
+    to.width,
+    to.height,
+  );
+  setIterationCache(translated);
+  addIterationBuffer();
+
+  markNeedsRerender();
 };
 
 /**

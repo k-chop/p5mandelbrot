@@ -5,12 +5,8 @@ import {
   needsRerender,
 } from "@/camera/palette";
 import type { Palette } from "@/color";
-import {
-  getIterationCache,
-  scaleIterationCacheAroundPoint,
-  setIterationCache,
-  translateRectInIterationCache,
-} from "@/iteration-buffer/iteration-buffer";
+import { getIterationCache } from "@/iteration-buffer/iteration-buffer";
+import { rescaleIterationCacheForResize } from "@/rendering/common";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { clamp } from "@/math/util";
 import { getStore } from "@/store/store";
@@ -122,26 +118,7 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
   unifiedIterationBuffer = new Uint32Array(w * h);
   mainBuffer.resizeCanvas(width, height);
 
-  const scaleFactor = Math.min(width, height) / Math.min(from.width, from.height);
-
-  console.debug("Resize scale factor", scaleFactor);
-
-  // サイズ差の分trasnlateしてからscale
-  const offsetX = Math.round((width - from.width) / 2);
-  const offsetY = Math.round((height - from.height) / 2);
-  translateRectInIterationCache(-offsetX, -offsetY);
-
-  const translated = scaleIterationCacheAroundPoint(
-    width / 2,
-    height / 2,
-    scaleFactor,
-    width,
-    height,
-  );
-  setIterationCache(translated);
-  addIterationBuffer();
-
-  markNeedsRerender();
+  rescaleIterationCacheForResize(from, { width, height });
 };
 
 /**
