@@ -36,6 +36,12 @@ export const ja: Dictionary = {
   "operations.poiListCopied": "POIリストのJSONをクリップボードにコピーしました！",
   "operations.copyPoiList": "POIリストをクリップボードにコピー",
 
+  // palette editor
+  "palette.palette": "パレット",
+  "palette.selectPalette": "パレットを選択",
+  "palette.paletteLength": "パレット長",
+  "palette.paletteOffset": "パレットオフセット",
+
   // instructions
   "instructions.mouse": "マウス",
   "instructions.keys": "キー",

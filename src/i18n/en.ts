@@ -36,6 +36,12 @@ export const en = {
   "operations.poiListCopied": "POI List JSON copied to clipboard!",
   "operations.copyPoiList": "Copy POI List to clipboard",
 
+  // palette editor
+  "palette.palette": "Palette",
+  "palette.selectPalette": "Select a palette",
+  "palette.paletteLength": "Palette Length",
+  "palette.paletteOffset": "Palette Offset",
+
   // instructions
   "instructions.mouse": "Mouse",
   "instructions.keys": "Keys",

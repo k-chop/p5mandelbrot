@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/shadcn/components/ui/select";
 import { Slider } from "@/shadcn/components/ui/slider";
+import { useT } from "@/i18n/context";
 import { getStore, updateStore, useStoreValue } from "@/store/store";
 import { LRUCache } from "@/utils/lru-cache";
 import { useEffect, useRef, useState } from "react";
@@ -85,6 +86,7 @@ const paletteLengthValues = [
 ];
 
 export const PaletteEditor = () => {
+  const t = useT();
   const [paletteLengthValue, setPaletteLengthValue] = useState(() => getStore("paletteLength"));
   const [paletteOffsetValue, setPaletteOffsetValue] = useState(() => getStore("paletteOffset"));
 
@@ -105,7 +107,7 @@ export const PaletteEditor = () => {
   return (
     <div className="flex max-w-80 flex-col gap-6">
       <div>
-        <div className="mb-1 ml-2">Palette</div>
+        <div className="mb-1 ml-2">{t("Palette", "palette.palette")}</div>
         <Select
           value={paletteId}
           onValueChange={(e) => {
@@ -115,7 +117,7 @@ export const PaletteEditor = () => {
           }}
         >
           <SelectTrigger className="flex items-center gap-2">
-            <SelectValue placeholder="Select a palette" />
+            <SelectValue placeholder={t("Select a palette")} />
           </SelectTrigger>
           <SelectContent>
             {Object.entries(palettePresets).map(([key, value]) => (
@@ -130,7 +132,7 @@ export const PaletteEditor = () => {
         </Select>
       </div>
       <div>
-        <div className="mb-1 ml-2">Palette Length: {paletteLengthValue}</div>
+        <div className="mb-1 ml-2">{t("Palette Length", "palette.paletteLength")}: {paletteLengthValue}</div>
         <ValueSlider<number>
           values={paletteLengthValues}
           defaultValue={paletteLengthValue}
@@ -148,7 +150,7 @@ export const PaletteEditor = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">Palette Offset: {paletteOffsetValue}</div>
+        <div className="mb-1 ml-2">{t("Palette Offset", "palette.paletteOffset")}: {paletteOffsetValue}</div>
         <Slider
           min={0}
           max={paletteLengthValue * 2 - 2 - 1} // mirroredの場合は2倍して先頭と末尾を引いた数になる
