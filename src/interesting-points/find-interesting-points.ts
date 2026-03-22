@@ -605,35 +605,38 @@ const CENTRALITY_DIRECTIONS = 16;
 /**
  * 各ブロックの多スケール構造密度（structureCentrality）を計算してfactorsに追加する。
  *
- * 複数の半径でブロック周囲のstructureAmountを方向別にサンプリングし、
- * 各半径で閾値以上のstructureAmountを持つ方向の割合（構造存在率）を求める。
- * 全半径の構造存在率の最小値をstructureCentralityとする。
- * 構造の中心にいれば全スケールで高い存在率、局所的に複雑なだけなら
- * 大きい半径で存在率が落ちる。
+ * 各方向について全半径のうち最大のSA値を取り、「この方向のどこかの距離に
+ * 構造があるか」を測定する。全方向の最大SA値のp25をSA全体平均で正規化し、
+ * structureCentralityとする。
+ * 構造の中心にいれば全方向どこかの距離で構造に当たり高スコア。
+ * 端にいれば一部の方向で構造がなく低スコア。
  */
 const calcStructureCentrality = (blocks: BlockDebugInfo[], stride: number): void => {
   // structureAmountグリッドを構築
   const saGrid = new Map<number, number>();
-  const values: number[] = [];
+  let saSum = 0;
+  let saCount = 0;
   for (const block of blocks) {
     const sa = block.factors.structureAmount ?? 0;
     saGrid.set(gridKey(block.bx, block.by), sa);
-    if (sa > 0) values.push(sa);
+    saSum += sa;
+    saCount++;
   }
-  if (values.length === 0) return;
+  if (saCount === 0) return;
 
-  values.sort((a, b) => a - b);
-  const saThreshold = values[Math.floor(values.length * 0.5)];
+  const saMean = saSum / saCount;
+  if (saMean === 0) return;
 
   for (const block of blocks) {
-    let minCoverage = 1;
+    // 各方向について、全半径での最大SA値を求める
+    const directionMaxSa: number[] = [];
 
-    for (const radiusInBlocks of CENTRALITY_RADII_IN_BLOCKS) {
-      const radiusPx = radiusInBlocks * stride;
-      let aboveCount = 0;
+    for (let d = 0; d < CENTRALITY_DIRECTIONS; d++) {
+      const angle = (2 * Math.PI * d) / CENTRALITY_DIRECTIONS;
+      let maxSa = 0;
 
-      for (let d = 0; d < CENTRALITY_DIRECTIONS; d++) {
-        const angle = (2 * Math.PI * d) / CENTRALITY_DIRECTIONS;
+      for (const radiusInBlocks of CENTRALITY_RADII_IN_BLOCKS) {
+        const radiusPx = radiusInBlocks * stride;
         const sx = Math.round(block.bx + radiusPx * Math.cos(angle));
         const sy = Math.round(block.by + radiusPx * Math.sin(angle));
 
@@ -642,18 +645,15 @@ const calcStructureCentrality = (blocks: BlockDebugInfo[], stride: number): void
         const snappedY = Math.round(sy / stride) * stride;
 
         const sa = saGrid.get(gridKey(snappedX, snappedY)) ?? 0;
-        if (sa >= saThreshold) {
-          aboveCount++;
-        }
+        if (sa > maxSa) maxSa = sa;
       }
 
-      const coverage = aboveCount / CENTRALITY_DIRECTIONS;
-      if (coverage < minCoverage) {
-        minCoverage = coverage;
-      }
+      directionMaxSa.push(maxSa);
     }
 
-    block.factors.structureCentrality = minCoverage;
+    directionMaxSa.sort((a, b) => a - b);
+    const p25 = directionMaxSa[Math.floor(directionMaxSa.length * 0.25)];
+    block.factors.structureCentrality = p25 / saMean;
   }
 };
 
