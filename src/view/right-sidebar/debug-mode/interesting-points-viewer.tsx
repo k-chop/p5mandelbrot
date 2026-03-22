@@ -1,3 +1,4 @@
+import { SimpleTooltip } from "@/components/simple-tooltip";
 import { exportEvalData } from "@/interesting-points/export-eval-data";
 import type { BlockDebugInfo } from "@/interesting-points/find-interesting-points";
 import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
@@ -60,14 +61,25 @@ export const InterestingPointsViewer = () => {
   }, [blocks]);
 
   const alwaysDebugToggle = (
-    <div className="flex items-center space-x-2">
-      <Switch
-        id="always-compute-ip-debug"
-        checked={alwaysDebug}
-        onCheckedChange={() => updateStoreWith("alwaysComputeIPDebugData", (v) => !v)}
-      />
-      <Label htmlFor="always-compute-ip-debug">Always compute debug data</Label>
-    </div>
+    <SimpleTooltip
+      side="bottom"
+      content={
+        <>
+          Computes debug data even when this tab is closed.
+          <br />
+          May slow down rendering.
+        </>
+      }
+    >
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="always-compute-ip-debug"
+          checked={alwaysDebug}
+          onCheckedChange={() => updateStoreWith("alwaysComputeIPDebugData", (v) => !v)}
+        />
+        <Label htmlFor="always-compute-ip-debug">Always compute debug data</Label>
+      </div>
+    </SimpleTooltip>
   );
 
   if (!debugData) {
