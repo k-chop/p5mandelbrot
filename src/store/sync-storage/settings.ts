@@ -1,8 +1,10 @@
 import { getStore } from "../store";
 
+import type { Locale } from "@/i18n/types";
 import type { RendererType } from "@/rendering/common";
 
 export type Settings = {
+  locale: Locale;
   zoomRate: number;
   workerCount: number;
   animationTime: number;
@@ -21,7 +23,12 @@ export type Settings = {
 export const DEFAULT_WORKER_COUNT =
   process.env.NODE_ENV === "test" ? 1 : navigator.hardwareConcurrency;
 
+/** ブラウザの言語設定からデフォルトのlocaleを判定する */
+const detectDefaultLocale = (): Locale =>
+  typeof navigator !== "undefined" && navigator.language.startsWith("ja") ? "ja" : "en";
+
 const defaultSettings = {
+  locale: detectDefaultLocale(),
   zoomRate: 2.0,
   workerCount: DEFAULT_WORKER_COUNT,
   animationTime: 0,
@@ -39,6 +46,7 @@ export const isSettingField = (key: string): key is keyof Settings => key in def
 
 export const writeSettingsToStorage = () => {
   const settings = {
+    locale: getStore("locale"),
     zoomRate: getStore("zoomRate"),
     workerCount: getStore("workerCount"),
     animationTime: getStore("animationTime"),
