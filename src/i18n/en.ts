@@ -52,6 +52,14 @@ export const en = {
   "instructions.resetIteration10000": "Reset iteration count to 10000",
   "instructions.resetIteration500": "Reset iteration count to 500",
 
+  // parameters
+  "parameters.maxIteration": "MAX Iteration",
+  "parameters.changeMaxIteration": "Change Max Iteration",
+  "parameters.iterationAtCursor": "Iteration at cursor",
+  "parameters.notEnoughPrecision": "Not enough precision.",
+  "parameters.switchToPerturbation": "Switch to perturbation mode by",
+  "parameters.switchToPerturbationSuffix": "key.",
+
   // settings
   "settings.rendererType": "Renderer Type",
   "settings.switchedToWebGPU": "Switched to WebGPU renderer",

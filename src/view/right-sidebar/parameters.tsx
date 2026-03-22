@@ -1,4 +1,5 @@
 import { Kbd } from "@/components/kbd";
+import { useT } from "@/i18n/context";
 import { setManualN } from "@/mandelbrot-state/mandelbrot-state";
 import { Card, CardContent } from "@/shadcn/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "@/shadcn/components/ui/dialog";
@@ -9,6 +10,7 @@ import { useStoreValue } from "../../store/store";
 import { useModalState } from "../modal/use-modal-state";
 
 export const Parameters = () => {
+  const t = useT();
   const [opened, { close, toggle }] = useModalState();
 
   const centerX = useStoreValue("centerX");
@@ -49,13 +51,13 @@ export const Parameters = () => {
             <div>{r.toPrecision(10)}</div>
           </li>
           <li className="flex justify-between">
-            <div>MAX Iteration</div>
+            <div>{t("MAX Iteration")}</div>
             <Dialog open={opened} onOpenChange={toggle}>
               <DialogTrigger>
                 <div>{N}</div>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader>Change Max Iteration</DialogHeader>
+                <DialogHeader>{t("Change Max Iteration")}</DialogHeader>
                 <Input
                   defaultValue={N.toString()}
                   onKeyDown={(e) => {
@@ -72,7 +74,7 @@ export const Parameters = () => {
             </Dialog>
           </li>
           <li className="flex justify-between">
-            <div>Iteration at cursor</div>
+            <div>{t("Iteration at cursor")}</div>
             <div>{iterationString}</div>
           </li>
           <li className="flex items-center justify-between">
@@ -87,9 +89,9 @@ export const Parameters = () => {
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <div>Not enough precision.</div>
+                    <div>{t("Not enough precision.")}</div>
                     <div>
-                      Switch to perturbation mode by <Kbd>m</Kbd> key.
+                      {t("Switch to perturbation mode by", "parameters.switchToPerturbation")} <Kbd>m</Kbd> {t("key.", "parameters.switchToPerturbationSuffix")}
                     </div>
                   </TooltipContent>
                 </Tooltip>

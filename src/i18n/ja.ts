@@ -52,6 +52,14 @@ export const ja: Dictionary = {
   "instructions.resetIteration10000": "反復回数を10000にリセット",
   "instructions.resetIteration500": "反復回数を500にリセット",
 
+  // parameters
+  "parameters.maxIteration": "最大反復回数",
+  "parameters.changeMaxIteration": "最大反復回数を変更",
+  "parameters.iterationAtCursor": "カーソル位置の反復回数",
+  "parameters.notEnoughPrecision": "精度が不足しています。",
+  "parameters.switchToPerturbation": "摂動モードに切り替えるには",
+  "parameters.switchToPerturbationSuffix": "キーを押してください。",
+
   // settings
   "settings.rendererType": "レンダラー",
   "settings.switchedToWebGPU": "WebGPUレンダラーに切り替えました",
