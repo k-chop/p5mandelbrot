@@ -1,6 +1,5 @@
 import { markNeedsRerender } from "@/camera/palette";
 import {
-  addIterationBuffer,
   scaleIterationCacheAroundPoint,
   setIterationCache,
   translateRectInIterationCache,
@@ -8,6 +7,7 @@ import {
 import type { Rect } from "@/math/rect";
 import { getStore, updateStore } from "@/store/store";
 import type { Resolution } from "./p5-renderer";
+import { addIterationBuffer } from "./renderer";
 
 /**
  * 使用するレンダラーの種類
