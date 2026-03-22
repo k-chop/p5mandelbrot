@@ -15,7 +15,9 @@
     "typeCheck": true
   },
   "categories": {},
-  "rules": {},
+  "rules": {
+    "jest/valid-expect": "off"
+  },
   "settings": {
     "jsx-a11y": {
       "polymorphicPropName": null,

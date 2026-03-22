@@ -2,51 +2,56 @@ import BigNumber from "bignumber.js";
 import { describe, expect, it } from "vitest";
 import { decodeNumber, encodeNumber } from "./number-encoding";
 
-/**
- * エンコード→デコードのラウンドトリップで値が保存されることを検証する
- *
- * toPrecision() の出力をエンコードし、デコード結果を BigNumber で比較する。
- */
-const roundTrip = (value: string) => {
-  const encoded = encodeNumber(value);
-  const decoded = decodeNumber(encoded);
-  expect(new BigNumber(decoded).eq(new BigNumber(value))).toBe(true);
-};
-
 describe("number-encoding", () => {
   describe("エンコード→デコードのラウンドトリップ", () => {
     it("整数", () => {
-      roundTrip("12345");
+      const encoded = encodeNumber("12345");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("12345"))).toBe(true);
     });
 
     it("小数", () => {
-      roundTrip("1.23456789");
+      const encoded = encodeNumber("1.23456789");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("1.23456789"))).toBe(true);
     });
 
     it("負の整数", () => {
-      roundTrip("-42");
+      const encoded = encodeNumber("-42");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("-42"))).toBe(true);
     });
 
     it("負の小数", () => {
-      roundTrip("-0.00123");
+      const encoded = encodeNumber("-0.00123");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("-0.00123"))).toBe(true);
     });
 
     it("正の指数", () => {
-      roundTrip("1.5e+10");
+      const encoded = encodeNumber("1.5e+10");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("1.5e+10"))).toBe(true);
     });
 
     it("負の指数", () => {
-      roundTrip("3.14159e-20");
+      const encoded = encodeNumber("3.14159e-20");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("3.14159e-20"))).toBe(true);
     });
 
     it("大きい有効数字列", () => {
-      roundTrip(
-        "1.408537400223374550983496866638703877765950056271735005951863022034495341910960396585990889377247354329184721916097300836171707822353071514393502045045428218599916142953125",
-      );
+      const value =
+        "1.408537400223374550983496866638703877765950056271735005951863022034495341910960396585990889377247354329184721916097300836171707822353071514393502045045428218599916142953125";
+      const encoded = encodeNumber(value);
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber(value))).toBe(true);
     });
 
     it("0", () => {
-      roundTrip("0");
+      const encoded = encodeNumber("0");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("0"))).toBe(true);
     });
   });
 
@@ -61,46 +66,68 @@ describe("number-encoding", () => {
 
     it("深いズームのx座標", () => {
       const value = deepX.toPrecision(146);
-      roundTrip(value);
+      const encoded = encodeNumber(value);
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber(value))).toBe(true);
     });
 
     it("深いズームのy座標", () => {
       const value = deepY.toPrecision(146);
-      roundTrip(value);
+      const encoded = encodeNumber(value);
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber(value))).toBe(true);
     });
 
     it("深いズームのr", () => {
       const value = deepR.toPrecision(6);
-      roundTrip(value);
+      const encoded = encodeNumber(value);
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber(value))).toBe(true);
     });
 
     it("全体表示のr", () => {
-      roundTrip("1.00000");
+      const encoded = encodeNumber("1.00000");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("1.00000"))).toBe(true);
     });
 
     it("中程度ズームの座標", () => {
       const x = new BigNumber("-0.7435669");
       const y = new BigNumber("0.1314023");
-      roundTrip(x.toPrecision(10));
-      roundTrip(y.toPrecision(10));
+      const xValue = x.toPrecision(10);
+      const yValue = y.toPrecision(10);
+      const xEncoded = encodeNumber(xValue);
+      const xDecoded = decodeNumber(xEncoded);
+      expect(new BigNumber(xDecoded).eq(new BigNumber(xValue))).toBe(true);
+      const yEncoded = encodeNumber(yValue);
+      const yDecoded = decodeNumber(yEncoded);
+      expect(new BigNumber(yDecoded).eq(new BigNumber(yValue))).toBe(true);
     });
   });
 
   describe("エッジケース", () => {
     it("非常に大きい指数", () => {
-      roundTrip("1.5e+300");
+      const encoded = encodeNumber("1.5e+300");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("1.5e+300"))).toBe(true);
     });
 
     it("非常に小さい指数", () => {
-      roundTrip("2.7e-300");
+      const encoded = encodeNumber("2.7e-300");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("2.7e-300"))).toBe(true);
     });
 
     it("1桁の有効数字", () => {
-      roundTrip("5");
+      const encoded = encodeNumber("5");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("5"))).toBe(true);
     });
 
     it("指数0の負数", () => {
-      roundTrip("-7");
+      const encoded = encodeNumber("-7");
+      const decoded = decodeNumber(encoded);
+      expect(new BigNumber(decoded).eq(new BigNumber("-7"))).toBe(true);
     });
   });
 

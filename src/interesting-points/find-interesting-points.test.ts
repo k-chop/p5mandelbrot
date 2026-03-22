@@ -812,9 +812,8 @@ describe("findStructureCenter", () => {
 
     // 片側だけだと方位カバレッジが0.5未満なのでnullか、
     // もし見つかっても右寄りの位置であること
-    if (center) {
-      expect(center.x).toBeGreaterThan(100);
-    }
+    expect(center).toBeDefined();
+    expect(center!.x).toBeGreaterThan(100);
   });
 
   it("debugData.centerPointがsymmetryモードで返される", () => {
@@ -831,9 +830,6 @@ describe("findStructureCenter", () => {
     });
 
     expect(result.debugData.centerPoint).toBeDefined();
-    // centerPointの型チェック（nullの場合もある）
-    if (result.debugData.centerPoint) {
-      expect(result.debugData.centerPoint.score).toBeGreaterThan(0);
-    }
+    expect(result.debugData.centerPoint!.score).toBeGreaterThan(0);
   });
 });
