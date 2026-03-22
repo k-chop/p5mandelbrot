@@ -15,8 +15,8 @@ export const ja: Dictionary = {
   "header.saveImage": "画像を保存",
   "header.imageSaved": "画像を保存しました！",
   "header.supersamplingX2": "スーパーサンプリング x2",
-  "header.showPointMarker": "ポイントマーカーを表示",
-  "header.interestingPointsTooltip1": "フラクタル上の興味深いポイントをマークします。",
+  "header.showPointMarker": "マーカーを表示",
+  "header.interestingPointsTooltip1": "拡大すると面白そうなポイントをマークします。",
   "header.interestingPointsTooltip2": "マーカーをクリックするとその中心にズームします。",
 
   // share dialog
@@ -39,8 +39,8 @@ export const ja: Dictionary = {
   // palette editor
   "palette.palette": "パレット",
   "palette.selectPalette": "パレットを選択",
-  "palette.paletteLength": "パレット長",
-  "palette.paletteOffset": "パレットオフセット",
+  "palette.paletteLength": "パレットの長さ",
+  "palette.paletteOffset": "パレットのオフセット",
 
   // poi
   "poi.savePOI": "POIを保存",
@@ -56,26 +56,26 @@ export const ja: Dictionary = {
   // footer
   "footer.invalidResult": "無効な結果",
   "footer.calcRefOrbit": "参照軌道の計算",
-  "footer.calcIteration": "反復計算",
+  "footer.calcIteration": "Iteration",
 
   // instructions
   "instructions.mouse": "マウス",
   "instructions.keys": "キー",
   "instructions.zoom": "ズーム",
   "instructions.zoomAtClickedPoint": "クリック位置でズーム",
-  "instructions.changeCenter": "中心を移動",
-  "instructions.interactiveZoom": "インタラクティブなズームと中心移動",
+  "instructions.changeCenter": "ドラッグで中心を移動",
+  "instructions.interactiveZoom": "ドラッグ開始点を中心に動的なズーム",
   "instructions.changePalette": "パレット変更",
   "instructions.toggleMode": "モード切替",
   "instructions.resetR": "r を 2.0 にリセット",
   "instructions.supersampling": "現在位置をスーパーサンプリング(x2)",
-  "instructions.changeMaxIteration": "最大反復回数を変更 (±100)",
-  "instructions.changeMaxIterationWisely": "最大反復回数を賢く変更 (たぶん)",
-  "instructions.resetIteration10000": "反復回数を10000にリセット",
-  "instructions.resetIteration500": "反復回数を500にリセット",
+  "instructions.changeMaxIteration": "最大iterationを変更 (±100)",
+  "instructions.changeMaxIterationWisely": "最大iterationを賢く変更 (たぶん)",
+  "instructions.resetIteration10000": "iterationを10000にリセット",
+  "instructions.resetIteration500": "iterationを500にリセット",
 
   // parameters
-  "parameters.maxIteration": "最大反復回数",
+  "parameters.maxIteration": "maxIteration",
   "parameters.changeMaxIteration": "最大反復回数を変更",
   "parameters.iterationAtCursor": "カーソル位置の反復回数",
   "parameters.notEnoughPrecision": "精度が不足しています。",
@@ -87,9 +87,9 @@ export const ja: Dictionary = {
   "settings.switchedToWebGPU": "WebGPUレンダラーに切り替えました",
   "settings.switchedToP5js": "P5.jsレンダラーに切り替えました",
   "settings.webgpu": "WebGPU（高速）",
-  "settings.p5js": "P5.js（互換）",
+  "settings.p5js": "P5.js（WebGPUが使えない環境向け）",
   "settings.zoomRate": "ズーム倍率",
-  "settings.workerCount": "ワーカー数",
+  "settings.workerCount": "Worker数",
   "settings.animationFrequency": "アニメーション頻度",
   "settings.none": "なし",
   "settings.animationCycleStep": "アニメーション周期ステップ",
