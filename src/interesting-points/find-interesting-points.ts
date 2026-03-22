@@ -596,6 +596,67 @@ const findSymmetryCandidates = (
   return candidates;
 };
 
+/** 多スケール構造密度の計算に使う半径リスト（ブロック数単位） */
+const CENTRALITY_RADII_IN_BLOCKS = [2, 8, 16, 32, 48];
+
+/** 各半径でのサンプル方向数 */
+const CENTRALITY_DIRECTIONS = 16;
+
+/**
+ * 各ブロックの多スケール構造密度（structureCentrality）を計算してfactorsに追加する。
+ *
+ * 複数の半径でブロック周囲のstructureAmountを方向別にサンプリングし、
+ * 各半径で閾値以上のstructureAmountを持つ方向の割合（構造存在率）を求める。
+ * 全半径の構造存在率の最小値をstructureCentralityとする。
+ * 構造の中心にいれば全スケールで高い存在率、局所的に複雑なだけなら
+ * 大きい半径で存在率が落ちる。
+ */
+const calcStructureCentrality = (blocks: BlockDebugInfo[], stride: number): void => {
+  // structureAmountグリッドを構築
+  const saGrid = new Map<number, number>();
+  const values: number[] = [];
+  for (const block of blocks) {
+    const sa = block.factors.structureAmount ?? 0;
+    saGrid.set(gridKey(block.bx, block.by), sa);
+    if (sa > 0) values.push(sa);
+  }
+  if (values.length === 0) return;
+
+  values.sort((a, b) => a - b);
+  const saThreshold = values[Math.floor(values.length * 0.5)];
+
+  for (const block of blocks) {
+    let minCoverage = 1;
+
+    for (const radiusInBlocks of CENTRALITY_RADII_IN_BLOCKS) {
+      const radiusPx = radiusInBlocks * stride;
+      let aboveCount = 0;
+
+      for (let d = 0; d < CENTRALITY_DIRECTIONS; d++) {
+        const angle = (2 * Math.PI * d) / CENTRALITY_DIRECTIONS;
+        const sx = Math.round(block.bx + radiusPx * Math.cos(angle));
+        const sy = Math.round(block.by + radiusPx * Math.sin(angle));
+
+        // strideに合わせてスナップ
+        const snappedX = Math.round(sx / stride) * stride;
+        const snappedY = Math.round(sy / stride) * stride;
+
+        const sa = saGrid.get(gridKey(snappedX, snappedY)) ?? 0;
+        if (sa >= saThreshold) {
+          aboveCount++;
+        }
+      }
+
+      const coverage = aboveCount / CENTRALITY_DIRECTIONS;
+      if (coverage < minCoverage) {
+        minCoverage = coverage;
+      }
+    }
+
+    block.factors.structureCentrality = minCoverage;
+  }
+};
+
 /**
  * 近接する候補をクラスタリングし、各クラスタの最高スコア候補を返す
  *
@@ -1171,6 +1232,7 @@ export function findInterestingPoints(
       minIteration,
       blocks,
     );
+    calcStructureCentrality(blocks, 8);
     const merged = mergeProximityCandidates(candidates, 16);
     const selected = applyNMS(merged, topK, suppressionRadius);
     const centerPoint = findStructureCenter(blocks, 8);
