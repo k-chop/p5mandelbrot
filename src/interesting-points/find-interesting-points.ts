@@ -377,8 +377,8 @@ export const calcNeighborhoodGradientDensity = (
 /** 回転対称性の検査に使う半径リスト */
 const SYMMETRY_RADII = [4, 8, 16, 32, 64, 96];
 
-/** 円周サンプルのユニーク値がこの数未満なら対称性計算をスキップ（平坦領域の偽高スコアを防ぐ） */
-const SYMMETRY_MIN_UNIQUE_VALUES = 3;
+/** ユニーク値数がこの値以上で重みが1.0に飽和する（連続的ペナルティの飽和点） */
+const SYMMETRY_UNIQUE_SATURATE = 3;
 
 /** 回転次数の範囲 */
 const MIN_ROTATION_ORDER = 2;
@@ -484,7 +484,10 @@ export const calcRotationalSymmetry = (
     if (validSamples.length >= 4) {
       const uniqueCount = new Set(validSamples).size;
 
-      if (uniqueCount >= SYMMETRY_MIN_UNIQUE_VALUES) {
+      const uniqueWeight =
+        uniqueCount < 2 ? 0 : Math.min(1, (uniqueCount - 1) / (SYMMETRY_UNIQUE_SATURATE - 1));
+
+      if (uniqueWeight > 0) {
         for (let n = MIN_ROTATION_ORDER; n <= MAX_ROTATION_ORDER; n++) {
           const shift = Math.round(sampleCount / n);
           if (shift === 0) continue;
@@ -508,6 +511,8 @@ export const calcRotationalSymmetry = (
             bestCorrelation = correlation;
           }
         }
+
+        bestCorrelation *= uniqueWeight;
       }
     }
 
@@ -589,6 +594,67 @@ const findSymmetryCandidates = (
   }
 
   return candidates;
+};
+
+/** 多スケール構造密度の計算に使う半径リスト（ブロック数単位） */
+const CENTRALITY_RADII_IN_BLOCKS = [2, 8, 16, 32, 48];
+
+/** 各半径でのサンプル方向数 */
+const CENTRALITY_DIRECTIONS = 16;
+
+/**
+ * 各ブロックの多スケール構造密度（structureCentrality）を計算してfactorsに追加する。
+ *
+ * 各方向について全半径のうち最大のSA値を取り、「この方向のどこかの距離に
+ * 構造があるか」を測定する。全方向の最大SA値のp25をSA全体平均で正規化し、
+ * structureCentralityとする。
+ * 構造の中心にいれば全方向どこかの距離で構造に当たり高スコア。
+ * 端にいれば一部の方向で構造がなく低スコア。
+ */
+const calcStructureCentrality = (blocks: BlockDebugInfo[], stride: number): void => {
+  // structureAmountグリッドを構築
+  const saGrid = new Map<number, number>();
+  let saSum = 0;
+  let saCount = 0;
+  for (const block of blocks) {
+    const sa = block.factors.structureAmount ?? 0;
+    saGrid.set(gridKey(block.bx, block.by), sa);
+    saSum += sa;
+    saCount++;
+  }
+  if (saCount === 0) return;
+
+  const saMean = saSum / saCount;
+  if (saMean === 0) return;
+
+  for (const block of blocks) {
+    // 各方向について、全半径での最大SA値を求める
+    const directionMaxSa: number[] = [];
+
+    for (let d = 0; d < CENTRALITY_DIRECTIONS; d++) {
+      const angle = (2 * Math.PI * d) / CENTRALITY_DIRECTIONS;
+      let maxSa = 0;
+
+      for (const radiusInBlocks of CENTRALITY_RADII_IN_BLOCKS) {
+        const radiusPx = radiusInBlocks * stride;
+        const sx = Math.round(block.bx + radiusPx * Math.cos(angle));
+        const sy = Math.round(block.by + radiusPx * Math.sin(angle));
+
+        // strideに合わせてスナップ
+        const snappedX = Math.round(sx / stride) * stride;
+        const snappedY = Math.round(sy / stride) * stride;
+
+        const sa = saGrid.get(gridKey(snappedX, snappedY)) ?? 0;
+        if (sa > maxSa) maxSa = sa;
+      }
+
+      directionMaxSa.push(maxSa);
+    }
+
+    directionMaxSa.sort((a, b) => a - b);
+    const p25 = directionMaxSa[Math.floor(directionMaxSa.length * 0.25)];
+    block.factors.structureCentrality = p25 / saMean;
+  }
 };
 
 /**
@@ -774,8 +840,139 @@ const countConnectedComponents = (
 const STRUCTURE_ISLAND_THRESHOLD = 0.5;
 
 /**
+ * structureAmountグリッド・neighborhoodGradientグリッドとflood fill閾値を事前計算して返す。
+ */
+const buildStructureGrids = (
+  blocks: BlockDebugInfo[],
+): {
+  saGrid: Map<number, number>;
+  ngGrid: Map<number, number>;
+  floodFillThreshold: number;
+} => {
+  const saGrid = new Map<number, number>();
+  const ngGrid = new Map<number, number>();
+  const values: number[] = [];
+  for (const block of blocks) {
+    const sa = block.factors.structureAmount ?? 0;
+    saGrid.set(gridKey(block.bx, block.by), sa);
+    ngGrid.set(gridKey(block.bx, block.by), block.factors.neighborhoodGradient ?? 0);
+    if (sa > 0) values.push(sa);
+  }
+  values.sort((a, b) => a - b);
+  const floodFillThreshold = values.length > 0 ? values[Math.floor(values.length * 0.8)] : 0;
+  return { saGrid, ngGrid, floodFillThreshold };
+};
+
+/**
+ * 指定座標から最も近い、floodFillThreshold以上のstructureAmountを持つブロックを探す。
+ */
+const findNearestAboveThreshold = (
+  blocks: BlockDebugInfo[],
+  cx: number,
+  cy: number,
+  saGrid: Map<number, number>,
+  floodFillThreshold: number,
+): { bx: number; by: number } | null => {
+  let bestBx = 0;
+  let bestBy = 0;
+  let bestDist = Infinity;
+  for (const block of blocks) {
+    const sa = saGrid.get(gridKey(block.bx, block.by)) ?? 0;
+    if (sa < floodFillThreshold) continue;
+    const dx = block.bx - cx;
+    const dy = block.by - cy;
+    const dist = dx * dx + dy * dy;
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestBx = block.bx;
+      bestBy = block.by;
+    }
+  }
+  return bestDist < Infinity ? { bx: bestBx, by: bestBy } : null;
+};
+
+/** 島補正の重心計算でneighborhoodGradientに掛ける重み */
+const ISLAND_GRADIENT_WEIGHT = 10;
+
+/**
+ * 起点からflood fillで島を特定し、島内の重み付き重心を返す。
+ * 重みは sa * (1 + ng * ISLAND_GRADIENT_WEIGHT) で、structureAmountと
+ * neighborhoodGradientの両方が高い場所に寄りやすくする。
+ * 島が見つからない場合はnullを返す。
+ */
+const floodFillIslandCentroid = (
+  saGrid: Map<number, number>,
+  ngGrid: Map<number, number>,
+  startBx: number,
+  startBy: number,
+  stride: number,
+  floodFillThreshold: number,
+): { x: number; y: number } | null => {
+  const visited = new Set<number>();
+  const islandBlocks: Array<{ x: number; y: number }> = [];
+  const queue: Array<{ x: number; y: number }> = [{ x: startBx, y: startBy }];
+  visited.add(gridKey(startBx, startBy));
+
+  while (queue.length > 0) {
+    const { x: bx, y: by } = queue.shift()!;
+    islandBlocks.push({ x: bx, y: by });
+
+    for (const [nx, ny] of [
+      [bx - stride, by],
+      [bx + stride, by],
+      [bx, by - stride],
+      [bx, by + stride],
+    ]) {
+      const nKey = gridKey(nx, ny);
+      if (visited.has(nKey)) continue;
+      const nSa = saGrid.get(nKey) ?? 0;
+      if (nSa >= floodFillThreshold) {
+        visited.add(nKey);
+        queue.push({ x: nx, y: ny });
+      }
+    }
+  }
+
+  if (islandBlocks.length === 0) return null;
+
+  // 島内の最大structureAmountを求め、その50%以上でフィルタして重心を計算
+  let maxSa = 0;
+  for (const block of islandBlocks) {
+    const sa = saGrid.get(gridKey(block.x, block.y))!;
+    if (sa > maxSa) maxSa = sa;
+  }
+  const threshold = maxSa * STRUCTURE_ISLAND_THRESHOLD;
+
+  let wX = 0;
+  let wY = 0;
+  let wTotal = 0;
+  for (const block of islandBlocks) {
+    const key = gridKey(block.x, block.y);
+    const sa = saGrid.get(key)!;
+    if (sa < threshold) continue;
+    const ng = ngGrid.get(key) ?? 0;
+    const w = sa * (1 + ng * ISLAND_GRADIENT_WEIGHT);
+    wX += block.x * w;
+    wY += block.y * w;
+    wTotal += w;
+  }
+
+  if (wTotal === 0) return null;
+
+  return {
+    x: Math.round(wX / wTotal),
+    y: Math.round(wY / wTotal),
+  };
+};
+
+/**
  * 仮centerPointに最も近いstructureAmountの島（連続した高スコア領域）を
- * flood fillで特定し、島内のstructureAmountで重み付き重心を返す。
+ * flood fillで特定し、島内のstructureAmountとneighborhoodGradientの
+ * 複合重み付き重心を返す。
+ *
+ * flood fillの閾値はstructureAmountのp80（非ゼロ値の上位20%）を使用する。
+ * 仮centerPoint付近に閾値以上のブロックがない場合、最も近い閾値以上の
+ * ブロックを起点に再補正する。
  * 島が見つからない場合は元の座標をそのまま返す。
  */
 const adjustCenterByStructureIsland = (
@@ -784,11 +981,8 @@ const adjustCenterByStructureIsland = (
   cy: number,
   stride: number,
 ): { x: number; y: number } => {
-  // structureAmountのグリッドを構築
-  const saGrid = new Map<number, number>();
-  for (const block of blocks) {
-    saGrid.set(gridKey(block.bx, block.by), block.factors.structureAmount ?? 0);
-  }
+  const { saGrid, ngGrid, floodFillThreshold } = buildStructureGrids(blocks);
+  if (floodFillThreshold === 0) return { x: cx, y: cy };
 
   // 仮centerPointに最も近いブロックを探す
   let closestBx = 0;
@@ -806,64 +1000,27 @@ const adjustCenterByStructureIsland = (
   }
 
   const startSa = saGrid.get(gridKey(closestBx, closestBy)) ?? 0;
-  if (startSa === 0) return { x: cx, y: cy };
 
-  // flood fillで島を特定（島内の最大値の50%以上を閾値とする）
-  // まず島全体を探索して最大値を求め、その後閾値でフィルタする
-  const visited = new Set<number>();
-  const islandBlocks: Array<{ x: number; y: number }> = [];
-  const queue: Array<{ x: number; y: number }> = [{ x: closestBx, y: closestBy }];
-  visited.add(gridKey(closestBx, closestBy));
+  let startBx = closestBx;
+  let startBy = closestBy;
 
-  // 第1パス: structureAmount > 0 の連続領域を探索
-  while (queue.length > 0) {
-    const { x: bx, y: by } = queue.shift()!;
-    islandBlocks.push({ x: bx, y: by });
-
-    for (const [nx, ny] of [
-      [bx - stride, by],
-      [bx + stride, by],
-      [bx, by - stride],
-      [bx, by + stride],
-    ]) {
-      const nKey = gridKey(nx, ny);
-      if (visited.has(nKey)) continue;
-      const nSa = saGrid.get(nKey) ?? 0;
-      if (nSa > 0) {
-        visited.add(nKey);
-        queue.push({ x: nx, y: ny });
-      }
-    }
+  if (startSa < floodFillThreshold) {
+    // 仮centerPoint付近のstructureAmountが閾値未満 → 最寄りの閾値以上ブロックに再補正
+    const nearest = findNearestAboveThreshold(blocks, cx, cy, saGrid, floodFillThreshold);
+    if (!nearest) return { x: cx, y: cy };
+    startBx = nearest.bx;
+    startBy = nearest.by;
   }
 
-  if (islandBlocks.length === 0) return { x: cx, y: cy };
-
-  // 島内の最大structureAmountを求め、閾値でフィルタ
-  let maxSa = 0;
-  for (const block of islandBlocks) {
-    const sa = saGrid.get(gridKey(block.x, block.y))!;
-    if (sa > maxSa) maxSa = sa;
-  }
-  const threshold = maxSa * STRUCTURE_ISLAND_THRESHOLD;
-
-  // 閾値以上のブロックでstructureAmount重み付き重心を計算
-  let wX = 0;
-  let wY = 0;
-  let wTotal = 0;
-  for (const block of islandBlocks) {
-    const sa = saGrid.get(gridKey(block.x, block.y))!;
-    if (sa < threshold) continue;
-    wX += block.x * sa;
-    wY += block.y * sa;
-    wTotal += sa;
-  }
-
-  if (wTotal === 0) return { x: cx, y: cy };
-
-  return {
-    x: Math.round(wX / wTotal),
-    y: Math.round(wY / wTotal),
-  };
+  const centroid = floodFillIslandCentroid(
+    saGrid,
+    ngGrid,
+    startBx,
+    startBy,
+    stride,
+    floodFillThreshold,
+  );
+  return centroid ?? { x: cx, y: cy };
 };
 
 /**
@@ -1075,6 +1232,7 @@ export function findInterestingPoints(
       minIteration,
       blocks,
     );
+    calcStructureCentrality(blocks, 8);
     const merged = mergeProximityCandidates(candidates, 16);
     const selected = applyNMS(merged, topK, suppressionRadius);
     const centerPoint = findStructureCenter(blocks, 8);

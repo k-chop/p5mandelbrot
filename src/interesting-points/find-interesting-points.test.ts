@@ -590,6 +590,34 @@ describe("calcRotationalSymmetry", () => {
 
     expect(result.score).toBe(0);
   });
+
+  it("ユニーク値が多いパターン → 少ないパターンよりsymmetryScoreが高い", () => {
+    const width = 250;
+    const height = 250;
+    const maxIter = 200;
+
+    // ユニーク値が多い: fillRadialPatternで多数の値を持つ対称パターン
+    const richBuffer = new Uint32Array(width * height).fill(50);
+    fillRadialPattern(richBuffer, width, height, 125, 125, 4, 50, 30, 120);
+    const richResult = calcRotationalSymmetry(richBuffer, 125, 125, width, height, maxIter);
+
+    // ユニーク値が少ない: 2値のみの対称パターン
+    const poorBuffer = new Uint32Array(width * height).fill(50);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const dx = x - 125;
+        const dy = y - 125;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 120 || dist === 0) continue;
+        const angle = Math.atan2(dy, dx);
+        // 2値のみで4-fold対称
+        poorBuffer[y * width + x] = Math.cos(4 * angle) > 0 ? 80 : 20;
+      }
+    }
+    const poorResult = calcRotationalSymmetry(poorBuffer, 125, 125, width, height, maxIter);
+
+    expect(richResult.symmetryScore).toBeGreaterThan(poorResult.symmetryScore);
+  });
 });
 
 describe("mergeProximityCandidates", () => {
