@@ -1,3 +1,4 @@
+import { useT } from "@/i18n/context";
 import { Separator } from "@/shadcn/components/ui/separator";
 import type { ResultSpans, Span } from "@/types";
 import clsx from "clsx";
@@ -20,6 +21,7 @@ const convertSpans = (value: any): ResultSpans | undefined => {
 };
 
 export const Footer = () => {
+  const t = useT();
   const progress = useStoreValue("progress");
 
   if (typeof progress === "string") {
@@ -27,7 +29,7 @@ export const Footer = () => {
   }
 
   const result = convertSpans(progress);
-  if (result == null) return "Invalid Result";
+  if (result == null) return t("Invalid Result");
 
   const { total, spans } = result;
 
@@ -136,9 +138,10 @@ const BarContent = (props: { name: string; elapsed: number; total: number; spans
 };
 
 const SpansDetail = (props: { name: string; spans: Span[] }) => {
+  const t = useT();
   const { name, spans } = props;
 
-  const label = nameToLabel(name);
+  const label = nameToLabel(name, t);
 
   if (spans.length === 1) {
     return (
@@ -169,12 +172,12 @@ const SpansDetail = (props: { name: string; spans: Span[] }) => {
   );
 };
 
-const nameToLabel = (name: string) => {
+const nameToLabel = (name: string, t: ReturnType<typeof useT>) => {
   if (name.includes("reference")) {
-    return "Calculate Reference Orbit";
+    return t("Calculate Reference Orbit");
   }
   if (name.includes("iteration")) {
-    return "Calculate Iteration";
+    return t("Calculate Iteration");
   }
   return name;
 };

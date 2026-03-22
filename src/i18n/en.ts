@@ -53,6 +53,11 @@ export const en = {
   "info.pressToUnpin": "Press",
   "info.pressToUnpinSuffix": "to unpin",
 
+  // footer
+  "footer.invalidResult": "Invalid Result",
+  "footer.calcRefOrbit": "Calculate Reference Orbit",
+  "footer.calcIteration": "Calculate Iteration",
+
   // instructions
   "instructions.mouse": "Mouse",
   "instructions.keys": "Keys",
