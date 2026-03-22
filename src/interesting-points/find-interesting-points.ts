@@ -779,21 +779,27 @@ const countConnectedComponents = (
 const STRUCTURE_ISLAND_THRESHOLD = 0.5;
 
 /**
- * structureAmountグリッドとflood fill閾値を事前計算して返す。
+ * structureAmountグリッド・neighborhoodGradientグリッドとflood fill閾値を事前計算して返す。
  */
-const buildStructureAmountGrid = (
+const buildStructureGrids = (
   blocks: BlockDebugInfo[],
-): { saGrid: Map<number, number>; floodFillThreshold: number } => {
+): {
+  saGrid: Map<number, number>;
+  ngGrid: Map<number, number>;
+  floodFillThreshold: number;
+} => {
   const saGrid = new Map<number, number>();
+  const ngGrid = new Map<number, number>();
   const values: number[] = [];
   for (const block of blocks) {
     const sa = block.factors.structureAmount ?? 0;
     saGrid.set(gridKey(block.bx, block.by), sa);
+    ngGrid.set(gridKey(block.bx, block.by), block.factors.neighborhoodGradient ?? 0);
     if (sa > 0) values.push(sa);
   }
   values.sort((a, b) => a - b);
   const floodFillThreshold = values.length > 0 ? values[Math.floor(values.length / 2)] : 0;
-  return { saGrid, floodFillThreshold };
+  return { saGrid, ngGrid, floodFillThreshold };
 };
 
 /**
@@ -824,12 +830,18 @@ const findNearestAboveThreshold = (
   return bestDist < Infinity ? { bx: bestBx, by: bestBy } : null;
 };
 
+/** 島補正の重心計算でneighborhoodGradientに掛ける重み */
+const ISLAND_GRADIENT_WEIGHT = 10;
+
 /**
- * 起点からflood fillで島を特定し、島内のstructureAmount重み付き重心を返す。
+ * 起点からflood fillで島を特定し、島内の重み付き重心を返す。
+ * 重みは sa * (1 + ng * ISLAND_GRADIENT_WEIGHT) で、structureAmountと
+ * neighborhoodGradientの両方が高い場所に寄りやすくする。
  * 島が見つからない場合はnullを返す。
  */
 const floodFillIslandCentroid = (
   saGrid: Map<number, number>,
+  ngGrid: Map<number, number>,
   startBx: number,
   startBy: number,
   stride: number,
@@ -874,11 +886,14 @@ const floodFillIslandCentroid = (
   let wY = 0;
   let wTotal = 0;
   for (const block of islandBlocks) {
-    const sa = saGrid.get(gridKey(block.x, block.y))!;
+    const key = gridKey(block.x, block.y);
+    const sa = saGrid.get(key)!;
     if (sa < threshold) continue;
-    wX += block.x * sa;
-    wY += block.y * sa;
-    wTotal += sa;
+    const ng = ngGrid.get(key) ?? 0;
+    const w = sa * (1 + ng * ISLAND_GRADIENT_WEIGHT);
+    wX += block.x * w;
+    wY += block.y * w;
+    wTotal += w;
   }
 
   if (wTotal === 0) return null;
@@ -891,7 +906,8 @@ const floodFillIslandCentroid = (
 
 /**
  * 仮centerPointに最も近いstructureAmountの島（連続した高スコア領域）を
- * flood fillで特定し、島内のstructureAmountで重み付き重心を返す。
+ * flood fillで特定し、島内のstructureAmountとneighborhoodGradientの
+ * 複合重み付き重心を返す。
  *
  * flood fillの閾値はstructureAmountのp50（非ゼロ値の中央値）を使用する。
  * 仮centerPoint付近に閾値以上のブロックがない場合、最も近い閾値以上の
@@ -904,7 +920,7 @@ const adjustCenterByStructureIsland = (
   cy: number,
   stride: number,
 ): { x: number; y: number } => {
-  const { saGrid, floodFillThreshold } = buildStructureAmountGrid(blocks);
+  const { saGrid, ngGrid, floodFillThreshold } = buildStructureGrids(blocks);
   if (floodFillThreshold === 0) return { x: cx, y: cy };
 
   // 仮centerPointに最も近いブロックを探す
@@ -935,7 +951,14 @@ const adjustCenterByStructureIsland = (
     startBy = nearest.by;
   }
 
-  const centroid = floodFillIslandCentroid(saGrid, startBx, startBy, stride, floodFillThreshold);
+  const centroid = floodFillIslandCentroid(
+    saGrid,
+    ngGrid,
+    startBx,
+    startBy,
+    stride,
+    floodFillThreshold,
+  );
   return centroid ?? { x: cx, y: cy };
 };
 
