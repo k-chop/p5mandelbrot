@@ -167,36 +167,47 @@ export const InterestingPointsViewer = () => {
         </div>
 
         {location.hostname === "localhost" && (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isExporting}
-            onClick={async () => {
-              setIsExporting(true);
-              try {
-                const pointIndex = await exportEvalData(
-                  () =>
-                    new Promise<string>((resolve) => {
-                      requestCanvasImage(400, resolve);
-                    }),
-                );
-                toast({
-                  title: "Export complete",
-                  description: `Saved to tmp/eval/point-${pointIndex}/`,
-                });
-              } catch (e) {
-                toast({
-                  title: "Export failed",
-                  description: e instanceof Error ? e.message : "Unknown error",
-                  variant: "destructive",
-                });
-              } finally {
-                setIsExporting(false);
-              }
-            }}
+          <SimpleTooltip
+            side="bottom"
+            content={
+              <>
+                {t("Exports data for agent evaluation to ./tmp/eval/.")}
+                <br />
+                {t("Only available when running locally with dev-all.")}
+              </>
+            }
           >
-            {isExporting ? "Exporting..." : "Export for Eval"}
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isExporting}
+              onClick={async () => {
+                setIsExporting(true);
+                try {
+                  const pointIndex = await exportEvalData(
+                    () =>
+                      new Promise<string>((resolve) => {
+                        requestCanvasImage(400, resolve);
+                      }),
+                  );
+                  toast({
+                    title: "Export complete",
+                    description: `Saved to tmp/eval/point-${pointIndex}/`,
+                  });
+                } catch (e) {
+                  toast({
+                    title: "Export failed",
+                    description: e instanceof Error ? e.message : "Unknown error",
+                    variant: "destructive",
+                  });
+                } finally {
+                  setIsExporting(false);
+                }
+              }}
+            >
+              {isExporting ? "Exporting..." : "Export for Eval"}
+            </Button>
+          </SimpleTooltip>
         )}
       </div>
     </div>

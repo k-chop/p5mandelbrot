@@ -105,4 +105,6 @@ export const en = {
   "debug.alwaysComputeTooltip1": "Computes debug data even when this tab is closed.",
   "debug.alwaysComputeTooltip2": "May slow down rendering.",
   "debug.clickBlockToShowDetail": "Click a block to show details",
+  "debug.exportEvalTooltip1": "Exports data for agent evaluation to ./tmp/eval/.",
+  "debug.exportEvalTooltip2": "Only available when running locally with dev-all.",
 } as const;

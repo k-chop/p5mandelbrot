@@ -106,4 +106,7 @@ export const ja: Dictionary = {
   "debug.alwaysComputeTooltip1": "このタブが閉じていてもデバッグデータを計算します。",
   "debug.alwaysComputeTooltip2": "描画が遅くなる場合があります。",
   "debug.clickBlockToShowDetail": "ブロックをクリックすると詳細を表示",
+  "debug.exportEvalTooltip1":
+    "./tmp/eval以下にエージェントが評価する用のデータをエクスポートする。",
+  "debug.exportEvalTooltip2": "ローカルでdev-allで起動したときのみ有効。",
 };
