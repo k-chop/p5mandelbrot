@@ -48,6 +48,11 @@ export const en = {
   "poi.apply": "Apply",
   "poi.delete": "Delete",
 
+  // informations
+  "info.refOrbitPinned": "Reference Orbit Pinned",
+  "info.pressToUnpin": "Press",
+  "info.pressToUnpinSuffix": "to unpin",
+
   // instructions
   "instructions.mouse": "Mouse",
   "instructions.keys": "Keys",

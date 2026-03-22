@@ -48,6 +48,11 @@ export const ja: Dictionary = {
   "poi.apply": "適用",
   "poi.delete": "削除",
 
+  // informations
+  "info.refOrbitPinned": "参照軌道を固定中",
+  "info.pressToUnpin": "解除するには",
+  "info.pressToUnpinSuffix": "を押してください",
+
   // instructions
   "instructions.mouse": "マウス",
   "instructions.keys": "キー",
