@@ -524,46 +524,46 @@ describe("calcRotationalSymmetry", () => {
   });
 
   it("2-fold対称パターン → 正のスコア", () => {
-    const width = 80;
-    const height = 80;
+    const width = 250;
+    const height = 250;
     const buffer = new Uint32Array(width * height).fill(50);
-    fillRadialPattern(buffer, width, height, 40, 40, 2, 50, 30, 35);
+    fillRadialPattern(buffer, width, height, 125, 125, 2, 50, 30, 120);
 
-    const result = calcRotationalSymmetry(buffer, 40, 40, width, height, 200);
+    const result = calcRotationalSymmetry(buffer, 125, 125, width, height, 200);
 
     expect(result).toBeGreaterThan(0);
   });
 
   it("4-fold対称パターン → 正のスコア", () => {
-    const width = 80;
-    const height = 80;
+    const width = 250;
+    const height = 250;
     const buffer = new Uint32Array(width * height).fill(50);
-    fillRadialPattern(buffer, width, height, 40, 40, 4, 50, 30, 35);
+    fillRadialPattern(buffer, width, height, 125, 125, 4, 50, 30, 120);
 
-    const result = calcRotationalSymmetry(buffer, 40, 40, width, height, 200);
+    const result = calcRotationalSymmetry(buffer, 125, 125, width, height, 200);
 
     expect(result).toBeGreaterThan(0);
   });
 
   it("非対称パターン → 対称パターンよりスコアが低い", () => {
-    const width = 80;
-    const height = 80;
+    const width = 250;
+    const height = 250;
     const maxIter = 200;
 
     // 4-fold対称パターン
     const symBuffer = new Uint32Array(width * height).fill(50);
-    fillRadialPattern(symBuffer, width, height, 40, 40, 4, 50, 30, 35);
-    const symScore = calcRotationalSymmetry(symBuffer, 40, 40, width, height, maxIter);
+    fillRadialPattern(symBuffer, width, height, 125, 125, 4, 50, 30, 120);
+    const symScore = calcRotationalSymmetry(symBuffer, 125, 125, width, height, maxIter);
 
     // ランダム風パターン（非対称）
     const asymBuffer = new Uint32Array(width * height).fill(50);
-    for (let y = 10; y < 70; y++) {
-      for (let x = 10; x < 70; x++) {
+    for (let y = 30; y < 220; y++) {
+      for (let x = 30; x < 220; x++) {
         // 対称性がない不規則パターン
         asymBuffer[y * width + x] = 20 + ((x * 7 + y * 13 + x * y) % 160);
       }
     }
-    const asymScore = calcRotationalSymmetry(asymBuffer, 40, 40, width, height, maxIter);
+    const asymScore = calcRotationalSymmetry(asymBuffer, 125, 125, width, height, maxIter);
 
     expect(symScore).toBeGreaterThan(asymScore);
   });

@@ -382,7 +382,7 @@ export const calcNeighborhoodGradientDensity = (
 };
 
 /** 回転対称性の検査に使う半径リスト */
-const SYMMETRY_RADII = [4, 8, 16, 32];
+const SYMMETRY_RADII = [4, 8, 16, 32, 64, 96];
 
 /** 円周サンプルのユニーク値がこの数未満なら対称性計算をスキップ（平坦領域の偽高スコアを防ぐ） */
 const SYMMETRY_MIN_UNIQUE_VALUES = 3;
