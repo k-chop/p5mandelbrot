@@ -79,7 +79,7 @@ export const ShareDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md overflow-hidden *:min-w-0">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t("Share", "header.share")}</DialogTitle>
         </DialogHeader>
@@ -99,7 +99,7 @@ export const ShareDialog = ({
             )}
           </div>
 
-          <div className="flex min-w-0 flex-col justify-center gap-1 overflow-hidden font-mono text-sm">
+          <div className="flex w-0 grow flex-col justify-center gap-1 font-mono text-sm">
             <div className="truncate">
               <span className="text-muted-foreground">x: </span>
               {shareData.x}
