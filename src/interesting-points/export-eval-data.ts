@@ -91,8 +91,13 @@ export const calcScoreStats = (blocks: BlockDebugInfo[]): ScoreStats => {
 };
 
 /**
- * InterestingPointsDebugDataからEvalSummaryを生成する
+ * debugDataから全ブロックの統合配列を取得する
  */
+const getAllBlocks = (debugData: InterestingPointsDebugData): BlockDebugInfo[] =>
+  debugData.scoring === "symmetry"
+    ? debugData.gridBlocks
+    : debugData.scaleBlocks.flatMap((sb) => sb.blocks);
+
 /**
  * ポイントに対応するブロックのfactorsを取得してEvalPointDataを生成する
  */
@@ -115,14 +120,14 @@ const toEvalPointData = (
 /**
  * InterestingPointsDebugDataからEvalSummaryを生成する
  */
-export const buildEvalSummary = (debugData: InterestingPointsDebugData): EvalSummary => {
+export const buildEvalSummary = (
+  debugData: InterestingPointsDebugData,
+  allBlocks?: BlockDebugInfo[],
+): EvalSummary => {
   const params = getCurrentParams();
   const canvasSize = getCanvasSize();
 
-  const allBlocks =
-    debugData.scoring === "symmetry"
-      ? debugData.gridBlocks
-      : debugData.scaleBlocks.flatMap((sb) => sb.blocks);
+  const blocks = allBlocks ?? getAllBlocks(debugData);
 
   const selectedSet = new Set(debugData.selectedPoints.map((p) => `${p.x},${p.y}`));
 
@@ -144,12 +149,12 @@ export const buildEvalSummary = (debugData: InterestingPointsDebugData): EvalSum
     },
     canvasSize: { width: canvasSize.width, height: canvasSize.height },
     scoring: debugData.scoring,
-    selectedPoints: debugData.selectedPoints.map((p, i) => toEvalPointData(p, i + 1, allBlocks)),
-    nearMissPoints: nearMiss.map((p, i) => toEvalPointData(p, selectedCount + i + 1, allBlocks)),
+    selectedPoints: debugData.selectedPoints.map((p, i) => toEvalPointData(p, i + 1, blocks)),
+    nearMissPoints: nearMiss.map((p, i) => toEvalPointData(p, selectedCount + i + 1, blocks)),
     centerPoint: debugData.centerPoint
-      ? toEvalPointData(debugData.centerPoint, 0, allBlocks)
+      ? toEvalPointData(debugData.centerPoint, 0, blocks)
       : null,
-    scoreStats: calcScoreStats(allBlocks),
+    scoreStats: calcScoreStats(blocks),
   };
 };
 
@@ -412,14 +417,11 @@ export const exportEvalData = async (getImageDataURL: () => Promise<string>): Pr
     canvasSize.height,
   );
 
-  const allBlocks =
-    debugData.scoring === "symmetry"
-      ? debugData.gridBlocks
-      : debugData.scaleBlocks.flatMap((sb) => sb.blocks);
+  const allBlocks = getAllBlocks(debugData);
 
   const heatmapDataURL = createHeatmapImage(allBlocks, canvasSize.width, canvasSize.height);
   const factorHeatmaps = createAllFactorHeatmaps(allBlocks, canvasSize.width, canvasSize.height);
-  const summary = buildEvalSummary(debugData);
+  const summary = buildEvalSummary(debugData, allBlocks);
 
   const response = await fetch("http://localhost:8080/api/eval-export", {
     method: "POST",
