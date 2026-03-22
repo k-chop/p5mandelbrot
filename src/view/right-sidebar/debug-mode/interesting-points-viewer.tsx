@@ -3,6 +3,7 @@ import { useT } from "@/i18n/context";
 import { exportEvalData } from "@/interesting-points/export-eval-data";
 import type { BlockDebugInfo } from "@/interesting-points/find-interesting-points";
 import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
+import { getCanvasSize } from "@/rendering/renderer";
 import { Button } from "@/shadcn/components/ui/button";
 import { Label } from "@/shadcn/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
@@ -13,8 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shadcn/components/ui/select";
-import { toast } from "@/shadcn/hooks/use-toast";
 import { Switch } from "@/shadcn/components/ui/switch";
+import { toast } from "@/shadcn/hooks/use-toast";
 import { updateStoreWith, useStoreValue } from "@/store/store";
 import { useMemo, useState } from "react";
 import { BlockHeatmap } from "./block-heatmap";
@@ -187,7 +188,8 @@ export const InterestingPointsViewer = () => {
                   const pointIndex = await exportEvalData(
                     () =>
                       new Promise<string>((resolve) => {
-                        requestCanvasImage(400, resolve);
+                        const { width } = getCanvasSize();
+                        requestCanvasImage(width, resolve);
                       }),
                   );
                   toast({
