@@ -4,6 +4,7 @@ import type { Palette } from "@/color/model";
 import type { MandelbrotWorkerType } from "@/types";
 import { mandelbrotWorkerTypes } from "@/types";
 import BigNumber from "bignumber.js";
+import { safeParseInt } from "@/math/util";
 import { decodeNumber, encodeNumber } from "./number-encoding";
 import { decodePalette, encodePalette, PERTURBATION_THRESHOLD } from "./palette-encoding";
 
@@ -46,7 +47,7 @@ export const extractMandelbrotParams = () => {
         safeX = new BigNumber(decodeNumber(encodedX));
         safeY = new BigNumber(decodeNumber(encodedY));
         safeR = new BigNumber(decodeNumber(encodedR));
-        safeN = isNaN(parseInt(nStr, 10)) ? 500 : parseInt(nStr, 10);
+        safeN = safeParseInt(nStr, 500);
         const paletteEncoded = parts.slice(4).join(".");
         safePalette = decodePalette(paletteEncoded);
       } else if (parts.length === 4) {
@@ -55,7 +56,7 @@ export const extractMandelbrotParams = () => {
         safeX = new BigNumber(decodeNumber(encodedX));
         safeY = new BigNumber(decodeNumber(encodedY));
         safeR = new BigNumber(decodeNumber(encodedR));
-        safeN = isNaN(parseInt(nStr, 10)) ? 500 : parseInt(nStr, 10);
+        safeN = safeParseInt(nStr, 500);
         if (palette != null) {
           safePalette = deserializePalette(palette);
         }
@@ -67,7 +68,7 @@ export const extractMandelbrotParams = () => {
       safeY = new BigNumber(y!);
       safeR = new BigNumber(r!);
       const N = params.get("N") || "NaN";
-      safeN = isNaN(parseInt(N, 10)) ? 500 : parseInt(N, 10);
+      safeN = safeParseInt(N, 500);
       if (palette != null) {
         safePalette = deserializePalette(palette);
       }
