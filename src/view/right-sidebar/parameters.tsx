@@ -6,7 +6,6 @@ import { Input } from "@/shadcn/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/shadcn/components/ui/tooltip";
 import { AlertCircleIcon } from "lucide-react";
@@ -84,22 +83,20 @@ export const Parameters = () => {
             <div>Mode</div>
             <div className="flex gap-1">
               {isNotEnoughPrecision ? (
-                <TooltipProvider>
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger>
-                      <div className="flex gap-1 rounded-md bg-destructive p-1 text-destructive-foreground">
-                        <AlertCircleIcon className="fill-destructive text-destructive-foreground" />
-                        {mode}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div>Not enough precision.</div>
-                      <div>
-                        Switch to perturbation mode by <Kbd>m</Kbd> key.
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger>
+                    <div className="flex gap-1 rounded-md bg-destructive p-1 text-destructive-foreground">
+                      <AlertCircleIcon className="fill-destructive text-destructive-foreground" />
+                      {mode}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div>Not enough precision.</div>
+                    <div>
+                      Switch to perturbation mode by <Kbd>m</Kbd> key.
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               ) : (
                 <>{mode}</>
               )}
