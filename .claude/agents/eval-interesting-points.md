@@ -19,6 +19,7 @@ tools:
    - `screenshot.png` — マーカー付きの盤面画像。**必ず読むこと。**
    - `heatmap.png` — 合成スコアのヒートマップ画像（黒=低スコア → 青 → シアン → 緑 → 黄 → 赤=高スコア）。**必ず読むこと。** スコアリングの空間分布を視覚的に確認するために不可欠。
    - `heatmap-{factorName}.png` — 各スコアリングfactorの個別ヒートマップ。**存在するものはすべて読むこと。** symmetryモードでは `heatmap-symmetryScore.png`, `heatmap-structureAmount.png`, `heatmap-neighborhoodGradient.png` が存在する。entropy-gradientモードでは `heatmap-entropy.png`, `heatmap-gradient.png` が存在する。合成スコアだけでは見えない各factorの寄与を個別に確認するために不可欠。
+   - `heatmap-centerScore.png` が存在する場合もあるが、これはcenterPoint選出専用のfactorであり、selectedPointsの評価には使わないこと（後述）。
    - `summary.json` — 評価データ（パラメータ、選出ポイント、near-missポイント、スコア統計）。**必ず読むこと。**
 3. 各ポイントを以下の観点で評価する:
    - **マーカーの位置**: 視覚的に面白そうな場所（複雑な境界、渦巻き、ミニブロットなど）を捉えているか
@@ -29,6 +30,7 @@ tools:
    - **誤検出**: 平坦・単純な領域にマーカーが置かれていないか
    - **スコアの妥当性**: 選出ポイント間のスコア差は、視覚的な面白さの差と一致しているか
    - **scoreStats**: nonZeroCount / totalBlocks の比率、p50/p90/p99のパーセンタイル分布は妥当か
+   - **centerPointの評価**: centerPointはselectedPointsとは独立に算出される別軸の選出である。selectedPointsのcenterScoreの値（0かどうか等）はselectedPointsの品質と無関係なので評価しないこと。centerPointの評価は「構造の中心を正しく捉えているか」のみで判断する
 
 ## 出力形式
 

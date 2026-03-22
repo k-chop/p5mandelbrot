@@ -442,7 +442,7 @@ export const calcRotationalSymmetry = (
   height: number,
   maxIteration: number,
 ): number => {
-  let totalBestCorrelation = 0;
+  const correlations: number[] = [];
   let validRadiusCount = 0;
   let allValidSum = 0;
   let allValidSumSq = 0;
@@ -510,13 +510,14 @@ export const calcRotationalSymmetry = (
       }
     }
 
-    totalBestCorrelation += bestCorrelation;
+    correlations.push(bestCorrelation);
     validRadiusCount++;
   }
 
   if (validRadiusCount === 0 || allValidCount === 0) return 0;
 
-  const symmetryScore = totalBestCorrelation / validRadiusCount;
+  const sorted = [...correlations].sort((a, b) => a - b);
+  const symmetryScore = sorted[Math.floor(sorted.length * 0.25)];
 
   const mean = allValidSum / allValidCount;
   const variance = allValidSumSq / allValidCount - mean * mean;
@@ -557,7 +558,7 @@ const calcRotationalSymmetryFactors = (
   height: number,
   maxIteration: number,
 ): SymmetryFactors => {
-  let totalBestCorrelation = 0;
+  const correlations: number[] = [];
   let validRadiusCount = 0;
   let allValidSum = 0;
   let allValidSumSq = 0;
@@ -625,7 +626,7 @@ const calcRotationalSymmetryFactors = (
       }
     }
 
-    totalBestCorrelation += bestCorrelation;
+    correlations.push(bestCorrelation);
     validRadiusCount++;
   }
 
@@ -633,7 +634,8 @@ const calcRotationalSymmetryFactors = (
     return { symmetryScore: 0, structureAmount: 0, neighborhoodGradient: 0, score: 0 };
   }
 
-  const symmetryScore = totalBestCorrelation / validRadiusCount;
+  const sorted = [...correlations].sort((a, b) => a - b);
+  const symmetryScore = sorted[Math.floor(sorted.length * 0.25)];
   const mean = allValidSum / allValidCount;
   const variance = allValidSumSq / allValidCount - mean * mean;
   const structureAmount = Math.sqrt(Math.max(0, variance)) / maxIteration;
@@ -860,7 +862,7 @@ const countConnectedComponents = (
       if (visited.has(current)) continue;
       visited.add(current);
 
-      const [cx, cy] = current.split(',').map(Number);
+      const [cx, cy] = current.split(",").map(Number);
       for (const [nx, ny] of [
         [cx, cy - stride],
         [cx, cy + stride],
@@ -878,6 +880,105 @@ const countConnectedComponents = (
   return count;
 };
 
+/** structureAmountの島の重心でcenterPointの位置を補正する比率 */
+const STRUCTURE_ISLAND_THRESHOLD = 0.5;
+
+/**
+ * 仮centerPointに最も近いstructureAmountの島（連続した高スコア領域）を
+ * flood fillで特定し、島内のstructureAmountで重み付き重心を返す。
+ * 島が見つからない場合は元の座標をそのまま返す。
+ */
+const adjustCenterByStructureIsland = (
+  blocks: BlockDebugInfo[],
+  cx: number,
+  cy: number,
+  stride: number,
+): { x: number; y: number } => {
+  // structureAmountのグリッドを構築
+  const saGrid = new Map<string, number>();
+  for (const block of blocks) {
+    saGrid.set(`${block.bx},${block.by}`, block.factors.structureAmount ?? 0);
+  }
+
+  // 仮centerPointに最も近いブロックを探す
+  let closestKey = "";
+  let closestDist = Infinity;
+  for (const block of blocks) {
+    const dx = block.bx - cx;
+    const dy = block.by - cy;
+    const dist = dx * dx + dy * dy;
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestKey = `${block.bx},${block.by}`;
+    }
+  }
+
+  const startSa = saGrid.get(closestKey) ?? 0;
+  if (startSa === 0) return { x: cx, y: cy };
+
+  // flood fillで島を特定（島内の最大値の50%以上を閾値とする）
+  // まず島全体を探索して最大値を求め、その後閾値でフィルタする
+  const visited = new Set<string>();
+  const islandKeys: string[] = [];
+  const queue: string[] = [closestKey];
+  visited.add(closestKey);
+
+  // 第1パス: structureAmount > 0 の連続領域を探索
+  while (queue.length > 0) {
+    const key = queue.shift()!;
+    islandKeys.push(key);
+
+    const [bxStr, byStr] = key.split(",");
+    const bx = Number(bxStr);
+    const by = Number(byStr);
+
+    for (const [nx, ny] of [
+      [bx - stride, by],
+      [bx + stride, by],
+      [bx, by - stride],
+      [bx, by + stride],
+    ]) {
+      const nKey = `${nx},${ny}`;
+      if (visited.has(nKey)) continue;
+      const nSa = saGrid.get(nKey) ?? 0;
+      if (nSa > 0) {
+        visited.add(nKey);
+        queue.push(nKey);
+      }
+    }
+  }
+
+  if (islandKeys.length === 0) return { x: cx, y: cy };
+
+  // 島内の最大structureAmountを求め、閾値でフィルタ
+  let maxSa = 0;
+  for (const key of islandKeys) {
+    const sa = saGrid.get(key)!;
+    if (sa > maxSa) maxSa = sa;
+  }
+  const threshold = maxSa * STRUCTURE_ISLAND_THRESHOLD;
+
+  // 閾値以上のブロックでstructureAmount重み付き重心を計算
+  let wX = 0;
+  let wY = 0;
+  let wTotal = 0;
+  for (const key of islandKeys) {
+    const sa = saGrid.get(key)!;
+    if (sa < threshold) continue;
+    const [bxStr, byStr] = key.split(",");
+    wX += Number(bxStr) * sa;
+    wY += Number(byStr) * sa;
+    wTotal += sa;
+  }
+
+  if (wTotal === 0) return { x: cx, y: cy };
+
+  return {
+    x: Math.round(wX / wTotal),
+    y: Math.round(wY / wTotal),
+  };
+};
+
 /**
  * ブロックスコア分布から構造の中心点を検出する
  *
@@ -885,6 +986,7 @@ const countConnectedComponents = (
  * エロージョン（収縮）を適用して小さいピークを除去する（ピークが1つになるまで）。
  * エロージョン後のスコアをfactorsに記録（ヒートマップ出力用）し、
  * 高スコアブロック群（最大値の90%以上）の重み付き重心を中心点とする。
+ * 最後にstructureAmountの島の重心で補正する。
  */
 export const findStructureCenter = (
   blocks: BlockDebugInfo[],
@@ -950,9 +1052,10 @@ export const findStructureCenter = (
       if (val > currentMax) currentMax = val;
     }
     const peakThreshold = currentMax * 0.5;
-    const peakCount = peakThreshold > 0
-      ? countConnectedComponents(blocks, centerScoreGrid, stride, peakThreshold)
-      : 0;
+    const peakCount =
+      peakThreshold > 0
+        ? countConnectedComponents(blocks, centerScoreGrid, stride, peakThreshold)
+        : 0;
 
     if (peakCount === 0) {
       // 全消滅 → 1つ前の状態を採用
@@ -1000,9 +1103,12 @@ export const findStructureCenter = (
   const cx = Math.round(weightedX / totalWeight);
   const cy = Math.round(weightedY / totalWeight);
 
+  // structureAmountの島の重心で補正
+  const adjusted = adjustCenterByStructureIsland(blocks, cx, cy, stride);
+
   return {
-    x: cx,
-    y: cy,
+    x: adjusted.x,
+    y: adjusted.y,
     iteration: 0,
     score: maxErodedScore,
   };
