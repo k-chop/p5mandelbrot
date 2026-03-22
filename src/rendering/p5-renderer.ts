@@ -242,7 +242,6 @@ export const drawUIInterestingPoints = (
   p: p5,
   points: InterestingPoint[],
   hoveredPoint: InterestingPoint | null,
-  centerPoint?: InterestingPoint | null,
 ): void => {
   if (points.length === 0) return;
 
@@ -252,7 +251,7 @@ export const drawUIInterestingPoints = (
 
   for (const point of points) {
     const isHovered = point === hoveredPoint;
-    const isCenter = point === centerPoint;
+    const isCenter = point.isCenter === true;
     // centerPointはスコアのスケールが異なるため固定サイズ
     const ratio = isCenter ? 1 : maxScore > 0 ? point.score / maxScore : 0;
     const radius = MARKER_BASE_RADIUS + (MARKER_MAX_RADIUS - MARKER_BASE_RADIUS) * ratio;

@@ -3,6 +3,8 @@ export interface InterestingPoint {
   y: number;
   iteration: number;
   score: number;
+  /** 構造中心点として選出されたポイントかどうか */
+  isCenter?: boolean;
 }
 
 export interface FindInterestingPointsOptions {
@@ -1111,6 +1113,7 @@ export const findStructureCenter = (
     y: adjusted.y,
     iteration: 0,
     score: maxErodedScore,
+    isCenter: true,
   };
 };
 
@@ -1177,7 +1180,7 @@ export function findInterestingPoints(
     (options?.scoring == null && options?.blockSize == null && options?.scales == null);
 
   if (useSymmetry) {
-    const debugBlocks: BlockDebugInfo[] | undefined = debug ? [] : undefined;
+    const blocks: BlockDebugInfo[] = [];
     const candidates = findSymmetryCandidates(
       buffer,
       width,
@@ -1185,19 +1188,19 @@ export function findInterestingPoints(
       maxIteration,
       8,
       minIteration,
-      debugBlocks,
+      blocks,
     );
     const merged = mergeProximityCandidates(candidates, 16);
     const selected = applyNMS(merged, topK, suppressionRadius);
+    const centerPoint = findStructureCenter(blocks, 8);
+    const filtered = centerPoint ? excludeOverlappingWithCenter(selected, centerPoint) : selected;
 
     if (debug) {
-      const centerPoint = findStructureCenter(debugBlocks!, 8);
-      const filtered = centerPoint ? excludeOverlappingWithCenter(selected, centerPoint) : selected;
       return {
         points: filtered,
         debugData: {
           scoring: "symmetry",
-          gridBlocks: debugBlocks!,
+          gridBlocks: blocks,
           scaleBlocks: [],
           rawCandidates: candidates,
           mergedCandidates: merged,
@@ -1207,7 +1210,7 @@ export function findInterestingPoints(
       };
     }
 
-    return selected;
+    return centerPoint ? [...filtered, centerPoint] : filtered;
   }
 
   // entropy-gradient パス

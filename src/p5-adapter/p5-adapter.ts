@@ -670,8 +670,7 @@ export const p5Draw = (p: p5) => {
     } else if (draggingMode === undefined) {
       changeCursor(p, p.CROSS);
     }
-    const centerPoint = getStore("interestingPointsDebugData")?.centerPoint ?? null;
-    drawUIInterestingPoints(p, currentInterestingPoints, hoveredPoint, centerPoint);
+    drawUIInterestingPoints(p, currentInterestingPoints, hoveredPoint);
   } else if (draggingMode === undefined) {
     changeCursor(p, p.CROSS);
   }
