@@ -1,3 +1,4 @@
+import { useT } from "@/i18n/context";
 import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { Button } from "@/shadcn/components/ui/button";
 import { ScrollArea } from "@/shadcn/components/ui/scroll-area";
@@ -8,6 +9,7 @@ import { POICard } from "./poi-card";
 import { usePOI } from "./use-poi";
 
 export const POI = () => {
+  const t = useT();
   const { poiList, addPOI, deletePOIAt, applyPOI, regenerateThumbnailPOI } = usePOI();
   const scrollTop = useRef(parseInt(sessionStorage.getItem("scroll") ?? "0"));
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -38,7 +40,7 @@ export const POI = () => {
             onClick={() => addPOI(cloneCurrentParams())}
           >
             <IconCirclePlus className="mr-2 size-6" />
-            Save POI
+            {t("Save POI")}
           </Button>
         </div>
       </div>

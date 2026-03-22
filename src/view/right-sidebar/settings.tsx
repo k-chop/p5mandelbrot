@@ -1,4 +1,5 @@
 import { ValueSlider } from "@/components/slider-wrapper";
+import { useT } from "@/i18n/context";
 import { resizeTo } from "@/p5-adapter/p5-adapter";
 import type { RendererType } from "@/rendering/common";
 import {
@@ -29,6 +30,7 @@ const createWorkerCountValues = () => {
 
 export const Settings = () => {
   const { toast } = useToast();
+  const t = useT();
 
   const zoomRate = useStoreValue("zoomRate");
   const workerCount = useStoreValue("workerCount");
@@ -85,7 +87,7 @@ export const Settings = () => {
     <div className="flex max-w-80 flex-col gap-6">
       {webGPUSupported && (
         <div>
-          <div className="mb-2 ml-2">Renderer Type</div>
+          <div className="mb-2 ml-2">{t("Renderer Type")}</div>
           <RadioGroup
             value={rendererType}
             onValueChange={(value: RendererType) => {
@@ -96,7 +98,9 @@ export const Settings = () => {
                 description: (
                   <div className="flex items-center justify-center gap-2">
                     <IconCircleCheck />
-                    Switched to {value === "webgpu" ? "WebGPU" : "P5.js"} renderer
+                    {value === "webgpu"
+                      ? t("Switched to WebGPU renderer")
+                      : t("Switched to P5.js renderer")}
                   </div>
                 ),
                 variant: "primary",
@@ -108,13 +112,13 @@ export const Settings = () => {
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="webgpu" id="webgpu" />
               <Label htmlFor="webgpu" className="cursor-pointer">
-                WebGPU (Faster)
+                {t("WebGPU (Faster)")}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="p5js" id="p5js" />
               <Label htmlFor="p5js" className="cursor-pointer">
-                P5.js (Compatible)
+                {t("P5.js (Compatible)")}
               </Label>
             </div>
           </RadioGroup>
@@ -122,7 +126,9 @@ export const Settings = () => {
       )}
 
       <div>
-        <div className="mb-1 ml-2">Zoom Rate: x{zoomRatePreview}</div>
+        <div className="mb-1 ml-2">
+          {t("Zoom Rate")}: x{zoomRatePreview}
+        </div>
         <ValueSlider<number>
           values={zoomRateValues}
           defaultValue={zoomRate}
@@ -132,7 +138,9 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">Worker Count: {workerCountPreview}</div>
+        <div className="mb-1 ml-2">
+          {t("Worker Count")}: {workerCountPreview}
+        </div>
         <ValueSlider<number>
           values={workerCountValues}
           defaultValue={workerCount}
@@ -146,7 +154,7 @@ export const Settings = () => {
       </div>
       <div>
         <div className="mb-1 ml-2">
-          Animation Frequency: {animationTime === 0 ? "None" : `${animationTime} ms`}
+          {t("Animation Frequency")}: {animationTime === 0 ? t("None") : `${animationTime} ms`}
         </div>
         <ValueSlider<number>
           values={animationTimeValues}
@@ -162,7 +170,9 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">Animation Cycle Step: {animationCycleStep}</div>
+        <div className="mb-1 ml-2">
+          {t("Animation Cycle Step")}: {animationCycleStep}
+        </div>
         <ValueSlider<number>
           values={animationCycleStepValues}
           defaultValue={animationCycleStep}
@@ -172,7 +182,9 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">Max Canvas Size: {maxCanvasSizePreview}</div>
+        <div className="mb-1 ml-2">
+          {t("Max Canvas Size")}: {maxCanvasSizePreview}
+        </div>
         <ValueSlider<number>
           values={maxCanvasSizeValues}
           defaultValue={maxCanvasSize}
@@ -187,7 +199,9 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">Supersampling Output Width: {supersamplingWidthPreview}px</div>
+        <div className="mb-1 ml-2">
+          {t("Supersampling Output Width")}: {supersamplingWidthPreview}px
+        </div>
         <ValueSlider<number>
           values={supersamplingWidthValues}
           defaultValue={supersamplingWidth}
@@ -197,7 +211,9 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">Supersampling Output Height: {supersamplingHeightPreview}px</div>
+        <div className="mb-1 ml-2">
+          {t("Supersampling Output Height")}: {supersamplingHeightPreview}px
+        </div>
         <ValueSlider<number>
           values={supersamplingHeightValues}
           defaultValue={supersamplingHeight}
@@ -207,7 +223,7 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">Import POI List</div>
+        <div className="mb-1 ml-2">{t("Import POI List")}</div>
         <Button
           variant="default"
           onClick={() => {
@@ -217,7 +233,7 @@ export const Settings = () => {
                   description: (
                     <div className="flex items-center justify-center gap-2">
                       <IconCircleCheck />
-                      Failed to import POI List from clipboard!
+                      {t("Failed to import POI List from clipboard!")}
                       <br />
                       {result.error}
                     </div>
@@ -231,7 +247,7 @@ export const Settings = () => {
                   description: (
                     <div className="flex items-center justify-center gap-2">
                       <IconCircleCheck />
-                      POI List imported from clipboard! <br />
+                      {t("POI List imported from clipboard!")} <br />
                       {result.value}
                     </div>
                   ),
@@ -242,7 +258,7 @@ export const Settings = () => {
             });
           }}
         >
-          Import from clipboard
+          {t("Import from clipboard")}
         </Button>
       </div>
     </div>

@@ -1,9 +1,11 @@
 import { Kbd } from "@/components/kbd";
+import { useT } from "@/i18n/context";
 import { Card, CardContent } from "@/shadcn/components/ui/card";
 import { useStoreValue } from "@/store/store";
 import { IconPin } from "@tabler/icons-react";
 
 export const Informations = () => {
+  const t = useT();
   const shouldReuseRefOrbit = useStoreValue("shouldReuseRefOrbit");
 
   if (!shouldReuseRefOrbit) return null;
@@ -14,10 +16,11 @@ export const Informations = () => {
         {shouldReuseRefOrbit && (
           <div className="flex flex-col gap-1">
             <div className="flex">
-              <IconPin /> Reference Orbit Pinned
+              <IconPin /> {t("Reference Orbit Pinned")}
             </div>
             <div>
-              (Press <Kbd>p</Kbd> to unpin)
+              ({t("Press", "info.pressToUnpin")} <Kbd>p</Kbd>{" "}
+              {t("to unpin", "info.pressToUnpinSuffix")})
             </div>
           </div>
         )}

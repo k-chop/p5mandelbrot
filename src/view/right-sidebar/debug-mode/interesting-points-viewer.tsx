@@ -1,4 +1,5 @@
 import { SimpleTooltip } from "@/components/simple-tooltip";
+import { useT } from "@/i18n/context";
 import { exportEvalData } from "@/interesting-points/export-eval-data";
 import type { BlockDebugInfo } from "@/interesting-points/find-interesting-points";
 import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
@@ -25,6 +26,7 @@ import { PointDetailPanel } from "./point-detail-panel";
  * ヒートマップ、factor選択、ポイント詳細パネルを統合する。
  */
 export const InterestingPointsViewer = () => {
+  const t = useT();
   const debugData = useStoreValue("interestingPointsDebugData");
   const alwaysDebug = useStoreValue("alwaysComputeIPDebugData");
   const [selectedFactor, setSelectedFactor] = useState("score");
@@ -65,19 +67,19 @@ export const InterestingPointsViewer = () => {
       side="bottom"
       content={
         <>
-          Computes debug data even when this tab is closed.
+          {t("Computes debug data even when this tab is closed.")}
           <br />
-          May slow down rendering.
+          {t("May slow down rendering.")}
         </>
       }
     >
-      <div className="flex items-center space-x-2">
+      <div className="flex w-fit items-center space-x-2">
         <Switch
           id="always-compute-ip-debug"
           checked={alwaysDebug}
           onCheckedChange={() => updateStoreWith("alwaysComputeIPDebugData", (v) => !v)}
         />
-        <Label htmlFor="always-compute-ip-debug">Always compute debug data</Label>
+        <Label htmlFor="always-compute-ip-debug">{t("Always compute debug data")}</Label>
       </div>
     </SimpleTooltip>
   );
@@ -165,36 +167,47 @@ export const InterestingPointsViewer = () => {
         </div>
 
         {location.hostname === "localhost" && (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isExporting}
-            onClick={async () => {
-              setIsExporting(true);
-              try {
-                const pointIndex = await exportEvalData(
-                  () =>
-                    new Promise<string>((resolve) => {
-                      requestCanvasImage(400, resolve);
-                    }),
-                );
-                toast({
-                  title: "Export complete",
-                  description: `Saved to tmp/eval/point-${pointIndex}/`,
-                });
-              } catch (e) {
-                toast({
-                  title: "Export failed",
-                  description: e instanceof Error ? e.message : "Unknown error",
-                  variant: "destructive",
-                });
-              } finally {
-                setIsExporting(false);
-              }
-            }}
+          <SimpleTooltip
+            side="bottom"
+            content={
+              <>
+                {t("Exports data for agent evaluation to ./tmp/eval/.")}
+                <br />
+                {t("Only available when running locally with dev-all.")}
+              </>
+            }
           >
-            {isExporting ? "Exporting..." : "Export for Eval"}
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isExporting}
+              onClick={async () => {
+                setIsExporting(true);
+                try {
+                  const pointIndex = await exportEvalData(
+                    () =>
+                      new Promise<string>((resolve) => {
+                        requestCanvasImage(400, resolve);
+                      }),
+                  );
+                  toast({
+                    title: "Export complete",
+                    description: `Saved to tmp/eval/point-${pointIndex}/`,
+                  });
+                } catch (e) {
+                  toast({
+                    title: "Export failed",
+                    description: e instanceof Error ? e.message : "Unknown error",
+                    variant: "destructive",
+                  });
+                } finally {
+                  setIsExporting(false);
+                }
+              }}
+            >
+              {isExporting ? "Exporting..." : "Export for Eval"}
+            </Button>
+          </SimpleTooltip>
         )}
       </div>
     </div>

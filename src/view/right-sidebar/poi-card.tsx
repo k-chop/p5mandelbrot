@@ -1,6 +1,7 @@
 import { getCurrentPalette } from "@/camera/palette";
 import { deserializePalette } from "@/color";
 import { SimpleTooltip } from "@/components/simple-tooltip";
+import { useT } from "@/i18n/context";
 import { getCanvasSize } from "@/rendering/renderer";
 import { Button } from "@/shadcn/components/ui/button";
 import { Card } from "@/shadcn/components/ui/card";
@@ -22,6 +23,7 @@ type POICardProps = {
 };
 
 export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICardProps) => {
+  const t = useT();
   const { r, N } = poi;
 
   const isInSamePlace = useIsInSamePlace(poi);
@@ -49,7 +51,7 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
       })
     : { url: "", x: "", y: "", r: "", N: 0 };
 
-  const overlayText = isInSamePlace ? "Regenerate thumbnail" : "Apply";
+  const overlayText = isInSamePlace ? t("Regenerate thumbnail") : t("Apply", "poi.apply");
   const handleThumbnailClick = isInSamePlace ? onRegenerateThumbnail : onApply;
 
   return (
@@ -74,12 +76,12 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
           </div>
 
           <div className="mt-2 flex justify-between gap-2">
-            <SimpleTooltip content="Share">
+            <SimpleTooltip content={t("Share", "header.share")}>
               <Button variant="default" size="icon-sm" onClick={openShare}>
                 <IconShare />
               </Button>
             </SimpleTooltip>
-            <SimpleTooltip content="Delete">
+            <SimpleTooltip content={t("Delete", "poi.delete")}>
               <Button variant="destructive" size="icon-sm" onClick={onDelete}>
                 <IconTrash />
               </Button>

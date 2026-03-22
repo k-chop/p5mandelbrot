@@ -1,3 +1,4 @@
+import type { Locale } from "@/i18n/types";
 import type { InterestingPointsDebugData } from "@/interesting-points/find-interesting-points";
 import type { POIData, ResultSpans } from "@/types";
 import BigNumber from "bignumber.js";
@@ -20,6 +21,7 @@ type Store = {
   poi: POIData[];
 
   // Settings
+  locale: Locale;
   zoomRate: number;
   workerCount: number;
   animationTime: number;
@@ -77,6 +79,7 @@ const store: Store = {
   // POI List
   poi: [],
   // Settings
+  locale: "en",
   zoomRate: 2.0,
   workerCount: 2,
   animationTime: 0,
