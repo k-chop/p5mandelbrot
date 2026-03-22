@@ -5,15 +5,10 @@ import {
   needsRerender,
 } from "@/camera/palette";
 import type { Palette } from "@/color";
-import {
-  getIterationCache,
-  scaleIterationCacheAroundPoint,
-  setIterationCache,
-  translateRectInIterationCache,
-} from "@/iteration-buffer/iteration-buffer";
+import { getIterationCache } from "@/iteration-buffer/iteration-buffer";
+import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "@/rendering/common";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { clamp } from "@/math/util";
-import { getStore } from "@/store/store";
 import { PERTURBATION_THRESHOLD } from "@/utils/palette-encoding";
 import type p5 from "p5";
 import type { InterestingPoint } from "../interesting-points/find-interesting-points";
@@ -106,12 +101,9 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
     `Request resize canvas to w=${requestWidth} h=${requestHeight}, from w=${from.width} h=${from.height}`,
   );
 
-  const maxSize = getStore("maxCanvasSize");
+  const { width: w, height: h } = applyMaxCanvasSize(requestWidth, requestHeight);
 
-  const w = maxSize === -1 ? requestWidth : Math.min(requestWidth, maxSize);
-  const h = maxSize === -1 ? requestHeight : Math.min(requestHeight, maxSize);
-
-  console.debug(`Resize to: w=${w}, h=${h} (maxCanvasSize=${maxSize})`);
+  console.debug(`Resize to: w=${w}, h=${h}`);
 
   p5Instance.resizeCanvas(w, h);
 
@@ -122,26 +114,7 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
   unifiedIterationBuffer = new Uint32Array(w * h);
   mainBuffer.resizeCanvas(width, height);
 
-  const scaleFactor = Math.min(width, height) / Math.min(from.width, from.height);
-
-  console.debug("Resize scale factor", scaleFactor);
-
-  // サイズ差の分trasnlateしてからscale
-  const offsetX = Math.round((width - from.width) / 2);
-  const offsetY = Math.round((height - from.height) / 2);
-  translateRectInIterationCache(-offsetX, -offsetY);
-
-  const translated = scaleIterationCacheAroundPoint(
-    width / 2,
-    height / 2,
-    scaleFactor,
-    width,
-    height,
-  );
-  setIterationCache(translated);
-  addIterationBuffer();
-
-  markNeedsRerender();
+  rescaleIterationCacheForResize(from, { width, height });
 };
 
 /**

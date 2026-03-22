@@ -1,6 +1,13 @@
+import { markNeedsRerender } from "@/camera/palette";
+import {
+  scaleIterationCacheAroundPoint,
+  setIterationCache,
+  translateRectInIterationCache,
+} from "@/iteration-buffer/iteration-buffer";
 import type { Rect } from "@/math/rect";
 import { getStore, updateStore } from "@/store/store";
 import type { Resolution } from "./p5-renderer";
+import { addIterationBuffer } from "./renderer";
 
 /**
  * 使用するレンダラーの種類
@@ -111,6 +118,46 @@ export const bufferLocalLogicalIndex = (
 };
 
 /**
+ * リサイズ時にイテレーションキャッシュをスケーリング・再配置する
+ */
+export const rescaleIterationCacheForResize = (
+  from: { width: number; height: number },
+  to: { width: number; height: number },
+) => {
+  const scaleFactor = Math.min(to.width, to.height) / Math.min(from.width, from.height);
+
+  console.debug("Resize scale factor", scaleFactor);
+
+  // サイズ差の分translateしてからscale
+  const offsetX = Math.round((to.width - from.width) / 2);
+  const offsetY = Math.round((to.height - from.height) / 2);
+  translateRectInIterationCache(-offsetX, -offsetY);
+
+  const translated = scaleIterationCacheAroundPoint(
+    to.width / 2,
+    to.height / 2,
+    scaleFactor,
+    to.width,
+    to.height,
+  );
+  setIterationCache(translated);
+  addIterationBuffer();
+
+  markNeedsRerender();
+};
+
+/**
+ * maxCanvasSize設定に基づいてサイズを制限する
+ */
+export const applyMaxCanvasSize = (w: number, h: number): { width: number; height: number } => {
+  const maxSize = getStore("maxCanvasSize");
+  return {
+    width: maxSize === -1 ? w : Math.min(w, maxSize),
+    height: maxSize === -1 ? h : Math.min(h, maxSize),
+  };
+};
+
+/**
  * canvasのサイズをcontainerのサイズと最大サイズ設定見て初期化する
  */
 export const initializeCanvasSize = () => {
@@ -118,15 +165,10 @@ export const initializeCanvasSize = () => {
   let w = 800;
   let h = 800;
 
-  const maxCanvasSize = getStore("maxCanvasSize");
-
   if (elm) {
     w = elm.clientWidth;
     h = elm.clientHeight;
   }
 
-  const width = maxCanvasSize === -1 ? w : Math.min(w, maxCanvasSize);
-  const height = maxCanvasSize === -1 ? h : Math.min(h, maxCanvasSize);
-
-  return { width, height };
+  return applyMaxCanvasSize(w, h);
 };

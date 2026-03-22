@@ -128,7 +128,7 @@ export const markDoneJob = (jobId: string) => {
  */
 export const deleteCompletedDoneJobs = () => {
   const remainingRequiredJobIds = new Set(
-    ...getWaitingJobs().map((job) => job.requiredJobIds ?? []),
+    getWaitingJobs().flatMap((job) => job.requiredJobIds ?? []),
   );
   Array.from(doneJobIds.values()).forEach((id) => {
     if (remainingRequiredJobIds.has(id)) return;
