@@ -91,7 +91,8 @@ export const Parameters = () => {
                   <TooltipContent>
                     <div>{t("Not enough precision.")}</div>
                     <div>
-                      {t("Switch to perturbation mode by", "parameters.switchToPerturbation")} <Kbd>m</Kbd> {t("key.", "parameters.switchToPerturbationSuffix")}
+                      {t("Switch to perturbation mode by", "parameters.switchToPerturbation")}{" "}
+                      <Kbd>m</Kbd> {t("key.", "parameters.switchToPerturbationSuffix")}
                     </div>
                   </TooltipContent>
                 </Tooltip>

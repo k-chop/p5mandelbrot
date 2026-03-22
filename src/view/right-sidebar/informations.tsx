@@ -19,7 +19,8 @@ export const Informations = () => {
               <IconPin /> {t("Reference Orbit Pinned")}
             </div>
             <div>
-              ({t("Press", "info.pressToUnpin")} <Kbd>p</Kbd> {t("to unpin", "info.pressToUnpinSuffix")})
+              ({t("Press", "info.pressToUnpin")} <Kbd>p</Kbd>{" "}
+              {t("to unpin", "info.pressToUnpinSuffix")})
             </div>
           </div>
         )}

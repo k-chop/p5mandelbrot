@@ -126,7 +126,9 @@ export const Settings = () => {
       )}
 
       <div>
-        <div className="mb-1 ml-2">{t("Zoom Rate")}: x{zoomRatePreview}</div>
+        <div className="mb-1 ml-2">
+          {t("Zoom Rate")}: x{zoomRatePreview}
+        </div>
         <ValueSlider<number>
           values={zoomRateValues}
           defaultValue={zoomRate}
@@ -136,7 +138,9 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">{t("Worker Count")}: {workerCountPreview}</div>
+        <div className="mb-1 ml-2">
+          {t("Worker Count")}: {workerCountPreview}
+        </div>
         <ValueSlider<number>
           values={workerCountValues}
           defaultValue={workerCount}
@@ -166,7 +170,9 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">{t("Animation Cycle Step")}: {animationCycleStep}</div>
+        <div className="mb-1 ml-2">
+          {t("Animation Cycle Step")}: {animationCycleStep}
+        </div>
         <ValueSlider<number>
           values={animationCycleStepValues}
           defaultValue={animationCycleStep}
@@ -176,7 +182,9 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">{t("Max Canvas Size")}: {maxCanvasSizePreview}</div>
+        <div className="mb-1 ml-2">
+          {t("Max Canvas Size")}: {maxCanvasSizePreview}
+        </div>
         <ValueSlider<number>
           values={maxCanvasSizeValues}
           defaultValue={maxCanvasSize}
@@ -191,7 +199,9 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">{t("Supersampling Output Width")}: {supersamplingWidthPreview}px</div>
+        <div className="mb-1 ml-2">
+          {t("Supersampling Output Width")}: {supersamplingWidthPreview}px
+        </div>
         <ValueSlider<number>
           values={supersamplingWidthValues}
           defaultValue={supersamplingWidth}
@@ -201,7 +211,9 @@ export const Settings = () => {
         />
       </div>
       <div>
-        <div className="mb-1 ml-2">{t("Supersampling Output Height")}: {supersamplingHeightPreview}px</div>
+        <div className="mb-1 ml-2">
+          {t("Supersampling Output Height")}: {supersamplingHeightPreview}px
+        </div>
         <ValueSlider<number>
           values={supersamplingHeightValues}
           defaultValue={supersamplingHeight}
