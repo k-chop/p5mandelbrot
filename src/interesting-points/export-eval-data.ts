@@ -151,9 +151,7 @@ export const buildEvalSummary = (
     scoring: debugData.scoring,
     selectedPoints: debugData.selectedPoints.map((p, i) => toEvalPointData(p, i + 1, blocks)),
     nearMissPoints: nearMiss.map((p, i) => toEvalPointData(p, selectedCount + i + 1, blocks)),
-    centerPoint: debugData.centerPoint
-      ? toEvalPointData(debugData.centerPoint, 0, blocks)
-      : null,
+    centerPoint: debugData.centerPoint ? toEvalPointData(debugData.centerPoint, 0, blocks) : null,
     scoreStats: calcScoreStats(blocks),
   };
 };

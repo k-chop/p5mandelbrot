@@ -3,11 +3,7 @@ import { setManualN } from "@/mandelbrot-state/mandelbrot-state";
 import { Card, CardContent } from "@/shadcn/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "@/shadcn/components/ui/dialog";
 import { Input } from "@/shadcn/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/shadcn/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shadcn/components/ui/tooltip";
 import { AlertCircleIcon } from "lucide-react";
 import { useStoreValue } from "../../store/store";
 import { useModalState } from "../modal/use-modal-state";

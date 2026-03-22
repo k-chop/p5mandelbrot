@@ -1,8 +1,4 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/shadcn/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shadcn/components/ui/tooltip";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 
 export const useClickFeedback = (duration = 2000) => {

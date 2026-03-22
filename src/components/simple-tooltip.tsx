@@ -1,8 +1,4 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/shadcn/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shadcn/components/ui/tooltip";
 
 type Props = {
   children: React.ReactNode;
