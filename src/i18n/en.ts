@@ -18,4 +18,23 @@ export const en = {
   "header.showPointMarker": "Show point marker",
   "header.interestingPointsTooltip1": "Marks interesting points on the fractal.",
   "header.interestingPointsTooltip2": "Click a marker to zoom into its center.",
+
+  // settings
+  "settings.rendererType": "Renderer Type",
+  "settings.switchedToWebGPU": "Switched to WebGPU renderer",
+  "settings.switchedToP5js": "Switched to P5.js renderer",
+  "settings.webgpu": "WebGPU (Faster)",
+  "settings.p5js": "P5.js (Compatible)",
+  "settings.zoomRate": "Zoom Rate",
+  "settings.workerCount": "Worker Count",
+  "settings.animationFrequency": "Animation Frequency",
+  "settings.none": "None",
+  "settings.animationCycleStep": "Animation Cycle Step",
+  "settings.maxCanvasSize": "Max Canvas Size",
+  "settings.supersamplingWidth": "Supersampling Output Width",
+  "settings.supersamplingHeight": "Supersampling Output Height",
+  "settings.importPOIList": "Import POI List",
+  "settings.importFromClipboard": "Import from clipboard",
+  "settings.poiImportFailed": "Failed to import POI List from clipboard!",
+  "settings.poiImportSuccess": "POI List imported from clipboard!",
 } as const;
