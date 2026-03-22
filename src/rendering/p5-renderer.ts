@@ -6,10 +6,9 @@ import {
 } from "@/camera/palette";
 import type { Palette } from "@/color";
 import { getIterationCache } from "@/iteration-buffer/iteration-buffer";
-import { rescaleIterationCacheForResize } from "@/rendering/common";
+import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "@/rendering/common";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { clamp } from "@/math/util";
-import { getStore } from "@/store/store";
 import { PERTURBATION_THRESHOLD } from "@/utils/palette-encoding";
 import type p5 from "p5";
 import type { InterestingPoint } from "../interesting-points/find-interesting-points";
@@ -102,12 +101,9 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
     `Request resize canvas to w=${requestWidth} h=${requestHeight}, from w=${from.width} h=${from.height}`,
   );
 
-  const maxSize = getStore("maxCanvasSize");
+  const { width: w, height: h } = applyMaxCanvasSize(requestWidth, requestHeight);
 
-  const w = maxSize === -1 ? requestWidth : Math.min(requestWidth, maxSize);
-  const h = maxSize === -1 ? requestHeight : Math.min(requestHeight, maxSize);
-
-  console.debug(`Resize to: w=${w}, h=${h} (maxCanvasSize=${maxSize})`);
+  console.debug(`Resize to: w=${w}, h=${h}`);
 
   p5Instance.resizeCanvas(w, h);
 

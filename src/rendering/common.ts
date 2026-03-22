@@ -147,6 +147,17 @@ export const rescaleIterationCacheForResize = (
 };
 
 /**
+ * maxCanvasSize設定に基づいてサイズを制限する
+ */
+export const applyMaxCanvasSize = (w: number, h: number): { width: number; height: number } => {
+  const maxSize = getStore("maxCanvasSize");
+  return {
+    width: maxSize === -1 ? w : Math.min(w, maxSize),
+    height: maxSize === -1 ? h : Math.min(h, maxSize),
+  };
+};
+
+/**
  * canvasのサイズをcontainerのサイズと最大サイズ設定見て初期化する
  */
 export const initializeCanvasSize = () => {
@@ -154,15 +165,10 @@ export const initializeCanvasSize = () => {
   let w = 800;
   let h = 800;
 
-  const maxCanvasSize = getStore("maxCanvasSize");
-
   if (elm) {
     w = elm.clientWidth;
     h = elm.clientHeight;
   }
 
-  const width = maxCanvasSize === -1 ? w : Math.min(w, maxCanvasSize);
-  const height = maxCanvasSize === -1 ? h : Math.min(h, maxCanvasSize);
-
-  return { width, height };
+  return applyMaxCanvasSize(w, h);
 };

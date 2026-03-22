@@ -2,10 +2,9 @@ import { getCurrentPalette, setPalette } from "@/camera/palette";
 import type { Palette } from "@/color";
 import { addTraceEvent } from "@/event-viewer/event";
 import { getIterationCache } from "@/iteration-buffer/iteration-buffer";
-import { rescaleIterationCacheForResize } from "@/rendering/common";
+import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "@/rendering/common";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import type { Rect } from "@/math/rect";
-import { getStore } from "@/store/store";
 import type { IterationBuffer } from "@/types";
 import tgpu, {
   type StorageFlag,
@@ -377,12 +376,9 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
 
   const gpuCanvas = document.getElementById("gpu-canvas")! as HTMLCanvasElement;
 
-  const maxSize = getStore("maxCanvasSize");
+  const { width: w, height: h } = applyMaxCanvasSize(requestWidth, requestHeight);
 
-  const w = maxSize === -1 ? requestWidth : Math.min(requestWidth, maxSize);
-  const h = maxSize === -1 ? requestHeight : Math.min(requestHeight, maxSize);
-
-  console.debug(`Resize to: w=${w}, h=${h} (maxCanvasSize=${maxSize})`);
+  console.debug(`Resize to: w=${w}, h=${h}`);
 
   gpuCanvas.width = w;
   gpuCanvas.height = h;
