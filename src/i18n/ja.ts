@@ -19,6 +19,13 @@ export const ja: Dictionary = {
   "header.interestingPointsTooltip1": "フラクタル上の興味深いポイントをマークします。",
   "header.interestingPointsTooltip2": "マーカーをクリックするとその中心にズームします。",
 
+  // share dialog
+  "share.noPreview": "プレビューなし",
+  "share.copied": "コピーしました！",
+  "share.copyAll": "すべてコピー",
+  "share.copyUrlAndImage": "URL & 画像をコピー",
+  "share.copyFailed": "クリップボードへのコピーに失敗しました",
+
   // settings
   "settings.rendererType": "レンダラー",
   "settings.switchedToWebGPU": "WebGPUレンダラーに切り替えました",

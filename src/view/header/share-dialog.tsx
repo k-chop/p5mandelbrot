@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/compo
 import { toast } from "@/shadcn/hooks/use-toast";
 import type { ShareData } from "@/utils/mandelbrot-url-params";
 import { ClickFeedback, useClickFeedback } from "@/view/components/click-feedback";
+import { useT } from "@/i18n/context";
 import { IconCircleCheck, IconCopy, IconPhoto } from "@tabler/icons-react";
 
 type ShareDialogProps = {
@@ -20,6 +21,7 @@ export const ShareDialog = ({
   imageDataUrl,
   showCopyImage = true,
 }: ShareDialogProps) => {
+  const t = useT();
   const copyAllFeedback = useClickFeedback();
   const copyUrlImageFeedback = useClickFeedback();
   const copyUrlFeedback = useClickFeedback();
@@ -44,7 +46,7 @@ export const ShareDialog = ({
       copyAllFeedback.trigger();
     } catch {
       toast({
-        description: "Failed to copy to clipboard",
+        description: t("Failed to copy to clipboard", "share.copyFailed"),
         variant: "destructive",
         duration: 3000,
       });
@@ -68,7 +70,7 @@ export const ShareDialog = ({
       copyUrlImageFeedback.trigger();
     } catch {
       toast({
-        description: "Failed to copy to clipboard",
+        description: t("Failed to copy to clipboard", "share.copyFailed"),
         variant: "destructive",
         duration: 3000,
       });
@@ -79,7 +81,7 @@ export const ShareDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md overflow-hidden *:min-w-0">
         <DialogHeader>
-          <DialogTitle>Share</DialogTitle>
+          <DialogTitle>{t("Share", "header.share")}</DialogTitle>
         </DialogHeader>
 
         <div className="flex gap-4">
@@ -92,7 +94,7 @@ export const ShareDialog = ({
               />
             ) : (
               <div className="flex h-50 w-50 items-center justify-center rounded border bg-muted text-muted-foreground">
-                No preview
+                {t("No preview")}
               </div>
             )}
           </div>
@@ -130,7 +132,7 @@ export const ShareDialog = ({
             content={
               <div className="flex items-center gap-1">
                 <IconCircleCheck className="size-4" />
-                Copied!
+                {t("Copied!")}
               </div>
             }
           >
@@ -144,7 +146,7 @@ export const ShareDialog = ({
                   copyUrlFeedback.trigger();
                 } catch {
                   toast({
-                    description: "Failed to copy to clipboard",
+                    description: t("Failed to copy to clipboard", "share.copyFailed"),
                     variant: "destructive",
                     duration: 3000,
                   });
@@ -162,13 +164,13 @@ export const ShareDialog = ({
             content={
               <div className="flex items-center gap-1">
                 <IconCircleCheck className="size-4" />
-                Copied!
+                {t("Copied!")}
               </div>
             }
           >
             <Button variant="outline" size="sm" className="min-w-0 flex-1" onClick={handleCopyAll}>
               <IconCopy className="mr-1 size-4 shrink-0" />
-              Copy All
+              {t("Copy All")}
             </Button>
           </ClickFeedback>
           {showCopyImage && (
@@ -177,7 +179,7 @@ export const ShareDialog = ({
               content={
                 <div className="flex items-center gap-1">
                   <IconCircleCheck className="size-4" />
-                  Copied!
+                  {t("Copied!")}
                 </div>
               }
             >
@@ -188,7 +190,7 @@ export const ShareDialog = ({
                 onClick={handleCopyUrlAndImage}
               >
                 <IconPhoto className="mr-1 size-4 shrink-0" />
-                <span className="truncate">Copy URL & Image</span>
+                <span className="truncate">{t("Copy URL & Image")}</span>
               </Button>
             </ClickFeedback>
           )}

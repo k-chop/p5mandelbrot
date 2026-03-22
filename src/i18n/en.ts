@@ -19,6 +19,13 @@ export const en = {
   "header.interestingPointsTooltip1": "Marks interesting points on the fractal.",
   "header.interestingPointsTooltip2": "Click a marker to zoom into its center.",
 
+  // share dialog
+  "share.noPreview": "No preview",
+  "share.copied": "Copied!",
+  "share.copyAll": "Copy All",
+  "share.copyUrlAndImage": "Copy URL & Image",
+  "share.copyFailed": "Failed to copy to clipboard",
+
   // settings
   "settings.rendererType": "Renderer Type",
   "settings.switchedToWebGPU": "Switched to WebGPU renderer",
