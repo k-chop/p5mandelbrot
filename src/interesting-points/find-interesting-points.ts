@@ -377,8 +377,8 @@ export const calcNeighborhoodGradientDensity = (
 /** 回転対称性の検査に使う半径リスト */
 const SYMMETRY_RADII = [4, 8, 16, 32, 64, 96];
 
-/** 円周サンプルのユニーク値がこの数未満なら対称性計算をスキップ（平坦領域の偽高スコアを防ぐ） */
-const SYMMETRY_MIN_UNIQUE_VALUES = 3;
+/** ユニーク値数がこの値以上で重みが1.0に飽和する（連続的ペナルティの飽和点） */
+const SYMMETRY_UNIQUE_SATURATE = 3;
 
 /** 回転次数の範囲 */
 const MIN_ROTATION_ORDER = 2;
@@ -484,7 +484,10 @@ export const calcRotationalSymmetry = (
     if (validSamples.length >= 4) {
       const uniqueCount = new Set(validSamples).size;
 
-      if (uniqueCount >= SYMMETRY_MIN_UNIQUE_VALUES) {
+      const uniqueWeight =
+        uniqueCount < 2 ? 0 : Math.min(1, (uniqueCount - 1) / (SYMMETRY_UNIQUE_SATURATE - 1));
+
+      if (uniqueWeight > 0) {
         for (let n = MIN_ROTATION_ORDER; n <= MAX_ROTATION_ORDER; n++) {
           const shift = Math.round(sampleCount / n);
           if (shift === 0) continue;
@@ -508,6 +511,8 @@ export const calcRotationalSymmetry = (
             bestCorrelation = correlation;
           }
         }
+
+        bestCorrelation *= uniqueWeight;
       }
     }
 
