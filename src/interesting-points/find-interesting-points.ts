@@ -1114,6 +1114,23 @@ export const findStructureCenter = (
   };
 };
 
+/** centerPointとマーカーが重ならないよう、近すぎるselectedPointsを除外する距離（px） */
+const CENTER_OVERLAP_DISTANCE = 28;
+
+/**
+ * centerPointに近すぎるselectedPointsを除外する。
+ * centerPointのマーカーを優先表示するため、重なるポイントを取り除く。
+ */
+const excludeOverlappingWithCenter = (
+  points: InterestingPoint[],
+  center: InterestingPoint,
+): InterestingPoint[] =>
+  points.filter((p) => {
+    const dx = p.x - center.x;
+    const dy = p.y - center.y;
+    return dx * dx + dy * dy > CENTER_OVERLAP_DISTANCE * CENTER_OVERLAP_DISTANCE;
+  });
+
 /**
  * iterationバッファから興味深いポイントを検出する
  *
@@ -1175,15 +1192,16 @@ export function findInterestingPoints(
 
     if (debug) {
       const centerPoint = findStructureCenter(debugBlocks!, 8);
+      const filtered = centerPoint ? excludeOverlappingWithCenter(selected, centerPoint) : selected;
       return {
-        points: selected,
+        points: filtered,
         debugData: {
           scoring: "symmetry",
           gridBlocks: debugBlocks!,
           scaleBlocks: [],
           rawCandidates: candidates,
           mergedCandidates: merged,
-          selectedPoints: selected,
+          selectedPoints: filtered,
           centerPoint,
         },
       };
