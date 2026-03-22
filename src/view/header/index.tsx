@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/compo
 import { Label } from "@/shadcn/components/ui/label";
 import { Switch } from "@/shadcn/components/ui/switch";
 import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
+import { useT } from "@/i18n/context";
 import { IconHelp } from "@tabler/icons-react";
 import { useModalState } from "../modal/use-modal-state";
 import { Actions } from "./actions";
@@ -24,6 +25,7 @@ const LanguageToggle = () => {
 };
 
 export const Header = () => {
+  const t = useT();
   const [opened, { open, toggle }] = useModalState();
   const isDebugMode = useStoreValue("isDebugMode");
 
@@ -34,7 +36,7 @@ export const Header = () => {
       <Dialog open={opened} onOpenChange={toggle}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-3xl">Instructions</DialogTitle>
+            <DialogTitle className="text-3xl">{t("Instructions")}</DialogTitle>
           </DialogHeader>
           <Instructions />
         </DialogContent>
@@ -49,7 +51,7 @@ export const Header = () => {
               checked={isDebugMode}
               onCheckedChange={() => toggleDebugMode()}
             />
-            <Label htmlFor="debug-mode">Debug Mode</Label>
+            <Label htmlFor="debug-mode">{t("Debug Mode")}</Label>
           </div>
           <Button variant="outline" size="icon-sm" asChild>
             <a href="https://github.com/k-chop/p5mandelbrot" target="_blank" rel="noreferrer">
