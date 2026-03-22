@@ -13,7 +13,6 @@ export const RightSidebar = () => {
         <DebugMode />
       ) : (
         <>
-          {/* <Parameters /> */}
           <Informations />
           <Operations />
           <POIHistories />
