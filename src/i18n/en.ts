@@ -26,6 +26,16 @@ export const en = {
   "share.copyUrlAndImage": "Copy URL & Image",
   "share.copyFailed": "Failed to copy to clipboard",
 
+  // operations tabs
+  "operations.palette": "Palette",
+  "operations.settings": "Settings",
+  "operations.outdatedApp": "This is outdated app.",
+  "operations.visitNewAppBefore": "Please visit ",
+  "operations.visitNewAppAfter": " to use new app.",
+  "operations.exportImportHint": "If you wish to export/import the POI list, use this button.",
+  "operations.poiListCopied": "POI List JSON copied to clipboard!",
+  "operations.copyPoiList": "Copy POI List to clipboard",
+
   // instructions
   "instructions.mouse": "Mouse",
   "instructions.keys": "Keys",

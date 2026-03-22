@@ -26,6 +26,16 @@ export const ja: Dictionary = {
   "share.copyUrlAndImage": "URL & 画像をコピー",
   "share.copyFailed": "クリップボードへのコピーに失敗しました",
 
+  // operations tabs
+  "operations.palette": "パレット",
+  "operations.settings": "設定",
+  "operations.outdatedApp": "このアプリは古いバージョンです。",
+  "operations.visitNewAppBefore": "新しいアプリは ",
+  "operations.visitNewAppAfter": " をご利用ください。",
+  "operations.exportImportHint": "POIリストのエクスポート/インポートはこのボタンを使ってください。",
+  "operations.poiListCopied": "POIリストのJSONをクリップボードにコピーしました！",
+  "operations.copyPoiList": "POIリストをクリップボードにコピー",
+
   // instructions
   "instructions.mouse": "マウス",
   "instructions.keys": "キー",

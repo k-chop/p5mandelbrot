@@ -1,3 +1,4 @@
+import { useT } from "@/i18n/context";
 import { Button } from "@/shadcn/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shadcn/components/ui/tabs";
 import { useToast } from "@/shadcn/hooks/use-toast";
@@ -11,6 +12,8 @@ import { usePOI } from "./use-poi";
 const tabsContentClass = "flex h-full grow flex-col data-[state=inactive]:hidden";
 
 export const Operations = () => {
+  const t = useT();
+
   if (isGithubPages()) {
     return <SuggestRedirect />;
   }
@@ -19,8 +22,8 @@ export const Operations = () => {
     <Tabs className="mx-2 flex grow flex-col" defaultValue="poi">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="poi">POI</TabsTrigger>
-        <TabsTrigger value="palette">Palette</TabsTrigger>
-        <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsTrigger value="palette">{t("Palette", "operations.palette")}</TabsTrigger>
+        <TabsTrigger value="settings">{t("Settings", "operations.settings")}</TabsTrigger>
       </TabsList>
       <TabsContent className={tabsContentClass} value="poi">
         <POI />
@@ -36,20 +39,21 @@ export const Operations = () => {
 };
 
 const SuggestRedirect = () => {
+  const t = useT();
   const { copyPOIListToClipboard } = usePOI();
   const { toast } = useToast();
 
   return (
     <div className="px-3">
-      <div className="text-lg font-bold">This is outdated app.</div>
+      <div className="text-lg font-bold">{t("This is outdated app.")}</div>
       <div className="py-2">
-        Please visit{" "}
+        {t("Please visit ", "operations.visitNewAppBefore")}
         <a href="https://p5mandelbrot.pages.dev" className="text-primary hover:underline">
           https://p5mandelbrot.pages.dev
-        </a>{" "}
-        to use new app.
+        </a>
+        {t(" to use new app.", "operations.visitNewAppAfter")}
       </div>
-      <div className="py-2">If you wish to export/import the POI list, use this button.</div>
+      <div className="py-2">{t("If you wish to export/import the POI list, use this button.")}</div>
       <div className="py-2">
         <Button
           variant="default"
@@ -61,7 +65,7 @@ const SuggestRedirect = () => {
               description: (
                 <div className="flex items-center justify-center gap-2">
                   <IconCircleCheck />
-                  POI List JSON copied to clipboard!
+                  {t("POI List JSON copied to clipboard!")}
                 </div>
               ),
               variant: "primary",
@@ -70,7 +74,7 @@ const SuggestRedirect = () => {
           }}
         >
           <IconCopy className="mr-2" />
-          Copy POI List to clipboard
+          {t("Copy POI List to clipboard")}
         </Button>
       </div>
     </div>
