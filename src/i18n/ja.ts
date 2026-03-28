@@ -96,6 +96,7 @@ export const ja: Dictionary = {
   "settings.poiImportFailed": "クリップボードからPOIリストのインポートに失敗しました！",
   "settings.poiImportSuccess": "クリップボードからPOIリストをインポートしました！",
   "settings.useWasm": "Reference Orbit計算にWasmを使用",
+  "settings.useWasmTooltip": "10倍ほど高速になるのでON推奨",
 
   // debug mode
   "debug.alwaysComputeDebugData": "常にデバッグデータを計算",

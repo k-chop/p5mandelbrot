@@ -1,3 +1,4 @@
+import { SimpleTooltip } from "@/components/simple-tooltip";
 import { ValueSlider } from "@/components/slider-wrapper";
 import { useT } from "@/i18n/context";
 import { resizeTo } from "@/p5-adapter/p5-adapter";
@@ -127,16 +128,18 @@ export const Settings = () => {
         </div>
       )}
 
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="use-wasm"
-          checked={useWasm}
-          onCheckedChange={() => updateStoreWith("useWasm", (v) => !v)}
-        />
-        <Label htmlFor="use-wasm" className="cursor-pointer">
-          {t("Use Wasm for reference orbit")}
-        </Label>
-      </div>
+      <SimpleTooltip content={t("Approximately 10x faster. Recommended to keep ON.")}>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="use-wasm"
+            checked={useWasm}
+            onCheckedChange={() => updateStoreWith("useWasm", (v) => !v)}
+          />
+          <Label htmlFor="use-wasm" className="cursor-pointer">
+            {t("Use Wasm for reference orbit")}
+          </Label>
+        </div>
+      </SimpleTooltip>
 
       <div>
         <div className="mb-1 ml-2">
