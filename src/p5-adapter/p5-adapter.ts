@@ -1,8 +1,9 @@
 import { changePaletteFromPresets, cycleCurrentPaletteOffset, setPalette } from "@/camera/palette";
+import type { InterestingPoint } from "@/interesting-points/find-interesting-points";
 import {
-  type InterestingPoint,
-  findInterestingPoints,
-} from "@/interesting-points/find-interesting-points";
+  cancelInterestingPointsComputation,
+  computeInterestingPointsAsync,
+} from "@/interesting-points/interesting-points-worker-facade";
 import {
   consolidateIterationCache,
   getIterationCache,
@@ -263,6 +264,7 @@ export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
 
   draggingMode = state;
   changeCursor(p, state === "move" ? "grabbing" : "zoom-in");
+  cancelInterestingPointsComputation();
   currentInterestingPoints = [];
 
   mouseDragged = true;
@@ -515,6 +517,7 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
   } else {
     // クリック時 — マーカー範囲内ならそのポイントを中心にズーム
     const hitPoint = findHitInterestingPoint(p.mouseX, p.mouseY, currentInterestingPoints);
+    cancelInterestingPointsComputation();
     currentInterestingPoints = [];
     if (hitPoint) {
       scaleTo(getStore("zoomRate"), { x: hitPoint.x, y: hitPoint.y });
@@ -692,23 +695,22 @@ export const p5Draw = (p: p5) => {
           // 次回のrendering後にPOIHistoryを更新する
           shouldSavePOIHistoryNextRender = true;
 
-          // 興味深いポイントを検出する
+          // 興味深いポイントを非同期で検出する
           if (getStore("showInterestingPoints") || getStore("alwaysComputeIPDebugData")) {
             const { width: cw, height: ch } = getCanvasSize();
             consolidateIterationCache(cw, ch);
             const cache = getIterationCache();
             if (cache.length > 0 && cache[0].buffer.length === cw * ch) {
               const params = getCurrentParams();
-              if (getStore("isDebugMode") || getStore("alwaysComputeIPDebugData")) {
-                const result = findInterestingPoints(cache[0].buffer, cw, ch, params.N, {
-                  debug: true,
-                });
-                currentInterestingPoints = result.points;
-                updateStore("interestingPointsDebugData", result.debugData);
-              } else {
-                currentInterestingPoints = findInterestingPoints(cache[0].buffer, cw, ch, params.N);
-                updateStore("interestingPointsDebugData", null);
-              }
+              const debug = getStore("isDebugMode") || getStore("alwaysComputeIPDebugData");
+              const bufferCopy = new Uint32Array(cache[0].buffer);
+              void computeInterestingPointsAsync(bufferCopy, cw, ch, params.N, { debug }).then(
+                (result) => {
+                  if (result === null) return; // キャンセルされた
+                  currentInterestingPoints = result.points;
+                  updateStore("interestingPointsDebugData", debug ? result.debugData : null);
+                },
+              );
             } else {
               currentInterestingPoints = [];
             }
