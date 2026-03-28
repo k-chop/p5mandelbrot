@@ -18,7 +18,7 @@ import {
   getWorkerId,
   getWorkerPool,
 } from "./pool-instance";
-import { getRefOrbitCache, getRefOrbitCacheIfAvailable } from "./ref-orbit-cache";
+import { getRefOrbitCacheIfAvailable } from "./ref-orbit-cache";
 import {
   addJob,
   canQueueJob,
@@ -124,10 +124,7 @@ export function registerBatch(
   let refX = batchContext.mandelbrotParams.x.toString();
   let refY = batchContext.mandelbrotParams.y.toString();
 
-  // 再利用フラグが立っているなら問答無用でcacheを使い、そうでない場合は使える場合のみ使う
-  const refOrbitCache = batchContext.shouldReuseRefOrbit
-    ? getRefOrbitCache()
-    : getRefOrbitCacheIfAvailable(batchContext.mandelbrotParams);
+  const refOrbitCache = getRefOrbitCacheIfAvailable(batchContext.mandelbrotParams);
 
   if (refOrbitCache) {
     console.debug("Cache available. Using reference orbit cache");

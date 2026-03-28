@@ -6,8 +6,6 @@ export const setRefOrbitCache = (cache: RefOrbitCache) => {
   latestRefOrbitCache = cache;
 };
 
-export const getRefOrbitCache = () => latestRefOrbitCache;
-
 export const getRefOrbitCacheIfAvailable = (params: MandelbrotParams) => {
   if (params.mode === "normal") {
     return null;

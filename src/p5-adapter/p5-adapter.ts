@@ -26,7 +26,6 @@ import {
   setOffsetParams,
   setScaleParams,
   toggleAutoIteration,
-  togglePinReference,
 } from "@/mandelbrot-state/mandelbrot-state";
 import { addCurrentLocationToPOIHistory, initializePOIHistory } from "@/poi-history/poi-history";
 import {
@@ -565,7 +564,6 @@ export const keyInputHandler = (event: KeyboardEvent) => {
     applyAutoIteration(width / 2, height / 2, 1 / rate, width, height);
     radiusTimesTo(rate);
   }
-  if (event.key === "p") togglePinReference();
   if (event.key === "ArrowUp") {
     const { width, height } = getCanvasSize();
     applyAutoIteration(width / 2, height / 2, rate, width, height);

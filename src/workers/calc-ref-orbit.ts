@@ -38,10 +38,6 @@ export type RefOrbitContextPopulated = {
   blaTableView: BLATableView;
 };
 
-// FIXME: 手抜き
-let websocketServerConnected = false;
-let ws: WebSocket | null = null;
-
 let wasmReady = false;
 
 /**
@@ -50,8 +46,8 @@ let wasmReady = false;
 function calcRefOrbitWasm(referencePoint: ComplexArbitrary, maxIteration: number): Complex[] {
   const orbit = wasmCalculate({
     type: "reference_orbit",
-    x: referencePoint.re.toString(),
-    y: referencePoint.im.toString(),
+    x: referencePoint.re.toFixed(),
+    y: referencePoint.im.toFixed(),
     max_iter: maxIteration,
   });
 
@@ -171,70 +167,6 @@ function calcBLACoefficient(ref: Complex[], pixelSpacing: number) {
 }
 
 /**
- * 別serverでrefOrbitを計算する
- *
- * FIXME: serverが立っていない場合はとりあえず勝手に落ちるに任せている
- */
-async function calcRefOrbitExternal(
-  referencePoint: ComplexArbitrary,
-  maxIteration: number,
-): Promise<Complex[]> {
-  if (ws == null || ws.readyState !== WebSocket.OPEN) {
-    return [];
-  }
-
-  const xnn: number[] = [];
-
-  const promise = new Promise<void>((resolve) => {
-    ws?.addEventListener(
-      "message",
-      (ev) => {
-        const message = ev.data;
-        if (typeof message === "string") {
-          const data = JSON.parse(message);
-          if (data.type === "error") {
-            console.error("Received message:", data);
-          } else {
-            console.log("Received message:", data);
-          }
-        } else if (message instanceof ArrayBuffer) {
-          const view = new DataView(message);
-          const type = view.getUint8(0);
-
-          if (type === 0x03) {
-            for (let i = 1; i < view.byteLength; i += 8) {
-              xnn.push(view.getFloat64(i, true));
-            }
-          }
-        }
-        resolve();
-      },
-      { once: true },
-    );
-  });
-
-  ws.send(
-    JSON.stringify({
-      type: "calculation_request",
-      x: referencePoint.re.toString(),
-      y: referencePoint.im.toString(),
-      maxIter: maxIteration,
-    }),
-  );
-
-  await promise;
-
-  const n = Math.floor(xnn.length / 2);
-  const xn: Complex[] = [];
-
-  for (let i = 0; i < n; i++) {
-    xn.push({ re: xnn[i * 2], im: xnn[i * 2 + 1] });
-  }
-
-  return xn;
-}
-
-/**
  * wasm モジュールを初期化する
  */
 async function initWasm() {
@@ -251,48 +183,10 @@ async function initWasm() {
 }
 
 /**
- * websocket serverに接続できるならしておく
- */
-async function initWebsocketServer() {
-  ws = new WebSocket("ws://localhost:8080");
-  ws.binaryType = "arraybuffer";
-
-  return new Promise<void>((resolve, reject) => {
-    if (ws == null) return reject("WebSocket is not initialized");
-
-    ws.addEventListener("error", (event) => {
-      console.error("Failed to connect to websocket server!", event);
-      console.error("Check the server and refOrbit calculation rust client is running");
-      reject(event);
-    });
-    ws.addEventListener("open", () => {
-      console.log("Websocket connection established!");
-      resolve();
-    });
-    // FIXME: 外からteminateされたときにWebSocketが閉じられない不具合がある
-    // MandelbrotFacadeLikeのterminateで即worker.terminateを呼ぶのではなくちゃんと後始末する
-    ws.addEventListener("close", () => {
-      websocketServerConnected = false;
-      ws = null;
-      console.log("Websocket connection closed.");
-    });
-  });
-}
-
-/**
  * worker起動時に呼ばれる
  */
 async function setup() {
   await initWasm();
-
-  if (process.env.NODE_ENV === "development" && websocketServerConnected === false) {
-    try {
-      await initWebsocketServer();
-      websocketServerConnected = true;
-    } catch {
-      console.warn("Failed to connect to websocket server");
-    }
-  }
 
   self.postMessage({ type: "init" });
 
@@ -334,20 +228,8 @@ async function setup() {
 
       let xn: Complex[] = [];
 
-      // 1. 外部Rustサーバ (開発環境のみ)
-      try {
-        if (process.env.NODE_ENV === "development" && websocketServerConnected) {
-          xn = await calcRefOrbitExternal(referencePoint, maxIteration);
-          if (xn.length > 0) {
-            console.debug(`${jobId}: ref orbit calculated with external server`);
-          }
-        }
-      } catch {
-        console.warn("Failed to calculate refOrbit on external server. Fallback.");
-      }
-
-      // 2. wasm (Fixed1024)
-      if (useWasm && wasmReady && xn.length === 0) {
+      // 1. wasm (Fixed1024)
+      if (useWasm && wasmReady) {
         try {
           xn = calcRefOrbitWasm(referencePoint, maxIteration);
           console.debug(`${jobId}: ref orbit calculated with wasm`);
@@ -356,7 +238,7 @@ async function setup() {
         }
       }
 
-      // 3. ローカルJS (BigNumber)
+      // 2. ローカルJS (BigNumber)
       if (xn.length === 0) {
         const { xn: xn2 } = calcRefOrbit(referencePoint, maxIteration, terminateChecker, workerIdx);
         xn = xn2;
@@ -393,7 +275,6 @@ async function setup() {
       // console.debug(`${jobId}: completed (ref)`);
     } else if (event.data.type === "request-shutdown") {
       console.log("Shutdown requested");
-      ws?.close();
       self.postMessage({ type: "shutdown" });
     } else {
       console.error("Unknown message", event.data);

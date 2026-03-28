@@ -106,7 +106,6 @@ export const startCalculation = async (
     pixelWidth: canvasWidth,
     pixelHeight: canvasHeight,
     terminator,
-    shouldReuseRefOrbit: getStore("shouldReuseRefOrbit"),
   });
 };
 

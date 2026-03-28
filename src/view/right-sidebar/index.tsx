@@ -1,6 +1,5 @@
 import { useStoreValue } from "@/store/store";
 import { DebugMode } from "./debug-mode/debug-mode";
-import { Informations } from "./informations";
 import { Operations } from "./operations";
 import { POIHistories } from "./poi-histories";
 
@@ -13,7 +12,6 @@ export const RightSidebar = () => {
         <DebugMode />
       ) : (
         <>
-          <Informations />
           <Operations />
           <POIHistories />
         </>

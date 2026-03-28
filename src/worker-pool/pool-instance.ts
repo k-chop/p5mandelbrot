@@ -102,10 +102,6 @@ export async function prepareWorkerPool(
   console.debug(`prepareWorkerPool: ${count}, ${workerType}`);
 
   updateStore("mode", workerType);
-  if (workerType === "normal") {
-    updateStore("shouldReuseRefOrbit", false);
-  }
-
   resetWorkers();
 
   fillIterationWorkerPool(count, workerType);

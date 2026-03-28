@@ -51,11 +51,6 @@ export const ja: Dictionary = {
   "poi.apply": "適用",
   "poi.delete": "削除",
 
-  // informations
-  "info.refOrbitPinned": "参照軌道を固定中",
-  "info.pressToUnpin": "解除するには",
-  "info.pressToUnpinSuffix": "を押してください",
-
   // footer
   "footer.invalidResult": "無効な結果",
   "footer.calcRefOrbit": "参照軌道の計算",
