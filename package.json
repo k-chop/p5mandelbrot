@@ -14,8 +14,7 @@
     "typecheck": "tsc --noEmit 2>&1",
     "server": "tsx src/server/index.ts",
     "wasm:build": "cd wasm-fp && wasm-pack build --target web && mv pkg/apfp_bg.wasm ../public/wasm/ && echo '*.wasm' > pkg/.gitignore",
-    "rust-client": "cd rust_client && cargo run && cd ../",
-    "dev-all": "run-p dev server rust-client"
+    "dev-all": "run-p dev server"
   },
   "dependencies": {
     "@hono/node-server": "1.19.11",
@@ -40,8 +39,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "tailwind-merge": "3.5.0",
-    "typegpu": "0.10.2",
-    "ws": "8.19.0"
+    "typegpu": "0.10.2"
   },
   "devDependencies": {
     "@radix-ui/colors": "3.0.0",
@@ -55,7 +53,6 @@
     "@types/p5": "1.7.6",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@types/ws": "8.18.1",
     "@vitejs/plugin-react": "6.0.1",
     "@webgpu/types": "0.1.69",
     "cross-env": "10.1.0",
