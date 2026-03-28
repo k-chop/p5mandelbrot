@@ -334,27 +334,25 @@ async function setup() {
 
       let xn: Complex[] = [];
 
-      // 1. wasm (Fixed1024)
+      // 1. 外部Rustサーバ (開発環境のみ)
+      try {
+        if (process.env.NODE_ENV === "development" && websocketServerConnected) {
+          xn = await calcRefOrbitExternal(referencePoint, maxIteration);
+          if (xn.length > 0) {
+            console.debug(`${jobId}: ref orbit calculated with external server`);
+          }
+        }
+      } catch {
+        console.warn("Failed to calculate refOrbit on external server. Fallback.");
+      }
+
+      // 2. wasm (Fixed1024)
       if (useWasm && wasmReady && xn.length === 0) {
         try {
           xn = calcRefOrbitWasm(referencePoint, maxIteration);
           console.debug(`${jobId}: ref orbit calculated with wasm`);
         } catch (e) {
           console.warn("Failed to calculate refOrbit with wasm. Fallback.", e);
-        }
-      }
-
-      // 2. 外部Rustサーバ (開発環境のみ)
-      if (xn.length === 0) {
-        try {
-          if (process.env.NODE_ENV === "development" && websocketServerConnected) {
-            xn = await calcRefOrbitExternal(referencePoint, maxIteration);
-            if (xn.length > 0) {
-              console.debug(`${jobId}: ref orbit calculated with external server`);
-            }
-          }
-        } catch {
-          console.warn("Failed to calculate refOrbit on external server. Fallback.");
         }
       }
 
