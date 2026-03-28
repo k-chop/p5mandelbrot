@@ -16,9 +16,9 @@
     "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "types": ["@webgpu/types"]
+    }
   },
   "include": ["src"],
+  "exclude": ["src/server"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
