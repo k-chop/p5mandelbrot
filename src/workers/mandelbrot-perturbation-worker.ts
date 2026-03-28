@@ -3,6 +3,7 @@
 import { generateLowResDiffSequence } from "@/math/low-res-diff-sequence";
 import { BLATableView, SKIP_BLA_ENTRY_UNTIL_THIS_L } from "@/workers/bla-table-item";
 import { ComplexArrayView } from "@/workers/xn-buffer";
+import BigNumber from "bignumber.js";
 import { mulIm, mulRe, nNorm } from "../math/complex";
 import type { IterationWorkerParams } from "../types";
 import type { RefOrbitContextPopulated } from "./calc-ref-orbit";
@@ -11,8 +12,8 @@ const calcHandler = (data: IterationWorkerParams) => {
   const {
     pixelHeight,
     pixelWidth,
-    cx: _cxStr,
-    cy: _cyStr,
+    cx: cxStr,
+    cy: cyStr,
     r: rStr,
     N: maxIteration,
     isSuperSampling,
@@ -22,8 +23,8 @@ const calcHandler = (data: IterationWorkerParams) => {
     endY,
     xn: xnBuffer,
     blaTable: blaTableBuffer,
-    refX: _refX,
-    refY: _refY,
+    refX,
+    refY,
     jobId,
     terminator,
     workerIdx,
@@ -43,17 +44,18 @@ const calcHandler = (data: IterationWorkerParams) => {
   const iterations = new Uint32Array(pixelNum);
   const totalPixelCount = pixelNum * (isSuperSampling ? 4 : 1); // FIXME: supersamplingの倍率が固定値になっている
 
-  const rF64 = Number(rStr);
+  const minDim = Math.min(pixelWidth, pixelHeight);
 
-  // 参照ピクセル座標（calc-ref-orbit.ts と同じ計算）
-  const refPixelX = Math.floor(pixelWidth / 2);
-  const refPixelY = Math.floor(pixelHeight / 2);
+  // deltaCをdoubleで直接計算するための事前計算値
+  const deltaCScale = (2 * Number(rStr)) / minDim;
 
-  // deltaC を f64 で直接計算するための事前計算値
-  // current - ref = ((px - refPx) * 2 / W * scaleX * r, -(py - refPy) * 2 / H * scaleY * r)
-  // scaleX = W / min(W,H), scaleY = H / min(W,H) なので
-  // 2 / W * scaleX * r = 2 / min(W,H) * r, 同様に Y も同じ
-  const deltaCScale = (2 * rF64) / Math.min(pixelWidth, pixelHeight);
+  // refPixel = W/2 + (refX - cx) / (2r) * min(W, H)
+  // pixelToComplexCoordinateComplexArbitrary の逆変換
+  const r2 = new BigNumber(rStr).times(2);
+  const refPixelX =
+    Math.floor(pixelWidth / 2) + new BigNumber(refX).minus(cxStr).div(r2).times(minDim).toNumber();
+  const refPixelY =
+    Math.floor(pixelHeight / 2) - new BigNumber(refY).minus(cyStr).div(r2).times(minDim).toNumber();
 
   // データ節約のために空にしたBLATableの次のindexから開始
   const startBLAIndex = Math.floor(Math.log2(SKIP_BLA_ENTRY_UNTIL_THIS_L)) + 1;
@@ -70,8 +72,10 @@ const calcHandler = (data: IterationWorkerParams) => {
     let deltaNRe = 0.0;
     let deltaNIm = 0.0;
 
-    // Δ0: BigNumber演算なしでf64で直接計算
-    // c が相殺されるので (pixelOffset - refPixelOffset) * scale * r のみ
+    // Δc = current - ref
+    //     = (cx + (pixelX - W/2) * deltaCScale) - (cx + (refPixelX - W/2) * deltaCScale)
+    //     = (pixelX - refPixelX) * deltaCScale
+    // cxとW/2が相殺される。BigNumbercのみなので、Δcはdoubleのみで計算できる。
     const deltaC = {
       re: (pixelX - refPixelX) * deltaCScale,
       im: -(pixelY - refPixelY) * deltaCScale,
