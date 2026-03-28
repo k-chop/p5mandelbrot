@@ -45,17 +45,15 @@ const calcHandler = (data: IterationWorkerParams) => {
   const totalPixelCount = pixelNum * (isSuperSampling ? 4 : 1); // FIXME: supersamplingの倍率が固定値になっている
 
   const rF64 = Number(rStr);
+  const minDim = Math.min(pixelWidth, pixelHeight);
 
   // deltaC を f64 で直接計算するための事前計算値
-  // 2 / min(W,H) * r
-  const deltaCScale = (2 * rF64) / Math.min(pixelWidth, pixelHeight);
+  const deltaCScale = (2 * rF64) / minDim;
 
   // 参照点のピクセル座標を算出
   // ref orbit cacheが使われている場合、refX/refYとcx/cyが異なるためピクセル中央からずれる
   // (refX - cx) / (2*r) で正規化してから minDim を掛ける（BigNumberのDECIMAL_PLACES=20制約を回避）
-  const r = new BigNumber(rStr);
-  const r2 = r.times(2);
-  const minDim = Math.min(pixelWidth, pixelHeight);
+  const r2 = new BigNumber(rStr).times(2);
   const refPixelX =
     Math.floor(pixelWidth / 2) + new BigNumber(refX).minus(cxStr).div(r2).times(minDim).toNumber();
   const refPixelY =
