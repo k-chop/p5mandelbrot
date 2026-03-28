@@ -9,7 +9,6 @@ import {
 import type { ComplexArrayView } from "@/workers/xn-buffer";
 import { encodeComplexArray } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
-import { calcCoordPrecision } from "@/utils/mandelbrot-url-params";
 import wasmInit, { calculate as wasmCalculate } from "../../wasm-fp/pkg/apfp.js";
 import type { Complex, ComplexArbitrary } from "../math/complex";
 import {
@@ -46,22 +45,13 @@ let ws: WebSocket | null = null;
 let wasmReady = false;
 
 /**
- * wasm (Fixed1024) でreference orbitを計算する。
- * radiusとpixelWidthから必要な精度を計算し、座標を丸めてからwasmに渡す。
+ * wasm (Fixed1024) でreference orbitを計算する
  */
-function calcRefOrbitWasm(
-  referencePoint: ComplexArbitrary,
-  maxIteration: number,
-  radius: BigNumber,
-  pixelWidth: number,
-): Complex[] {
-  const precision = calcCoordPrecision(radius, pixelWidth);
-  const xStr = referencePoint.re.toPrecision(precision);
-  const yStr = referencePoint.im.toPrecision(precision);
+function calcRefOrbitWasm(referencePoint: ComplexArbitrary, maxIteration: number): Complex[] {
   const orbit = wasmCalculate({
     type: "reference_orbit",
-    x: xStr,
-    y: yStr,
+    x: referencePoint.re.toString(),
+    y: referencePoint.im.toString(),
     max_iter: maxIteration,
   });
 
@@ -359,7 +349,7 @@ async function setup() {
       // 2. wasm (Fixed1024)
       if (useWasm && wasmReady && xn.length === 0) {
         try {
-          xn = calcRefOrbitWasm(referencePoint, maxIteration, radius, pixelWidth);
+          xn = calcRefOrbitWasm(referencePoint, maxIteration);
           console.debug(`${jobId}: ref orbit calculated with wasm`);
         } catch (e) {
           console.warn("Failed to calculate refOrbit with wasm. Fallback.", e);
