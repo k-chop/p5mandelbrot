@@ -1,3 +1,5 @@
+import { getStore } from "@/store/store";
+import { calcCoordPrecision } from "@/utils/mandelbrot-url-params";
 import type {
   BatchContext,
   CalcIterationJob,
@@ -226,8 +228,9 @@ export class RefOrbitWorker implements MandelbrotFacadeLike {
   startCalculate = (job: CalcRefOrbitJob, batchContext: BatchContext, workerIdx: number) => {
     this.running = true;
 
-    const complexCenterX = batchContext.mandelbrotParams.x.toString();
-    const complexCenterY = batchContext.mandelbrotParams.y.toString();
+    const precision = calcCoordPrecision(batchContext.mandelbrotParams.r, batchContext.pixelWidth);
+    const complexCenterX = batchContext.mandelbrotParams.x.toPrecision(precision);
+    const complexCenterY = batchContext.mandelbrotParams.y.toPrecision(precision);
     const complexRadius = batchContext.mandelbrotParams.r.toString();
     const maxIteration = batchContext.mandelbrotParams.N;
     const pixelHeight = batchContext.pixelHeight;
@@ -273,6 +276,7 @@ export class RefOrbitWorker implements MandelbrotFacadeLike {
       jobId,
       terminator,
       workerIdx,
+      useWasm: getStore("useWasm"),
     });
   };
 

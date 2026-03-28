@@ -30,6 +30,7 @@ yarn.lock
 
 # rust
 rust_client/target/*
+wasm-fp/target/*
 
 # Claude agent files
 CLAUDE.md

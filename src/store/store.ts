@@ -39,6 +39,8 @@ type Store = {
 
   // mandelbrot state
   shouldReuseRefOrbit: boolean;
+  /** reference orbit計算にwasmを使うかどうか */
+  useWasm: boolean;
 
   // palette settings
   paletteId: string;
@@ -84,11 +86,12 @@ const store: Store = {
   workerCount: 2,
   animationTime: 0,
   refOrbitWorkerCount: 1, // 仮
-  maxCanvasSize: -1,
+  maxCanvasSize: 800,
   // UI state
   canvasLocked: false,
   // mandelbrot state
   shouldReuseRefOrbit: false,
+  useWasm: true,
   // palette settings
   paletteId: "d3-chromatic,RdYlBlu,1",
   paletteLength: 128,

@@ -3,16 +3,7 @@
 import { generateLowResDiffSequence } from "@/math/low-res-diff-sequence";
 import { BLATableView, SKIP_BLA_ENTRY_UNTIL_THIS_L } from "@/workers/bla-table-item";
 import { ComplexArrayView } from "@/workers/xn-buffer";
-import BigNumber from "bignumber.js";
-import {
-  complexArbitary,
-  dSub,
-  mulIm,
-  mulRe,
-  nNorm,
-  pixelToComplexCoordinateComplexArbitrary,
-  toComplex,
-} from "../math/complex";
+import { mulIm, mulRe, nNorm } from "../math/complex";
 import type { IterationWorkerParams } from "../types";
 import type { RefOrbitContextPopulated } from "./calc-ref-orbit";
 
@@ -20,8 +11,8 @@ const calcHandler = (data: IterationWorkerParams) => {
   const {
     pixelHeight,
     pixelWidth,
-    cx: cxStr,
-    cy: cyStr,
+    cx: _cxStr,
+    cy: _cyStr,
     r: rStr,
     N: maxIteration,
     isSuperSampling,
@@ -31,8 +22,8 @@ const calcHandler = (data: IterationWorkerParams) => {
     endY,
     xn: xnBuffer,
     blaTable: blaTableBuffer,
-    refX,
-    refY,
+    refX: _refX,
+    refY: _refY,
     jobId,
     terminator,
     workerIdx,
@@ -52,9 +43,17 @@ const calcHandler = (data: IterationWorkerParams) => {
   const iterations = new Uint32Array(pixelNum);
   const totalPixelCount = pixelNum * (isSuperSampling ? 4 : 1); // FIXME: supersamplingの倍率が固定値になっている
 
-  const c = complexArbitary(cxStr, cyStr);
-  const ref = complexArbitary(refX, refY);
-  const r = new BigNumber(rStr);
+  const rF64 = Number(rStr);
+
+  // 参照ピクセル座標（calc-ref-orbit.ts と同じ計算）
+  const refPixelX = Math.floor(pixelWidth / 2);
+  const refPixelY = Math.floor(pixelHeight / 2);
+
+  // deltaC を f64 で直接計算するための事前計算値
+  // current - ref = ((px - refPx) * 2 / W * scaleX * r, -(py - refPy) * 2 / H * scaleY * r)
+  // scaleX = W / min(W,H), scaleY = H / min(W,H) なので
+  // 2 / W * scaleX * r = 2 / min(W,H) * r, 同様に Y も同じ
+  const deltaCScale = (2 * rF64) / Math.min(pixelWidth, pixelHeight);
 
   // データ節約のために空にしたBLATableの次のindexから開始
   const startBLAIndex = Math.floor(Math.log2(SKIP_BLA_ENTRY_UNTIL_THIS_L)) + 1;
@@ -71,16 +70,12 @@ const calcHandler = (data: IterationWorkerParams) => {
     let deltaNRe = 0.0;
     let deltaNIm = 0.0;
 
-    const current = pixelToComplexCoordinateComplexArbitrary(
-      pixelX,
-      pixelY,
-      c,
-      r,
-      pixelWidth,
-      pixelHeight,
-    );
-    // Δ0
-    const deltaC = toComplex(dSub(current, ref));
+    // Δ0: BigNumber演算なしでf64で直接計算
+    // c が相殺されるので (pixelOffset - refPixelOffset) * scale * r のみ
+    const deltaC = {
+      re: (pixelX - refPixelX) * deltaCScale,
+      im: -(pixelY - refPixelY) * deltaCScale,
+    };
 
     let iteration = 0;
     let refIteration = 0;

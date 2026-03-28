@@ -9,6 +9,7 @@ import {
 import type { ComplexArrayView } from "@/workers/xn-buffer";
 import { encodeComplexArray } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
+import wasmInit, { calculate as wasmCalculate } from "../../wasm-fp/pkg/apfp.js";
 import type { Complex, ComplexArbitrary } from "../math/complex";
 import {
   add,
@@ -40,6 +41,29 @@ export type RefOrbitContextPopulated = {
 // FIXME: 手抜き
 let websocketServerConnected = false;
 let ws: WebSocket | null = null;
+
+let wasmReady = false;
+
+/**
+ * wasm (Fixed1024) でreference orbitを計算する
+ */
+function calcRefOrbitWasm(referencePoint: ComplexArbitrary, maxIteration: number): Complex[] {
+  const orbit = wasmCalculate({
+    type: "reference_orbit",
+    x: referencePoint.re.toString(),
+    y: referencePoint.im.toString(),
+    max_iter: maxIteration,
+  });
+
+  const n = orbit.length / 2;
+  const xn: Complex[] = Array.from({ length: n });
+
+  for (let i = 0; i < n; i++) {
+    xn[i] = { re: orbit[i * 2], im: orbit[i * 2 + 1] };
+  }
+
+  return xn;
+}
 
 function calcRefOrbit(
   center: ComplexArbitrary,
@@ -211,6 +235,22 @@ async function calcRefOrbitExternal(
 }
 
 /**
+ * wasm モジュールを初期化する
+ */
+async function initWasm() {
+  try {
+    const base = import.meta.env.BASE_URL ?? "/";
+    const wasmUrl = new URL(`${base}wasm/apfp_bg.wasm`, self.location.origin);
+    await wasmInit(wasmUrl);
+    wasmReady = true;
+    console.log("Wasm module initialized");
+  } catch (e) {
+    console.warn("Failed to init wasm module:", e);
+    wasmReady = false;
+  }
+}
+
+/**
  * websocket serverに接続できるならしておく
  */
 async function initWebsocketServer() {
@@ -243,6 +283,8 @@ async function initWebsocketServer() {
  * worker起動時に呼ばれる
  */
 async function setup() {
+  await initWasm();
+
   if (process.env.NODE_ENV === "development" && websocketServerConnected === false) {
     try {
       await initWebsocketServer();
@@ -266,6 +308,7 @@ async function setup() {
         jobId,
         terminator,
         workerIdx,
+        useWasm,
       } = event.data as RefOrbitWorkerParams;
 
       const startedAt = performance.now();
@@ -291,20 +334,35 @@ async function setup() {
 
       let xn: Complex[] = [];
 
+      // 1. 外部Rustサーバ (開発環境のみ)
       try {
-        // とりあえずrefOrbit計算serverは開発環境のみ使えるようにしておく
-        // worker起動のタイミングでwebsocket serverが立ち上がってなかったら、次からローカルで計算する
         if (process.env.NODE_ENV === "development" && websocketServerConnected) {
           xn = await calcRefOrbitExternal(referencePoint, maxIteration);
+          if (xn.length > 0) {
+            console.debug(`${jobId}: ref orbit calculated with external server`);
+          }
         }
       } catch {
         console.warn("Failed to calculate refOrbit on external server. Fallback.");
       }
 
+      // 2. wasm (Fixed1024)
+      if (useWasm && wasmReady && xn.length === 0) {
+        try {
+          xn = calcRefOrbitWasm(referencePoint, maxIteration);
+          console.debug(`${jobId}: ref orbit calculated with wasm`);
+        } catch (e) {
+          console.warn("Failed to calculate refOrbit with wasm. Fallback.", e);
+        }
+      }
+
+      // 3. ローカルJS (BigNumber)
       if (xn.length === 0) {
-        // この時点で計算結果がない場合はローカルで計算する
         const { xn: xn2 } = calcRefOrbit(referencePoint, maxIteration, terminateChecker, workerIdx);
         xn = xn2;
+        if (xn.length > 0) {
+          console.debug(`${jobId}: ref orbit calculated with JS (BigNumber)`);
+        }
       }
 
       if (terminateChecker[workerIdx] !== 0) {

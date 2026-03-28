@@ -87,6 +87,7 @@ export interface RefOrbitWorkerParams {
   jobId: string;
   terminator: SharedArrayBuffer;
   workerIdx: number;
+  useWasm: boolean;
 }
 
 export const mandelbrotWorkerTypes = ["normal", "perturbation"] as const;

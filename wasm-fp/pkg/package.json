@@ -1,0 +1,15 @@
+{
+  "name": "apfp",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "apfp_bg.wasm",
+    "apfp.js",
+    "apfp.d.ts"
+  ],
+  "main": "apfp.js",
+  "types": "apfp.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
