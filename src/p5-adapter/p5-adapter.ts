@@ -264,6 +264,7 @@ export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
 
   draggingMode = state;
   changeCursor(p, state === "move" ? "grabbing" : "zoom-in");
+  cancelInterestingPointsComputation();
   currentInterestingPoints = [];
 
   mouseDragged = true;
