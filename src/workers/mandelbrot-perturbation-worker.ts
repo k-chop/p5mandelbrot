@@ -44,12 +44,10 @@ const calcHandler = (data: IterationWorkerParams) => {
   const iterations = new Uint32Array(pixelNum);
   const totalPixelCount = pixelNum * (isSuperSampling ? 4 : 1); // FIXME: supersamplingの倍率が固定値になっている
 
-  const rF64 = Number(rStr);
   const minDim = Math.min(pixelWidth, pixelHeight);
 
-  // deltaCをdoubleのみで直接計算するための事前計算値
-  // deltaCScale = 2r / min(W, H)
-  const deltaCScale = (2 * rF64) / minDim;
+  // deltaCをdoubleで直接計算するための事前計算値
+  const deltaCScale = (2 * Number(rStr)) / minDim;
 
   // refPixel = W/2 + (refX - cx) / (2r) * min(W, H)
   // pixelToComplexCoordinateComplexArbitrary の逆変換
@@ -74,7 +72,10 @@ const calcHandler = (data: IterationWorkerParams) => {
     let deltaNRe = 0.0;
     let deltaNIm = 0.0;
 
-    // Δ0 = (pixelX - refPixelX, -(pixelY - refPixelY)) * deltaCScale
+    // Δc = current - ref
+    //     = (cx + (pixelX - W/2) * deltaCScale) - (cx + (refPixelX - W/2) * deltaCScale)
+    //     = (pixelX - refPixelX) * deltaCScale
+    // cxとW/2が相殺される。BigNumbercのみなので、Δcはdoubleのみで計算できる。
     const deltaC = {
       re: (pixelX - refPixelX) * deltaCScale,
       im: -(pixelY - refPixelY) * deltaCScale,
