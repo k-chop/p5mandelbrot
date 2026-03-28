@@ -50,8 +50,8 @@ let wasmReady = false;
 function calcRefOrbitWasm(referencePoint: ComplexArbitrary, maxIteration: number): Complex[] {
   const orbit = wasmCalculate({
     type: "reference_orbit",
-    x: referencePoint.re.toString(),
-    y: referencePoint.im.toString(),
+    x: referencePoint.re.toFixed(),
+    y: referencePoint.im.toFixed(),
     max_iter: maxIteration,
   });
 
