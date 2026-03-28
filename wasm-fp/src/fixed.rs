@@ -124,8 +124,69 @@ impl Fixed1024 {
         Self::new(limbs, self.negative != other.negative)
     }
 
+    /// 自乗の専用実装。a[i]*a[j] == a[j]*a[i] の対称性を利用し、
+    /// 対角以外の積を1回だけ計算して2倍することで乗算回数を約47%削減する。
     pub fn square(&self) -> Self {
-        self.mul(self)
+        let mut product = [0u64; 32];
+
+        // Off-diagonal: i < j の組み合わせのみ計算
+        for i in 0..16 {
+            let mut carry = 0u128;
+            for j in (i + 1)..16 {
+                let p = (self.limbs[i] as u128) * (self.limbs[j] as u128)
+                    + product[i + j] as u128
+                    + carry;
+                product[i + j] = p as u64;
+                carry = p >> 64;
+            }
+            // carry を上位に伝播
+            let mut k = i + 16;
+            let mut c = carry as u64;
+            while c > 0 && k < 32 {
+                let (s, overflow) = product[k].overflowing_add(c);
+                product[k] = s;
+                c = overflow as u64;
+                k += 1;
+            }
+        }
+
+        // off-diagonal 部分を2倍（左シフト1）
+        let mut shift_carry = 0u64;
+        for i in 0..32 {
+            let new_carry = product[i] >> 63;
+            product[i] = (product[i] << 1) | shift_carry;
+            shift_carry = new_carry;
+        }
+
+        // Diagonal: a[i]*a[i] を加算
+        for i in 0..16 {
+            let p = (self.limbs[i] as u128) * (self.limbs[i] as u128);
+            let lo = p as u64;
+            let hi = (p >> 64) as u64;
+            let idx = i * 2;
+
+            let (s1, c1) = product[idx].overflowing_add(lo);
+            product[idx] = s1;
+            let (s2, c2) = product[idx + 1].overflowing_add(hi);
+            let (s3, c3) = s2.overflowing_add(c1 as u64);
+            product[idx + 1] = s3;
+
+            let mut c = c2 as u64 + c3 as u64;
+            let mut k = idx + 2;
+            while c > 0 && k < 32 {
+                let (s, overflow) = product[k].overflowing_add(c);
+                product[k] = s;
+                c = overflow as u64;
+                k += 1;
+            }
+        }
+
+        let mut limbs = [0u64; 16];
+        for i in 0..16 {
+            limbs[i] = product[i + 15];
+        }
+        // 自乗は常に非負
+        Self::new(limbs, false)
     }
 
     pub fn double(&self) -> Self {
