@@ -47,12 +47,12 @@ const calcHandler = (data: IterationWorkerParams) => {
   const rF64 = Number(rStr);
   const minDim = Math.min(pixelWidth, pixelHeight);
 
+  // deltaCをdoubleのみで直接計算するための事前計算値
   // deltaCScale = 2r / min(W, H)
   const deltaCScale = (2 * rF64) / minDim;
 
   // refPixel = W/2 + (refX - cx) / (2r) * min(W, H)
   // pixelToComplexCoordinateComplexArbitrary の逆変換
-  // 除算を (refX - cx) / (2r) の順で行い、BigNumberのDECIMAL_PLACES=20で丸められるのを回避
   const r2 = new BigNumber(rStr).times(2);
   const refPixelX =
     Math.floor(pixelWidth / 2) + new BigNumber(refX).minus(cxStr).div(r2).times(minDim).toNumber();
