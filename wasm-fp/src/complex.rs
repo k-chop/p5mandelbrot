@@ -48,6 +48,14 @@ impl ComplexFixed {
         }
     }
 
+    /// 各成分の下位リムをゼロにして精度を制限する。
+    pub fn truncate(&self, keep_limbs: usize) -> Self {
+        Self {
+            re: self.re.truncate(keep_limbs),
+            im: self.im.truncate(keep_limbs),
+        }
+    }
+
     /// |z|² = re² + im²
     pub fn norm_squared(&self) -> Fixed1024 {
         self.re.square().add(&self.im.square())

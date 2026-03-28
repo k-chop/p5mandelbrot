@@ -98,10 +98,17 @@ impl Fixed1024 {
     }
 
     pub fn mul(&self, other: &Self) -> Self {
+        self.mul_with_limbs(other, 16)
+    }
+
+    /// 上位 `active_limbs` 個のリムのみ使って乗算する。
+    /// 下位リムの計算をスキップして高速化する。
+    pub fn mul_with_limbs(&self, other: &Self, active_limbs: usize) -> Self {
+        let start = 16 - active_limbs.min(16);
         let mut product = [0u64; 32];
-        for i in 0..16 {
+        for i in start..16 {
             let mut carry = 0u128;
-            for j in 0..16 {
+            for j in start..16 {
                 let p = (self.limbs[i] as u128) * (other.limbs[j] as u128)
                     + product[i + j] as u128
                     + carry;
@@ -124,13 +131,19 @@ impl Fixed1024 {
         Self::new(limbs, self.negative != other.negative)
     }
 
-    /// 自乗の専用実装。a[i]*a[j] == a[j]*a[i] の対称性を利用し、
-    /// 対角以外の積を1回だけ計算して2倍することで乗算回数を約47%削減する。
     pub fn square(&self) -> Self {
+        self.square_with_limbs(16)
+    }
+
+    /// 上位 `active_limbs` 個のリムのみ使って自乗する。
+    /// a[i]*a[j] == a[j]*a[i] の対称性を利用し、
+    /// 対角以外の積を1回だけ計算して2倍することで乗算回数を約47%削減する。
+    pub fn square_with_limbs(&self, active_limbs: usize) -> Self {
+        let start = 16 - active_limbs.min(16);
         let mut product = [0u64; 32];
 
         // Off-diagonal: i < j の組み合わせのみ計算
-        for i in 0..16 {
+        for i in start..16 {
             let mut carry = 0u128;
             for j in (i + 1)..16 {
                 let p = (self.limbs[i] as u128) * (self.limbs[j] as u128)
@@ -151,15 +164,16 @@ impl Fixed1024 {
         }
 
         // off-diagonal 部分を2倍（左シフト1）
+        let shift_start = start * 2;
         let mut shift_carry = 0u64;
-        for i in 0..32 {
+        for i in shift_start..32 {
             let new_carry = product[i] >> 63;
             product[i] = (product[i] << 1) | shift_carry;
             shift_carry = new_carry;
         }
 
         // Diagonal: a[i]*a[i] を加算
-        for i in 0..16 {
+        for i in start..16 {
             let p = (self.limbs[i] as u128) * (self.limbs[i] as u128);
             let lo = p as u64;
             let hi = (p >> 64) as u64;
@@ -187,6 +201,20 @@ impl Fixed1024 {
         }
         // 自乗は常に非負
         Self::new(limbs, false)
+    }
+
+    /// 下位リムをゼロにして精度を制限する。
+    /// `keep_limbs` 個の上位リム（limbs[16-keep_limbs..16]）のみ残す。
+    pub fn truncate(&self, keep_limbs: usize) -> Self {
+        let mut limbs = [0u64; 16];
+        let start = 16 - keep_limbs.min(16);
+        for i in start..16 {
+            limbs[i] = self.limbs[i];
+        }
+        Self {
+            limbs,
+            negative: self.negative,
+        }
     }
 
     /// 右1bitシフト（2で割る）。符号は保持する。
