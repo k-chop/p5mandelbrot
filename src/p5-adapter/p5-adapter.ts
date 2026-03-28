@@ -580,6 +580,37 @@ export const keyInputHandler = (event: KeyboardEvent) => {
   if (event.key === "ArrowLeft") setManualN(params.N - diff);
 };
 
+/**
+ * 興味深いポイント検出をWorkerで非同期実行する。
+ * 機能が無効またはキャッシュが不十分な場合はポイントをクリアする。
+ */
+const scheduleInterestingPointsDetection = (): void => {
+  if (!getStore("showInterestingPoints") && !getStore("alwaysComputeIPDebugData")) {
+    currentInterestingPoints = [];
+    return;
+  }
+
+  const { width, height } = getCanvasSize();
+  consolidateIterationCache(width, height);
+  const cache = getIterationCache();
+
+  if (cache.length === 0 || cache[0].buffer.length !== width * height) {
+    currentInterestingPoints = [];
+    return;
+  }
+
+  const { N } = getCurrentParams();
+  const debug = getStore("isDebugMode") || getStore("alwaysComputeIPDebugData");
+  const bufferCopy = new Uint32Array(cache[0].buffer);
+
+  void computeInterestingPointsAsync(bufferCopy, width, height, N, { debug }).then((result) => {
+    if (result === null) return;
+
+    currentInterestingPoints = result.points;
+    updateStore("interestingPointsDebugData", debug ? result.debugData : null);
+  });
+};
+
 export const p5Draw = (p: p5) => {
   const time = getStore("animationTime");
   const step = getStore("animationCycleStep");
@@ -695,28 +726,7 @@ export const p5Draw = (p: p5) => {
           // 次回のrendering後にPOIHistoryを更新する
           shouldSavePOIHistoryNextRender = true;
 
-          // 興味深いポイントを非同期で検出する
-          if (getStore("showInterestingPoints") || getStore("alwaysComputeIPDebugData")) {
-            const { width: cw, height: ch } = getCanvasSize();
-            consolidateIterationCache(cw, ch);
-            const cache = getIterationCache();
-            if (cache.length > 0 && cache[0].buffer.length === cw * ch) {
-              const params = getCurrentParams();
-              const debug = getStore("isDebugMode") || getStore("alwaysComputeIPDebugData");
-              const bufferCopy = new Uint32Array(cache[0].buffer);
-              void computeInterestingPointsAsync(bufferCopy, cw, ch, params.N, { debug }).then(
-                (result) => {
-                  if (result === null) return; // キャンセルされた
-                  currentInterestingPoints = result.points;
-                  updateStore("interestingPointsDebugData", debug ? result.debugData : null);
-                },
-              );
-            } else {
-              currentInterestingPoints = [];
-            }
-          } else {
-            currentInterestingPoints = [];
-          }
+          scheduleInterestingPointsDetection();
         }
       },
       // onTranslated - cacheのtranslateとmainBufferへの書き込みが済んでから描画位置を戻す
