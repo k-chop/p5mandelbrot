@@ -141,6 +141,12 @@ impl Fixed1024 {
         }
     }
 
+    /// self >= threshold (非負の整数) を整数部リムのみで判定する。
+    /// norm_squared の bailout チェックなど、to_f64 変換を避けて高速に比較したい場合に使う。
+    pub fn ge_integer(&self, threshold: u64) -> bool {
+        !self.negative && self.limbs[15] >= threshold
+    }
+
     pub fn to_f64(&self) -> f64 {
         let mut top = 15;
         while top > 0 && self.limbs[top] == 0 {

@@ -23,7 +23,7 @@ pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
     let mut result = Vec::with_capacity((req.max_iter as usize + 1) * 2);
 
     for _ in 0..=req.max_iter {
-        if z.norm_squared().to_f64() >= 4.0 {
+        if z.norm_squared().ge_integer(4) {
             break;
         }
 
