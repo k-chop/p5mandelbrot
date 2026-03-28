@@ -52,25 +52,46 @@ pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
     let mut z = ComplexFixed::ZERO;
     let mut result = Vec::with_capacity((req.max_iter as usize + 1) * 2);
 
-    for _ in 0..=req.max_iter {
-        // re², im² を norm_squared チェックと z² + c の両方で使い回す
-        let re2 = z.re.square_with_limbs(limbs);
-        let im2 = z.im.square_with_limbs(limbs);
+    if limbs >= 16 {
+        // フル精度パス: コンパイル時定数ループで最適化される
+        for _ in 0..=req.max_iter {
+            let re2 = z.re.square();
+            let im2 = z.im.square();
 
-        if re2.add(&im2).ge_integer(4) {
-            break;
+            if re2.add(&im2).ge_integer(4) {
+                break;
+            }
+
+            result.push(z.re.to_f64());
+            result.push(z.im.to_f64());
+
+            let sum_sq = z.re.add(&z.im).square();
+            let two_re_im = sum_sq.sub(&re2).sub(&im2);
+            z = ComplexFixed::new(
+                re2.sub(&im2).add(&c.re),
+                two_re_im.add(&c.im),
+            );
         }
+    } else {
+        // 削減精度パス: 座標桁数に応じた動的リム数
+        for _ in 0..=req.max_iter {
+            let re2 = z.re.square_with_limbs(limbs);
+            let im2 = z.im.square_with_limbs(limbs);
 
-        result.push(z.re.to_f64());
-        result.push(z.im.to_f64());
+            if re2.add(&im2).ge_integer(4) {
+                break;
+            }
 
-        // re*im = ((re+im)² - re² - im²) / 2 で mul を square に置き換え
-        let sum_sq = z.re.add(&z.im).square_with_limbs(limbs);
-        let two_re_im = sum_sq.sub(&re2).sub(&im2);
-        z = ComplexFixed::new(
-            re2.sub(&im2).add(&c.re),
-            two_re_im.add(&c.im),
-        );
+            result.push(z.re.to_f64());
+            result.push(z.im.to_f64());
+
+            let sum_sq = z.re.add(&z.im).square_with_limbs(limbs);
+            let two_re_im = sum_sq.sub(&re2).sub(&im2);
+            z = ComplexFixed::new(
+                re2.sub(&im2).add(&c.re),
+                two_re_im.add(&c.im),
+            );
+        }
     }
 
     result
