@@ -95,6 +95,7 @@ export const en = {
   "settings.importFromClipboard": "Import from clipboard",
   "settings.poiImportFailed": "Failed to import POI List from clipboard!",
   "settings.poiImportSuccess": "POI List imported from clipboard!",
+  "settings.useWasm": "Use Wasm for reference orbit",
   // debug mode
   "debug.alwaysComputeDebugData": "Always compute debug data",
   "debug.alwaysComputeTooltip1": "Computes debug data even when this tab is closed.",

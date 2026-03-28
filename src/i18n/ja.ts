@@ -95,6 +95,7 @@ export const ja: Dictionary = {
   "settings.importFromClipboard": "クリップボードからインポート",
   "settings.poiImportFailed": "クリップボードからPOIリストのインポートに失敗しました！",
   "settings.poiImportSuccess": "クリップボードからPOIリストをインポートしました！",
+  "settings.useWasm": "Reference Orbit計算にWasmを使用",
 
   // debug mode
   "debug.alwaysComputeDebugData": "常にデバッグデータを計算",

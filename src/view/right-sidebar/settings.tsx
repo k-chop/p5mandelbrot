@@ -11,12 +11,13 @@ import {
 import { Button } from "@/shadcn/components/ui/button";
 import { Label } from "@/shadcn/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
+import { Switch } from "@/shadcn/components/ui/switch";
 import { useToast } from "@/shadcn/hooks/use-toast";
 import { readPOIListFromClipboard } from "@/store/sync-storage/poi-list";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { IconCircleCheck } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { getStore, updateStore, useStoreValue } from "../../store/store";
+import { getStore, updateStore, updateStoreWith, useStoreValue } from "../../store/store";
 import { DEFAULT_WORKER_COUNT } from "../../store/sync-storage/settings";
 
 const createWorkerCountValues = () => {
@@ -37,6 +38,7 @@ export const Settings = () => {
   const maxCanvasSize = useStoreValue("maxCanvasSize");
   const supersamplingWidth = useStoreValue("supersamplingWidth");
   const supersamplingHeight = useStoreValue("supersamplingHeight");
+  const useWasm = useStoreValue("useWasm");
 
   // WebGPUサポート状態の確認
   const [webGPUSupported, setWebGPUSupported] = useState(false);
@@ -124,6 +126,17 @@ export const Settings = () => {
           </RadioGroup>
         </div>
       )}
+
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="use-wasm"
+          checked={useWasm}
+          onCheckedChange={() => updateStoreWith("useWasm", (v) => !v)}
+        />
+        <Label htmlFor="use-wasm" className="cursor-pointer">
+          {t("Use Wasm for reference orbit")}
+        </Label>
+      </div>
 
       <div>
         <div className="mb-1 ml-2">
