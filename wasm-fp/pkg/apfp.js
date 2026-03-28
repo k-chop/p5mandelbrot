@@ -2,7 +2,7 @@
 
 /**
  * JS から呼ぶエントリポイント。
- * 入力: `{ type, x, y, max_iter }` オブジェクト
+ * 入力: `{ type, x, y, max_iter, active_limbs? }` オブジェクト
  * 出力: `Float64Array` — `[re0, im0, re1, im1, ...]`
  * @param {any} req
  * @returns {Float64Array}
