@@ -189,6 +189,21 @@ impl Fixed1024 {
         Self::new(limbs, false)
     }
 
+    /// 右1bitシフト（2で割る）。符号は保持する。
+    pub fn half(&self) -> Self {
+        let mut limbs = [0u64; 16];
+        for i in 0..16 {
+            limbs[i] = self.limbs[i] >> 1;
+            if i + 1 < 16 {
+                limbs[i] |= self.limbs[i + 1] << 63;
+            }
+        }
+        Self {
+            limbs,
+            negative: self.negative,
+        }
+    }
+
     pub fn double(&self) -> Self {
         let mut limbs = [0u64; 16];
         let mut carry = 0u64;

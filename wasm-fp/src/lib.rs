@@ -34,10 +34,12 @@ pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
         result.push(z.re.to_f64());
         result.push(z.im.to_f64());
 
-        let re_im = z.re.mul(&z.im);
+        // re*im = ((re+im)² - re² - im²) / 2 で mul を square に置き換え
+        let sum_sq = z.re.add(&z.im).square();
+        let two_re_im = sum_sq.sub(&re2).sub(&im2);
         z = ComplexFixed::new(
             re2.sub(&im2).add(&c.re),
-            re_im.double().add(&c.im),
+            two_re_im.add(&c.im),
         );
     }
 
