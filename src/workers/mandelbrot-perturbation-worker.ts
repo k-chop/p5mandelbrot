@@ -47,12 +47,12 @@ const calcHandler = (data: IterationWorkerParams) => {
   const rF64 = Number(rStr);
   const minDim = Math.min(pixelWidth, pixelHeight);
 
-  // deltaC を f64 で直接計算するための事前計算値
+  // deltaCScale = 2r / min(W, H)
   const deltaCScale = (2 * rF64) / minDim;
 
-  // 参照点のピクセル座標を算出
-  // ref orbit cacheが使われている場合、refX/refYとcx/cyが異なるためピクセル中央からずれる
-  // (refX - cx) / (2*r) で正規化してから minDim を掛ける（BigNumberのDECIMAL_PLACES=20制約を回避）
+  // refPixel = W/2 + (refX - cx) / (2r) * min(W, H)
+  // pixelToComplexCoordinateComplexArbitrary の逆変換
+  // 除算を (refX - cx) / (2r) の順で行い、BigNumberのDECIMAL_PLACES=20で丸められるのを回避
   const r2 = new BigNumber(rStr).times(2);
   const refPixelX =
     Math.floor(pixelWidth / 2) + new BigNumber(refX).minus(cxStr).div(r2).times(minDim).toNumber();
@@ -74,8 +74,7 @@ const calcHandler = (data: IterationWorkerParams) => {
     let deltaNRe = 0.0;
     let deltaNIm = 0.0;
 
-    // Δ0: BigNumber演算なしでf64で直接計算
-    // c が相殺されるので (pixelOffset - refPixelOffset) * scale * r のみ
+    // Δ0 = (pixelX - refPixelX, -(pixelY - refPixelY)) * deltaCScale
     const deltaC = {
       re: (pixelX - refPixelX) * deltaCScale,
       im: -(pixelY - refPixelY) * deltaCScale,
