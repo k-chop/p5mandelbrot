@@ -35,7 +35,7 @@ const defaultSettings = {
   workerCount: DEFAULT_WORKER_COUNT,
   animationTime: 0,
   animationCycleStep: 1,
-  maxCanvasSize: -1,
+  maxCanvasSize: 800,
   rendererType: "p5js" as RendererType,
   supersamplingWidth: 1920,
   supersamplingHeight: 1080,

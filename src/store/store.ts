@@ -86,7 +86,7 @@ const store: Store = {
   workerCount: 2,
   animationTime: 0,
   refOrbitWorkerCount: 1, // 仮
-  maxCanvasSize: -1,
+  maxCanvasSize: 800,
   // UI state
   canvasLocked: false,
   // mandelbrot state
