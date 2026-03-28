@@ -51,11 +51,6 @@ export const en = {
   "poi.apply": "Apply",
   "poi.delete": "Delete",
 
-  // informations
-  "info.refOrbitPinned": "Reference Orbit Pinned",
-  "info.pressToUnpin": "Press",
-  "info.pressToUnpinSuffix": "to unpin",
-
   // footer
   "footer.invalidResult": "Invalid Result",
   "footer.calcRefOrbit": "Calculate Reference Orbit",

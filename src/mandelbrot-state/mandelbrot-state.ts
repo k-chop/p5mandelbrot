@@ -1,5 +1,5 @@
 import { getCanvasSize } from "@/rendering/renderer";
-import { getStore, updateStore, updateStoreWith } from "@/store/store";
+import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams, OffsetParams } from "@/types";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { cycleWorkerType } from "@/worker-pool/worker-pool";
@@ -144,14 +144,6 @@ export const radiusTimesTo = (times: number) => {
 
   setCurrentParams({ r: currentParams.r.times(times) });
   setOffsetParams({ x: 0, y: 0 });
-};
-
-export const togglePinReference = () => {
-  if (getCurrentParams().mode !== "perturbation") return;
-
-  const newValue = updateStoreWith("shouldReuseRefOrbit", (t) => !t);
-
-  console.debug(`Reference orbit has pinned: ${newValue}`);
 };
 
 export const cloneCurrentParams = () => cloneParams(currentParams);
