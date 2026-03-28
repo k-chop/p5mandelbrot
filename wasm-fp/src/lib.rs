@@ -23,14 +23,22 @@ pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
     let mut result = Vec::with_capacity((req.max_iter as usize + 1) * 2);
 
     for _ in 0..=req.max_iter {
-        if z.norm_squared().ge_integer(4) {
+        // re², im² を norm_squared チェックと z² + c の両方で使い回す
+        let re2 = z.re.square();
+        let im2 = z.im.square();
+
+        if re2.add(&im2).ge_integer(4) {
             break;
         }
 
         result.push(z.re.to_f64());
         result.push(z.im.to_f64());
 
-        z = z.square().add(&c);
+        let re_im = z.re.mul(&z.im);
+        z = ComplexFixed::new(
+            re2.sub(&im2).add(&c.re),
+            re_im.double().add(&c.im),
+        );
     }
 
     result
