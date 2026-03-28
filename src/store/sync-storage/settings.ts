@@ -18,6 +18,8 @@ export type Settings = {
   alwaysComputeIPDebugData: boolean;
   /** Debug Modeで選択中のタブ */
   debugModeTab: string;
+  /** reference orbit計算にwasmを使うかどうか */
+  useWasm: boolean;
 };
 
 export const DEFAULT_WORKER_COUNT =
@@ -40,6 +42,7 @@ const defaultSettings = {
   showInterestingPoints: false,
   alwaysComputeIPDebugData: false,
   debugModeTab: "batch-render",
+  useWasm: true,
 } satisfies Settings;
 
 export const isSettingField = (key: string): key is keyof Settings => key in defaultSettings;
@@ -58,6 +61,7 @@ export const writeSettingsToStorage = () => {
     showInterestingPoints: getStore("showInterestingPoints"),
     alwaysComputeIPDebugData: getStore("alwaysComputeIPDebugData"),
     debugModeTab: getStore("debugModeTab"),
+    useWasm: getStore("useWasm"),
   } satisfies Settings;
 
   const serialized = JSON.stringify(settings);

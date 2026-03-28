@@ -13,6 +13,7 @@
     "format:check": "oxfmt --check",
     "typecheck": "tsc --noEmit 2>&1",
     "server": "tsx src/server/index.ts",
+    "wasm:build": "cd wasm-fp && wasm-pack build --target web && mv pkg/apfp_bg.wasm ../public/wasm/ && echo '*.wasm' > pkg/.gitignore",
     "rust-client": "cd rust_client && cargo run && cd ../",
     "dev-all": "run-p dev server rust-client"
   },

@@ -1,3 +1,4 @@
+import { getStore } from "@/store/store";
 import type {
   BatchContext,
   CalcIterationJob,
@@ -273,6 +274,7 @@ export class RefOrbitWorker implements MandelbrotFacadeLike {
       jobId,
       terminator,
       workerIdx,
+      useWasm: getStore("useWasm"),
     });
   };
 
