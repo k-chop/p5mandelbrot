@@ -264,8 +264,6 @@ export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
 
   draggingMode = state;
   changeCursor(p, state === "move" ? "grabbing" : "zoom-in");
-  cancelInterestingPointsComputation();
-  currentInterestingPoints = [];
 
   mouseDragged = true;
   isTranslatingMainBuffer = true;
@@ -517,8 +515,6 @@ export const p5MouseReleased = (p: p5, ev: MouseEvent) => {
   } else {
     // クリック時 — マーカー範囲内ならそのポイントを中心にズーム
     const hitPoint = findHitInterestingPoint(p.mouseX, p.mouseY, currentInterestingPoints);
-    cancelInterestingPointsComputation();
-    currentInterestingPoints = [];
     if (hitPoint) {
       scaleTo(getStore("zoomRate"), { x: hitPoint.x, y: hitPoint.y });
     } else {
@@ -719,6 +715,10 @@ export const p5Draw = (p: p5) => {
   }
 
   if (needsRenderForCurrentParams()) {
+    // 新しい計算が始まるので前回のinteresting points検出をキャンセルしてクリアする
+    cancelInterestingPointsComputation();
+    currentInterestingPoints = [];
+
     void startCalculation(
       (elapsed: number) => {
         // elapsed=0は中断時なのでなにもしない
