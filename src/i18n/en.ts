@@ -21,6 +21,8 @@ export const en = {
   "header.showPointMarker": "Show point marker",
   "header.interestingPointsTooltip1": "Marks interesting points on the fractal.",
   "header.interestingPointsTooltip2": "Click a marker to zoom into its center.",
+  "header.randomJump": "Random Jump",
+  "header.randomJumpTooltip": "Jump to a random preset point of interest.",
 
   // share dialog
   "share.noPreview": "No preview",

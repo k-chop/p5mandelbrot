@@ -1,8 +1,14 @@
-import { getCurrentPalette } from "@/camera/palette";
+import { getCurrentPalette, setSerializedPalette } from "@/camera/palette";
 import { SimpleTooltip } from "@/components/simple-tooltip";
 import { useT } from "@/i18n/context";
-import { getCurrentParams, setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
+import {
+  getCurrentParams,
+  setCurrentParams,
+  setManualN,
+} from "@/mandelbrot-state/mandelbrot-state";
 import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
+import { getRandomPresetPOI } from "@/preset-poi/preset-poi";
 import { getCanvasSize } from "@/rendering/renderer";
 import { Button } from "@/shadcn/components/ui/button";
 import { Label } from "@/shadcn/components/ui/label";
@@ -11,7 +17,8 @@ import { toast } from "@/shadcn/hooks/use-toast";
 import { updateStoreWith, useStoreValue } from "@/store/store";
 import { buildShareData } from "@/utils/mandelbrot-url-params";
 import { useModalState } from "@/view/modal/use-modal-state";
-import { IconCircleCheck, IconDownload, IconShare } from "@tabler/icons-react";
+import { IconCircleCheck, IconDice, IconDownload, IconShare } from "@tabler/icons-react";
+import BigNumber from "bignumber.js";
 import { Expand } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ShareDialog } from "./share-dialog";
@@ -19,6 +26,7 @@ import { ShareDialog } from "./share-dialog";
 export const Actions = () => {
   return (
     <div className="flex items-center gap-x-2">
+      <RandomJumpButton />
       <ShareButton />
       <SaveImageButton />
       <SupersamplingButton />
@@ -121,6 +129,34 @@ const SaveImageButton = () => {
       >
         <IconDownload className="mr-1 size-6" />
         {t("Save Image")}
+      </Button>
+    </SimpleTooltip>
+  );
+};
+
+/** プリセットPOIからランダムに1件選んでジャンプするボタン */
+const RandomJumpButton = () => {
+  const t = useT();
+
+  const handleClick = () => {
+    const raw = getRandomPresetPOI();
+    setManualN(raw.N);
+    setCurrentParams({
+      x: new BigNumber(raw.x),
+      y: new BigNumber(raw.y),
+      r: new BigNumber(raw.r),
+      N: raw.N,
+      mode: raw.mode,
+    });
+    clearIterationCache();
+    setSerializedPalette(raw.palette);
+  };
+
+  return (
+    <SimpleTooltip content={t("Jump to a random preset point of interest.")}>
+      <Button variant="default" size="sm" onClick={handleClick}>
+        <IconDice className="mr-1 size-6" />
+        {t("Random Jump")}
       </Button>
     </SimpleTooltip>
   );
