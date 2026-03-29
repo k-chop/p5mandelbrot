@@ -603,9 +603,27 @@ const presetPOIList: PresetPOIRaw[] = [
 ];
 
 /**
- * プリセットPOIリストからランダムに1件取得する
+ * Fisher-Yatesシャッフルで配列をin-placeにシャッフルする
+ */
+const shuffle = <T>(array: T[]): T[] => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
+/** シャッフル済みのインデックス配列。ファイル読み込み時に初期化 */
+const shuffledIndices = shuffle([...Array(presetPOIList.length).keys()]);
+let cursor = 0;
+
+/**
+ * プリセットPOIリストからシャッフル順に1件取得する
+ *
+ * 全件を一巡するまで同じPOIは返さない。一巡したら先頭に戻る。
  */
 export const getRandomPresetPOI = (): PresetPOIRaw => {
-  const index = Math.floor(Math.random() * presetPOIList.length);
+  const index = shuffledIndices[cursor];
+  cursor = (cursor + 1) % shuffledIndices.length;
   return presetPOIList[index];
 };
