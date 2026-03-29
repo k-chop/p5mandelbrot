@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit 2>&1",
     "server": "tsx src/server/index.ts",
     "wasm:build": "cd wasm-fp && wasm-pack build --target web && mv pkg/apfp_bg.wasm ../public/wasm/ && echo '*.wasm' > pkg/.gitignore",
-    "dev-all": "run-p dev server"
+    "dev-all": "run-p dev server",
+    "poi:convert": "tsx scripts/convert-poi-list.ts"
   },
   "dependencies": {
     "@hono/node-server": "1.19.11",

@@ -32,6 +32,10 @@ yarn.lock
 rust_client/target/*
 wasm-fp/target/*
 
+# POI data files
+point-list.txt
+point-list.json
+
 # Claude agent files
 CLAUDE.md
 tmp
