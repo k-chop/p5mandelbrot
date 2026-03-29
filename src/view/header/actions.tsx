@@ -152,10 +152,10 @@ const RandomJumpButton = () => {
   };
 
   return (
-    <SimpleTooltip content={t("Jump to a random preset point of interest.")}>
+    <SimpleTooltip content={t("Dive into a hidden gem of the Mandelbrot set.")}>
       <Button variant="default" size="sm" onClick={handleClick}>
         <IconDice className="mr-1 size-6" />
-        {t("Random Jump")}
+        {t("I'm Feeling Lucky")}
       </Button>
     </SimpleTooltip>
   );
