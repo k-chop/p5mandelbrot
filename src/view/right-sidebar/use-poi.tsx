@@ -87,17 +87,11 @@ export const usePOI = () => {
     setSerializedPalette(poi.serializedPalette);
   }, []);
 
-  const copyPOIListToClipboard = useCallback(() => {
-    const poiListString = JSON.stringify(poiList);
-    void navigator.clipboard.writeText(poiListString);
-  }, [poiList]);
-
   return {
     poiList,
     addPOI,
     deletePOIAt,
     applyPOI,
-    copyPOIListToClipboard,
     regenerateThumbnailPOI,
   };
 };

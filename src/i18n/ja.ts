@@ -35,9 +35,6 @@ export const ja: Dictionary = {
   "operations.outdatedApp": "このアプリは古いバージョンです。",
   "operations.visitNewAppBefore": "新しいアプリは ",
   "operations.visitNewAppAfter": " をご利用ください。",
-  "operations.exportImportHint": "POIリストのエクスポート/インポートはこのボタンを使ってください。",
-  "operations.poiListCopied": "POIリストのJSONをクリップボードにコピーしました！",
-  "operations.copyPoiList": "POIリストをクリップボードにコピー",
 
   // palette editor
   "palette.palette": "パレット",
@@ -50,6 +47,17 @@ export const ja: Dictionary = {
   "poi.regenerateThumbnail": "サムネイルを再生成",
   "poi.apply": "適用",
   "poi.delete": "削除",
+  "poi.export": "エクスポート",
+  "poi.import": "インポート",
+  "poi.exportTitle": "POIエクスポート",
+  "poi.importTitle": "POIインポート",
+  "poi.exportCount": "{count}件のPOI",
+  "poi.copyToClipboard": "クリップボードにコピー",
+  "poi.pasteHere": "エクスポートしたPOIテキストを貼り付け...",
+  "poi.importParsed": "{count}件パース済み",
+  "poi.importNew": "{count}件が新規",
+  "poi.importDuplicates": "{count}件は重複のため無視",
+  "poi.importButton": "{count}件のPOIをインポート",
 
   // footer
   "footer.invalidResult": "無効な結果",
@@ -86,10 +94,6 @@ export const ja: Dictionary = {
   "settings.maxCanvasSize": "最大キャンバスサイズ",
   "settings.supersamplingWidth": "スーパーサンプリング出力幅",
   "settings.supersamplingHeight": "スーパーサンプリング出力高さ",
-  "settings.importPOIList": "POIリストのインポート",
-  "settings.importFromClipboard": "クリップボードからインポート",
-  "settings.poiImportFailed": "クリップボードからPOIリストのインポートに失敗しました！",
-  "settings.poiImportSuccess": "クリップボードからPOIリストをインポートしました！",
   "settings.useWasm": "Reference Orbit計算にWasmを使用",
   "settings.useWasmTooltip": "10倍ほど高速になるのでON推奨",
 
