@@ -8,7 +8,6 @@ import {
 } from "@/mandelbrot-state/mandelbrot-state";
 import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
 import { getMatchingHistoryThumbnail } from "@/poi-history/poi-history";
-import { getCanvasSize } from "@/rendering/renderer";
 import { deletePreview, savePreview } from "@/store/preview-store";
 import { calcCoordPrecision } from "@/utils/mandelbrot-url-params";
 import BigNumber from "bignumber.js";
@@ -44,7 +43,7 @@ export const usePOI = () => {
 
   const addPOI = useCallback(
     (newParams: MandelbrotParams) => {
-      const precision = calcCoordPrecision(newParams.r, getCanvasSize().width);
+      const precision = calcCoordPrecision(newParams.r);
       const trimmedParams = {
         ...newParams,
         x: new BigNumber(newParams.x.toPrecision(precision)),

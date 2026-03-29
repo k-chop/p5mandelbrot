@@ -228,7 +228,7 @@ export class RefOrbitWorker implements MandelbrotFacadeLike {
   startCalculate = (job: CalcRefOrbitJob, batchContext: BatchContext, workerIdx: number) => {
     this.running = true;
 
-    const precision = calcCoordPrecision(batchContext.mandelbrotParams.r, batchContext.pixelWidth);
+    const precision = calcCoordPrecision(batchContext.mandelbrotParams.r);
     const complexCenterX = batchContext.mandelbrotParams.x.toPrecision(precision);
     const complexCenterY = batchContext.mandelbrotParams.y.toPrecision(precision);
     const complexRadius = batchContext.mandelbrotParams.r.toString();

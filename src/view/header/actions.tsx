@@ -78,7 +78,6 @@ const ShareButton = () => {
     ? buildShareData({
         ...getCurrentParams(),
         palette: getCurrentPalette(),
-        canvasWidth: getCanvasSize().width,
       })
     : { url: "", x: "", y: "", r: "", N: 0 };
 
