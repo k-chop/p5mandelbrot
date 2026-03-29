@@ -37,24 +37,28 @@ export const POI = () => {
   return (
     <>
       <div className="flex-none">
-        <div className="mb-2 flex gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            className="grow"
-            onClick={() => addPOI(cloneCurrentParams())}
-          >
-            <IconCirclePlus className="mr-1 size-5" />
-            {t("Save POI")}
-          </Button>
-          <Button variant="outline" size="sm" onClick={openExport}>
-            <IconUpload className="mr-1 size-4" />
-            {t("Export", "poi.export")}
-          </Button>
-          <Button variant="outline" size="sm" onClick={openImport}>
-            <IconDownload className="mr-1 size-4" />
-            {t("Import", "poi.import")}
-          </Button>
+        <div className="mb-2 flex gap-2 justify-between">
+          <div className="flex w-64">
+            <Button
+              variant="default"
+              size="sm"
+              className="grow"
+              onClick={() => addPOI(cloneCurrentParams())}
+            >
+              <IconCirclePlus className="mr-1 size-5" />
+              {t("Save POI")}
+            </Button>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={openExport}>
+              <IconUpload className="mr-1 size-4" />
+              {t("Export", "poi.export")}
+            </Button>
+            <Button variant="outline" size="sm" onClick={openImport}>
+              <IconDownload className="mr-1 size-4" />
+              {t("Import", "poi.import")}
+            </Button>
+          </div>
         </div>
       </div>
 
