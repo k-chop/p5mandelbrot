@@ -1,9 +1,6 @@
 import type { Palette } from "@/color";
 import BigNumber from "bignumber.js";
-import type { Result } from "neverthrow";
-import { err, ok } from "neverthrow";
 import type { MandelbrotParams, POIData } from "../../types";
-import { updateStore } from "../store";
 
 export const createNewPOIData = (params: MandelbrotParams, palette: Palette): POIData => ({
   id: crypto.randomUUID(),
@@ -51,51 +48,104 @@ export const deserializeMandelbrotParams = (params: any): POIData => {
   };
 };
 
-const mergePOIList = (
-  baseList: POIData[],
-  importedList: POIData[],
-): { result: POIData[]; imported: number; conflicted: number } => {
-  const result = [...baseList];
-  let conflicted = 0;
-  let imported = 0;
-  const baseIds = new Set(baseList.map((poi) => poi.id));
+const SEPARATOR = "----";
 
-  for (const poi of importedList) {
-    if (!baseIds.has(poi.id)) {
-      result.push(poi);
-      imported++;
-    } else {
-      conflicted++;
-    }
+/**
+ * POIデータ1件をplain textにシリアライズする
+ */
+const serializePOIToText = (poi: POIData): string => {
+  const lines = [
+    `x: ${poi.x.toString()}`,
+    `y: ${poi.y.toString()}`,
+    `r: ${poi.r.toString()}`,
+    `N: ${poi.N}`,
+    `mode: ${poi.mode}`,
+  ];
+  if (poi.serializedPalette) {
+    lines.push(`palette: ${poi.serializedPalette}`);
   }
-
-  return { result, imported, conflicted };
+  return lines.join("\n");
 };
 
-export const readPOIListFromClipboard = async (): Promise<Result<string, string>> => {
-  try {
-    const serialized = await navigator.clipboard.readText();
-    if (!serialized) return err("Clipboard is empty");
+/**
+ * POIリスト全体をplain textにシリアライズする
+ */
+export const serializePOIListToText = (poiList: POIData[]): string => {
+  return poiList.map(serializePOIToText).join(`\n${SEPARATOR}\n`);
+};
 
-    const rawList = JSON.parse(serialized);
-
-    const importedPOIList = rawList.map(deserializeMandelbrotParams);
-
-    const existsPOIList = readPOIListFromStorage();
-    const { result, imported, conflicted } = mergePOIList(existsPOIList, importedPOIList);
-
-    console.info(`Imported: ${imported}, Conflicted: ${conflicted}`);
-
-    writePOIListToStorage(result);
-    updateStore("poi", result);
-
-    return ok(`Imported: ${imported}, Conflicted: ${conflicted}`);
-  } catch (e) {
-    console.error(e);
-
-    if (e instanceof Error) {
-      return err(e.message);
+/**
+ * plain textから1件のPOIデータをパースする。不正なデータの場合はnullを返す
+ */
+const parsePOIFromText = (text: string): POIData | null => {
+  const fields: Record<string, string> = {};
+  for (const line of text.split("\n")) {
+    const idx = line.indexOf(":");
+    if (idx === -1) continue;
+    const key = line.slice(0, idx).trim();
+    const value = line.slice(idx + 1).trim();
+    if (key && value) {
+      fields[key] = value;
     }
-    return err("Unknown error");
   }
+
+  if (!fields.x || !fields.y || !fields.r || !fields.N || !fields.mode) {
+    return null;
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    x: new BigNumber(fields.x),
+    y: new BigNumber(fields.y),
+    r: new BigNumber(fields.r),
+    N: parseInt(fields.N, 10),
+    mode: fields.mode as POIData["mode"],
+    serializedPalette: fields.palette,
+  };
+};
+
+/**
+ * plain textからPOIリストをデシリアライズする
+ */
+export const deserializePOIListFromText = (text: string): POIData[] => {
+  const blocks = text
+    .split(SEPARATOR)
+    .map((b) => b.trim())
+    .filter(Boolean);
+  const results: POIData[] = [];
+  for (const block of blocks) {
+    const poi = parsePOIFromText(block);
+    if (poi) results.push(poi);
+  }
+  return results;
+};
+
+/**
+ * 2つのPOIが同一の座標・パラメータを持つかを判定する
+ */
+const isSamePOI = (a: POIData, b: POIData): boolean =>
+  a.x.eq(b.x) && a.y.eq(b.y) && a.r.eq(b.r) && a.N === b.N && a.mode === b.mode;
+
+/**
+ * 既存リストにインポート対象をマージし、重複を除外した結果を返す
+ */
+export const mergePOIList = (
+  baseList: POIData[],
+  importedList: POIData[],
+): { result: POIData[]; newCount: number; duplicateCount: number } => {
+  const result = [...baseList];
+  let duplicateCount = 0;
+  let newCount = 0;
+
+  for (const poi of importedList) {
+    const isDuplicate = baseList.some((base) => isSamePOI(base, poi));
+    if (isDuplicate) {
+      duplicateCount++;
+    } else {
+      result.push(poi);
+      newCount++;
+    }
+  }
+
+  return { result, newCount, duplicateCount };
 };

@@ -35,9 +35,6 @@ export const en = {
   "operations.outdatedApp": "This is outdated app.",
   "operations.visitNewAppBefore": "Please visit ",
   "operations.visitNewAppAfter": " to use new app.",
-  "operations.exportImportHint": "If you wish to export/import the POI list, use this button.",
-  "operations.poiListCopied": "POI List JSON copied to clipboard!",
-  "operations.copyPoiList": "Copy POI List to clipboard",
 
   // palette editor
   "palette.palette": "Palette",
@@ -50,6 +47,17 @@ export const en = {
   "poi.regenerateThumbnail": "Regenerate thumbnail",
   "poi.apply": "Apply",
   "poi.delete": "Delete",
+  "poi.export": "Export",
+  "poi.import": "Import",
+  "poi.exportTitle": "Export POI",
+  "poi.importTitle": "Import POI",
+  "poi.exportCount": "{count} POIs",
+  "poi.copyToClipboard": "Copy to clipboard",
+  "poi.pasteHere": "Paste exported POI text here...",
+  "poi.importParsed": "{count} POIs parsed",
+  "poi.importNew": "{count} new",
+  "poi.importDuplicates": "{count} duplicates ignored",
+  "poi.importButton": "Import {count} POIs",
 
   // footer
   "footer.invalidResult": "Invalid Result",
@@ -86,10 +94,6 @@ export const en = {
   "settings.maxCanvasSize": "Max Canvas Size",
   "settings.supersamplingWidth": "Supersampling Output Width",
   "settings.supersamplingHeight": "Supersampling Output Height",
-  "settings.importPOIList": "Import POI List",
-  "settings.importFromClipboard": "Import from clipboard",
-  "settings.poiImportFailed": "Failed to import POI List from clipboard!",
-  "settings.poiImportSuccess": "POI List imported from clipboard!",
   "settings.useWasm": "Use Wasm for reference orbit",
   "settings.useWasmTooltip": "Approximately 10x faster. Recommended to keep ON.",
   // debug mode

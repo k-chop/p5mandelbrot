@@ -1,13 +1,9 @@
 import { useT } from "@/i18n/context";
-import { Button } from "@/shadcn/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shadcn/components/ui/tabs";
-import { useToast } from "@/shadcn/hooks/use-toast";
 import { isGithubPages } from "@/utils/location";
-import { IconCircleCheck, IconCopy } from "@tabler/icons-react";
 import { PaletteEditor } from "./palette-editor";
 import { POI } from "./poi";
 import { Settings } from "./settings";
-import { usePOI } from "./use-poi";
 
 const tabsContentClass = "flex h-full grow flex-col data-[state=inactive]:hidden";
 
@@ -40,8 +36,6 @@ export const Operations = () => {
 
 const SuggestRedirect = () => {
   const t = useT();
-  const { copyPOIListToClipboard } = usePOI();
-  const { toast } = useToast();
 
   return (
     <div className="px-3">
@@ -52,30 +46,6 @@ const SuggestRedirect = () => {
           https://p5mandelbrot.pages.dev
         </a>
         {t(" to use new app.", "operations.visitNewAppAfter")}
-      </div>
-      <div className="py-2">{t("If you wish to export/import the POI list, use this button.")}</div>
-      <div className="py-2">
-        <Button
-          variant="default"
-          size="sm"
-          onClick={() => {
-            copyPOIListToClipboard();
-
-            toast({
-              description: (
-                <div className="flex items-center justify-center gap-2">
-                  <IconCircleCheck />
-                  {t("POI List JSON copied to clipboard!")}
-                </div>
-              ),
-              variant: "primary",
-              duration: 2000,
-            });
-          }}
-        >
-          <IconCopy className="mr-2" />
-          {t("Copy POI List to clipboard")}
-        </Button>
       </div>
     </div>
   );

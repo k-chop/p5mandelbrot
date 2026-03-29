@@ -9,12 +9,11 @@ import {
   isWebGPUSupported,
   setRenderer,
 } from "@/rendering/common";
-import { Button } from "@/shadcn/components/ui/button";
 import { Label } from "@/shadcn/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
 import { Switch } from "@/shadcn/components/ui/switch";
 import { useToast } from "@/shadcn/hooks/use-toast";
-import { readPOIListFromClipboard } from "@/store/sync-storage/poi-list";
+
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { IconCircleCheck } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
@@ -237,45 +236,6 @@ export const Settings = () => {
           onValueChange={(value) => setSupersamplingHeightPreview(value)}
           onValueCommit={(value) => updateStore("supersamplingHeight", value)}
         />
-      </div>
-      <div>
-        <div className="mb-1 ml-2">{t("Import POI List")}</div>
-        <Button
-          variant="default"
-          onClick={() => {
-            void readPOIListFromClipboard().then((result) => {
-              if (result.isErr()) {
-                toast({
-                  description: (
-                    <div className="flex items-center justify-center gap-2">
-                      <IconCircleCheck />
-                      {t("Failed to import POI List from clipboard!")}
-                      <br />
-                      {result.error}
-                    </div>
-                  ),
-                  variant: "destructive",
-                  duration: 5000,
-                });
-                return;
-              } else {
-                toast({
-                  description: (
-                    <div className="flex items-center justify-center gap-2">
-                      <IconCircleCheck />
-                      {t("POI List imported from clipboard!")} <br />
-                      {result.value}
-                    </div>
-                  ),
-                  variant: "primary",
-                  duration: 5000,
-                });
-              }
-            });
-          }}
-        >
-          {t("Import from clipboard")}
-        </Button>
       </div>
     </div>
   );
