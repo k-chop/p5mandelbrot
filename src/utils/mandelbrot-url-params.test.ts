@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { describe, expect, it } from "vitest";
-import { calcCoordPrecision } from "./mandelbrot-url-params";
+import { calcCoordPrecision } from "@/math/coord-precision";
 
 /**
  * x.toPrecision(n) で丸めたとき、元の x との差が pixelSize 未満かどうかを検証する
@@ -92,51 +92,50 @@ describe("共有URL用の座標精度", () => {
     });
   });
 
-  describe("calcCoordPrecision が正しい桁数を返す", () => {
-    it("r=1, W=1920 → 5-6桁", () => {
-      const p = calcCoordPrecision(new BigNumber(1), 1920);
-      expect(p).toBeGreaterThanOrEqual(4);
-      expect(p).toBeLessThanOrEqual(7);
+  describe("calcCoordPrecision が正しい桁数を返す（内部固定幅 8192）", () => {
+    const W = 8192;
+
+    it("r=1 → 6-8桁", () => {
+      const p = calcCoordPrecision(new BigNumber(1));
+      expect(p).toBeGreaterThanOrEqual(6);
+      expect(p).toBeLessThanOrEqual(8);
     });
 
-    it("r=1e-10, W=1920 → 14-16桁", () => {
-      const p = calcCoordPrecision(new BigNumber("1e-10"), 1920);
-      expect(p).toBeGreaterThanOrEqual(13);
-      expect(p).toBeLessThanOrEqual(16);
+    it("r=1e-10 → 15-17桁", () => {
+      const p = calcCoordPrecision(new BigNumber("1e-10"));
+      expect(p).toBeGreaterThanOrEqual(15);
+      expect(p).toBeLessThanOrEqual(17);
     });
 
-    it("r=1e-141, W=1920 → 145-148桁", () => {
-      const p = calcCoordPrecision(new BigNumber("1.23e-141"), 1920);
-      expect(p).toBeGreaterThanOrEqual(145);
-      expect(p).toBeLessThanOrEqual(148);
+    it("r=1e-141 → 146-149桁", () => {
+      const p = calcCoordPrecision(new BigNumber("1.23e-141"));
+      expect(p).toBeGreaterThanOrEqual(146);
+      expect(p).toBeLessThanOrEqual(149);
     });
 
     it("計算された桁数で実際に1ピクセル以内に収まる", () => {
       const testCases = [
-        { r: new BigNumber(1), W: 1920 },
-        { r: new BigNumber("1e-10"), W: 1920 },
-        { r: new BigNumber("1e-50"), W: 1920 },
-        { r: new BigNumber("1.23e-141"), W: 1920 },
-        { r: new BigNumber("1e-5"), W: 3840 },
+        new BigNumber(1),
+        new BigNumber("1e-10"),
+        new BigNumber("1e-50"),
+        new BigNumber("1.23e-141"),
+        new BigNumber("1e-5"),
       ];
 
-      for (const { r, W } of testCases) {
-        const precision = calcCoordPrecision(r, W);
+      for (const r of testCases) {
+        const precision = calcCoordPrecision(r);
         expect(
           isWithinOnePixel(deepX, precision, r, W),
-          `r=${r.toString()}, W=${W}, precision=${precision}`,
+          `r=${r.toString()}, precision=${precision}`,
         ).toBe(true);
       }
     });
 
     it("安全マージンは過剰ではない（-5桁で不足するケースがある）", () => {
-      const testCases = [
-        { r: new BigNumber("1e-10"), W: 1920 },
-        { r: new BigNumber("1.23e-141"), W: 1920 },
-      ];
+      const testCases = [new BigNumber("1e-10"), new BigNumber("1.23e-141")];
 
-      const hasInsufficientCase = testCases.some(({ r, W }) => {
-        const precision = calcCoordPrecision(r, W);
+      const hasInsufficientCase = testCases.some((r) => {
+        const precision = calcCoordPrecision(r);
         return !isWithinOnePixel(deepX, precision - 5, r, W);
       });
       expect(hasInsufficientCase).toBe(true);

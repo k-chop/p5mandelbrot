@@ -21,6 +21,8 @@ export const en = {
   "header.showPointMarker": "Show point marker",
   "header.interestingPointsTooltip1": "Marks interesting points on the fractal.",
   "header.interestingPointsTooltip2": "Click a marker to zoom into its center.",
+  "header.randomJump": "I'm Feeling Lucky",
+  "header.randomJumpTooltip": "Dive into a hidden gem of the Mandelbrot set.",
 
   // share dialog
   "share.noPreview": "No preview",

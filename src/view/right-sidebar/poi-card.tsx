@@ -2,7 +2,6 @@ import { getCurrentPalette } from "@/camera/palette";
 import { deserializePalette } from "@/color";
 import { SimpleTooltip } from "@/components/simple-tooltip";
 import { useT } from "@/i18n/context";
-import { getCanvasSize } from "@/rendering/renderer";
 import { Button } from "@/shadcn/components/ui/button";
 import { Card } from "@/shadcn/components/ui/card";
 import { loadPreview } from "@/store/preview-store";
@@ -47,7 +46,6 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
         palette: poi.serializedPalette
           ? deserializePalette(poi.serializedPalette)
           : getCurrentPalette(),
-        canvasWidth: getCanvasSize().width,
       })
     : { url: "", x: "", y: "", r: "", N: 0 };
 

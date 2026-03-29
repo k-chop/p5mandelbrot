@@ -21,6 +21,8 @@ export const ja: Dictionary = {
   "header.showPointMarker": "マーカーを表示",
   "header.interestingPointsTooltip1": "拡大すると面白そうなポイントをマークします。",
   "header.interestingPointsTooltip2": "マーカーをクリックするとその中心にズームします。",
+  "header.randomJump": "I'm Feeling Lucky",
+  "header.randomJumpTooltip": "マンデルブロ集合の秘境へ連れて行くぜ。",
 
   // share dialog
   "share.noPreview": "プレビューなし",
