@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { describe, expect, it } from "vitest";
-import { calcCoordPrecision } from "./mandelbrot-url-params";
+import { calcCoordPrecision } from "@/math/coord-precision";
 
 /**
  * x.toPrecision(n) で丸めたとき、元の x との差が pixelSize 未満かどうかを検証する

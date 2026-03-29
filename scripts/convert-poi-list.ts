@@ -11,7 +11,7 @@ import BigNumber from "bignumber.js";
 import { readFileSync, writeFileSync } from "node:fs";
 import type { PresetPOIRaw } from "../src/preset-poi/preset-poi";
 import { deserializePOIListFromText, serializePOIData } from "../src/store/sync-storage/poi-list";
-import { calcCoordPrecision } from "../src/utils/mandelbrot-url-params";
+import { calcCoordPrecision } from "../src/math/coord-precision";
 
 const inputFile = process.argv[2] ?? "point-list.txt";
 const outputFile = "point-list.json";

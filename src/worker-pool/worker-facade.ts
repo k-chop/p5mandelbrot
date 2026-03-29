@@ -1,5 +1,5 @@
 import { getStore } from "@/store/store";
-import { calcCoordPrecision } from "@/utils/mandelbrot-url-params";
+import { calcCoordPrecision } from "@/math/coord-precision";
 import type {
   BatchContext,
   CalcIterationJob,

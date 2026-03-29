@@ -9,7 +9,7 @@ import {
 import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
 import { getMatchingHistoryThumbnail } from "@/poi-history/poi-history";
 import { deletePreview, savePreview } from "@/store/preview-store";
-import { calcCoordPrecision } from "@/utils/mandelbrot-url-params";
+import { calcCoordPrecision } from "@/math/coord-precision";
 import BigNumber from "bignumber.js";
 import { useCallback } from "react";
 import { updateStore, useStoreValue } from "../../store/store";
