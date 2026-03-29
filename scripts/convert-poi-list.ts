@@ -7,10 +7,11 @@
  * input-file を省略すると point-list.txt を読み込む。
  * 出力は常に point-list.json。
  */
+import BigNumber from "bignumber.js";
 import { readFileSync, writeFileSync } from "node:fs";
 import type { PresetPOIRaw } from "../src/preset-poi/preset-poi";
-import { deserializePOIListFromText } from "../src/store/sync-storage/poi-list";
-import { serializePOIData } from "../src/store/sync-storage/poi-list";
+import { deserializePOIListFromText, serializePOIData } from "../src/store/sync-storage/poi-list";
+import { calcCoordPrecision } from "../src/utils/mandelbrot-url-params";
 
 const inputFile = process.argv[2] ?? "point-list.txt";
 const outputFile = "point-list.json";
@@ -19,7 +20,10 @@ const text = readFileSync(inputFile, "utf-8");
 const poiDataList = deserializePOIListFromText(text);
 
 const poiList: PresetPOIRaw[] = poiDataList.map((poi) => {
-  const serialized = serializePOIData(poi);
+  const precision = calcCoordPrecision(poi.r);
+  const trimmedX = new BigNumber(poi.x.toPrecision(precision));
+  const trimmedY = new BigNumber(poi.y.toPrecision(precision));
+  const serialized = serializePOIData({ ...poi, x: trimmedX, y: trimmedY });
   const raw: PresetPOIRaw = {
     x: serialized.x,
     y: serialized.y,
