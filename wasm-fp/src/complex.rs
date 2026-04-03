@@ -1,25 +1,25 @@
-use crate::fixed::Fixed1024;
+use crate::fixed::Fixed2048;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ComplexFixed {
-    pub re: Fixed1024,
-    pub im: Fixed1024,
+    pub re: Fixed2048,
+    pub im: Fixed2048,
 }
 
 impl ComplexFixed {
     pub const ZERO: Self = Self {
-        re: Fixed1024::ZERO,
-        im: Fixed1024::ZERO,
+        re: Fixed2048::ZERO,
+        im: Fixed2048::ZERO,
     };
 
-    pub fn new(re: Fixed1024, im: Fixed1024) -> Self {
+    pub fn new(re: Fixed2048, im: Fixed2048) -> Self {
         Self { re, im }
     }
 
     pub fn parse(re: &str, im: &str) -> Self {
         Self {
-            re: Fixed1024::parse(re),
-            im: Fixed1024::parse(im),
+            re: Fixed2048::parse(re),
+            im: Fixed2048::parse(im),
         }
     }
 
@@ -57,7 +57,7 @@ impl ComplexFixed {
     }
 
     /// |z|² = re² + im²
-    pub fn norm_squared(&self) -> Fixed1024 {
+    pub fn norm_squared(&self) -> Fixed2048 {
         self.re.square().add(&self.im.square())
     }
 }
@@ -204,11 +204,11 @@ mod tests {
         let expected = norm_sq.square();
         assert!(approx_eq(z_sq_norm_sq.to_f64(), expected.to_f64()));
 
-        // リムレベルでも差は最下位2リム以内
-        let diff_count = (0..16)
+        // リムレベルでも差は最下位数リム以内
+        let diff_count = (0..32)
             .filter(|&i| z_sq_norm_sq.limbs[i] != expected.limbs[i])
             .count();
-        assert!(diff_count <= 2, "too many differing limbs: {diff_count}");
+        assert!(diff_count <= 4, "too many differing limbs: {diff_count}");
     }
 
     #[test]

@@ -35,8 +35,8 @@ fn calc_required_limbs(x: &str, y: &str) -> usize {
     // log2(10) ≈ 3.3219
     let frac_bits = (frac_digits as f64 * 3.3219).ceil() as usize + 64;
     let frac_limbs = (frac_bits + 63) / 64;
-    // 整数部1リム + 小数部リム、最大16
-    (1 + frac_limbs).clamp(2, 16)
+    // 整数部1リム + 小数部リム、最大32
+    (1 + frac_limbs).clamp(2, fixed::LIMBS)
 }
 
 /// Reference orbit を計算し、各反復の (re, im) を f64 で返す。
@@ -46,52 +46,29 @@ pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
     let c = ComplexFixed::parse(&req.x, &req.y);
     let limbs = req
         .active_limbs
-        .map(|n| (n as usize).clamp(2, 16))
+        .map(|n| (n as usize).clamp(2, fixed::LIMBS))
         .unwrap_or_else(|| calc_required_limbs(&req.x, &req.y));
 
     let mut z = ComplexFixed::ZERO;
     let mut result = Vec::with_capacity((req.max_iter as usize + 1) * 2);
 
-    if limbs >= 16 {
-        // フル精度パス: コンパイル時定数ループで最適化される
-        for _ in 0..=req.max_iter {
-            let re2 = z.re.square();
-            let im2 = z.im.square();
+    for _ in 0..=req.max_iter {
+        let re2 = z.re.square_with_limbs(limbs);
+        let im2 = z.im.square_with_limbs(limbs);
 
-            if re2.add(&im2).ge_integer(4) {
-                break;
-            }
-
-            result.push(z.re.to_f64());
-            result.push(z.im.to_f64());
-
-            let sum_sq = z.re.add(&z.im).square();
-            let two_re_im = sum_sq.sub(&re2).sub(&im2);
-            z = ComplexFixed::new(
-                re2.sub(&im2).add(&c.re),
-                two_re_im.add(&c.im),
-            );
+        if re2.add(&im2).ge_integer(4) {
+            break;
         }
-    } else {
-        // 削減精度パス: 座標桁数に応じた動的リム数
-        for _ in 0..=req.max_iter {
-            let re2 = z.re.square_with_limbs(limbs);
-            let im2 = z.im.square_with_limbs(limbs);
 
-            if re2.add(&im2).ge_integer(4) {
-                break;
-            }
+        result.push(z.re.to_f64());
+        result.push(z.im.to_f64());
 
-            result.push(z.re.to_f64());
-            result.push(z.im.to_f64());
-
-            let sum_sq = z.re.add(&z.im).square_with_limbs(limbs);
-            let two_re_im = sum_sq.sub(&re2).sub(&im2);
-            z = ComplexFixed::new(
-                re2.sub(&im2).add(&c.re),
-                two_re_im.add(&c.im),
-            );
-        }
+        let sum_sq = z.re.add(&z.im).square_with_limbs(limbs);
+        let two_re_im = sum_sq.sub(&re2).sub(&im2);
+        z = ComplexFixed::new(
+            re2.sub(&im2).add(&c.re),
+            two_re_im.add(&c.im),
+        );
     }
 
     result
@@ -231,7 +208,7 @@ mod tests {
             ),
         ];
 
-        let limb_counts = [16, 14, 12, 10, 8, 6, 4, 3, 2];
+        let limb_counts = [32, 28, 24, 20, 16, 14, 12, 10, 8, 6, 4, 3, 2];
 
         for (label, x, y, max_iter) in &test_cases {
             println!("\n=== {} (max_iter={}) ===", label, max_iter);
