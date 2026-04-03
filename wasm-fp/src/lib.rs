@@ -231,9 +231,9 @@ mod tests {
                 active_limbs: None,
             };
 
-            let full = perform_calculation_with_limbs(&req, 16);
+            let full = perform_calculation_with_limbs(&req, fixed::LIMBS);
             let full_iters = full.len() / 2;
-            println!("Full precision (16 limbs): {} iterations", full_iters);
+            println!("Full precision ({} limbs): {} iterations", fixed::LIMBS, full_iters);
 
             for &limbs in &limb_counts[1..] {
                 let reduced = perform_calculation_with_limbs(&req, limbs);
