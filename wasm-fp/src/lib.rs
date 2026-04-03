@@ -17,9 +17,12 @@ pub struct CalculationRequest {
     pub active_limbs: Option<u32>,
 }
 
-/// 座標文字列の小数部桁数から必要なリム数を計算する。
-/// 必要bit数 = ceil(桁数 × log2(10)) + 余裕 64bit。整数部1リム + 小数部リム数。
-fn calc_required_limbs(x: &str, y: &str) -> usize {
+/// 座標文字列の小数部桁数と反復回数から必要なリム数を計算する。
+///
+/// 必要bit数 = ceil(桁数 × log2(10)) + 反復マージン。
+/// 反復マージン: 64 + 4 × ceil(log2(max_iter))。
+/// 反復中の誤差蓄積に対する余裕を max_iter に応じて動的に確保する。
+fn calc_required_limbs(x: &str, y: &str, max_iter: u32) -> usize {
     let frac_digits = [x, y]
         .iter()
         .map(|s| {
@@ -33,9 +36,16 @@ fn calc_required_limbs(x: &str, y: &str) -> usize {
         .unwrap_or(0);
 
     // log2(10) ≈ 3.3219
-    let frac_bits = (frac_digits as f64 * 3.3219).ceil() as usize + 64;
+    let coord_bits = (frac_digits as f64 * 3.3219).ceil() as usize;
+    // 反復回数に応じた動的マージン
+    let iter_margin = if max_iter > 1 {
+        64 + 4 * (max_iter as f64).log2().ceil() as usize
+    } else {
+        64
+    };
+    let frac_bits = coord_bits + iter_margin;
     let frac_limbs = (frac_bits + 63) / 64;
-    // 整数部1リム + 小数部リム、最大32
+    // 整数部1リム + 小数部リム
     (1 + frac_limbs).clamp(2, fixed::LIMBS)
 }
 
@@ -47,7 +57,7 @@ pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
     let limbs = req
         .active_limbs
         .map(|n| (n as usize).clamp(2, fixed::LIMBS))
-        .unwrap_or_else(|| calc_required_limbs(&req.x, &req.y));
+        .unwrap_or_else(|| calc_required_limbs(&req.x, &req.y, req.max_iter));
 
     let mut z = ComplexFixed::ZERO;
     let mut result = Vec::with_capacity((req.max_iter as usize + 1) * 2);
