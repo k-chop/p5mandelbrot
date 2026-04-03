@@ -66,18 +66,18 @@ pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
         let re2 = z.re.square_with_limbs(limbs);
         let im2 = z.im.square_with_limbs(limbs);
 
-        if re2.add(&im2).ge_integer(4) {
+        if re2.add_with_limbs(&im2, limbs).ge_integer(4) {
             break;
         }
 
         result.push(z.re.to_f64());
         result.push(z.im.to_f64());
 
-        let sum_sq = z.re.add(&z.im).square_with_limbs(limbs);
-        let two_re_im = sum_sq.sub(&re2).sub(&im2);
+        let sum_sq = z.re.add_with_limbs(&z.im, limbs).square_with_limbs(limbs);
+        let two_re_im = sum_sq.sub_with_limbs(&re2, limbs).sub_with_limbs(&im2, limbs);
         z = ComplexFixed::new(
-            re2.sub(&im2).add(&c.re),
-            two_re_im.add(&c.im),
+            re2.sub_with_limbs(&im2, limbs).add_with_limbs(&c.re, limbs),
+            two_re_im.add_with_limbs(&c.im, limbs),
         );
     }
 

@@ -49,8 +49,8 @@ impl Fixed2048 {
         }
     }
 
-    fn cmp_magnitude(&self, other: &Self) -> Ordering {
-        for i in (0..LIMBS).rev() {
+    fn cmp_magnitude_ranged(&self, other: &Self, start: usize) -> Ordering {
+        for i in (start..LIMBS).rev() {
             match self.limbs[i].cmp(&other.limbs[i]) {
                 Ordering::Equal => continue,
                 ord => return ord,
@@ -59,10 +59,10 @@ impl Fixed2048 {
         Ordering::Equal
     }
 
-    fn add_limbs(a: &[u64; LIMBS], b: &[u64; LIMBS]) -> [u64; LIMBS] {
+    fn add_limbs_ranged(a: &[u64; LIMBS], b: &[u64; LIMBS], start: usize) -> [u64; LIMBS] {
         let mut result = [0u64; LIMBS];
         let mut carry = 0u64;
-        for i in 0..LIMBS {
+        for i in start..LIMBS {
             let (s1, c1) = a[i].overflowing_add(b[i]);
             let (s2, c2) = s1.overflowing_add(carry);
             result[i] = s2;
@@ -71,10 +71,10 @@ impl Fixed2048 {
         result
     }
 
-    fn sub_limbs(a: &[u64; LIMBS], b: &[u64; LIMBS]) -> [u64; LIMBS] {
+    fn sub_limbs_ranged(a: &[u64; LIMBS], b: &[u64; LIMBS], start: usize) -> [u64; LIMBS] {
         let mut result = [0u64; LIMBS];
         let mut borrow = 0u64;
-        for i in 0..LIMBS {
+        for i in start..LIMBS {
             let (s1, b1) = a[i].overflowing_sub(b[i]);
             let (s2, b2) = s1.overflowing_sub(borrow);
             result[i] = s2;
@@ -83,18 +83,25 @@ impl Fixed2048 {
         result
     }
 
+    /// フル精度加算。`add_with_limbs(other, LIMBS)` と等価。
     pub fn add(&self, other: &Self) -> Self {
+        self.add_with_limbs(other, LIMBS)
+    }
+
+    /// 上位 `active_limbs` 個のリムのみ使って加算する。
+    pub fn add_with_limbs(&self, other: &Self, active_limbs: usize) -> Self {
+        let start = LIMBS - active_limbs.min(LIMBS);
         if self.negative == other.negative {
-            let limbs = Self::add_limbs(&self.limbs, &other.limbs);
+            let limbs = Self::add_limbs_ranged(&self.limbs, &other.limbs, start);
             Self::new(limbs, self.negative)
         } else {
-            match self.cmp_magnitude(other) {
+            match self.cmp_magnitude_ranged(other, start) {
                 Ordering::Greater => {
-                    let limbs = Self::sub_limbs(&self.limbs, &other.limbs);
+                    let limbs = Self::sub_limbs_ranged(&self.limbs, &other.limbs, start);
                     Self::new(limbs, self.negative)
                 }
                 Ordering::Less => {
-                    let limbs = Self::sub_limbs(&other.limbs, &self.limbs);
+                    let limbs = Self::sub_limbs_ranged(&other.limbs, &self.limbs, start);
                     Self::new(limbs, other.negative)
                 }
                 Ordering::Equal => Self::ZERO,
@@ -102,8 +109,14 @@ impl Fixed2048 {
         }
     }
 
+    /// フル精度減算。`sub_with_limbs(other, LIMBS)` と等価。
     pub fn sub(&self, other: &Self) -> Self {
         self.add(&other.negate())
+    }
+
+    /// 上位 `active_limbs` 個のリムのみ使って減算する。
+    pub fn sub_with_limbs(&self, other: &Self, active_limbs: usize) -> Self {
+        self.add_with_limbs(&other.negate(), active_limbs)
     }
 
     /// フル精度乗算。`mul_with_limbs(other, LIMBS)` と等価。
@@ -230,8 +243,14 @@ impl Fixed2048 {
 
     /// 右1bitシフト（2で割る）。符号は保持する。
     pub fn half(&self) -> Self {
+        self.half_with_limbs(LIMBS)
+    }
+
+    /// 上位 `active_limbs` 個のリムのみ使って右1bitシフトする。
+    pub fn half_with_limbs(&self, active_limbs: usize) -> Self {
+        let start = LIMBS - active_limbs.min(LIMBS);
         let mut limbs = [0u64; LIMBS];
-        for i in 0..LIMBS {
+        for i in start..LIMBS {
             limbs[i] = self.limbs[i] >> 1;
             if i + 1 < LIMBS {
                 limbs[i] |= self.limbs[i + 1] << 63;
@@ -244,9 +263,15 @@ impl Fixed2048 {
     }
 
     pub fn double(&self) -> Self {
+        self.double_with_limbs(LIMBS)
+    }
+
+    /// 上位 `active_limbs` 個のリムのみ使って左1bitシフトする。
+    pub fn double_with_limbs(&self, active_limbs: usize) -> Self {
+        let start = LIMBS - active_limbs.min(LIMBS);
         let mut limbs = [0u64; LIMBS];
         let mut carry = 0u64;
-        for i in 0..LIMBS {
+        for i in start..LIMBS {
             limbs[i] = (self.limbs[i] << 1) | carry;
             carry = self.limbs[i] >> 63;
         }
