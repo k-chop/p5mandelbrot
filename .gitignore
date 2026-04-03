@@ -39,3 +39,4 @@ point-list.json
 # Claude agent files
 CLAUDE.md
 tmp
+.dev

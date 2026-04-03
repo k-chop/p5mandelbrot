@@ -17,9 +17,12 @@ pub struct CalculationRequest {
     pub active_limbs: Option<u32>,
 }
 
-/// 座標文字列の小数部桁数から必要なリム数を計算する。
-/// 必要bit数 = ceil(桁数 × log2(10)) + 余裕 64bit。整数部1リム + 小数部リム数。
-fn calc_required_limbs(x: &str, y: &str) -> usize {
+/// 座標文字列の小数部桁数と反復回数から必要なリム数を計算する。
+///
+/// 必要bit数 = ceil(桁数 × log2(10)) + 反復マージン。
+/// 反復マージン: 64 + 4 × ceil(log2(max_iter))。
+/// 反復中の誤差蓄積に対する余裕を max_iter に応じて動的に確保する。
+fn calc_required_limbs(x: &str, y: &str, max_iter: u32) -> usize {
     let frac_digits = [x, y]
         .iter()
         .map(|s| {
@@ -33,10 +36,17 @@ fn calc_required_limbs(x: &str, y: &str) -> usize {
         .unwrap_or(0);
 
     // log2(10) ≈ 3.3219
-    let frac_bits = (frac_digits as f64 * 3.3219).ceil() as usize + 64;
+    let coord_bits = (frac_digits as f64 * 3.3219).ceil() as usize;
+    // 反復回数に応じた動的マージン
+    let iter_margin = if max_iter > 1 {
+        64 + 4 * (max_iter as f64).log2().ceil() as usize
+    } else {
+        64
+    };
+    let frac_bits = coord_bits + iter_margin;
     let frac_limbs = (frac_bits + 63) / 64;
-    // 整数部1リム + 小数部リム、最大16
-    (1 + frac_limbs).clamp(2, 16)
+    // 整数部1リム + 小数部リム
+    (1 + frac_limbs).clamp(2, fixed::LIMBS)
 }
 
 /// Reference orbit を計算し、各反復の (re, im) を f64 で返す。
@@ -46,52 +56,29 @@ pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
     let c = ComplexFixed::parse(&req.x, &req.y);
     let limbs = req
         .active_limbs
-        .map(|n| (n as usize).clamp(2, 16))
-        .unwrap_or_else(|| calc_required_limbs(&req.x, &req.y));
+        .map(|n| (n as usize).clamp(2, fixed::LIMBS))
+        .unwrap_or_else(|| calc_required_limbs(&req.x, &req.y, req.max_iter));
 
     let mut z = ComplexFixed::ZERO;
     let mut result = Vec::with_capacity((req.max_iter as usize + 1) * 2);
 
-    if limbs >= 16 {
-        // フル精度パス: コンパイル時定数ループで最適化される
-        for _ in 0..=req.max_iter {
-            let re2 = z.re.square();
-            let im2 = z.im.square();
+    for _ in 0..=req.max_iter {
+        let re2 = z.re.square_with_limbs(limbs);
+        let im2 = z.im.square_with_limbs(limbs);
 
-            if re2.add(&im2).ge_integer(4) {
-                break;
-            }
-
-            result.push(z.re.to_f64());
-            result.push(z.im.to_f64());
-
-            let sum_sq = z.re.add(&z.im).square();
-            let two_re_im = sum_sq.sub(&re2).sub(&im2);
-            z = ComplexFixed::new(
-                re2.sub(&im2).add(&c.re),
-                two_re_im.add(&c.im),
-            );
+        if re2.add_with_limbs(&im2, limbs).ge_integer(4) {
+            break;
         }
-    } else {
-        // 削減精度パス: 座標桁数に応じた動的リム数
-        for _ in 0..=req.max_iter {
-            let re2 = z.re.square_with_limbs(limbs);
-            let im2 = z.im.square_with_limbs(limbs);
 
-            if re2.add(&im2).ge_integer(4) {
-                break;
-            }
+        result.push(z.re.to_f64());
+        result.push(z.im.to_f64());
 
-            result.push(z.re.to_f64());
-            result.push(z.im.to_f64());
-
-            let sum_sq = z.re.add(&z.im).square_with_limbs(limbs);
-            let two_re_im = sum_sq.sub(&re2).sub(&im2);
-            z = ComplexFixed::new(
-                re2.sub(&im2).add(&c.re),
-                two_re_im.add(&c.im),
-            );
-        }
+        let sum_sq = z.re.add_with_limbs(&z.im, limbs).square_with_limbs(limbs);
+        let two_re_im = sum_sq.sub_with_limbs(&re2, limbs).sub_with_limbs(&im2, limbs);
+        z = ComplexFixed::new(
+            re2.sub_with_limbs(&im2, limbs).add_with_limbs(&c.re, limbs),
+            two_re_im.add_with_limbs(&c.im, limbs),
+        );
     }
 
     result
@@ -231,7 +218,7 @@ mod tests {
             ),
         ];
 
-        let limb_counts = [16, 14, 12, 10, 8, 6, 4, 3, 2];
+        let limb_counts = [32, 28, 24, 20, 16, 14, 12, 10, 8, 6, 4, 3, 2];
 
         for (label, x, y, max_iter) in &test_cases {
             println!("\n=== {} (max_iter={}) ===", label, max_iter);
@@ -244,9 +231,9 @@ mod tests {
                 active_limbs: None,
             };
 
-            let full = perform_calculation_with_limbs(&req, 16);
+            let full = perform_calculation_with_limbs(&req, fixed::LIMBS);
             let full_iters = full.len() / 2;
-            println!("Full precision (16 limbs): {} iterations", full_iters);
+            println!("Full precision ({} limbs): {} iterations", fixed::LIMBS, full_iters);
 
             for &limbs in &limb_counts[1..] {
                 let reduced = perform_calculation_with_limbs(&req, limbs);
