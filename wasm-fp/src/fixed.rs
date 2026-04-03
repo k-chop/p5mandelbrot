@@ -148,7 +148,7 @@ impl Fixed2048 {
             }
         }
         let mut limbs = [0u64; LIMBS];
-        for i in 0..LIMBS {
+        for i in start..LIMBS {
             limbs[i] = product[i + FRAC_LIMBS];
         }
         Self::new(limbs, self.negative != other.negative)
@@ -220,7 +220,7 @@ impl Fixed2048 {
         }
 
         let mut limbs = [0u64; LIMBS];
-        for i in 0..LIMBS {
+        for i in start..LIMBS {
             limbs[i] = product[i + FRAC_LIMBS];
         }
         // 自乗は常に非負
