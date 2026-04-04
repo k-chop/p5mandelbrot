@@ -42,8 +42,6 @@ const createWorkerCountValues = () => {
 const zoomRateValues = ["1.2", "1.5", "2.0", "4.0", "6.0", "10", "50", "100"];
 const workerCountValues = createWorkerCountValues();
 const maxCanvasSizeValues = ["-1", "128", "256", "512", "800", "1024", "2048"];
-const supersamplingWidthValues = ["1280", "1920", "2560", "3840", "5120", "7680"];
-const supersamplingHeightValues = ["720", "1080", "1440", "2160", "2880", "4320"];
 
 /** 左カラム: Rendering セクション */
 const RenderingSection = () => {
@@ -202,47 +200,6 @@ const ExplorationSection = () => {
   );
 };
 
-/** 右カラム: Supersampling Output セクション */
-const SupersamplingSection = () => {
-  const t = useT();
-  const supersamplingWidth = useStoreValue("supersamplingWidth");
-  const supersamplingHeight = useStoreValue("supersamplingHeight");
-  const [supersamplingWidthPreview, setSupersamplingWidthPreview] = useState(supersamplingWidth);
-  const [supersamplingHeightPreview, setSupersamplingHeightPreview] = useState(supersamplingHeight);
-
-  return (
-    <div className="flex flex-col gap-5">
-      <SectionTitle>Supersampling Output</SectionTitle>
-
-      <div>
-        <div className="mb-1 ml-2 text-sm">
-          {t("Supersampling Output Width")}: {supersamplingWidthPreview}px
-        </div>
-        <ValueSlider<number>
-          values={supersamplingWidthValues}
-          defaultValue={supersamplingWidth}
-          valueConverter={(value) => parseInt(value)}
-          onValueChange={(value) => setSupersamplingWidthPreview(value)}
-          onValueCommit={(value) => updateStore("supersamplingWidth", value)}
-        />
-      </div>
-
-      <div>
-        <div className="mb-1 ml-2 text-sm">
-          {t("Supersampling Output Height")}: {supersamplingHeightPreview}px
-        </div>
-        <ValueSlider<number>
-          values={supersamplingHeightValues}
-          defaultValue={supersamplingHeight}
-          valueConverter={(value) => parseInt(value)}
-          onValueChange={(value) => setSupersamplingHeightPreview(value)}
-          onValueCommit={(value) => updateStore("supersamplingHeight", value)}
-        />
-      </div>
-    </div>
-  );
-};
-
 /** 右カラム: About セクション */
 const AboutSection = () => {
   const t = useT();
@@ -333,7 +290,6 @@ export const SettingsDialog = ({
           </div>
           <div className="flex flex-col gap-8">
             <ExplorationSection />
-            <SupersamplingSection />
             <AboutSection />
           </div>
         </div>

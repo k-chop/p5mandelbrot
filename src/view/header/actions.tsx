@@ -14,9 +14,9 @@ import { Button } from "@/shadcn/components/ui/button";
 import { toast } from "@/shadcn/hooks/use-toast";
 import { buildShareData } from "@/utils/mandelbrot-url-params";
 import { useModalState } from "@/view/modal/use-modal-state";
+import { SupersamplingPopover } from "@/view/supersampling-popover";
 import { IconCircleCheck, IconDice, IconDownload, IconShare } from "@tabler/icons-react";
 import BigNumber from "bignumber.js";
-import { Expand } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ShareDialog } from "./share-dialog";
 
@@ -26,7 +26,7 @@ export const Actions = () => {
       <RandomJumpButton />
       <ShareButton />
       <SaveImageButton />
-      <SupersamplingButton />
+      <SupersamplingPopover />
     </div>
   );
 };
@@ -128,21 +128,5 @@ const RandomJumpButton = () => {
         {t("I'm Feeling Lucky")}
       </Button>
     </SimpleTooltip>
-  );
-};
-
-const SupersamplingButton = () => {
-  const t = useT();
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => {
-        setCurrentParams({ isSuperSampling: true });
-      }}
-    >
-      <Expand className="mr-1 size-6" />
-      {t("Supersampling x2")}
-    </Button>
   );
 };
