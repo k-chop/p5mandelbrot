@@ -1,6 +1,6 @@
 import { Button } from "@/shadcn/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
-import { toast } from "@/shadcn/hooks/use-toast";
+import { toast } from "sonner";
 import type { ShareData } from "@/utils/mandelbrot-url-params";
 import { ClickFeedback, useClickFeedback } from "@/view/components/click-feedback";
 import { useT } from "@/i18n/context";
@@ -45,11 +45,7 @@ export const ShareDialog = ({
       }
       copyAllFeedback.trigger();
     } catch {
-      toast({
-        description: t("Failed to copy to clipboard", "share.copyFailed"),
-        variant: "destructive",
-        duration: 3000,
-      });
+      toast.error(t("Failed to copy to clipboard", "share.copyFailed"), { duration: 3000 });
     }
   };
 
@@ -69,11 +65,7 @@ export const ShareDialog = ({
       }
       copyUrlImageFeedback.trigger();
     } catch {
-      toast({
-        description: t("Failed to copy to clipboard", "share.copyFailed"),
-        variant: "destructive",
-        duration: 3000,
-      });
+      toast.error(t("Failed to copy to clipboard", "share.copyFailed"), { duration: 3000 });
     }
   };
 
@@ -145,9 +137,7 @@ export const ShareDialog = ({
                   await navigator.clipboard.writeText(shareData.url);
                   copyUrlFeedback.trigger();
                 } catch {
-                  toast({
-                    description: t("Failed to copy to clipboard", "share.copyFailed"),
-                    variant: "destructive",
+                  toast.error(t("Failed to copy to clipboard", "share.copyFailed"), {
                     duration: 3000,
                   });
                 }

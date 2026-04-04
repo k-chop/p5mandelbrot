@@ -1,5 +1,5 @@
 import { I18nProvider } from "@/i18n/context";
-import { Toaster } from "@/shadcn/components/ui/toaster";
+import { Toaster } from "@/shadcn/components/ui/sonner";
 import { TooltipProvider } from "@/shadcn/components/ui/tooltip";
 import { useStoreValue } from "@/store/store";
 import { useEffect } from "react";
@@ -54,7 +54,7 @@ const AppRootInner = () => {
           <SupersamplingOverlay />,
           document.getElementById("supersampling-overlay")!,
         )}
-        <Toaster />
+        <Toaster position="top-center" />
       </TooltipProvider>
     </I18nProvider>
   );

@@ -11,11 +11,11 @@ import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
 import { getRandomPresetPOI } from "@/preset-poi/preset-poi";
 import { getCanvasSize } from "@/rendering/renderer";
 import { Button } from "@/shadcn/components/ui/button";
-import { toast } from "@/shadcn/hooks/use-toast";
+import { toast } from "sonner";
 import { buildShareData } from "@/utils/mandelbrot-url-params";
 import { useModalState } from "@/view/modal/use-modal-state";
 import { SupersamplingPopover } from "@/view/supersampling-popover";
-import { IconCircleCheck, IconDice, IconDownload, IconShare } from "@tabler/icons-react";
+import { IconDice, IconDownload, IconShare } from "@tabler/icons-react";
 import BigNumber from "bignumber.js";
 import { useEffect, useState } from "react";
 import { ShareDialog } from "./share-dialog";
@@ -83,14 +83,7 @@ const SaveImageButton = () => {
             link.href = imageDataURL;
             link.click();
 
-            toast({
-              description: (
-                <div className="flex items-center justify-center gap-2">
-                  <IconCircleCheck />
-                  {t("Image saved!")}
-                </div>
-              ),
-              variant: "primary",
+            toast.success(t("Image saved!"), {
               duration: 2000,
             });
           });

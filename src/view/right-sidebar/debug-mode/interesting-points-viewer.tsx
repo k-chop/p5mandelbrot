@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/shadcn/components/ui/select";
 import { Switch } from "@/shadcn/components/ui/switch";
-import { toast } from "@/shadcn/hooks/use-toast";
+import { toast } from "sonner";
 import { updateStoreWith, useStoreValue } from "@/store/store";
 import { useMemo, useState } from "react";
 import { BlockHeatmap } from "./block-heatmap";
@@ -192,15 +192,12 @@ export const InterestingPointsViewer = () => {
                         requestCanvasImage(width, resolve);
                       }),
                   );
-                  toast({
-                    title: "Export complete",
+                  toast.success("Export complete", {
                     description: `Saved to tmp/eval/point-${pointIndex}/`,
                   });
                 } catch (e) {
-                  toast({
-                    title: "Export failed",
+                  toast.error("Export failed", {
                     description: e instanceof Error ? e.message : "Unknown error",
-                    variant: "destructive",
                   });
                 } finally {
                   setIsExporting(false);

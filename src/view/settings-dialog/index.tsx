@@ -14,11 +14,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/compo
 import { Label } from "@/shadcn/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
 import { Switch } from "@/shadcn/components/ui/switch";
-import { useToast } from "@/shadcn/hooks/use-toast";
+import { toast } from "sonner";
 import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
 import { DEFAULT_WORKER_COUNT } from "@/store/sync-storage/settings";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
-import { IconCircleCheck, IconHelp, IconSettings } from "@tabler/icons-react";
+import { IconHelp, IconSettings } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Instructions } from "../header/instructions";
 import { useModalState } from "../modal/use-modal-state";
@@ -45,7 +45,6 @@ const maxCanvasSizeValues = ["-1", "128", "256", "512", "800", "1024", "2048"];
 
 /** 左カラム: Rendering セクション */
 const RenderingSection = () => {
-  const { toast } = useToast();
   const t = useT();
   const workerCount = useStoreValue("workerCount");
   const maxCanvasSize = useStoreValue("maxCanvasSize");
@@ -73,18 +72,12 @@ const RenderingSection = () => {
             onValueChange={(value: RendererType) => {
               setRendererType(value);
               setRenderer(value);
-              toast({
-                description: (
-                  <div className="flex items-center justify-center gap-2">
-                    <IconCircleCheck />
-                    {value === "webgpu"
-                      ? t("Switched to WebGPU renderer")
-                      : t("Switched to P5.js renderer")}
-                  </div>
-                ),
-                variant: "primary",
-                duration: 3000,
-              });
+              toast.success(
+                value === "webgpu"
+                  ? t("Switched to WebGPU renderer")
+                  : t("Switched to P5.js renderer"),
+                { duration: 3000 },
+              );
             }}
             className="flex flex-col space-y-1"
           >

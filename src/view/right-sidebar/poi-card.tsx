@@ -4,7 +4,7 @@ import { SimpleTooltip } from "@/components/simple-tooltip";
 import { useT } from "@/i18n/context";
 import { Button } from "@/shadcn/components/ui/button";
 import { Card } from "@/shadcn/components/ui/card";
-import { toast } from "@/shadcn/hooks/use-toast";
+import { toast } from "sonner";
 import { loadPreview } from "@/store/preview-store";
 import { useStoreValue } from "@/store/store";
 import { isDevMode } from "@/utils/dev-mode";
@@ -126,17 +126,9 @@ const addToPreset = async (poi: POIData) => {
       body: JSON.stringify(body),
     });
     const data = await res.json();
-    toast({
-      description: `Added to preset: #${data.id}`,
-      variant: "primary",
-      duration: 2000,
-    });
+    toast.success(`Added to preset: #${data.id}`, { duration: 2000 });
   } catch {
-    toast({
-      description: "Failed to add to preset (is dev server running?)",
-      variant: "destructive",
-      duration: 3000,
-    });
+    toast.error("Failed to add to preset (is dev server running?)", { duration: 3000 });
   }
 };
 
