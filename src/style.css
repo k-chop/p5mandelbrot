@@ -97,38 +97,43 @@ summary {
 }
 
 body {
-  margin: 0.5rem;
+  margin: 0;
+}
+
+/* ダークモードに合うスクロールバー */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a3a transparent;
 }
 
 #main {
-  min-height: 97dvh;
-
-  display: grid;
-  gap: 0.2rem;
-  grid-template-rows: auto 1fr 2rem;
-  grid-template-columns: minmax(60%, auto) 1fr;
-  grid-template-areas:
-    "header header"
-    "canvas sidebar"
-    "footer footer";
-}
-
-#header {
-  grid-area: header;
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background: #0e0e14;
 }
 
 #canvas-wrapper {
-  position: relative;
-  grid-area: canvas;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
+  transition:
+    left 300ms,
+    right 300ms;
   justify-content: center;
+  pointer-events: none;
 }
 
 #p5root {
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: auto;
 }
 
 #canvas-overlay {
@@ -137,20 +142,6 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 15;
-}
-
-#sidebar-right {
-  grid-area: sidebar;
-  min-width: 25vw;
-
-  display: flex;
-  flex-direction: column;
-  height: 88dvh;
-  overflow-y: auto;
-}
-
-#footer {
-  grid-area: footer;
 }
 
 #supersampling-overlay {

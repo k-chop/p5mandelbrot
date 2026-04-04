@@ -24,6 +24,9 @@ export const ja: Dictionary = {
   "header.randomJump": "I'm Feeling Lucky",
   "header.randomJumpTooltip": "マンデルブロ集合の秘境へ連れて行くぜ。",
 
+  // toolbar
+  "toolbar.togglePOIPanel": "POIパネルの表示切替",
+
   // share dialog
   "share.noPreview": "プレビューなし",
   "share.copied": "コピーしました！",
@@ -49,10 +52,10 @@ export const ja: Dictionary = {
   "poi.regenerateThumbnail": "サムネイルを再生成",
   "poi.apply": "適用",
   "poi.delete": "削除",
-  "poi.export": "エクスポート",
-  "poi.import": "インポート",
-  "poi.exportTitle": "POIエクスポート",
-  "poi.importTitle": "POIインポート",
+  "poi.export": "Export",
+  "poi.import": "Import",
+  "poi.exportTitle": "POI Export",
+  "poi.importTitle": "POI Import",
   "poi.exportCount": "{count}件のPOI",
   "poi.copyToClipboard": "クリップボードにコピー",
   "poi.pasteHere": "エクスポートしたPOIテキストを貼り付け...",

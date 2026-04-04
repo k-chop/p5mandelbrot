@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shadcn/components/ui/select";
+import { Separator } from "@/shadcn/components/ui/separator";
 import { Slider } from "@/shadcn/components/ui/slider";
 import { useT } from "@/i18n/context";
 import { getStore, updateStore, useStoreValue } from "@/store/store";
@@ -168,6 +169,72 @@ export const PaletteEditor = () => {
             updateStore("paletteOffset", value);
             setCurrentPaletteOffset(value);
           }}
+        />
+      </div>
+      <Separator className="my-1" />
+      <PaletteAnimationSection />
+    </div>
+  );
+};
+
+const animationTimeValues = ["0", "1000", "600", "300", "100", "60", "33", "16", "6"];
+const animationCycleStepValues = [
+  "1",
+  "2",
+  "3",
+  "5",
+  "7",
+  "11",
+  "13",
+  "17",
+  "19",
+  "23",
+  "29",
+  "31",
+  "37",
+  "41",
+  "43",
+  "47",
+];
+
+/** パレットアニメーション設定 */
+const PaletteAnimationSection = () => {
+  const t = useT();
+  const [animationTime, setAnimationTime] = useState(() => getStore("animationTime"));
+  const [animationCycleStep, setAnimationCycleStep] = useState(() =>
+    getStore("animationCycleStep"),
+  );
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="ml-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+        Animation
+      </div>
+      <div>
+        <div className="mb-1 ml-2">
+          {t("Animation Frequency")}: {animationTime === 0 ? t("None") : `${animationTime} ms`}
+        </div>
+        <ValueSlider<number>
+          values={animationTimeValues}
+          defaultValue={animationTime}
+          valueConverter={(value) => parseInt(value)}
+          onValueChange={(value) => setAnimationTime(value)}
+          onValueCommit={(value) => {
+            setAnimationTime(value);
+            updateStore("animationTime", value);
+          }}
+        />
+      </div>
+      <div>
+        <div className="mb-1 ml-2">
+          {t("Animation Cycle Step")}: {animationCycleStep}
+        </div>
+        <ValueSlider<number>
+          values={animationCycleStepValues}
+          defaultValue={animationCycleStep}
+          valueConverter={(value) => parseInt(value)}
+          onValueChange={(value) => setAnimationCycleStep(value)}
+          onValueCommit={(value) => updateStore("animationCycleStep", value)}
         />
       </div>
     </div>

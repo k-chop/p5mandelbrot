@@ -24,6 +24,9 @@ export const en = {
   "header.randomJump": "I'm Feeling Lucky",
   "header.randomJumpTooltip": "Dive into a hidden gem of the Mandelbrot set.",
 
+  // toolbar
+  "toolbar.togglePOIPanel": "Toggle POI panel",
+
   // share dialog
   "share.noPreview": "No preview",
   "share.copied": "Copied!",

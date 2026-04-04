@@ -1,7 +1,6 @@
 import { useT } from "@/i18n/context";
 import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { Button } from "@/shadcn/components/ui/button";
-import { ScrollArea } from "@/shadcn/components/ui/scroll-area";
 import { useModalState } from "@/view/modal/use-modal-state";
 import { IconCirclePlus, IconDownload, IconUpload } from "@tabler/icons-react";
 import throttle from "lodash.throttle";
@@ -75,25 +74,26 @@ export const POI = () => {
         }}
       />
 
-      <ScrollArea
+      <div
         ref={viewportRef}
-        className="flex min-h-10 grow basis-0 flex-col overflow-y-auto"
+        className="min-h-10 grow basis-0 overflow-y-scroll"
         onScroll={handleScroll}
       >
-        <div>
-          <div className="flex flex-row flex-wrap gap-2 pt-1 pl-1">
-            {poiList.map((poi, index) => (
-              <POICard
-                key={poi.id}
-                poi={poi}
-                onDelete={() => deletePOIAt(index)}
-                onApply={() => applyPOI(poi)}
-                onRegenerateThumbnail={() => regenerateThumbnailPOI(index)}
-              />
-            ))}
-          </div>
+        <div
+          className="grid gap-2 p-1 pr-2"
+          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))" }}
+        >
+          {poiList.map((poi, index) => (
+            <POICard
+              key={poi.id}
+              poi={poi}
+              onDelete={() => deletePOIAt(index)}
+              onApply={() => applyPOI(poi)}
+              onRegenerateThumbnail={() => regenerateThumbnailPOI(index)}
+            />
+          ))}
         </div>
-      </ScrollArea>
+      </div>
     </>
   );
 };

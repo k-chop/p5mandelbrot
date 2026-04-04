@@ -15,6 +15,7 @@ import { useCallback } from "react";
 import { updateStore, useStoreValue } from "../../store/store";
 import { createNewPOIData, writePOIListToStorage } from "../../store/sync-storage/poi-list";
 import type { MandelbrotParams, POIData } from "../../types";
+import { POI_THUMBNAIL_SIZE } from "@/constants";
 
 /**
  * パラメータに合わせたサムネイル画像を取得する共通関数
@@ -31,7 +32,7 @@ function getThumbnailForParams(params: MandelbrotParams = getCurrentParams()): s
   console.log("Capturing new thumbnail");
 
   try {
-    return getResizedCanvasImageDataURL(100);
+    return getResizedCanvasImageDataURL(POI_THUMBNAIL_SIZE);
   } catch (e) {
     console.error("Failed to capture thumbnail:", e);
     return "";

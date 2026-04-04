@@ -36,6 +36,8 @@ type Store = {
 
   // UI state
   canvasLocked: boolean;
+  /** POIパネルの開閉状態 */
+  poiPanelOpen: boolean;
 
   // mandelbrot state
   /** reference orbit計算にwasmを使うかどうか */
@@ -88,6 +90,7 @@ const store: Store = {
   maxCanvasSize: 800,
   // UI state
   canvasLocked: false,
+  poiPanelOpen: true,
   // mandelbrot state
   useWasm: true,
   // palette settings

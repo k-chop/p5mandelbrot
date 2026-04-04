@@ -77,10 +77,12 @@ const BatchMinimap = ({ entry, index }: { entry: BatchRenderEntry; index: number
 
       <div className="relative">
         <svg
-          width={effectiveWidth}
-          height={effectiveHeight}
-          className="rounded border"
-          style={{ backgroundColor: "#f8fafc" }}
+          viewBox={`0 0 ${effectiveWidth} ${effectiveHeight}`}
+          className="w-full max-w-[300px] rounded border"
+          style={{
+            backgroundColor: "#f8fafc",
+            aspectRatio: `${effectiveWidth} / ${effectiveHeight}`,
+          }}
         >
           <defs>
             <pattern

@@ -1,4 +1,3 @@
-import { debounce } from "es-toolkit";
 import p5 from "p5";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
@@ -9,10 +8,9 @@ import {
   p5Draw,
   p5MouseReleased,
   p5Setup,
-  resizeTo,
   zoomTo,
 } from "./p5-adapter/p5-adapter";
-import { isInside } from "./p5-adapter/utils";
+import { isInside, isOnUIOverlay } from "./p5-adapter/utils";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
 import { isSettingField, readSettingsFromStorage } from "./store/sync-storage/settings";
@@ -27,7 +25,8 @@ const sketch = (p: p5) => {
     await p5Setup(p);
   };
 
-  p.mousePressed = () => {
+  p.mousePressed = (ev: MouseEvent) => {
+    if (isOnUIOverlay(ev)) return;
     if (getStore("canvasLocked")) return;
     if (isInside(p)) {
       changeToMousePressedState(p);
@@ -35,13 +34,12 @@ const sketch = (p: p5) => {
   };
 
   p.mouseDragged = (ev: MouseEvent) => {
-    ev.preventDefault(); // 問答無用で止めて良い
+    if (isOnUIOverlay(ev)) return;
+    ev.preventDefault();
 
     if (ev.buttons === 1) {
-      // RMB
       changeDraggingState("move", p);
     } else if (ev.buttons === 2) {
-      // LMB
       changeDraggingState("zoom", p);
     }
   };
@@ -51,10 +49,11 @@ const sketch = (p: p5) => {
   };
 
   p.mouseWheel = (event: WheelEvent) => {
+    if (isOnUIOverlay(event)) return;
     if (!isInside(p)) return;
     if (getStore("canvasLocked")) return;
 
-    event.preventDefault(); // canvas内ではスクロールしないように
+    event.preventDefault();
 
     zoomTo(event.deltaY > 0);
   };
@@ -72,10 +71,8 @@ const sketch = (p: p5) => {
     p5Draw(p);
   };
 
-  const debouncedResizeFunc = debounce(() => resizeTo(p), 250);
-  p.windowResized = () => {
-    debouncedResizeFunc();
-  };
+  // キャンバスサイズはsettingsのmaxCanvasSizeで制御する。
+  // windowResizedによる自動リサイズは無効化（フローティングパネルの開閉で不要なリサイズが走るため）
 };
 
 const entrypoint = () => {
