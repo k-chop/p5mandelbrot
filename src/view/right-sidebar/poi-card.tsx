@@ -53,38 +53,30 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
   const handleThumbnailClick = isInSamePlace ? onRegenerateThumbnail : onApply;
 
   return (
-    <Card className={`w-52 p-2 ${isInSamePlace ? "ring-2 ring-primary/50" : ""}`}>
-      <div className="flex">
-        <div className="group relative size-25 cursor-pointer" onClick={handleThumbnailClick}>
-          <POICardPreview poi={poi} />
-          <div className="absolute inset-0 flex items-center justify-center rounded bg-black/70 text-xs text-center font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
-            {overlayText}
-          </div>
+    <Card className={`overflow-hidden p-0 ${isInSamePlace ? "ring-2 ring-primary/50" : ""}`}>
+      <div className="group relative cursor-pointer" onClick={handleThumbnailClick}>
+        <POICardPreview poi={poi} />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-xs text-center font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+          {overlayText}
         </div>
-        <div className="ml-2 flex grow flex-col justify-between">
-          <div>
-            <div className="flex justify-between text-sm">
-              <div>r</div>
-              <div>{r.toPrecision(3)}</div>
-            </div>
-            <div className="flex justify-between text-sm">
-              <div>N</div>
-              <div>{N.toFixed(0)}</div>
-            </div>
-          </div>
-
-          <div className="mt-2 flex justify-between gap-2">
-            <SimpleTooltip content={t("Share", "header.share")}>
-              <Button variant="default" size="icon-sm" onClick={openShare}>
-                <IconShare />
-              </Button>
-            </SimpleTooltip>
-            <SimpleTooltip content={t("Delete", "poi.delete")}>
-              <Button variant="destructive" size="icon-sm" onClick={onDelete}>
-                <IconTrash />
-              </Button>
-            </SimpleTooltip>
-          </div>
+      </div>
+      <div className="flex items-center justify-between px-2 py-1.5">
+        <div className="min-w-0 text-xs">
+          <span className="text-muted-foreground">r:</span>
+          {r.toPrecision(3)} <span className="text-muted-foreground">N:</span>
+          {N.toFixed(0)}
+        </div>
+        <div className="flex gap-1">
+          <SimpleTooltip content={t("Share", "header.share")}>
+            <Button variant="ghost" size="icon-sm" onClick={openShare}>
+              <IconShare className="size-3.5" />
+            </Button>
+          </SimpleTooltip>
+          <SimpleTooltip content={t("Delete", "poi.delete")}>
+            <Button variant="ghost" size="icon-sm" onClick={onDelete}>
+              <IconTrash className="size-3.5" />
+            </Button>
+          </SimpleTooltip>
         </div>
       </div>
       <ShareDialog
