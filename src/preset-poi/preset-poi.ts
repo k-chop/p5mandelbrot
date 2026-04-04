@@ -1,6 +1,11 @@
 import { calcCoordPrecision } from "@/math/coord-precision";
 import type { MandelbrotWorkerType, POIData } from "@/types";
+import { isDevMode } from "@/utils/dev-mode";
 import BigNumber from "bignumber.js";
+
+/** GCSプロキシのベースURL（Cloudflare Worker経由） */
+const GCS_BASE_URL =
+  "https://p5mandelbrot-gcs-proxy.7bb81493-fc28-4b3b-918a-7098cdfffb9a.workers.dev";
 
 /**
  * プリセットPOIの生データ型
@@ -23,6 +28,9 @@ let presetPOIList: PresetPOIRaw[] = [];
 let shuffledIndices: number[] = [];
 let cursor = 0;
 
+/** GCSから取得するモードか（開発時のみ切り替え可能、本番では常にtrue） */
+let useGCS = !isDevMode();
+
 /**
  * Fisher-Yatesシャッフルで配列をin-placeにシャッフルする
  */
@@ -35,13 +43,40 @@ const shuffle = <T>(array: T[]): T[] => {
 };
 
 /**
+ * GCSモードかどうかを返す
+ */
+export const isGCSMode = (): boolean => useGCS;
+
+/**
+ * GCSモードを切り替える（開発時のみ使用）
+ */
+export const setGCSMode = (value: boolean): void => {
+  useGCS = value;
+};
+
+/**
+ * プリセットPOIのサムネイルURLを返す
+ */
+export const getPresetThumbnailUrl = (id: string, revision?: number): string => {
+  if (useGCS) {
+    return `${GCS_BASE_URL}/thumbnails/${id}.png`;
+  }
+  if (isDevMode()) {
+    return `http://localhost:8080/api/preset-poi/${id}/thumbnail${revision != null ? `?v=${revision}` : ""}`;
+  }
+  return `${import.meta.env.BASE_URL ?? "/"}preset-poi/thumbnails/${id}.png`;
+};
+
+/**
  * parameters.json からプリセットPOIリストを読み込んで初期化する
  *
  * アプリ起動時に1回呼び出す。読み込み完了後にシャッフルインデックスを構築する。
  */
 export const initializePresetPOIList = async (): Promise<void> => {
-  const base = import.meta.env.BASE_URL ?? "/";
-  const res = await fetch(`${base}preset-poi/parameters.json`);
+  const url = useGCS
+    ? `${GCS_BASE_URL}/parameters.json`
+    : `${import.meta.env.BASE_URL ?? "/"}preset-poi/parameters.json`;
+  const res = await fetch(url);
   presetPOIList = await res.json();
   shuffledIndices = shuffle([...Array(presetPOIList.length).keys()]);
   cursor = 0;
