@@ -59,6 +59,7 @@ export const ja: Dictionary = {
   // poi
   "poi.savePOI": "POIを保存",
   "poi.regenerateThumbnail": "サムネイルを再生成",
+  "poi.thumbnailRegenerated": "サムネイルを再生成しました",
   "poi.apply": "適用",
   "poi.delete": "削除",
   "poi.export": "Export",

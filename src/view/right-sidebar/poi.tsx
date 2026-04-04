@@ -12,6 +12,7 @@ import {
 import { IconCirclePlus, IconDownload, IconPhoto, IconUpload } from "@tabler/icons-react";
 import throttle from "lodash.throttle";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { POICard } from "./poi-card";
 import { POIExportDialog } from "./poi-export-dialog";
 import { POIImportDialog } from "./poi-import-dialog";
@@ -161,7 +162,12 @@ export const POI = () => {
               poi={poi}
               onDelete={() => deletePOIAt(index)}
               onApply={() => applyPOI(poi)}
-              onRegenerateThumbnail={() => regenerateThumbnailPOI(index)}
+              onRegenerateThumbnail={() => {
+                regenerateThumbnailPOI(index);
+                toast.success(t("Thumbnail regenerated", "poi.thumbnailRegenerated"), {
+                  duration: 2000,
+                });
+              }}
             />
           ))}
         </div>
