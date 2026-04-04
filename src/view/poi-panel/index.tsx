@@ -64,7 +64,7 @@ export const POIPanel = () => {
   return (
     <div
       style={{ width: `${poiPanelWidth}px` }}
-      className={`fixed top-0 right-0 z-[90] flex h-full flex-col border-l border-[#2a2a3a] transition-transform duration-300 ${
+      className={`fixed top-0 right-0 z-90 flex h-full flex-col border-l border-[#2a2a3a] transition-transform duration-300 ${
         poiPanelOpen
           ? "translate-x-0 bg-[#161620]/97 shadow-[-4px_0_16px_rgba(0,0,0,0.5)] backdrop-blur-sm"
           : "translate-x-full"

@@ -75,7 +75,7 @@ export const BlockHeatmap = memo(
         <div className="relative">
           <svg
             viewBox={`0 0 ${effectiveWidth} ${effectiveHeight}`}
-            className="w-full max-w-[600px] rounded border"
+            className="w-full max-w-150 rounded border"
             style={{
               backgroundColor: "#1a1a2e",
               aspectRatio: `${effectiveWidth} / ${effectiveHeight}`,

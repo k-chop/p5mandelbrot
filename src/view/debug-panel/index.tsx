@@ -27,7 +27,7 @@ export const DebugPanel = () => {
   return (
     <div
       style={{ width: `${debugPanelWidth}px` }}
-      className={`fixed top-16 left-0 z-[90] flex h-[calc(100%-4rem)] flex-col border-r border-[#2a2a3a] transition-transform duration-300 ${
+      className={`fixed top-16 left-0 z-90 flex h-[calc(100%-4rem)] flex-col border-r border-[#2a2a3a] transition-transform duration-300 ${
         isDebugMode
           ? "translate-x-0 bg-[#161620]/97 shadow-[4px_0_16px_rgba(0,0,0,0.5)] backdrop-blur-sm"
           : "-translate-x-full"
