@@ -67,7 +67,9 @@ export const usePOI = () => {
       poi.serializedPalette = getCurrentPalette().serialize();
       writePOIListToStorage(poiList);
 
-      const imageDataURL = getThumbnailForParams();
+      // 履歴キャッシュを経由せず、常にキャンバスから直接キャプチャする
+      // （パレット変更後に古いサムネイルが使われるのを防ぐ）
+      const imageDataURL = getResizedCanvasImageDataURL(POI_THUMBNAIL_SIZE);
       savePreview(poi.id, imageDataURL);
       updateStore("poi", poiList);
     },
