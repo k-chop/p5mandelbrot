@@ -31,7 +31,7 @@ function getThumbnailForParams(params: MandelbrotParams = getCurrentParams()): s
   console.log("Capturing new thumbnail");
 
   try {
-    return getResizedCanvasImageDataURL(100);
+    return getResizedCanvasImageDataURL(175);
   } catch (e) {
     console.error("Failed to capture thumbnail:", e);
     return "";

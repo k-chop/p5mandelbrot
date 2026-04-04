@@ -70,7 +70,7 @@ export const addPOIToHistory = (poi: POIHistory) => {
  */
 export const addCurrentLocationToPOIHistory = () => {
   const poi = createNewPOIData(getCurrentParams(), getCurrentPalette());
-  const imageDataUrl = getResizedCanvasImageDataURL(100);
+  const imageDataUrl = getResizedCanvasImageDataURL(175);
 
   addPOIToHistory({ ...poi, imageDataUrl });
 };
