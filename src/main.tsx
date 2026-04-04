@@ -45,7 +45,6 @@ const sketch = (p: p5) => {
   };
 
   p.mouseReleased = (ev: MouseEvent) => {
-    if (isOnUIOverlay(ev)) return;
     p5MouseReleased(p, ev);
   };
 
