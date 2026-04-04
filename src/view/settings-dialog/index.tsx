@@ -15,7 +15,7 @@ import { Label } from "@/shadcn/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
 import { Switch } from "@/shadcn/components/ui/switch";
 import { useToast } from "@/shadcn/hooks/use-toast";
-import { getStore, updateStore, updateStoreWith, useStoreValue } from "@/store/store";
+import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
 import { DEFAULT_WORKER_COUNT } from "@/store/sync-storage/settings";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { IconCircleCheck, IconHelp, IconSettings } from "@tabler/icons-react";
@@ -41,25 +41,6 @@ const createWorkerCountValues = () => {
 
 const zoomRateValues = ["1.2", "1.5", "2.0", "4.0", "6.0", "10", "50", "100"];
 const workerCountValues = createWorkerCountValues();
-const animationTimeValues = ["0", "1000", "600", "300", "100", "60", "33", "16", "6"];
-const animationCycleStepValues = [
-  "1",
-  "2",
-  "3",
-  "5",
-  "7",
-  "11",
-  "13",
-  "17",
-  "19",
-  "23",
-  "29",
-  "31",
-  "37",
-  "41",
-  "43",
-  "47",
-];
 const maxCanvasSizeValues = ["-1", "128", "256", "512", "800", "1024", "2048"];
 const supersamplingWidthValues = ["1280", "1920", "2560", "3840", "5120", "7680"];
 const supersamplingHeightValues = ["720", "1080", "1440", "2160", "2880", "4320"];
@@ -221,50 +202,6 @@ const ExplorationSection = () => {
   );
 };
 
-/** 右カラム: Animation セクション */
-const AnimationSection = () => {
-  const t = useT();
-  const [animationTime, setAnimationTime] = useState(() => getStore("animationTime"));
-  const [animationCycleStep, setAnimationCycleStep] = useState(() =>
-    getStore("animationCycleStep"),
-  );
-
-  return (
-    <div className="flex flex-col gap-5">
-      <SectionTitle>Animation</SectionTitle>
-
-      <div>
-        <div className="mb-1 ml-2 text-sm">
-          {t("Animation Frequency")}: {animationTime === 0 ? t("None") : `${animationTime} ms`}
-        </div>
-        <ValueSlider<number>
-          values={animationTimeValues}
-          defaultValue={animationTime}
-          valueConverter={(value) => parseInt(value)}
-          onValueChange={(value) => setAnimationTime(value)}
-          onValueCommit={(value) => {
-            setAnimationTime(value);
-            updateStore("animationTime", value);
-          }}
-        />
-      </div>
-
-      <div>
-        <div className="mb-1 ml-2 text-sm">
-          {t("Animation Cycle Step")}: {animationCycleStep}
-        </div>
-        <ValueSlider<number>
-          values={animationCycleStepValues}
-          defaultValue={animationCycleStep}
-          valueConverter={(value) => parseInt(value)}
-          onValueChange={(value) => setAnimationCycleStep(value)}
-          onValueCommit={(value) => updateStore("animationCycleStep", value)}
-        />
-      </div>
-    </div>
-  );
-};
-
 /** 右カラム: Supersampling Output セクション */
 const SupersamplingSection = () => {
   const t = useT();
@@ -396,7 +333,6 @@ export const SettingsDialog = ({
           </div>
           <div className="flex flex-col gap-8">
             <ExplorationSection />
-            <AnimationSection />
             <SupersamplingSection />
             <AboutSection />
           </div>
