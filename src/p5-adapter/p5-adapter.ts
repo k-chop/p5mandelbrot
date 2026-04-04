@@ -29,6 +29,7 @@ import {
   toggleAutoIteration,
 } from "@/mandelbrot-state/mandelbrot-state";
 import { addCurrentLocationToPOIHistory, initializePOIHistory } from "@/poi-history/poi-history";
+import { initializePresetPOIList } from "@/preset-poi/preset-poi";
 import {
   getRenderer,
   initializeCanvasSize,
@@ -459,7 +460,7 @@ export const p5Setup = async (p: p5) => {
     return true;
   };
 
-  await initializePOIHistory();
+  await Promise.all([initializePOIHistory(), initializePresetPOIList()]);
 
   // URL共有で飛んできたときに各種パラメータを初期値としてセットする
   const initialParams = extractMandelbrotParams();

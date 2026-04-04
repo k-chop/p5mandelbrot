@@ -19,12 +19,12 @@ const outputFile = "point-list.json";
 const text = readFileSync(inputFile, "utf-8");
 const poiDataList = deserializePOIListFromText(text);
 
-const poiList: PresetPOIRaw[] = poiDataList.map((poi) => {
+const poiList: Omit<PresetPOIRaw, "id">[] = poiDataList.map((poi) => {
   const precision = calcCoordPrecision(poi.r);
   const trimmedX = new BigNumber(poi.x.toPrecision(precision));
   const trimmedY = new BigNumber(poi.y.toPrecision(precision));
   const serialized = serializePOIData({ ...poi, x: trimmedX, y: trimmedY });
-  const raw: PresetPOIRaw = {
+  const raw: Omit<PresetPOIRaw, "id"> = {
     x: serialized.x,
     y: serialized.y,
     r: serialized.r,
