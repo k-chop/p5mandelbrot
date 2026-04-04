@@ -10,7 +10,7 @@ import {
   p5Setup,
   zoomTo,
 } from "./p5-adapter/p5-adapter";
-import { isInside } from "./p5-adapter/utils";
+import { isInside, isOnUIOverlay } from "./p5-adapter/utils";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
 import { isSettingField, readSettingsFromStorage } from "./store/sync-storage/settings";
@@ -25,7 +25,8 @@ const sketch = (p: p5) => {
     await p5Setup(p);
   };
 
-  p.mousePressed = () => {
+  p.mousePressed = (ev: MouseEvent) => {
+    if (isOnUIOverlay(ev)) return;
     if (getStore("canvasLocked")) return;
     if (isInside(p)) {
       changeToMousePressedState(p);
@@ -33,26 +34,27 @@ const sketch = (p: p5) => {
   };
 
   p.mouseDragged = (ev: MouseEvent) => {
-    ev.preventDefault(); // 問答無用で止めて良い
+    if (isOnUIOverlay(ev)) return;
+    ev.preventDefault();
 
     if (ev.buttons === 1) {
-      // RMB
       changeDraggingState("move", p);
     } else if (ev.buttons === 2) {
-      // LMB
       changeDraggingState("zoom", p);
     }
   };
 
   p.mouseReleased = (ev: MouseEvent) => {
+    if (isOnUIOverlay(ev)) return;
     p5MouseReleased(p, ev);
   };
 
   p.mouseWheel = (event: WheelEvent) => {
+    if (isOnUIOverlay(event)) return;
     if (!isInside(p)) return;
     if (getStore("canvasLocked")) return;
 
-    event.preventDefault(); // canvas内ではスクロールしないように
+    event.preventDefault();
 
     zoomTo(event.deltaY > 0);
   };
