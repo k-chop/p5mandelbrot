@@ -1,0 +1,3 @@
+name = "p5mandelbrot-gcs-proxy"
+main = "index.ts"
+compatibility_date = "2026-04-01"

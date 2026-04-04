@@ -5,7 +5,10 @@ import { setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-stat
 import {
   type PresetPOIRaw,
   getPresetPOIList,
+  getPresetThumbnailUrl,
   initializePresetPOIList,
+  isGCSMode,
+  setGCSMode,
 } from "@/preset-poi/preset-poi";
 import { Alert, AlertDescription } from "@/shadcn/components/ui/alert";
 import { Button } from "@/shadcn/components/ui/button";
@@ -15,7 +18,7 @@ import {
   type ThumbnailTarget,
   useThumbnailBatch,
 } from "@/view/thumbnail-batch/use-thumbnail-batch";
-import { IconPhoto, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { IconCloud, IconFolder, IconPhoto, IconRefresh, IconTrash } from "@tabler/icons-react";
 import BigNumber from "bignumber.js";
 import { useCallback, useState } from "react";
 
@@ -130,6 +133,25 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
             </Button>
             {isDevMode() && (
               <Button
+                variant={isGCSMode() ? "default" : "outline"}
+                size="sm"
+                onClick={async () => {
+                  setGCSMode(!isGCSMode());
+                  await initializePresetPOIList();
+                  setRevision((r) => r + 1);
+                }}
+                disabled={isRunning}
+              >
+                {isGCSMode() ? (
+                  <IconCloud className="mr-1 size-4" />
+                ) : (
+                  <IconFolder className="mr-1 size-4" />
+                )}
+                {isGCSMode() ? "GCS" : "Local"}
+              </Button>
+            )}
+            {isDevMode() && (
+              <Button
                 variant="outline"
                 size="sm"
                 onClick={handleGenerateThumbnails}
@@ -209,9 +231,7 @@ const PresetCard = ({
   onJump: () => void;
   onDelete: () => void;
 }) => {
-  const thumbnailUrl = isDevMode()
-    ? `http://localhost:8080/api/preset-poi/${poi.id}/thumbnail?v=${revision}`
-    : `${import.meta.env.BASE_URL ?? "/"}preset-poi/thumbnails/${poi.id}.png`;
+  const thumbnailUrl = getPresetThumbnailUrl(poi.id, revision);
 
   return (
     <div className="group overflow-hidden rounded border border-[#2a2a3a] bg-[#1e1e2e] transition-colors hover:border-primary/50">
