@@ -2,9 +2,17 @@ import { setSerializedPalette } from "@/camera/palette";
 import { useT } from "@/i18n/context";
 import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
 import { setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
-import { type PresetPOIRaw, getPresetPOIList } from "@/preset-poi/preset-poi";
+import {
+  type PresetPOIRaw,
+  getPresetPOIList,
+  initializePresetPOIList,
+} from "@/preset-poi/preset-poi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
+import { toast } from "@/shadcn/hooks/use-toast";
+import { isDevMode } from "@/utils/dev-mode";
+import { IconTrash } from "@tabler/icons-react";
 import BigNumber from "bignumber.js";
+import { useState } from "react";
 
 type PresetListDialogProps = {
   open: boolean;
@@ -18,9 +26,36 @@ type PresetListDialogProps = {
  */
 export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) => {
   const t = useT();
+  const [revision, setRevision] = useState(0);
+  // revisionの変更でリストを再取得する
+  void revision;
   const presetList = getPresetPOIList();
 
   if (!open) return null;
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/preset-poi/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast({
+          description: `Deleted preset: #${data.deleted}`,
+          variant: "primary",
+          duration: 2000,
+        });
+        await initializePresetPOIList();
+        setRevision((r) => r + 1);
+      }
+    } catch {
+      toast({
+        description: "Failed to delete preset (is dev server running?)",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -46,6 +81,7 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
                 jumpToPreset(poi);
                 onOpenChange(false);
               }}
+              onDelete={() => handleDelete(poi.id)}
             />
           ))}
         </div>
@@ -69,16 +105,24 @@ const jumpToPreset = (poi: PresetPOIRaw) => {
 };
 
 /** 個別プリセットのカード */
-const PresetCard = ({ poi, onJump }: { poi: PresetPOIRaw; onJump: () => void }) => {
+const PresetCard = ({
+  poi,
+  onJump,
+  onDelete,
+}: {
+  poi: PresetPOIRaw;
+  onJump: () => void;
+  onDelete: () => void;
+}) => {
   const base = import.meta.env.BASE_URL ?? "/";
   const thumbnailUrl = `${base}preset-poi/thumbnails/${poi.id}.png`;
 
   return (
-    <button
-      onClick={onJump}
-      className="group overflow-hidden rounded border border-[#2a2a3a] bg-[#1e1e2e] transition-colors hover:border-primary/50"
-    >
-      <div className="relative aspect-square w-full overflow-hidden bg-[#0a0a14]">
+    <div className="group overflow-hidden rounded border border-[#2a2a3a] bg-[#1e1e2e] transition-colors hover:border-primary/50">
+      <button
+        onClick={onJump}
+        className="relative aspect-square w-full overflow-hidden bg-[#0a0a14]"
+      >
         <img
           src={thumbnailUrl}
           alt={`Preset ${poi.id}`}
@@ -90,12 +134,25 @@ const PresetCard = ({ poi, onJump }: { poi: PresetPOIRaw; onJump: () => void }) 
         <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
           Jump
         </div>
+      </button>
+      <div className="flex items-center justify-between px-2 py-1 text-xs">
+        <span>
+          <span className="text-muted-foreground">#{poi.id}</span>{" "}
+          <span className="text-muted-foreground">N:</span>
+          {poi.N}
+        </span>
+        {isDevMode() && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="text-muted-foreground hover:text-destructive rounded p-0.5 transition-colors"
+          >
+            <IconTrash className="size-3.5" />
+          </button>
+        )}
       </div>
-      <div className="px-2 py-1 text-left text-xs">
-        <span className="text-muted-foreground">#{poi.id}</span>{" "}
-        <span className="text-muted-foreground">N:</span>
-        {poi.N}
-      </div>
-    </button>
+    </div>
   );
 };
