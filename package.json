@@ -17,6 +17,7 @@
     "dev-all": "cross-env VITE_P5_MANDELBROT_DEVELOPMENT=true run-p dev server",
     "poi:convert": "tsx scripts/convert-poi-list.ts",
     "poi:sync": "gcloud storage rsync --delete-unmatched-destination-objects --recursive public/preset-poi/ gs://p5mandelbrot-preset-poi/",
+    "poi:pull": "gcloud storage rsync --recursive gs://p5mandelbrot-preset-poi/ public/preset-poi/",
     "worker:dev": "wrangler dev --config workers/gcs-proxy/wrangler.toml",
     "worker:deploy": "wrangler deploy --config workers/gcs-proxy/wrangler.toml"
   },
