@@ -4,6 +4,10 @@ import type p5 from "p5";
 export const isInside = (p: p5) =>
   0 <= p.mouseX && p.mouseX <= p.width && 0 <= p.mouseY && p.mouseY <= p.height;
 
+// mouseDragged等で高頻度呼び出しされるため、DOM要素をキャッシュ
+let cachedP5Root: HTMLElement | null = null;
+let cachedCanvasOverlay: HTMLElement | null = null;
+
 /**
  * イベントの対象がフローティングUI要素上かどうか判定する
  *
@@ -13,14 +17,11 @@ export const isOnUIOverlay = (ev: MouseEvent): boolean => {
   const target = ev.target as HTMLElement | null;
   if (!target) return false;
 
-  // p5rootの子要素（canvas自体）なら false
-  const p5root = document.getElementById("p5root");
-  if (p5root?.contains(target)) return false;
+  cachedP5Root ??= document.getElementById("p5root");
+  cachedCanvasOverlay ??= document.getElementById("canvas-overlay");
 
-  // canvas-overlay の子要素も false
-  const canvasOverlay = document.getElementById("canvas-overlay");
-  if (canvasOverlay?.contains(target)) return false;
+  if (cachedP5Root?.contains(target)) return false;
+  if (cachedCanvasOverlay?.contains(target)) return false;
 
-  // それ以外（ツールバー、パネル等）は true
   return true;
 };

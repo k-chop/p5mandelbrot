@@ -15,9 +15,7 @@ import { useCallback } from "react";
 import { updateStore, useStoreValue } from "../../store/store";
 import { createNewPOIData, writePOIListToStorage } from "../../store/sync-storage/poi-list";
 import type { MandelbrotParams, POIData } from "../../types";
-
-/** POIサムネイルの生成サイズ(px) */
-export const POI_THUMBNAIL_SIZE = 200;
+import { POI_THUMBNAIL_SIZE } from "@/constants";
 
 /**
  * パラメータに合わせたサムネイル画像を取得する共通関数

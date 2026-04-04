@@ -1,28 +1,12 @@
 import { updateStore, useStoreValue } from "@/store/store";
 import { IconX } from "@tabler/icons-react";
-import { useEffect } from "react";
 import { DebugMode } from "../right-sidebar/debug-mode/debug-mode";
 import { usePanelLayout } from "../use-panel-layout";
-import { useIsWideViewport } from "./use-is-wide-viewport";
-
-/** 狭い画面での排他ロジック: デバッグON時にPOIパネルを閉じる */
-const useExclusivePanels = () => {
-  const isDebugMode = useStoreValue("isDebugMode");
-  const isNarrow = !useIsWideViewport(1440);
-
-  useEffect(() => {
-    if (isNarrow && isDebugMode) {
-      updateStore("poiPanelOpen", false);
-    }
-  }, [isNarrow, isDebugMode]);
-};
 
 /** 左側スライドインデバッグパネル */
 export const DebugPanel = () => {
   const isDebugMode = useStoreValue("isDebugMode");
   const { debugPanelWidth } = usePanelLayout();
-
-  useExclusivePanels();
 
   return (
     <div

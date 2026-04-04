@@ -10,7 +10,7 @@ import { COLLAPSED_STRIP_WIDTH, POIPanel } from "./poi-panel";
 import { ProgressBar } from "./progress-bar";
 import { SupersamplingOverlay } from "./supersampling-overlay";
 import { Toolbar } from "./toolbar";
-import { usePanelLayout } from "./use-panel-layout";
+import { PanelLayoutProvider, useExclusivePanels, usePanelLayout } from "./use-panel-layout";
 
 /**
  * パネルの開閉に応じてキャンバスの中央位置を調整する
@@ -32,14 +32,15 @@ const useCanvasPositionAdjust = () => {
 
     wrapper.style.left = `${debugWidth}px`;
     wrapper.style.right = `${poiWidth}px`;
-    wrapper.style.transition = "left 300ms, right 300ms";
   }, [isDebugMode, poiPanelOpen, debugPanelWidth, poiPanelWidth]);
 };
 
-export const AppRoot = () => {
+/** AppRoot内部（PanelLayoutProvider内で動作する） */
+const AppRootInner = () => {
   const locale = useStoreValue("locale");
 
   useCanvasPositionAdjust();
+  useExclusivePanels();
 
   return (
     <I18nProvider locale={locale}>
@@ -56,5 +57,13 @@ export const AppRoot = () => {
         <Toaster />
       </TooltipProvider>
     </I18nProvider>
+  );
+};
+
+export const AppRoot = () => {
+  return (
+    <PanelLayoutProvider>
+      <AppRootInner />
+    </PanelLayoutProvider>
   );
 };

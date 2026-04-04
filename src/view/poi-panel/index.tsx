@@ -4,8 +4,6 @@ import { Separator } from "@/shadcn/components/ui/separator";
 import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
 import { isGithubPages } from "@/utils/location";
 import { IconCirclePlus, IconLayoutSidebar, IconX } from "@tabler/icons-react";
-import { useEffect } from "react";
-import { useIsWideViewport } from "../debug-panel/use-is-wide-viewport";
 import { POI } from "../right-sidebar/poi";
 import { POICardPreview } from "../right-sidebar/poi-card-preview";
 import { POIHistories } from "../right-sidebar/poi-histories";
@@ -14,18 +12,6 @@ import { usePanelLayout } from "../use-panel-layout";
 
 /** POIパネル閉じ時のストリップ幅(px) */
 export const COLLAPSED_STRIP_WIDTH = 80;
-
-/** 狭い画面での排他ロジック: POIパネル開時にデバッグを閉じる */
-const useExclusivePanels = () => {
-  const poiPanelOpen = useStoreValue("poiPanelOpen");
-  const isNarrow = !useIsWideViewport(1440);
-
-  useEffect(() => {
-    if (isNarrow && poiPanelOpen) {
-      updateStore("isDebugMode", false);
-    }
-  }, [isNarrow, poiPanelOpen]);
-};
 
 /** POIパネル内のコンテンツ */
 const PanelContent = () => {
@@ -102,8 +88,6 @@ const CollapsedStrip = () => {
 export const POIPanel = () => {
   const poiPanelOpen = useStoreValue("poiPanelOpen");
   const { poiPanelWidth } = usePanelLayout();
-
-  useExclusivePanels();
 
   return (
     <div
