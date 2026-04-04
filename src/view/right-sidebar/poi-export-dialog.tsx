@@ -2,7 +2,7 @@ import { useT } from "@/i18n/context";
 import { Button } from "@/shadcn/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { Textarea } from "@/shadcn/components/ui/textarea";
-import { toast } from "@/shadcn/hooks/use-toast";
+import { toast } from "sonner";
 import { serializePOIListToText } from "@/store/sync-storage/poi-list";
 import { useStoreValue } from "@/store/store";
 import { ClickFeedback, useClickFeedback } from "@/view/components/click-feedback";
@@ -31,11 +31,7 @@ export const POIExportDialog = ({ open, onOpenChange }: POIExportDialogProps) =>
       await navigator.clipboard.writeText(text);
       copyFeedback.trigger();
     } catch {
-      toast({
-        description: t("Failed to copy to clipboard", "share.copyFailed"),
-        variant: "destructive",
-        duration: 3000,
-      });
+      toast.error(t("Failed to copy to clipboard", "share.copyFailed"), { duration: 3000 });
     }
   };
 
