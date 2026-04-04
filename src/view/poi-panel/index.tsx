@@ -1,14 +1,18 @@
 import { useT } from "@/i18n/context";
+import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { Separator } from "@/shadcn/components/ui/separator";
 import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
 import { isGithubPages } from "@/utils/location";
-import { IconLayoutSidebar, IconStar, IconX } from "@tabler/icons-react";
+import { IconCirclePlus, IconLayoutSidebar, IconX } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useIsWideViewport } from "../debug-panel/use-is-wide-viewport";
 import { POI } from "../right-sidebar/poi";
+import { POICardPreview } from "../right-sidebar/poi-card-preview";
 import { POIHistories } from "../right-sidebar/poi-histories";
+import { usePOI } from "../right-sidebar/use-poi";
 import { usePanelLayout } from "../use-panel-layout";
 
-const COLLAPSED_STRIP_WIDTH = 40;
+const COLLAPSED_STRIP_WIDTH = 80;
 
 /** 狭い画面での排他ロジック: POIパネル開時にデバッグを閉じる */
 const useExclusivePanels = () => {
@@ -56,17 +60,40 @@ const SuggestRedirect = () => {
   );
 };
 
-/** 閉じた時に右端に表示されるストリップ */
+/** 閉じた時に右端に表示されるミニPOIストリップ */
 const CollapsedStrip = () => {
+  const { poiList, addPOI, applyPOI } = usePOI();
+
   return (
-    <button
-      onClick={() => updateStore("poiPanelOpen", true)}
-      className="absolute top-0 left-0 flex h-full flex-col items-center gap-3 border-r border-[#3a3a4a] bg-[#1e1e2e] pt-4 transition-colors hover:bg-[#262640]"
-      style={{ width: `${COLLAPSED_STRIP_WIDTH}px` }}
-    >
-      <IconLayoutSidebar size={18} className="text-foreground/60" />
-      <IconStar size={16} className="text-foreground/60" />
-    </button>
+    <div className="absolute top-0 left-0 h-full w-20 overflow-y-scroll border-r border-[#3a3a4a] bg-[#1e1e2e]">
+      <div className="sticky top-0 z-10 flex flex-col items-center gap-1.5 bg-[#1e1e2e] px-1.5 pt-1.5 pb-2">
+        <button
+          onClick={() => updateStore("poiPanelOpen", true)}
+          className="flex aspect-square w-full items-center justify-center rounded transition-colors hover:bg-[#262640]"
+        >
+          <IconLayoutSidebar size={20} className="text-foreground/60" />
+        </button>
+        <Separator className="w-full" />
+        <button
+          onClick={() => addPOI(cloneCurrentParams())}
+          className="flex aspect-square w-full items-center justify-center rounded bg-primary/90 transition-colors hover:bg-primary"
+        >
+          <IconCirclePlus size={20} className="text-primary-foreground" />
+        </button>
+      </div>
+
+      <div className="flex flex-col items-center gap-1.5 px-1.5 pb-2">
+        {poiList.map((poi) => (
+          <button
+            key={poi.id}
+            onClick={() => applyPOI(poi)}
+            className="w-full shrink-0 overflow-hidden rounded transition-opacity hover:opacity-80"
+          >
+            <POICardPreview poi={poi} />
+          </button>
+        ))}
+      </div>
+    </div>
   );
 };
 
