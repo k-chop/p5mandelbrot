@@ -23,7 +23,7 @@ export type Settings = {
 };
 
 export const DEFAULT_WORKER_COUNT =
-  process.env.NODE_ENV === "test" ? 1 : navigator.hardwareConcurrency;
+  import.meta.env.MODE === "test" ? 1 : navigator.hardwareConcurrency;
 
 /** ブラウザの言語設定からデフォルトのlocaleを判定する */
 const detectDefaultLocale = (): Locale =>
