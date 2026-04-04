@@ -106,8 +106,10 @@ export const ja: Dictionary = {
   "settings.none": "なし",
   "settings.animationCycleStep": "アニメーション周期ステップ",
   "settings.maxCanvasSize": "最大キャンバスサイズ",
-  "settings.supersamplingWidth": "スーパーサンプリング出力幅",
-  "settings.supersamplingHeight": "スーパーサンプリング出力高さ",
+  "settings.outputSize": "出力サイズ",
+  "settings.displaySize": "ディスプレイサイズ",
+  "settings.custom": "カスタム",
+  "settings.generate": "生成",
   "settings.useWasm": "Reference Orbit計算にWasmを使用",
   "settings.useWasmTooltip": "10倍ほど高速になるのでON推奨",
 

@@ -106,8 +106,10 @@ export const en = {
   "settings.none": "None",
   "settings.animationCycleStep": "Animation Cycle Step",
   "settings.maxCanvasSize": "Max Canvas Size",
-  "settings.supersamplingWidth": "Supersampling Output Width",
-  "settings.supersamplingHeight": "Supersampling Output Height",
+  "settings.outputSize": "Output Size",
+  "settings.displaySize": "Display Size",
+  "settings.custom": "Custom",
+  "settings.generate": "Generate",
   "settings.useWasm": "Use Wasm for reference orbit",
   "settings.useWasmTooltip": "Approximately 10x faster. Recommended to keep ON.",
   // debug mode
