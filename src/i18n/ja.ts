@@ -73,6 +73,10 @@ export const ja: Dictionary = {
   "poi.importDuplicates": "{count}件は重複のため無視",
   "poi.importButton": "{count}件のPOIをインポート",
 
+  // preset
+  "preset.title": "プリセット一覧",
+  "preset.count": "{count}件のプリセット",
+
   // footer
   "footer.invalidResult": "無効な結果",
   "footer.calcRefOrbit": "参照軌道の計算",

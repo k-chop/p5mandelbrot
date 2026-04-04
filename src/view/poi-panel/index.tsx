@@ -1,9 +1,13 @@
 import { useT } from "@/i18n/context";
 import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { SimpleTooltip } from "@/components/simple-tooltip";
+import { Button } from "@/shadcn/components/ui/button";
 import { Separator } from "@/shadcn/components/ui/separator";
 import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
 import { isGithubPages } from "@/utils/location";
-import { IconCirclePlus, IconLayoutSidebar, IconX } from "@tabler/icons-react";
+import { useModalState } from "@/view/modal/use-modal-state";
+import { PresetListDialog } from "@/view/preset-list/preset-list-dialog";
+import { IconCirclePlus, IconLayoutSidebar, IconList, IconX } from "@tabler/icons-react";
 import { POI } from "../right-sidebar/poi";
 import { POICardPreview } from "../right-sidebar/poi-card-preview";
 import { POIHistories } from "../right-sidebar/poi-histories";
@@ -44,6 +48,39 @@ const SuggestRedirect = () => {
         {t(" to use new app.", "operations.visitNewAppAfter")}
       </div>
     </div>
+  );
+};
+
+/** POIパネルのヘッダー */
+const POIPanelHeader = () => {
+  const t = useT();
+  const [presetOpened, { open: openPreset, close: closePreset }] = useModalState();
+
+  return (
+    <>
+      <div className="flex items-center justify-between border-b border-[#2a2a3a] px-4 py-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold">Points of Interest</h2>
+          <SimpleTooltip content={t("Preset List", "preset.title")}>
+            <Button variant="ghost" size="icon-sm" onClick={openPreset}>
+              <IconList className="size-4" />
+            </Button>
+          </SimpleTooltip>
+        </div>
+        <button
+          onClick={() => updateStoreWith("poiPanelOpen", (v) => !v)}
+          className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
+        >
+          <IconX size={18} />
+        </button>
+      </div>
+      <PresetListDialog
+        open={presetOpened}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) closePreset();
+        }}
+      />
+    </>
   );
 };
 
@@ -103,15 +140,7 @@ export const POIPanel = () => {
     >
       {poiPanelOpen ? (
         <>
-          <div className="flex items-center justify-between border-b border-[#2a2a3a] px-4 py-3">
-            <h2 className="text-sm font-semibold">Points of Interest</h2>
-            <button
-              onClick={() => updateStoreWith("poiPanelOpen", (v) => !v)}
-              className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
-            >
-              <IconX size={18} />
-            </button>
-          </div>
+          <POIPanelHeader />
           <div className="flex min-h-0 grow flex-col overflow-y-auto px-2 pt-2">
             <PanelContent />
           </div>
