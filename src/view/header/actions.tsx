@@ -11,10 +11,7 @@ import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
 import { getRandomPresetPOI } from "@/preset-poi/preset-poi";
 import { getCanvasSize } from "@/rendering/renderer";
 import { Button } from "@/shadcn/components/ui/button";
-import { Label } from "@/shadcn/components/ui/label";
-import { Switch } from "@/shadcn/components/ui/switch";
 import { toast } from "@/shadcn/hooks/use-toast";
-import { updateStoreWith, useStoreValue } from "@/store/store";
 import { buildShareData } from "@/utils/mandelbrot-url-params";
 import { useModalState } from "@/view/modal/use-modal-state";
 import { IconCircleCheck, IconDice, IconDownload, IconShare } from "@tabler/icons-react";
@@ -30,34 +27,7 @@ export const Actions = () => {
       <ShareButton />
       <SaveImageButton />
       <SupersamplingButton />
-      <InterestingPointsToggle />
     </div>
-  );
-};
-
-/** 興味深いポイントマーカーの表示切り替えスイッチ */
-const InterestingPointsToggle = () => {
-  const show = useStoreValue("showInterestingPoints");
-  const t = useT();
-  return (
-    <SimpleTooltip
-      content={
-        <>
-          {t("Marks interesting points on the fractal.")}
-          <br />
-          {t("Click a marker to zoom into its center.")}
-        </>
-      }
-    >
-      <div className="flex items-center space-x-2 px-2">
-        <Switch
-          id="interesting-points"
-          checked={show}
-          onCheckedChange={() => updateStoreWith("showInterestingPoints", (v) => !v)}
-        />
-        <Label htmlFor="interesting-points">{t("Show point marker")}</Label>
-      </div>
-    </SimpleTooltip>
   );
 };
 
