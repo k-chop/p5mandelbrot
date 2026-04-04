@@ -1,6 +1,5 @@
 import { useT } from "@/i18n/context";
 import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { SimpleTooltip } from "@/components/simple-tooltip";
 import { Button } from "@/shadcn/components/ui/button";
 import { Separator } from "@/shadcn/components/ui/separator";
 import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
@@ -59,13 +58,12 @@ const POIPanelHeader = () => {
   return (
     <>
       <div className="flex items-center justify-between border-b border-[#2a2a3a] px-4 py-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <h2 className="text-sm font-semibold">Points of Interest</h2>
-          <SimpleTooltip content={t("Preset List", "preset.title")}>
-            <Button variant="ghost" size="icon-sm" onClick={openPreset}>
-              <IconList className="size-4" />
-            </Button>
-          </SimpleTooltip>
+          <Button variant="outline" size="sm" onClick={openPreset}>
+            <IconList className="mr-1 size-4" />
+            {t("Preset List", "preset.title")}
+          </Button>
         </div>
         <button
           onClick={() => updateStoreWith("poiPanelOpen", (v) => !v)}
