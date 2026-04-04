@@ -41,15 +41,20 @@ export default {
       return new Response("Method not allowed", { status: 405 });
     }
 
-    // GCSにプロキシ
+    // GCSにプロキシ（parameters.jsonはCDNキャッシュをバイパス）
     const gcsUrl = `${GCS_BUCKET_URL}${url.pathname}`;
-    const gcsResponse = await fetch(gcsUrl);
+    const isParametersJson = url.pathname === "/parameters.json";
+    const gcsRequestUrl = isParametersJson ? `${gcsUrl}?_=${Date.now()}` : gcsUrl;
+    const gcsResponse = await fetch(gcsRequestUrl);
 
     // レスポンスヘッダーにCORP/CORSを付与
     const headers = new Headers(gcsResponse.headers);
     headers.set("Cross-Origin-Resource-Policy", "cross-origin");
     if (isAllowedOrigin(origin)) {
       headers.set("Access-Control-Allow-Origin", origin!);
+    }
+    if (isParametersJson) {
+      headers.set("Cache-Control", "no-cache");
     }
 
     return new Response(gcsResponse.body, {
