@@ -17,6 +17,9 @@ export default defineConfig({
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",
     },
+    watch: {
+      ignored: ["**/public/preset-poi/**"],
+    },
   },
   define: {
     "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),

@@ -73,6 +73,10 @@ export const en = {
   "poi.importDuplicates": "{count} duplicates ignored",
   "poi.importButton": "Import {count} POIs",
 
+  // preset
+  "preset.title": "Preset List",
+  "preset.count": "{count} presets",
+
   // footer
   "footer.invalidResult": "Invalid Result",
   "footer.calcRefOrbit": "Calculate Reference Orbit",

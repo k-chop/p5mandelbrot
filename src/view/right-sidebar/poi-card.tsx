@@ -4,12 +4,14 @@ import { SimpleTooltip } from "@/components/simple-tooltip";
 import { useT } from "@/i18n/context";
 import { Button } from "@/shadcn/components/ui/button";
 import { Card } from "@/shadcn/components/ui/card";
+import { toast } from "@/shadcn/hooks/use-toast";
 import { loadPreview } from "@/store/preview-store";
 import { useStoreValue } from "@/store/store";
+import { isDevMode } from "@/utils/dev-mode";
 import { buildShareData } from "@/utils/mandelbrot-url-params";
 import { ShareDialog } from "@/view/header/share-dialog";
 import { useModalState } from "@/view/modal/use-modal-state";
-import { IconShare, IconTrash } from "@tabler/icons-react";
+import { IconBookmarkPlus, IconShare, IconTrash } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import type { POIData } from "../../types";
 import { POICardPreview } from "./poi-card-preview";
@@ -67,6 +69,13 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
           {N.toFixed(0)}
         </div>
         <div className="flex gap-1">
+          {isDevMode() && (
+            <SimpleTooltip content="Add to Preset">
+              <Button variant="ghost" size="icon-sm" onClick={() => addToPreset(poi)}>
+                <IconBookmarkPlus className="size-3.5" />
+              </Button>
+            </SimpleTooltip>
+          )}
           <SimpleTooltip content={t("Share", "header.share")}>
             <Button variant="ghost" size="icon-sm" onClick={openShare}>
               <IconShare className="size-3.5" />
@@ -90,6 +99,45 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
       />
     </Card>
   );
+};
+
+/**
+ * POIをプリセットリストに追加する
+ *
+ * サーバーAPIにPOIデータとサムネイルを送信する。dev-all時のみ使用。
+ */
+const addToPreset = async (poi: POIData) => {
+  const thumbnail = await loadPreview(poi.id);
+
+  const body = {
+    x: poi.x.toString(),
+    y: poi.y.toString(),
+    r: poi.r.toString(),
+    N: poi.N,
+    mode: poi.mode,
+    palette: poi.serializedPalette,
+    thumbnail: thumbnail ?? undefined,
+  };
+
+  try {
+    const res = await fetch("http://localhost:8080/api/preset-poi", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    toast({
+      description: `Added to preset: #${data.id}`,
+      variant: "primary",
+      duration: 2000,
+    });
+  } catch {
+    toast({
+      description: "Failed to add to preset (is dev server running?)",
+      variant: "destructive",
+      duration: 3000,
+    });
+  }
 };
 
 const useIsInSamePlace = (poi: POIData) => {
