@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useIsWideViewport } from "../debug-panel/use-is-wide-viewport";
 import { POI } from "../right-sidebar/poi";
 import { POIHistories } from "../right-sidebar/poi-histories";
+import { usePanelLayout } from "../use-panel-layout";
 
 /** 狭い画面での排他ロジック: POIパネル開時にデバッグを閉じる */
 const useExclusivePanels = () => {
@@ -56,15 +57,14 @@ const SuggestRedirect = () => {
 /** 右側スライドインPOIパネル */
 export const POIPanel = () => {
   const poiPanelOpen = useStoreValue("poiPanelOpen");
-  const isUltraWide = useIsWideViewport(2200);
+  const { poiPanelWidth } = usePanelLayout();
 
   useExclusivePanels();
 
-  const width = isUltraWide ? "w-[500px]" : "w-[400px]";
-
   return (
     <div
-      className={`fixed top-0 right-0 z-[90] flex h-full flex-col border-l border-[#2a2a3a] transition-transform duration-300 ${width} ${
+      style={{ width: `${poiPanelWidth}px` }}
+      className={`fixed top-0 right-0 z-[90] flex h-full flex-col border-l border-[#2a2a3a] transition-transform duration-300 ${
         poiPanelOpen
           ? "translate-x-0 bg-[#161620]/97 shadow-[-4px_0_16px_rgba(0,0,0,0.5)] backdrop-blur-sm"
           : "translate-x-full"

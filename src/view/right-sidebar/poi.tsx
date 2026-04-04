@@ -79,7 +79,10 @@ export const POI = () => {
         className="min-h-10 grow basis-0 overflow-y-scroll"
         onScroll={handleScroll}
       >
-        <div className="grid grid-cols-2 gap-2 p-1 pr-2">
+        <div
+          className="grid gap-2 p-1 pr-2"
+          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))" }}
+        >
           {poiList.map((poi, index) => (
             <POICard
               key={poi.id}

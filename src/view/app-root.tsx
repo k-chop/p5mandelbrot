@@ -6,38 +6,34 @@ import { useEffect } from "react";
 import ReactDOM from "react-dom";
 import { CanvasOverlay } from "./canvas-overlay";
 import { DebugPanel } from "./debug-panel";
-import { useIsWideViewport } from "./debug-panel/use-is-wide-viewport";
 import { POIPanel } from "./poi-panel";
 import { ProgressBar } from "./progress-bar";
 import { SupersamplingOverlay } from "./supersampling-overlay";
 import { Toolbar } from "./toolbar";
+import { usePanelLayout } from "./use-panel-layout";
 
 /**
  * パネルの開閉に応じてキャンバスの中央位置を調整する
  *
- * パネルの幅を状態から計算し、canvas-wrapperにパディングを設定して
- * flexの中央配置でキャンバスが両パネルの間の中央に来るようにする。
- * windowResizedは無効化済みなので、パディング変更でresizeCanvasは走らない。
+ * canvas-wrapperのleft/rightをパネル幅分ずらして、
+ * キャンバスが両パネルの間の中央に来るようにする。
  */
 const useCanvasPositionAdjust = () => {
   const isDebugMode = useStoreValue("isDebugMode");
   const poiPanelOpen = useStoreValue("poiPanelOpen");
-  const isUltraWide = useIsWideViewport(2200);
-  const isWide = useIsWideViewport(1800);
+  const { debugPanelWidth, poiPanelWidth } = usePanelLayout();
 
   useEffect(() => {
     const wrapper = document.getElementById("canvas-wrapper");
     if (!wrapper) return;
 
-    // パネル幅を状態から計算（debug-panel/index.tsx, poi-panel/index.tsx と一致させる）
-    const debugWidth = isDebugMode ? (isUltraWide ? 636 : isWide ? 500 : 436) : 0;
-    const poiWidth = poiPanelOpen ? (isUltraWide ? 500 : 400) : 0;
+    const debugWidth = isDebugMode ? debugPanelWidth : 0;
+    const poiWidth = poiPanelOpen ? poiPanelWidth : 0;
 
-    // inset: 0 を個別プロパティで上書きしてcanvas-wrapperの範囲を狭める
     wrapper.style.left = `${debugWidth}px`;
     wrapper.style.right = `${poiWidth}px`;
     wrapper.style.transition = "left 300ms, right 300ms";
-  }, [isDebugMode, poiPanelOpen, isUltraWide, isWide]);
+  }, [isDebugMode, poiPanelOpen, debugPanelWidth, poiPanelWidth]);
 };
 
 export const AppRoot = () => {
