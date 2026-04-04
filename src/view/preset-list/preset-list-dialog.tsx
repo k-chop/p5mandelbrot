@@ -7,12 +7,17 @@ import {
   getPresetPOIList,
   initializePresetPOIList,
 } from "@/preset-poi/preset-poi";
+import { Button } from "@/shadcn/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { toast } from "@/shadcn/hooks/use-toast";
 import { isDevMode } from "@/utils/dev-mode";
-import { IconTrash } from "@tabler/icons-react";
+import {
+  type ThumbnailTarget,
+  useThumbnailBatch,
+} from "@/view/thumbnail-batch/use-thumbnail-batch";
+import { IconPhoto, IconTrash } from "@tabler/icons-react";
 import BigNumber from "bignumber.js";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 type PresetListDialogProps = {
   open: boolean;
@@ -27,9 +32,18 @@ type PresetListDialogProps = {
 export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) => {
   const t = useT();
   const [revision, setRevision] = useState(0);
-  // revisionの変更でリストを再取得する
   void revision;
   const presetList = getPresetPOIList();
+
+  const handleCapture = useCallback(async (id: string, dataUrl: string) => {
+    await fetch(`http://localhost:8080/api/preset-poi/${id}/thumbnail`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ thumbnail: dataUrl }),
+    });
+  }, []);
+
+  const { batchState, start: startBatch } = useThumbnailBatch(handleCapture);
 
   if (!open) return null;
 
@@ -57,14 +71,71 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
     }
   };
 
+  const handleGenerateThumbnails = async () => {
+    const base = import.meta.env.BASE_URL ?? "/";
+    const missing: ThumbnailTarget[] = [];
+
+    for (const poi of presetList) {
+      const url = `${base}preset-poi/thumbnails/${poi.id}.png`;
+      try {
+        const res = await fetch(url, { method: "HEAD" });
+        if (!res.ok) missing.push(poi);
+      } catch {
+        missing.push(poi);
+      }
+    }
+
+    if (missing.length === 0) {
+      toast({
+        description: "All thumbnails already exist",
+        variant: "primary",
+        duration: 2000,
+      });
+      return;
+    }
+
+    toast({
+      description: `Generating ${missing.length} thumbnails...`,
+      variant: "primary",
+      duration: 2000,
+    });
+
+    startBatch(missing);
+  };
+
+  const isRunning = batchState.status === "running";
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={isRunning ? undefined : onOpenChange}>
       <DialogContent className="max-h-[80vh] max-w-6xl">
         <DialogHeader>
           <DialogTitle>{t("Preset List", "preset.title")}</DialogTitle>
         </DialogHeader>
-        <div className="text-sm text-muted-foreground">
-          {t("{count} presets", "preset.count").replace("{count}", String(presetList.length))}
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            {t("{count} presets", "preset.count").replace("{count}", String(presetList.length))}
+            {isRunning && (
+              <span className="ml-2 text-primary">
+                Generating... {batchState.current}/{batchState.total} (#{batchState.currentId})
+              </span>
+            )}
+            {batchState.status === "done" && (
+              <span className="ml-2 text-green-400">
+                Done! {batchState.generated} thumbnails generated
+              </span>
+            )}
+          </div>
+          {isDevMode() && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateThumbnails}
+              disabled={isRunning}
+            >
+              <IconPhoto className="mr-1 size-4" />
+              Generate Thumbnails
+            </Button>
+          )}
         </div>
         <div
           className="grid auto-rows-min gap-2 overflow-y-auto pr-1"

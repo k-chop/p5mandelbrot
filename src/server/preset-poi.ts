@@ -106,6 +106,22 @@ export const registerPresetPOIRoutes = (app: Hono) => {
     return c.json({ id });
   });
 
+  app.put("/api/preset-poi/:id/thumbnail", async (c) => {
+    const id = c.req.param("id");
+    const body = (await c.req.json()) as { thumbnail: string };
+
+    if (!body.thumbnail) {
+      return c.json({ error: "thumbnail field is required (DataURL string)" }, 400);
+    }
+
+    mkdirSync(THUMBNAILS_DIR, { recursive: true });
+    const buffer = decodeDataURL(body.thumbnail);
+    writeFileSync(join(THUMBNAILS_DIR, `${id}.png`), buffer);
+
+    console.log(`Preset POI thumbnail updated: ${id}`);
+    return c.json({ id });
+  });
+
   app.delete("/api/preset-poi/:id", (c) => {
     const id = c.req.param("id");
     const entries = readParameters();
