@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import ReactDOM from "react-dom";
 import { CanvasOverlay } from "./canvas-overlay";
 import { DebugPanel } from "./debug-panel";
-import { POIPanel } from "./poi-panel";
+import { COLLAPSED_STRIP_WIDTH, POIPanel } from "./poi-panel";
 import { ProgressBar } from "./progress-bar";
 import { SupersamplingOverlay } from "./supersampling-overlay";
 import { Toolbar } from "./toolbar";
@@ -28,7 +28,7 @@ const useCanvasPositionAdjust = () => {
     if (!wrapper) return;
 
     const debugWidth = isDebugMode ? debugPanelWidth : 0;
-    const poiWidth = poiPanelOpen ? poiPanelWidth : 0;
+    const poiWidth = poiPanelOpen ? poiPanelWidth : COLLAPSED_STRIP_WIDTH;
 
     wrapper.style.left = `${debugWidth}px`;
     wrapper.style.right = `${poiWidth}px`;

@@ -12,7 +12,8 @@ import { POIHistories } from "../right-sidebar/poi-histories";
 import { usePOI } from "../right-sidebar/use-poi";
 import { usePanelLayout } from "../use-panel-layout";
 
-const COLLAPSED_STRIP_WIDTH = 80;
+/** POIパネル閉じ時のストリップ幅(px) */
+export const COLLAPSED_STRIP_WIDTH = 80;
 
 /** 狭い画面での排他ロジック: POIパネル開時にデバッグを閉じる */
 const useExclusivePanels = () => {
