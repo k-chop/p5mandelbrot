@@ -61,6 +61,7 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ thumbnail: dataUrl }),
     });
+    setRevision((r) => r + 1);
   }, []);
 
   const { batchState, start: startBatch } = useThumbnailBatch(handleCapture);
@@ -155,6 +156,7 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
             <PresetCard
               key={poi.id}
               poi={poi}
+              revision={revision}
               onJump={() => {
                 jumpToPreset(poi);
                 onOpenChange(false);
@@ -185,15 +187,17 @@ const jumpToPreset = (poi: PresetPOIRaw) => {
 /** 個別プリセットのカード */
 const PresetCard = ({
   poi,
+  revision,
   onJump,
   onDelete,
 }: {
   poi: PresetPOIRaw;
+  revision: number;
   onJump: () => void;
   onDelete: () => void;
 }) => {
   const base = import.meta.env.BASE_URL ?? "/";
-  const thumbnailUrl = `${base}preset-poi/thumbnails/${poi.id}.png`;
+  const thumbnailUrl = `${base}preset-poi/thumbnails/${poi.id}.png?v=${revision}`;
 
   return (
     <div className="group overflow-hidden rounded border border-[#2a2a3a] bg-[#1e1e2e] transition-colors hover:border-primary/50">
