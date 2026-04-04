@@ -35,6 +35,7 @@ wasm-fp/target/*
 # POI data files
 point-list.txt
 point-list.json
+public/preset-poi/
 
 # Wrangler
 .wrangler
