@@ -86,11 +86,10 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
 
   const handleGenerateThumbnails = async () => {
     setFeedback(null);
-    const base = import.meta.env.BASE_URL ?? "/";
     const missing: ThumbnailTarget[] = [];
 
     for (const poi of presetList) {
-      const url = `${base}preset-poi/thumbnails/${poi.id}.png`;
+      const url = `http://localhost:8080/api/preset-poi/${poi.id}/thumbnail`;
       const exists = await thumbnailExists(url);
       if (!exists) missing.push(poi);
     }
@@ -196,8 +195,9 @@ const PresetCard = ({
   onJump: () => void;
   onDelete: () => void;
 }) => {
-  const base = import.meta.env.BASE_URL ?? "/";
-  const thumbnailUrl = `${base}preset-poi/thumbnails/${poi.id}.png?v=${revision}`;
+  const thumbnailUrl = isDevMode()
+    ? `http://localhost:8080/api/preset-poi/${poi.id}/thumbnail?v=${revision}`
+    : `${import.meta.env.BASE_URL ?? "/"}preset-poi/thumbnails/${poi.id}.png`;
 
   return (
     <div className="group overflow-hidden rounded border border-[#2a2a3a] bg-[#1e1e2e] transition-colors hover:border-primary/50">

@@ -67,10 +67,26 @@ interface AddPresetBody {
 /**
  * preset-poi用のルートをHonoアプリに登録する
  *
+ * GET /api/preset-poi/:id/thumbnail — サムネイル画像を配信（キャッシュなし）
  * POST /api/preset-poi — プリセットPOIを追加
+ * PUT /api/preset-poi/:id/thumbnail — サムネイル画像を更新
  * DELETE /api/preset-poi/:id — プリセットPOIを削除
  */
 export const registerPresetPOIRoutes = (app: Hono) => {
+  app.get("/api/preset-poi/:id/thumbnail", (c) => {
+    const id = c.req.param("id");
+    const filePath = join(THUMBNAILS_DIR, `${id}.png`);
+
+    if (!existsSync(filePath)) {
+      return c.notFound();
+    }
+
+    const buffer = readFileSync(filePath);
+    return c.body(buffer, 200, {
+      "Content-Type": "image/png",
+      "Cache-Control": "no-cache",
+    });
+  });
   app.post("/api/preset-poi", async (c) => {
     const body = (await c.req.json()) as AddPresetBody;
 
