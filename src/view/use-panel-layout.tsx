@@ -74,6 +74,8 @@ const usePOIPanelWidthValue = (debugPanelWidth: number, viewportWidth: number): 
   const canFit = (poiWidth: number) =>
     viewportWidth >= activeDebugWidth + poiWidth + canvasWidth + 200;
 
+  if (canFit(1120)) return 1120;
+  if (canFit(940)) return 940;
   if (canFit(760)) return 760;
   if (canFit(580)) return 580;
   return 400;
