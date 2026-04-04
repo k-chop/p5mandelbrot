@@ -26,6 +26,15 @@ export const en = {
 
   // toolbar
   "toolbar.togglePOIPanel": "Toggle POI panel",
+  "toolbar.jump": "Jump",
+  "toolbar.jumpToCoordinates": "Jump to Coordinates",
+  "toolbar.pasteCoordinates": "Paste coordinates",
+  "toolbar.currentValue": "Current value",
+  "toolbar.parseError": "Could not recognize parameters",
+  "toolbar.invalidCoordinates": "Invalid coordinate values",
+  "toolbar.invalidRadius": "Invalid radius value",
+  "toolbar.invalidIteration": "Invalid iteration count",
+  "toolbar.parseFailed": "Failed to parse parameter values",
 
   // share dialog
   "share.noPreview": "No preview",
