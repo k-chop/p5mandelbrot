@@ -85,6 +85,7 @@ export const registerPresetPOIRoutes = (app: Hono) => {
     return c.body(buffer, 200, {
       "Content-Type": "image/png",
       "Cache-Control": "no-cache",
+      "Cross-Origin-Resource-Policy": "cross-origin",
     });
   });
   app.post("/api/preset-poi", async (c) => {
