@@ -16,7 +16,11 @@ export const PalettePopover = () => {
           {t("Palette", "operations.palette")}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80" align="start" sideOffset={8}>
+      <PopoverContent
+        className="w-84 border border-[#2a2a3a] p-4 shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
+        align="start"
+        sideOffset={8}
+      >
         <PaletteEditor />
       </PopoverContent>
     </Popover>
