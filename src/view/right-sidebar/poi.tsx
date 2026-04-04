@@ -1,7 +1,7 @@
 import { useT } from "@/i18n/context";
 import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { Alert, AlertDescription } from "@/shadcn/components/ui/alert";
 import { Button } from "@/shadcn/components/ui/button";
-import { toast } from "@/shadcn/hooks/use-toast";
 import { loadPreview, savePreview } from "@/store/preview-store";
 import type { POIData } from "@/types";
 import { useModalState } from "@/view/modal/use-modal-state";
@@ -11,7 +11,7 @@ import {
 } from "@/view/thumbnail-batch/use-thumbnail-batch";
 import { IconCirclePlus, IconDownload, IconPhoto, IconUpload } from "@tabler/icons-react";
 import throttle from "lodash.throttle";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { POICard } from "./poi-card";
 import { POIExportDialog } from "./poi-export-dialog";
 import { POIImportDialog } from "./poi-import-dialog";
@@ -41,8 +41,10 @@ export const POI = () => {
   }, []);
 
   const { batchState, start: startBatch } = useThumbnailBatch(handleCapture);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   const handleGenerateMissing = async () => {
+    setFeedback(null);
     const missing: ThumbnailTarget[] = [];
     for (const poi of poiList) {
       const preview = await loadPreview(poi.id);
@@ -52,20 +54,11 @@ export const POI = () => {
     }
 
     if (missing.length === 0) {
-      toast({
-        description: "All thumbnails already exist",
-        variant: "primary",
-        duration: 2000,
-      });
+      setFeedback("All thumbnails already exist");
       return;
     }
 
-    toast({
-      description: `Generating ${missing.length} thumbnails...`,
-      variant: "primary",
-      duration: 2000,
-    });
-
+    setFeedback(`Generating ${missing.length} thumbnails...`);
     startBatch(missing);
   };
 
@@ -122,14 +115,21 @@ export const POI = () => {
           </div>
         </div>
         {isRunning && (
-          <div className="mb-2 text-xs text-primary">
-            Generating... {batchState.current}/{batchState.total}
-          </div>
+          <Alert className="mb-2">
+            <AlertDescription>
+              Generating... {batchState.current}/{batchState.total}
+            </AlertDescription>
+          </Alert>
         )}
         {batchState.status === "done" && batchState.generated > 0 && (
-          <div className="mb-2 text-xs text-green-400">
-            Done! {batchState.generated} thumbnails generated
-          </div>
+          <Alert className="mb-2">
+            <AlertDescription>Done! {batchState.generated} thumbnails generated</AlertDescription>
+          </Alert>
+        )}
+        {feedback && !isRunning && batchState.status !== "done" && (
+          <Alert className="mb-2">
+            <AlertDescription>{feedback}</AlertDescription>
+          </Alert>
         )}
       </div>
 

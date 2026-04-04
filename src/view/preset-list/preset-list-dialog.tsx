@@ -7,9 +7,9 @@ import {
   getPresetPOIList,
   initializePresetPOIList,
 } from "@/preset-poi/preset-poi";
+import { Alert, AlertDescription } from "@/shadcn/components/ui/alert";
 import { Button } from "@/shadcn/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
-import { toast } from "@/shadcn/hooks/use-toast";
 import { isDevMode } from "@/utils/dev-mode";
 import {
   type ThumbnailTarget,
@@ -25,6 +25,23 @@ type PresetListDialogProps = {
 };
 
 /**
+ * サムネイルが実際に存在するかcontent-typeで判定する
+ *
+ * Vite devサーバーはSPAフォールバックで存在しないファイルにも200を返すため、
+ * ステータスコードだけでは判定できない。
+ */
+const thumbnailExists = async (url: string): Promise<boolean> => {
+  try {
+    const res = await fetch(url, { method: "HEAD" });
+    if (!res.ok) return false;
+    const contentType = res.headers.get("content-type") ?? "";
+    return contentType.startsWith("image/");
+  } catch {
+    return false;
+  }
+};
+
+/**
  * プリセットPOI一覧を表示するダイアログ
  *
  * サムネイルがあればグリッド表示し、クリックでその座標にジャンプする。
@@ -34,6 +51,9 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
   const [revision, setRevision] = useState(0);
   void revision;
   const presetList = getPresetPOIList();
+  const [feedback, setFeedback] = useState<{ type: "info" | "error"; message: string } | null>(
+    null,
+  );
 
   const handleCapture = useCallback(async (id: string, dataUrl: string) => {
     await fetch(`http://localhost:8080/api/preset-poi/${id}/thumbnail`, {
@@ -54,52 +74,32 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
       });
       const data = await res.json();
       if (res.ok) {
-        toast({
-          description: `Deleted preset: #${data.deleted}`,
-          variant: "primary",
-          duration: 2000,
-        });
+        setFeedback({ type: "info", message: `Deleted preset: #${data.deleted}` });
         await initializePresetPOIList();
         setRevision((r) => r + 1);
       }
     } catch {
-      toast({
-        description: "Failed to delete preset (is dev server running?)",
-        variant: "destructive",
-        duration: 3000,
-      });
+      setFeedback({ type: "error", message: "Failed to delete (is dev server running?)" });
     }
   };
 
   const handleGenerateThumbnails = async () => {
+    setFeedback(null);
     const base = import.meta.env.BASE_URL ?? "/";
     const missing: ThumbnailTarget[] = [];
 
     for (const poi of presetList) {
       const url = `${base}preset-poi/thumbnails/${poi.id}.png`;
-      try {
-        const res = await fetch(url, { method: "HEAD" });
-        if (!res.ok) missing.push(poi);
-      } catch {
-        missing.push(poi);
-      }
+      const exists = await thumbnailExists(url);
+      if (!exists) missing.push(poi);
     }
 
     if (missing.length === 0) {
-      toast({
-        description: "All thumbnails already exist",
-        variant: "primary",
-        duration: 2000,
-      });
+      setFeedback({ type: "info", message: "All thumbnails already exist" });
       return;
     }
 
-    toast({
-      description: `Generating ${missing.length} thumbnails...`,
-      variant: "primary",
-      duration: 2000,
-    });
-
+    setFeedback({ type: "info", message: `Generating ${missing.length} thumbnails...` });
     startBatch(missing);
   };
 
@@ -114,16 +114,6 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
             {t("{count} presets", "preset.count").replace("{count}", String(presetList.length))}
-            {isRunning && (
-              <span className="ml-2 text-primary">
-                Generating... {batchState.current}/{batchState.total} (#{batchState.currentId})
-              </span>
-            )}
-            {batchState.status === "done" && (
-              <span className="ml-2 text-green-400">
-                Done! {batchState.generated} thumbnails generated
-              </span>
-            )}
           </div>
           {isDevMode() && (
             <Button
@@ -137,11 +127,28 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
             </Button>
           )}
         </div>
+        {isRunning && (
+          <Alert>
+            <AlertDescription>
+              Generating... {batchState.current}/{batchState.total} (#{batchState.currentId})
+            </AlertDescription>
+          </Alert>
+        )}
+        {batchState.status === "done" && batchState.generated > 0 && (
+          <Alert>
+            <AlertDescription>Done! {batchState.generated} thumbnails generated</AlertDescription>
+          </Alert>
+        )}
+        {feedback && !isRunning && batchState.status !== "done" && (
+          <Alert variant={feedback.type === "error" ? "destructive" : "default"}>
+            <AlertDescription>{feedback.message}</AlertDescription>
+          </Alert>
+        )}
         <div
           className="grid auto-rows-min gap-2 overflow-y-auto pr-1"
           style={{
             gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-            maxHeight: "calc(80vh - 120px)",
+            maxHeight: "calc(80vh - 160px)",
           }}
         >
           {presetList.map((poi) => (
