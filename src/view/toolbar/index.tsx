@@ -2,11 +2,12 @@ import { SimpleTooltip } from "@/components/simple-tooltip";
 import { useT } from "@/i18n/context";
 import { Button } from "@/shadcn/components/ui/button";
 import { updateStoreWith, useStoreValue } from "@/store/store";
-import { IconBug, IconLayoutSidebar, IconSettings } from "@tabler/icons-react";
+import { IconBug, IconLayoutSidebar, IconNavigation, IconSettings } from "@tabler/icons-react";
 import { Actions } from "../header/actions";
 import { useModalState } from "../modal/use-modal-state";
 import { PalettePopover } from "../palette-popover";
 import { SettingsDialog } from "../settings-dialog";
+import { JumpDialog } from "./jump-dialog";
 
 /** デバッグパネルの開閉トグルボタン */
 const DebugPanelToggle = () => {
@@ -49,6 +50,7 @@ const POIPanelToggle = () => {
 export const Toolbar = () => {
   const t = useT();
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useModalState();
+  const [jumpOpened, { open: openJump, close: closeJump }] = useModalState();
 
   return (
     <>
@@ -58,10 +60,20 @@ export const Toolbar = () => {
           if (!isOpen) closeSettings();
         }}
       />
+      <JumpDialog
+        open={jumpOpened}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) closeJump();
+        }}
+      />
       <div className="fixed top-3 left-3 z-100 flex items-center gap-2 rounded-xl border border-[#2a2a3a] bg-[#1c1c24]/95 px-3 py-2 backdrop-blur-sm">
         <Actions />
         <div className="bg-border mx-1 h-6 w-px" />
         <PalettePopover />
+        <Button variant="outline" size="sm" onClick={openJump}>
+          <IconNavigation className="mr-1 size-5" />
+          {t("Jump", "toolbar.jump")}
+        </Button>
         <Button variant="outline" size="sm" onClick={openSettings}>
           <IconSettings className="mr-1 size-5" />
           {t("Settings", "operations.settings")}

@@ -26,6 +26,15 @@ export const ja: Dictionary = {
 
   // toolbar
   "toolbar.togglePOIPanel": "POIパネルの表示切替",
+  "toolbar.jump": "ジャンプ",
+  "toolbar.jumpToCoordinates": "座標を指定してジャンプ",
+  "toolbar.pasteCoordinates": "座標情報を入力",
+  "toolbar.currentValue": "現在の値",
+  "toolbar.parseError": "パラメータを認識できませんでした",
+  "toolbar.invalidCoordinates": "座標の値が不正です",
+  "toolbar.invalidRadius": "半径の値が不正です",
+  "toolbar.invalidIteration": "反復回数の値が不正です",
+  "toolbar.parseFailed": "パラメータの解析に失敗しました",
 
   // share dialog
   "share.noPreview": "プレビューなし",
