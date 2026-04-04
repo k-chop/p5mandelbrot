@@ -1,9 +1,22 @@
 import { updateStore, useStoreValue } from "@/store/store";
 import { createContext, use, useEffect, useState } from "react";
 import { useIsWideViewport } from "./debug-panel/use-is-wide-viewport";
+import { COLLAPSED_STRIP_WIDTH } from "./poi-panel";
 
 /** パネル排他の閾値(px) */
 const EXCLUSIVE_BREAKPOINT = 1440;
+
+/** デバッグパネルの最大幅(px) */
+const DEBUG_PANEL_MAX = 500;
+
+/** デバッグパネルの最小幅(px) */
+const DEBUG_PANEL_MIN = 436;
+
+/** POIパネルの最小幅(px) */
+const POI_PANEL_MIN = 400;
+
+/** パネル間の余白(px) */
+const LAYOUT_MARGIN = 200;
 
 /**
  * ビューポート幅をthrottle付きで返すフック
@@ -43,42 +56,61 @@ const useViewportWidth = (): number => {
 };
 
 /**
- * デバッグパネルの幅(px)をビューポート幅に応じて返す
+ * POIパネルの幅(px)をステップ値から選択する
  *
- * 2200px以上: 636、1800px以上: 500、それ以下: 436
- */
-const useDebugPanelWidthValue = (): number => {
-  const isUltraWide = useIsWideViewport(2200);
-  const isWide = useIsWideViewport(1800);
-
-  if (isUltraWide) return 636;
-  if (isWide) return 500;
-  return 436;
-};
-
-/**
- * POIパネルの幅(px)を余り幅に応じて返す
- *
- * 余り幅 = ビューポート - デバッグパネル幅(開いてれば) - キャンバス幅 - 余白
- * カード幅175px固定で、何列入るかで段階的にパネル幅を決定する。
+ * debugReservedを予約した上で、収まる最大のステップ幅を返す。
  */
 const calcPOIPanelWidth = (
-  debugPanelWidth: number,
   viewportWidth: number,
-  isDebugMode: boolean,
-  maxCanvasSize: number,
+  debugReserved: number,
+  canvasWidth: number,
 ): number => {
-  const canvasWidth = maxCanvasSize === -1 ? 1024 : Math.min(maxCanvasSize, viewportWidth);
-  const activeDebugWidth = isDebugMode ? debugPanelWidth : 0;
-
   const canFit = (poiWidth: number) =>
-    viewportWidth >= activeDebugWidth + poiWidth + canvasWidth + 200;
+    viewportWidth >= debugReserved + poiWidth + canvasWidth + LAYOUT_MARGIN;
 
   if (canFit(1120)) return 1120;
   if (canFit(940)) return 940;
   if (canFit(760)) return 760;
   if (canFit(580)) return 580;
-  return 400;
+  return POI_PANEL_MIN;
+};
+
+/**
+ * デバッグパネルとPOIパネルの幅を同時に算出する
+ *
+ * debugが最大幅に到達できるならMAXを予約してからPOIのステップ幅を決める。
+ * 到達できない場合はPOIにMINを予約して、残りをdebugに割り当てる。
+ */
+const calcPanelWidths = (
+  viewportWidth: number,
+  isDebugMode: boolean,
+  canvasWidth: number,
+  poiPanelOpen: boolean,
+): { debugPanelWidth: number; poiPanelWidth: number } => {
+  const budget = viewportWidth - canvasWidth - LAYOUT_MARGIN;
+
+  if (!isDebugMode) {
+    // debugパネル非表示: POIにフルに使わせる
+    const poiPanelWidth = calcPOIPanelWidth(viewportWidth, 0, canvasWidth);
+    return { debugPanelWidth: DEBUG_PANEL_MAX, poiPanelWidth };
+  }
+
+  const poiActual = poiPanelOpen ? POI_PANEL_MIN : COLLAPSED_STRIP_WIDTH;
+
+  if (budget >= DEBUG_PANEL_MAX + poiActual) {
+    // debugがMAXに到達できる → MAXを予約してPOIを算出
+    const poiPanelWidth = calcPOIPanelWidth(viewportWidth, DEBUG_PANEL_MAX, canvasWidth);
+    return { debugPanelWidth: DEBUG_PANEL_MAX, poiPanelWidth };
+  }
+
+  // debugがMAXに届かない → POIにMINを予約して残りをdebugへ
+  const poiReserved = poiPanelOpen ? POI_PANEL_MIN : COLLAPSED_STRIP_WIDTH;
+  const debugPanelWidth = Math.max(
+    DEBUG_PANEL_MIN,
+    Math.min(DEBUG_PANEL_MAX, budget - poiReserved),
+  );
+  const poiPanelWidth = calcPOIPanelWidth(viewportWidth, debugPanelWidth, canvasWidth);
+  return { debugPanelWidth, poiPanelWidth };
 };
 
 /** パネルレイアウト情報の型 */
@@ -97,14 +129,16 @@ const PanelLayoutContext = createContext<PanelLayout | null>(null);
  */
 export const PanelLayoutProvider = ({ children }: { children: React.ReactNode }) => {
   const viewportWidth = useViewportWidth();
-  const debugPanelWidth = useDebugPanelWidthValue();
   const isDebugMode = useStoreValue("isDebugMode");
+  const poiPanelOpen = useStoreValue("poiPanelOpen");
   const maxCanvasSize = useStoreValue("maxCanvasSize");
-  const poiPanelWidth = calcPOIPanelWidth(
-    debugPanelWidth,
+
+  const canvasWidth = maxCanvasSize === -1 ? 1024 : Math.min(maxCanvasSize, viewportWidth);
+  const { debugPanelWidth, poiPanelWidth } = calcPanelWidths(
     viewportWidth,
     isDebugMode,
-    maxCanvasSize,
+    canvasWidth,
+    poiPanelOpen,
   );
 
   return (
