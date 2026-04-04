@@ -1,12 +1,14 @@
 import { useT } from "@/i18n/context";
 import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
 import { isGithubPages } from "@/utils/location";
-import { IconX } from "@tabler/icons-react";
+import { IconLayoutSidebar, IconStar, IconX } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useIsWideViewport } from "../debug-panel/use-is-wide-viewport";
 import { POI } from "../right-sidebar/poi";
 import { POIHistories } from "../right-sidebar/poi-histories";
 import { usePanelLayout } from "../use-panel-layout";
+
+const COLLAPSED_STRIP_WIDTH = 40;
 
 /** 狭い画面での排他ロジック: POIパネル開時にデバッグを閉じる */
 const useExclusivePanels = () => {
@@ -54,6 +56,20 @@ const SuggestRedirect = () => {
   );
 };
 
+/** 閉じた時に右端に表示されるストリップ */
+const CollapsedStrip = () => {
+  return (
+    <button
+      onClick={() => updateStore("poiPanelOpen", true)}
+      className="absolute top-0 left-0 flex h-full flex-col items-center gap-3 border-r border-[#3a3a4a] bg-[#1e1e2e] pt-4 transition-colors hover:bg-[#262640]"
+      style={{ width: `${COLLAPSED_STRIP_WIDTH}px` }}
+    >
+      <IconLayoutSidebar size={18} className="text-foreground/60" />
+      <IconStar size={16} className="text-foreground/60" />
+    </button>
+  );
+};
+
 /** 右側スライドインPOIパネル */
 export const POIPanel = () => {
   const poiPanelOpen = useStoreValue("poiPanelOpen");
@@ -63,25 +79,34 @@ export const POIPanel = () => {
 
   return (
     <div
-      style={{ width: `${poiPanelWidth}px` }}
+      style={{
+        width: `${poiPanelWidth}px`,
+        transform: poiPanelOpen
+          ? "translateX(0)"
+          : `translateX(calc(100% - ${COLLAPSED_STRIP_WIDTH}px))`,
+      }}
       className={`fixed top-0 right-0 z-90 flex h-full flex-col border-l border-[#2a2a3a] transition-transform duration-300 ${
-        poiPanelOpen
-          ? "translate-x-0 bg-[#161620]/97 shadow-[-4px_0_16px_rgba(0,0,0,0.5)] backdrop-blur-sm"
-          : "translate-x-full"
+        poiPanelOpen ? "bg-[#161620]/97 shadow-[-4px_0_16px_rgba(0,0,0,0.5)] backdrop-blur-sm" : ""
       }`}
     >
-      <div className="flex items-center justify-between border-b border-[#2a2a3a] px-4 py-3">
-        <h2 className="text-sm font-semibold">Points of Interest</h2>
-        <button
-          onClick={() => updateStoreWith("poiPanelOpen", (v) => !v)}
-          className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
-        >
-          <IconX size={18} />
-        </button>
-      </div>
-      <div className="flex min-h-0 grow flex-col overflow-y-auto px-2 pt-2">
-        <PanelContent />
-      </div>
+      {poiPanelOpen ? (
+        <>
+          <div className="flex items-center justify-between border-b border-[#2a2a3a] px-4 py-3">
+            <h2 className="text-sm font-semibold">Points of Interest</h2>
+            <button
+              onClick={() => updateStoreWith("poiPanelOpen", (v) => !v)}
+              className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
+            >
+              <IconX size={18} />
+            </button>
+          </div>
+          <div className="flex min-h-0 grow flex-col overflow-y-auto px-2 pt-2">
+            <PanelContent />
+          </div>
+        </>
+      ) : (
+        <CollapsedStrip />
+      )}
     </div>
   );
 };
