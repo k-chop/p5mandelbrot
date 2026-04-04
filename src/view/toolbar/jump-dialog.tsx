@@ -188,7 +188,7 @@ export const JumpDialog = ({ open, onOpenChange }: JumpDialogProps) => {
               placeholder={"x=-1.408, y=0.136, r=2e-7, N=500\nreal: -1.408 imag: 0.136 zoom: 1e10"}
               value={rawText}
               onChange={(e) => handleTextChange(e.target.value)}
-              className="min-h-20 break-all font-mono text-xs placeholder:opacity-30"
+              className="h-[250px] break-all font-mono text-xs placeholder:opacity-30"
             />
             {parseError && <p className="text-xs text-destructive">{resolveError(parseError)}</p>}
           </div>
