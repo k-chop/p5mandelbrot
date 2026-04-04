@@ -1,4 +1,6 @@
-import type { MandelbrotWorkerType } from "@/types";
+import { calcCoordPrecision } from "@/math/coord-precision";
+import type { MandelbrotWorkerType, POIData } from "@/types";
+import BigNumber from "bignumber.js";
 
 /**
  * プリセットPOIの生データ型
@@ -55,6 +57,24 @@ export const getPresetPOIList = (): readonly PresetPOIRaw[] => presetPOIList;
  *
  * 全件を一巡するまで同じPOIは返さない。一巡したら先頭に戻る。
  */
+/**
+ * POIDataがプリセットリストに既登録かを判定する
+ *
+ * precision切り捨て後のx, y, r, Nで比較する。
+ */
+export const isRegisteredAsPreset = (poi: POIData): boolean => {
+  const precision = calcCoordPrecision(poi.r);
+  const px = poi.x.toPrecision(precision);
+  const py = poi.y.toPrecision(precision);
+  const pr = poi.r.toString();
+
+  return presetPOIList.some((preset) => {
+    const presetX = new BigNumber(preset.x).toPrecision(precision);
+    const presetY = new BigNumber(preset.y).toPrecision(precision);
+    return presetX === px && presetY === py && preset.r === pr && preset.N === poi.N;
+  });
+};
+
 export const getRandomPresetPOI = (): PresetPOIRaw => {
   if (presetPOIList.length === 0) {
     throw new Error("Preset POI list is not initialized. Call initializePresetPOIList() first.");
