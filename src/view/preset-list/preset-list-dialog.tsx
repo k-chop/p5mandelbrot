@@ -15,7 +15,7 @@ import {
   type ThumbnailTarget,
   useThumbnailBatch,
 } from "@/view/thumbnail-batch/use-thumbnail-batch";
-import { IconPhoto, IconTrash } from "@tabler/icons-react";
+import { IconPhoto, IconRefresh, IconTrash } from "@tabler/icons-react";
 import BigNumber from "bignumber.js";
 import { useCallback, useState } from "react";
 
@@ -115,17 +115,31 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
           <div className="text-sm text-muted-foreground">
             {t("{count} presets", "preset.count").replace("{count}", String(presetList.length))}
           </div>
-          {isDevMode() && (
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={handleGenerateThumbnails}
+              onClick={async () => {
+                await initializePresetPOIList();
+                setRevision((r) => r + 1);
+              }}
               disabled={isRunning}
             >
-              <IconPhoto className="mr-1 size-4" />
-              Generate Thumbnails
+              <IconRefresh className="mr-1 size-4" />
+              Reload
             </Button>
-          )}
+            {isDevMode() && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateThumbnails}
+                disabled={isRunning}
+              >
+                <IconPhoto className="mr-1 size-4" />
+                Generate Thumbnails
+              </Button>
+            )}
+          </div>
         </div>
         {isRunning && (
           <Alert>
