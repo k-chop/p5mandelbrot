@@ -59,6 +59,7 @@ export const en = {
   // poi
   "poi.savePOI": "Save POI",
   "poi.regenerateThumbnail": "Regenerate thumbnail",
+  "poi.thumbnailRegenerated": "Thumbnail regenerated",
   "poi.apply": "Apply",
   "poi.delete": "Delete",
   "poi.export": "Export",

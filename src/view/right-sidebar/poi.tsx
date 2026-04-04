@@ -10,8 +10,8 @@ import {
   useThumbnailBatch,
 } from "@/view/thumbnail-batch/use-thumbnail-batch";
 import { IconCirclePlus, IconDownload, IconPhoto, IconUpload } from "@tabler/icons-react";
-import throttle from "lodash.throttle";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
 import { POICard } from "./poi-card";
 import { POIExportDialog } from "./poi-export-dialog";
 import { POIImportDialog } from "./poi-import-dialog";
@@ -31,8 +31,6 @@ const toThumbnailTarget = (poi: POIData): ThumbnailTarget => ({
 export const POI = () => {
   const t = useT();
   const { poiList, addPOI, deletePOIAt, applyPOI, regenerateThumbnailPOI } = usePOI();
-  const scrollTop = useRef(parseInt(sessionStorage.getItem("scroll") ?? "0"));
-  const viewportRef = useRef<HTMLDivElement>(null);
   const [exportOpened, { open: openExport, close: closeExport }] = useModalState();
   const [importOpened, { open: openImport, close: closeImport }] = useModalState();
 
@@ -61,21 +59,6 @@ export const POI = () => {
     setFeedback(`Generating ${missing.length} thumbnails...`);
     startBatch(missing);
   };
-
-  const handleScroll = throttle((e: React.UIEvent<HTMLDivElement>) => {
-    scrollTop.current = e.currentTarget.scrollTop;
-  }, 500);
-
-  useEffect(() => {
-    const scroll = scrollTop.current;
-    if (viewportRef.current) {
-      viewportRef.current.scrollTop = scroll;
-    }
-
-    return () => {
-      sessionStorage.setItem("scroll", scrollTop.current.toString());
-    };
-  }, []);
 
   const isRunning = batchState.status === "running";
 
@@ -146,11 +129,7 @@ export const POI = () => {
         }}
       />
 
-      <div
-        ref={viewportRef}
-        className="min-h-10 grow basis-0 overflow-y-scroll"
-        onScroll={handleScroll}
-      >
+      <div className="min-h-10 grow basis-0 overflow-y-scroll">
         <div
           className="grid gap-2 p-1 pr-2"
           style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))" }}
@@ -161,7 +140,12 @@ export const POI = () => {
               poi={poi}
               onDelete={() => deletePOIAt(index)}
               onApply={() => applyPOI(poi)}
-              onRegenerateThumbnail={() => regenerateThumbnailPOI(index)}
+              onRegenerateThumbnail={() => {
+                regenerateThumbnailPOI(index);
+                toast.success(t("Thumbnail regenerated", "poi.thumbnailRegenerated"), {
+                  duration: 2000,
+                });
+              }}
             />
           ))}
         </div>

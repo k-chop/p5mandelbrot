@@ -1,13 +1,7 @@
 import { getCurrentPalette, setSerializedPalette } from "@/camera/palette";
 import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
-import {
-  cloneParams,
-  getCurrentParams,
-  setCurrentParams,
-  setManualN,
-} from "@/mandelbrot-state/mandelbrot-state";
-import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
-import { getMatchingHistoryThumbnail } from "@/poi-history/poi-history";
+import { cloneParams, setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
+import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
 import { deletePreview, savePreview } from "@/store/preview-store";
 import { calcCoordPrecision } from "@/math/coord-precision";
 import BigNumber from "bignumber.js";
@@ -16,28 +10,6 @@ import { updateStore, useStoreValue } from "../../store/store";
 import { createNewPOIData, writePOIListToStorage } from "../../store/sync-storage/poi-list";
 import type { MandelbrotParams, POIData } from "../../types";
 import { POI_THUMBNAIL_SIZE } from "@/constants";
-
-/**
- * パラメータに合わせたサムネイル画像を取得する共通関数
- * 履歴から一致するものがあれば使用し、なければ直接キャプチャ
- */
-function getThumbnailForParams(params: MandelbrotParams = getCurrentParams()): string {
-  const matchingThumbnail = getMatchingHistoryThumbnail(params);
-
-  if (matchingThumbnail) {
-    console.log("Using existing thumbnail from history");
-    return matchingThumbnail;
-  }
-
-  console.log("Capturing new thumbnail");
-
-  try {
-    return getResizedCanvasImageDataURL(POI_THUMBNAIL_SIZE);
-  } catch (e) {
-    console.error("Failed to capture thumbnail:", e);
-    return "";
-  }
-}
 
 export const usePOI = () => {
   const poiList: POIData[] = useStoreValue("poi");
@@ -54,8 +26,10 @@ export const usePOI = () => {
       const newPOIList = [newPOI, ...poiList];
       writePOIListToStorage(newPOIList);
 
-      const imageDataURL = getThumbnailForParams(newParams);
-      savePreview(newPOI.id, imageDataURL);
+      // drawループ内でキャプチャする（WebGPUではテクスチャがexpireするため直接取得不可）
+      requestCanvasImage(POI_THUMBNAIL_SIZE, (imageDataURL) => {
+        savePreview(newPOI.id, imageDataURL);
+      });
       updateStore("poi", newPOIList);
     },
     [poiList],
@@ -67,8 +41,10 @@ export const usePOI = () => {
       poi.serializedPalette = getCurrentPalette().serialize();
       writePOIListToStorage(poiList);
 
-      const imageDataURL = getThumbnailForParams();
-      savePreview(poi.id, imageDataURL);
+      // drawループ内でキャプチャする（WebGPUではテクスチャがexpireするため直接取得不可）
+      requestCanvasImage(POI_THUMBNAIL_SIZE, (imageDataURL) => {
+        savePreview(poi.id, imageDataURL);
+      });
       updateStore("poi", poiList);
     },
     [poiList],

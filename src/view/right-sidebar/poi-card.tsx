@@ -11,7 +11,8 @@ import { isDevMode } from "@/utils/dev-mode";
 import { buildShareData } from "@/utils/mandelbrot-url-params";
 import { ShareDialog } from "@/view/header/share-dialog";
 import { useModalState } from "@/view/modal/use-modal-state";
-import { IconBookmarkPlus, IconShare, IconTrash } from "@tabler/icons-react";
+import { isRegisteredAsPreset } from "@/preset-poi/preset-poi";
+import { IconBookmarkFilled, IconBookmarkPlus, IconShare, IconTrash } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import type { POIData } from "../../types";
 import { POICardPreview } from "./poi-card-preview";
@@ -69,13 +70,20 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
           {N.toFixed(0)}
         </div>
         <div className="flex gap-1">
-          {isDevMode() && (
-            <SimpleTooltip content="Add to Preset">
-              <Button variant="ghost" size="icon-sm" onClick={() => addToPreset(poi)}>
-                <IconBookmarkPlus className="size-3.5" />
-              </Button>
-            </SimpleTooltip>
-          )}
+          {isDevMode() &&
+            (isRegisteredAsPreset(poi) ? (
+              <SimpleTooltip content="Already in Preset">
+                <Button variant="ghost" size="icon-sm" disabled>
+                  <IconBookmarkFilled className="size-3.5 text-emerald-400/70" />
+                </Button>
+              </SimpleTooltip>
+            ) : (
+              <SimpleTooltip content="Add to Preset">
+                <Button variant="ghost" size="icon-sm" onClick={() => addToPreset(poi)}>
+                  <IconBookmarkPlus className="size-3.5" />
+                </Button>
+              </SimpleTooltip>
+            ))}
           <SimpleTooltip content={t("Share", "header.share")}>
             <Button variant="ghost" size="icon-sm" onClick={openShare}>
               <IconShare className="size-3.5" />

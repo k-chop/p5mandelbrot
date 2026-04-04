@@ -10,7 +10,7 @@ export const POICardPreview = React.memo(({ poi }: Props) => {
   const [data, setData] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useTrackChangePreview(poi.id);
+  const previewChanged = useTrackChangePreview(poi.id);
 
   useEffect(() => {
     let isCancelled = false;
@@ -36,7 +36,7 @@ export const POICardPreview = React.memo(({ poi }: Props) => {
     return () => {
       isCancelled = true;
     };
-  }, [poi.id]);
+  }, [poi.id, previewChanged]);
 
   if (isLoading) {
     return (
