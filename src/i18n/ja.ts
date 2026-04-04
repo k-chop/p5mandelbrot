@@ -24,6 +24,9 @@ export const ja: Dictionary = {
   "header.randomJump": "I'm Feeling Lucky",
   "header.randomJumpTooltip": "マンデルブロ集合の秘境へ連れて行くぜ。",
 
+  // toolbar
+  "toolbar.togglePOIPanel": "POIパネルの表示切替",
+
   // share dialog
   "share.noPreview": "プレビューなし",
   "share.copied": "コピーしました！",

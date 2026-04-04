@@ -4,10 +4,10 @@ import { TooltipProvider } from "@/shadcn/components/ui/tooltip";
 import { useStoreValue } from "@/store/store";
 import ReactDOM from "react-dom";
 import { CanvasOverlay } from "./canvas-overlay";
-import { Footer } from "./footer";
-import { Header } from "./header";
-import { RightSidebar } from "./right-sidebar";
+import { POIPanel } from "./poi-panel";
+import { ProgressBar } from "./progress-bar";
 import { SupersamplingOverlay } from "./supersampling-overlay";
+import { Toolbar } from "./toolbar";
 
 export const AppRoot = () => {
   const locale = useStoreValue("locale");
@@ -15,9 +15,9 @@ export const AppRoot = () => {
   return (
     <I18nProvider locale={locale}>
       <TooltipProvider delayDuration={0}>
-        {ReactDOM.createPortal(<Header />, document.getElementById("header")!)}
-        {ReactDOM.createPortal(<RightSidebar />, document.getElementById("sidebar-right")!)}
-        {ReactDOM.createPortal(<Footer />, document.getElementById("footer")!)}
+        {ReactDOM.createPortal(<Toolbar />, document.getElementById("toolbar")!)}
+        {ReactDOM.createPortal(<POIPanel />, document.getElementById("poi-panel")!)}
+        {ReactDOM.createPortal(<ProgressBar />, document.getElementById("progress-bar")!)}
         {ReactDOM.createPortal(<CanvasOverlay />, document.getElementById("canvas-overlay")!)}
         {ReactDOM.createPortal(
           <SupersamplingOverlay />,
