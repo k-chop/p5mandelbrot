@@ -51,5 +51,5 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": []
+  "ignorePatterns": ["wasm-fp/pkg"]
 }
