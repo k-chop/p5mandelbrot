@@ -74,7 +74,7 @@ export const POICard = ({ poi, onDelete, onApply, onRegenerateThumbnail }: POICa
             (isRegisteredAsPreset(poi) ? (
               <SimpleTooltip content="Already in Preset">
                 <Button variant="ghost" size="icon-sm" disabled>
-                  <IconBookmarkFilled className="size-3.5" />
+                  <IconBookmarkFilled className="size-3.5 text-emerald-400/70" />
                 </Button>
               </SimpleTooltip>
             ) : (
