@@ -1,4 +1,3 @@
-import { debounce } from "es-toolkit";
 import p5 from "p5";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
@@ -9,7 +8,6 @@ import {
   p5Draw,
   p5MouseReleased,
   p5Setup,
-  resizeTo,
   zoomTo,
 } from "./p5-adapter/p5-adapter";
 import { isInside } from "./p5-adapter/utils";
@@ -72,10 +70,8 @@ const sketch = (p: p5) => {
     p5Draw(p);
   };
 
-  const debouncedResizeFunc = debounce(() => resizeTo(p), 250);
-  p.windowResized = () => {
-    debouncedResizeFunc();
-  };
+  // キャンバスサイズはsettingsのmaxCanvasSizeで制御する。
+  // windowResizedによる自動リサイズは無効化（フローティングパネルの開閉で不要なリサイズが走るため）
 };
 
 const entrypoint = () => {

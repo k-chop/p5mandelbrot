@@ -1,42 +1,35 @@
 import { useT } from "@/i18n/context";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shadcn/components/ui/tabs";
-import { updateStoreWith, useStoreValue } from "@/store/store";
+import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
 import { isGithubPages } from "@/utils/location";
 import { IconX } from "@tabler/icons-react";
-import { DebugMode } from "../right-sidebar/debug-mode/debug-mode";
+import { useEffect } from "react";
+import { useIsWideViewport } from "../debug-panel/use-is-wide-viewport";
 import { POI } from "../right-sidebar/poi";
 import { POIHistories } from "../right-sidebar/poi-histories";
 
-const tabsContentClass = "flex h-full grow flex-col data-[state=inactive]:hidden";
+/** 狭い画面での排他ロジック: POIパネル開時にデバッグを閉じる */
+const useExclusivePanels = () => {
+  const poiPanelOpen = useStoreValue("poiPanelOpen");
+  const isNarrow = !useIsWideViewport(1440);
+
+  useEffect(() => {
+    if (isNarrow && poiPanelOpen) {
+      updateStore("isDebugMode", false);
+    }
+  }, [isNarrow, poiPanelOpen]);
+};
 
 /** POIパネル内のコンテンツ */
 const PanelContent = () => {
-  const isDebugMode = useStoreValue("isDebugMode");
-
   if (isGithubPages()) {
     return <SuggestRedirect />;
   }
 
   return (
     <div className="flex h-full flex-col">
-      {isDebugMode ? (
-        <Tabs className="flex grow flex-col" defaultValue="poi">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="poi">POI</TabsTrigger>
-            <TabsTrigger value="debug">Debug</TabsTrigger>
-          </TabsList>
-          <TabsContent className={tabsContentClass} value="poi">
-            <POI />
-          </TabsContent>
-          <TabsContent className={tabsContentClass} value="debug">
-            <DebugMode />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <div className="flex grow flex-col">
-          <POI />
-        </div>
-      )}
+      <div className="flex grow flex-col">
+        <POI />
+      </div>
       <POIHistories />
     </div>
   );
@@ -63,11 +56,18 @@ const SuggestRedirect = () => {
 /** 右側スライドインPOIパネル */
 export const POIPanel = () => {
   const poiPanelOpen = useStoreValue("poiPanelOpen");
+  const isUltraWide = useIsWideViewport(2200);
+
+  useExclusivePanels();
+
+  const width = isUltraWide ? "w-[500px]" : "w-[400px]";
 
   return (
     <div
-      className={`fixed top-0 right-0 z-[90] flex h-full w-[400px] flex-col border-l border-[#2a2a3a] bg-[#161620]/97 shadow-[-4px_0_16px_rgba(0,0,0,0.5)] backdrop-blur-sm transition-transform duration-300 ${
-        poiPanelOpen ? "translate-x-0" : "translate-x-full"
+      className={`fixed top-0 right-0 z-[90] flex h-full flex-col border-l border-[#2a2a3a] transition-transform duration-300 ${width} ${
+        poiPanelOpen
+          ? "translate-x-0 bg-[#161620]/97 shadow-[-4px_0_16px_rgba(0,0,0,0.5)] backdrop-blur-sm"
+          : "translate-x-full"
       }`}
     >
       <div className="flex items-center justify-between border-b border-[#2a2a3a] px-4 py-3">

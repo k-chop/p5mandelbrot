@@ -2,11 +2,29 @@ import { SimpleTooltip } from "@/components/simple-tooltip";
 import { useT } from "@/i18n/context";
 import { Button } from "@/shadcn/components/ui/button";
 import { updateStoreWith, useStoreValue } from "@/store/store";
-import { IconLayoutSidebar, IconSettings } from "@tabler/icons-react";
+import { IconBug, IconLayoutSidebar, IconSettings } from "@tabler/icons-react";
 import { Actions } from "../header/actions";
 import { useModalState } from "../modal/use-modal-state";
 import { PalettePopover } from "../palette-popover";
 import { SettingsDialog } from "../settings-dialog";
+
+/** デバッグパネルの開閉トグルボタン */
+const DebugPanelToggle = () => {
+  const isDebugMode = useStoreValue("isDebugMode");
+
+  return (
+    <SimpleTooltip content="Debug">
+      <Button
+        variant={isDebugMode ? "default" : "outline"}
+        size="sm"
+        onClick={() => updateStoreWith("isDebugMode", (v) => !v)}
+      >
+        <IconBug className="mr-1 size-5" />
+        Debug
+      </Button>
+    </SimpleTooltip>
+  );
+};
 
 /** POIパネルの開閉トグルボタン */
 const POIPanelToggle = () => {
@@ -49,6 +67,7 @@ export const Toolbar = () => {
           {t("Settings", "operations.settings")}
         </Button>
         <div className="bg-border mx-1 h-6 w-px" />
+        <DebugPanelToggle />
         <POIPanelToggle />
       </div>
     </>
