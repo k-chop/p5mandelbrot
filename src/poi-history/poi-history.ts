@@ -1,6 +1,7 @@
 import { getCurrentPalette } from "@/camera/palette";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { getResizedCanvasImageDataURL } from "@/p5-adapter/p5-adapter";
+import { POI_THUMBNAIL_SIZE } from "@/view/right-sidebar/use-poi";
 import { createNewPOIData } from "@/store/sync-storage/poi-list";
 import type { POIData } from "@/types";
 import { eventmit } from "eventmit";
@@ -70,7 +71,7 @@ export const addPOIToHistory = (poi: POIHistory) => {
  */
 export const addCurrentLocationToPOIHistory = () => {
   const poi = createNewPOIData(getCurrentParams(), getCurrentPalette());
-  const imageDataUrl = getResizedCanvasImageDataURL(175);
+  const imageDataUrl = getResizedCanvasImageDataURL(POI_THUMBNAIL_SIZE);
 
   addPOIToHistory({ ...poi, imageDataUrl });
 };
