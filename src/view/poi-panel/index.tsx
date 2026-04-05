@@ -62,14 +62,16 @@ const POIPanelHeader = () => {
       <div className="flex items-center justify-between border-b border-[#2a2a3a] px-4 py-3">
         <div className="flex items-center gap-4">
           <h2 className="text-sm font-semibold">Points of Interest</h2>
-          <Button variant="outline" size="sm" onClick={openPreset}>
-            <IconList className="mr-1 size-4" />
-            {t("Preset List", "preset.title")}
-          </Button>
-          <Button variant="outline" size="sm" onClick={openMinimap}>
-            <IconMap className="mr-1 size-4" />
-            Minimap
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="sm" onClick={openPreset}>
+              <IconList className="mr-1 size-4" />
+              {t("Preset List", "preset.title")}
+            </Button>
+            <Button variant="outline" size="sm" onClick={openMinimap}>
+              <IconMap className="mr-1 size-4" />
+              Minimap
+            </Button>
+          </div>
         </div>
         <button
           onClick={() => updateStoreWith("poiPanelOpen", (v) => !v)}
