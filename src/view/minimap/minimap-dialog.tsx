@@ -3,8 +3,8 @@ import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
 import { setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
 import {
   type PresetPOIRaw,
-  getPresetPOIList,
   getPresetThumbnailUrl,
+  usePresetPOIList,
 } from "@/preset-poi/preset-poi";
 import { calcCoordPrecision } from "@/math/coord-precision";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
@@ -307,10 +307,9 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
  */
 export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
   const userPOIList: POIData[] = useStoreValue("poi");
+  const presetList = usePresetPOIList();
 
   const { clusters, presetCount, userCount } = useMemo(() => {
-    const presetList = getPresetPOIList();
-
     const pins: Pin[] = [];
 
     // ユーザーPOIと重複するプリセットIDを収集（ユーザーPOI優先で表示するため）
@@ -370,7 +369,7 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
       presetCount: presetList.length - duplicatePresetIds.size,
       userCount: userPOIList.length,
     };
-  }, [userPOIList]);
+  }, [userPOIList, presetList]);
 
   const handleJump = useCallback(() => {
     onOpenChange(false);

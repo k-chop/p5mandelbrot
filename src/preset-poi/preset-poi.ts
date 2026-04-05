@@ -2,6 +2,7 @@ import { calcCoordPrecision } from "@/math/coord-precision";
 import type { MandelbrotWorkerType, POIData } from "@/types";
 import { isDevMode } from "@/utils/dev-mode";
 import BigNumber from "bignumber.js";
+import { useSyncExternalStore } from "react";
 
 /** GCSプロキシのベースURL（Cloudflare Worker経由） */
 const GCS_BASE_URL =
@@ -22,7 +23,34 @@ export interface PresetPOIRaw {
 }
 
 /** 読み込み済みのプリセットPOIリスト */
-let presetPOIList: PresetPOIRaw[] = [];
+let presetPOIList: readonly PresetPOIRaw[] = [];
+
+/** useSyncExternalStore用の購読管理 */
+const listeners = new Set<() => void>();
+
+/**
+ * プリセットPOIリストの変更を購読する
+ */
+const subscribe = (listener: () => void): (() => void) => {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+};
+
+/**
+ * 購読者に変更を通知する
+ */
+const emitChange = () => {
+  for (const listener of listeners) {
+    listener();
+  }
+};
+
+/**
+ * プリセットPOIリストをReactコンポーネントから購読するhook
+ */
+export const usePresetPOIList = (): readonly PresetPOIRaw[] => {
+  return useSyncExternalStore(subscribe, getPresetPOIList);
+};
 
 /** シャッフル済みのインデックス配列 */
 let shuffledIndices: number[] = [];
@@ -80,6 +108,7 @@ export const initializePresetPOIList = async (): Promise<void> => {
   presetPOIList = await res.json();
   shuffledIndices = shuffle([...Array(presetPOIList.length).keys()]);
   cursor = 0;
+  emitChange();
 };
 
 /**
