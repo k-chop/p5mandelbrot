@@ -127,7 +127,7 @@ const jumpToUserPOI = (poi: POIData) => {
 };
 
 /** ポップオーバーの幅(px) */
-const POPOVER_WIDTH = 280;
+const POPOVER_WIDTH = 260;
 
 /**
  * ピンの位置に応じてポップオーバーの配置を決定する
@@ -187,7 +187,12 @@ const ClusterPopover = ({ cluster, onJump }: { cluster: Cluster; onJump: () => v
   }, [cluster.pins]);
 
   return (
-    <div className="grid max-h-72 grid-cols-3 gap-1.5 overflow-y-auto">
+    <div
+      className="grid max-h-72 gap-1.5 overflow-y-auto"
+      style={{
+        gridTemplateColumns: `repeat(${Math.min(cluster.pins.length, 3)}, 80px)`,
+      }}
+    >
       {cluster.pins.map((pin) => (
         <button
           key={pin.id}
@@ -282,7 +287,7 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
       {showPopover && (
         <div
           ref={popoverRef}
-          className="absolute z-50 w-70 rounded-lg border border-white/10 bg-[#1e1e2e]/95 p-2 shadow-xl backdrop-blur-sm"
+          className="absolute z-50 w-fit rounded-lg border border-white/10 bg-[#1e1e2e]/95 p-2 shadow-xl backdrop-blur-sm"
           style={popoverPosition(cluster.cx, cluster.cy)}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
