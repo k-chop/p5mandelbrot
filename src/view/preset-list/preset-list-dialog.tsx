@@ -110,7 +110,7 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={isRunning ? undefined : onOpenChange}>
-      <DialogContent className="max-h-[80vh] max-w-6xl">
+      <DialogContent className="max-h-[80vh] max-w-6xl" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("Preset List", "preset.title")}</DialogTitle>
         </DialogHeader>
