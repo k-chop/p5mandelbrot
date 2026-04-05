@@ -75,7 +75,7 @@ export const ja: Dictionary = {
   "poi.importButton": "{count}件のPOIをインポート",
 
   // preset
-  "preset.title": "プリセット一覧",
+  "preset.title": "Preset",
   "preset.count": "{count}件のプリセット",
 
   // footer
