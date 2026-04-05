@@ -5,8 +5,9 @@ import { Separator } from "@/shadcn/components/ui/separator";
 import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
 import { isGithubPages } from "@/utils/location";
 import { useModalState } from "@/view/modal/use-modal-state";
+import { MinimapDialog } from "@/view/minimap/minimap-dialog";
 import { PresetListDialog } from "@/view/preset-list/preset-list-dialog";
-import { IconCirclePlus, IconLayoutSidebar, IconList, IconX } from "@tabler/icons-react";
+import { IconCirclePlus, IconLayoutSidebar, IconList, IconMap, IconX } from "@tabler/icons-react";
 import { POI } from "../right-sidebar/poi";
 import { POICardPreview } from "../right-sidebar/poi-card-preview";
 import { POIHistories } from "../right-sidebar/poi-histories";
@@ -54,6 +55,7 @@ const SuggestRedirect = () => {
 const POIPanelHeader = () => {
   const t = useT();
   const [presetOpened, { open: openPreset, close: closePreset }] = useModalState();
+  const [minimapOpened, { open: openMinimap, close: closeMinimap }] = useModalState();
 
   return (
     <>
@@ -63,6 +65,10 @@ const POIPanelHeader = () => {
           <Button variant="outline" size="sm" onClick={openPreset}>
             <IconList className="mr-1 size-4" />
             {t("Preset List", "preset.title")}
+          </Button>
+          <Button variant="outline" size="sm" onClick={openMinimap}>
+            <IconMap className="mr-1 size-4" />
+            Minimap
           </Button>
         </div>
         <button
@@ -76,6 +82,12 @@ const POIPanelHeader = () => {
         open={presetOpened}
         onOpenChange={(isOpen) => {
           if (!isOpen) closePreset();
+        }}
+      />
+      <MinimapDialog
+        open={minimapOpened}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) closeMinimap();
         }}
       />
     </>
