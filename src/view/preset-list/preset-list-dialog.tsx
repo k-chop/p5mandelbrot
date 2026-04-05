@@ -4,11 +4,11 @@ import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
 import { setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
 import {
   type PresetPOIRaw,
-  getPresetPOIList,
   getPresetThumbnailUrl,
   initializePresetPOIList,
   isGCSMode,
   setGCSMode,
+  usePresetPOIList,
 } from "@/preset-poi/preset-poi";
 import { Alert, AlertDescription } from "@/shadcn/components/ui/alert";
 import { Button } from "@/shadcn/components/ui/button";
@@ -53,7 +53,7 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
   const t = useT();
   const [revision, setRevision] = useState(0);
   void revision;
-  const presetList = getPresetPOIList();
+  const presetList = usePresetPOIList();
   const [feedback, setFeedback] = useState<{ type: "info" | "error"; message: string } | null>(
     null,
   );
