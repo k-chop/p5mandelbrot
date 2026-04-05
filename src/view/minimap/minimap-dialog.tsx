@@ -126,7 +126,7 @@ const jumpToUserPOI = (poi: POIData) => {
 };
 
 /** ポップオーバーの幅(px) */
-const POPOVER_WIDTH = 224;
+const POPOVER_WIDTH = 280;
 
 /**
  * ピンの位置に応じてポップオーバーの配置を決定する
@@ -186,32 +186,24 @@ const ClusterPopover = ({ cluster, onJump }: { cluster: Cluster; onJump: () => v
   }, [cluster.pins]);
 
   return (
-    <div className="flex max-h-60 flex-col gap-1.5 overflow-y-auto">
+    <div className="grid max-h-72 grid-cols-3 gap-1.5 overflow-y-auto">
       {cluster.pins.map((pin) => (
         <button
           key={pin.id}
-          className="flex items-center gap-2 rounded p-1 text-left transition-colors hover:bg-white/10"
+          className="overflow-hidden rounded transition-opacity hover:opacity-80"
+          style={{
+            border: `2px solid ${pin.source === "preset" ? PRESET_COLOR : USER_POI_COLOR}`,
+          }}
           onClick={(e) => {
             e.stopPropagation();
             pin.jumpAction();
             onJump();
           }}
         >
-          <div className="size-10 shrink-0 overflow-hidden rounded bg-black/40">
+          <div className="aspect-square w-full bg-black/40">
             {thumbnails[pin.id] && (
               <img src={thumbnails[pin.id]!} alt={pin.label} className="size-full object-cover" />
             )}
-          </div>
-          <div className="min-w-0 text-xs">
-            <div className="flex items-center gap-1">
-              <span
-                className="inline-block size-2 shrink-0 rounded-full"
-                style={{
-                  backgroundColor: pin.source === "preset" ? PRESET_COLOR : USER_POI_COLOR,
-                }}
-              />
-              <span className="truncate">{pin.label}</span>
-            </div>
           </div>
         </button>
       ))}
@@ -289,7 +281,7 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
       {showPopover && (
         <div
           ref={popoverRef}
-          className="absolute z-50 w-56 rounded-lg border border-white/10 bg-[#1e1e2e]/95 p-2 shadow-xl backdrop-blur-sm"
+          className="absolute z-50 w-70 rounded-lg border border-white/10 bg-[#1e1e2e]/95 p-2 shadow-xl backdrop-blur-sm"
           style={popoverPosition(cluster.cx, cluster.cy)}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
