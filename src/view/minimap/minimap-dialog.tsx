@@ -6,6 +6,7 @@ import {
   getPresetPOIList,
   getPresetThumbnailUrl,
 } from "@/preset-poi/preset-poi";
+import { calcCoordPrecision } from "@/math/coord-precision";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { loadPreview } from "@/store/preview-store";
 import { useStoreValue } from "@/store/store";
@@ -302,13 +303,30 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
 export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
   const userPOIList: POIData[] = useStoreValue("poi");
 
-  const clusters = useMemo(() => {
+  const { clusters, presetCount, userCount } = useMemo(() => {
     const presetList = getPresetPOIList();
 
     const pins: Pin[] = [];
 
-    // プリセットPOI
+    // ユーザーPOIと重複するプリセットIDを収集（ユーザーPOI優先で表示するため）
+    const duplicatePresetIds = new Set<string>();
+    for (const userPOI of userPOIList) {
+      const precision = calcCoordPrecision(userPOI.r);
+      const ux = userPOI.x.toPrecision(precision);
+      const uy = userPOI.y.toPrecision(precision);
+      const ur = userPOI.r.toString();
+      for (const preset of presetList) {
+        const px = new BigNumber(preset.x).toPrecision(precision);
+        const py = new BigNumber(preset.y).toPrecision(precision);
+        if (px === ux && py === uy && preset.r === ur && preset.N === userPOI.N) {
+          duplicatePresetIds.add(preset.id);
+        }
+      }
+    }
+
+    // プリセットPOI（ユーザーPOIと重複するものはスキップ）
     for (const poi of presetList) {
+      if (duplicatePresetIds.has(poi.id)) continue;
       const re = Number(poi.x);
       const im = Number(poi.y);
       const { x, y } = complexToPixel(re, im);
@@ -342,7 +360,11 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
       });
     }
 
-    return clusterPins(pins);
+    return {
+      clusters: clusterPins(pins),
+      presetCount: presetList.length - duplicatePresetIds.size,
+      userCount: userPOIList.length,
+    };
   }, [userPOIList]);
 
   const handleJump = useCallback(() => {
@@ -351,12 +373,9 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
 
   if (!open) return null;
 
-  const presetCount = getPresetPOIList().length;
-  const userCount = userPOIList.length;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] max-w-[1080px] p-4">
+      <DialogContent className="max-h-[95vh] max-w-270 p-4">
         <DialogHeader>
           <DialogTitle>Minimap</DialogTitle>
         </DialogHeader>
