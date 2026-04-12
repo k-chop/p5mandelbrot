@@ -1,10 +1,13 @@
 import { Button } from "@/shadcn/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { toast } from "sonner";
+import { isDevMode } from "@/utils/dev-mode";
 import type { ShareData } from "@/utils/mandelbrot-url-params";
 import { ClickFeedback, useClickFeedback } from "@/view/components/click-feedback";
 import { useT } from "@/i18n/context";
-import { IconCircleCheck, IconCopy, IconPhoto } from "@tabler/icons-react";
+import { IconCircleCheck, IconCopy, IconExternalLink, IconPhoto } from "@tabler/icons-react";
+
+const PRODUCTION_ORIGIN = "https://p5mandelbrot.pages.dev";
 
 type ShareDialogProps = {
   open: boolean;
@@ -185,6 +188,21 @@ export const ShareDialog = ({
             </ClickFeedback>
           )}
         </div>
+
+        {isDevMode() && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => {
+              const { search } = new URL(shareData.url);
+              window.open(`${PRODUCTION_ORIGIN}/${search}`, "_blank", "noopener,noreferrer");
+            }}
+          >
+            <IconExternalLink className="mr-1 size-4 shrink-0" />
+            Open in p5mandelbrot.pages.dev
+          </Button>
+        )}
       </DialogContent>
     </Dialog>
   );
