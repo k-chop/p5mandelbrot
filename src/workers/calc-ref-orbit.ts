@@ -10,6 +10,7 @@ import type { ComplexArrayView } from "@/workers/xn-buffer";
 import { encodeComplexArray } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import wasmInit, { calculate as wasmCalculate } from "../../wasm-fp/pkg/apfp.js";
+import { calcRequiredLimbs, clampLimbs } from "../math/calc-required-limbs";
 import type { Complex, ComplexArbitrary } from "../math/complex";
 import {
   add,
@@ -41,14 +42,20 @@ export type RefOrbitContextPopulated = {
 let wasmReady = false;
 
 /**
- * wasm (Fixed1024) でreference orbitを計算する
+ * wasm (固定精度 big float) で reference orbit を計算する。
+ * limb 数は呼び出し側で必ず決定して渡すこと。
  */
-function calcRefOrbitWasm(referencePoint: ComplexArbitrary, maxIteration: number): Complex[] {
+function calcRefOrbitWasm(
+  referencePoint: ComplexArbitrary,
+  maxIteration: number,
+  limbCount: number,
+): Complex[] {
   const orbit = wasmCalculate({
     type: "reference_orbit",
     x: referencePoint.re.toFixed(),
     y: referencePoint.im.toFixed(),
     max_iter: maxIteration,
+    active_limbs: limbCount,
   });
 
   const n = orbit.length / 2;
@@ -203,6 +210,7 @@ async function setup() {
         terminator,
         workerIdx,
         useWasm,
+        limbCountOverride,
       } = event.data as RefOrbitWorkerParams;
 
       const startedAt = performance.now();
@@ -228,11 +236,19 @@ async function setup() {
 
       let xn: Complex[] = [];
 
-      // 1. wasm (Fixed1024)
+      // 1. wasm (固定精度 big float)
       if (useWasm && wasmReady) {
         try {
-          xn = calcRefOrbitWasm(referencePoint, maxIteration);
-          console.debug(`${jobId}: ref orbit calculated with wasm`);
+          // 実際に wasm に渡す座標文字列から limb 数を決定する
+          const refXStr = referencePoint.re.toFixed();
+          const refYStr = referencePoint.im.toFixed();
+          const limbCount =
+            limbCountOverride != null
+              ? clampLimbs(limbCountOverride)
+              : calcRequiredLimbs(refXStr, refYStr, maxIteration);
+
+          xn = calcRefOrbitWasm(referencePoint, maxIteration, limbCount);
+          console.debug(`${jobId}: ref orbit calculated with wasm (limbs=${limbCount})`);
         } catch (e) {
           console.warn("Failed to calculate refOrbit with wasm. Fallback.", e);
         }

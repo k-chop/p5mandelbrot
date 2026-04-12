@@ -11,42 +11,9 @@ pub struct CalculationRequest {
     pub x: String,
     pub y: String,
     pub max_iter: u32,
-    /// 使用する上位リム数（省略時は座標の桁数から自動計算）。
-    /// 小さいほど高速だが精度が下がる。
-    #[serde(default)]
-    pub active_limbs: Option<u32>,
-}
-
-/// 座標文字列の小数部桁数と反復回数から必要なリム数を計算する。
-///
-/// 必要bit数 = ceil(桁数 × log2(10)) + 反復マージン。
-/// 反復マージン: 64 + 4 × ceil(log2(max_iter))。
-/// 反復中の誤差蓄積に対する余裕を max_iter に応じて動的に確保する。
-fn calc_required_limbs(x: &str, y: &str, max_iter: u32) -> usize {
-    let frac_digits = [x, y]
-        .iter()
-        .map(|s| {
-            let s = s.trim().trim_start_matches('-').trim_start_matches('+');
-            match s.find('.') {
-                Some(dot) => s.len() - dot - 1,
-                None => 0,
-            }
-        })
-        .max()
-        .unwrap_or(0);
-
-    // log2(10) ≈ 3.3219
-    let coord_bits = (frac_digits as f64 * 3.3219).ceil() as usize;
-    // 反復回数に応じた動的マージン
-    let iter_margin = if max_iter > 1 {
-        64 + 4 * (max_iter as f64).log2().ceil() as usize
-    } else {
-        64
-    };
-    let frac_bits = coord_bits + iter_margin;
-    let frac_limbs = (frac_bits + 63) / 64;
-    // 整数部1リム + 小数部リム
-    (1 + frac_limbs).clamp(2, fixed::LIMBS)
+    /// 使用する上位リム数。JS側で計算して必ず指定する。
+    /// 範囲は [2, fixed::LIMBS]。小さいほど高速だが精度が下がる。
+    pub active_limbs: u32,
 }
 
 /// Reference orbit を計算し、各反復の (re, im) を f64 で返す。
@@ -54,10 +21,7 @@ fn calc_required_limbs(x: &str, y: &str, max_iter: u32) -> usize {
 /// z0 = (0,0) から始まり、記録してから反復する（JS版calcRefOrbitと同じ順序）。
 pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
     let c = ComplexFixed::parse(&req.x, &req.y);
-    let limbs = req
-        .active_limbs
-        .map(|n| (n as usize).clamp(2, fixed::LIMBS))
-        .unwrap_or_else(|| calc_required_limbs(&req.x, &req.y, req.max_iter));
+    let limbs = (req.active_limbs as usize).clamp(2, fixed::LIMBS);
 
     let mut z = ComplexFixed::ZERO;
     let mut result = Vec::with_capacity((req.max_iter as usize + 1) * 2);
@@ -102,7 +66,7 @@ fn perform_calculation_with_limbs(req: &CalculationRequest, limbs: usize) -> Vec
         x: req.x.clone(),
         y: req.y.clone(),
         max_iter: req.max_iter,
-        active_limbs: Some(limbs as u32),
+        active_limbs: limbs as u32,
     };
     perform_calculation(req)
 }
@@ -120,7 +84,7 @@ mod tests {
             x: "0".into(),
             y: "0".into(),
             max_iter: 10,
-            active_limbs: None,
+            active_limbs: fixed::LIMBS as u32,
         };
         let result = perform_calculation(req);
         assert_eq!(result.len(), 22); // 11 entries × 2
@@ -136,7 +100,7 @@ mod tests {
             x: "2".into(),
             y: "0".into(),
             max_iter: 100,
-            active_limbs: None,
+            active_limbs: fixed::LIMBS as u32,
         };
         let result = perform_calculation(req);
         // z0=(0,0) のみ: [0.0, 0.0]
@@ -154,7 +118,7 @@ mod tests {
             x: "-1".into(),
             y: "0".into(),
             max_iter: 4,
-            active_limbs: None,
+            active_limbs: fixed::LIMBS as u32,
         };
         let result = perform_calculation(req);
         assert_eq!(result.len(), 10); // 5 entries × 2
@@ -179,7 +143,7 @@ mod tests {
             x: "-0.75".into(),
             y: "0.1".into(),
             max_iter: 10,
-            active_limbs: None,
+            active_limbs: fixed::LIMBS as u32,
         };
         let result = perform_calculation(req);
         assert_eq!(result.len(), 22); // 11 entries × 2
@@ -228,7 +192,7 @@ mod tests {
                 x: x.to_string(),
                 y: y.to_string(),
                 max_iter: *max_iter,
-                active_limbs: None,
+                active_limbs: fixed::LIMBS as u32,
             };
 
             let full = perform_calculation_with_limbs(&req, fixed::LIMBS);

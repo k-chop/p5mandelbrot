@@ -20,6 +20,8 @@ let lastCalc: MandelbrotParams = {
 
 let prevBatchId = "";
 
+let forceRerenderFlag = false;
+
 let currentParams: MandelbrotParams = {
   x: new BigNumber(
     "-1.408537400223374550983496866638703877765950056271735005951863022034495341910960396585990889377247354329184721916097300836171707822353071514393502045045428218599916142953125",
@@ -51,9 +53,19 @@ export const setPrevBatchId = (id: string) => {
 export const getCurrentParams = () => currentParams;
 export const markAsRenderedWithCurrentParams = () => {
   lastCalc = { ...currentParams };
+  forceRerenderFlag = false;
 };
 export const needsRenderForCurrentParams = () => {
+  if (forceRerenderFlag) return true;
   return !isSameParams(lastCalc, currentParams);
+};
+
+/**
+ * パラメータが同じでも次回 draw ループで再計算を走らせるフラグを立てる。
+ * limb override の切り替えなど「パラメータに含まれない再実行要求」用。
+ */
+export const forceReRender = () => {
+  forceRerenderFlag = true;
 };
 const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
   a.x === b.x &&

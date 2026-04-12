@@ -42,6 +42,8 @@ type Store = {
   // mandelbrot state
   /** reference orbit計算にwasmを使うかどうか */
   useWasm: boolean;
+  /** 手動指定の limb 数 override（null なら自動計算） */
+  manualLimbsOverride: number | null;
 
   // palette settings
   paletteId: string;
@@ -93,6 +95,7 @@ const store: Store = {
   poiPanelOpen: true,
   // mandelbrot state
   useWasm: true,
+  manualLimbsOverride: null,
   // palette settings
   paletteId: "d3-chromatic,RdYlBlu,1",
   paletteLength: 128,
