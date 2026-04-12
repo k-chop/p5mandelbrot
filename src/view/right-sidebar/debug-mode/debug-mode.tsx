@@ -9,6 +9,7 @@ import { calcCoordPrecision } from "@/math/coord-precision";
 import { Slider } from "@/shadcn/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shadcn/components/ui/tabs";
 import { updateStore, useStoreValue } from "@/store/store";
+import { invalidateRefOrbitCache } from "@/worker-pool/ref-orbit-cache";
 import { useEffect, useMemo, useState } from "react";
 import { BatchRenderViewer } from "./batch-render-viewer";
 import { EventViewer } from "./event-viewer";
@@ -84,6 +85,8 @@ const LimbStatusPanel = () => {
     } else {
       updateStore("manualLimbsOverride", clampLimbs(value));
     }
+    // 前回計算の xn/blaTable が再利用されると limb 変更が反映されないので破棄する
+    invalidateRefOrbitCache();
     forceReRender();
   };
 
