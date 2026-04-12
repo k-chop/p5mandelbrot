@@ -277,6 +277,7 @@ export class RefOrbitWorker implements MandelbrotFacadeLike {
       terminator,
       workerIdx,
       useWasm: getStore("useWasm"),
+      limbCountOverride: getStore("manualLimbsOverride"),
     });
   };
 

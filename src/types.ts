@@ -88,6 +88,10 @@ export interface RefOrbitWorkerParams {
   terminator: SharedArrayBuffer;
   workerIdx: number;
   useWasm: boolean;
+  /**
+   * limb 数の手動上書き。null なら worker 側で自動計算される（= calcRequiredLimbs）。
+   */
+  limbCountOverride: number | null;
 }
 
 export const mandelbrotWorkerTypes = ["normal", "perturbation"] as const;

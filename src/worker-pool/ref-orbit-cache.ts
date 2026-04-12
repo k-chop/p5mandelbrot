@@ -6,6 +6,14 @@ export const setRefOrbitCache = (cache: RefOrbitCache) => {
   latestRefOrbitCache = cache;
 };
 
+/**
+ * 保持している reference orbit cache を破棄する。
+ * 次回の registerBatch で確実に worker を起動させたい場合に呼ぶ。
+ */
+export const invalidateRefOrbitCache = () => {
+  latestRefOrbitCache = null;
+};
+
 export const getRefOrbitCacheIfAvailable = (params: MandelbrotParams) => {
   if (params.mode === "normal") {
     return null;
