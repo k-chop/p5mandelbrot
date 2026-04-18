@@ -159,6 +159,24 @@ const syncStoreValues = (p: p5) => {
   updateStore("progress", progress);
 };
 
+/**
+ * calculateComplexMouseXY の結果キャッシュ
+ *
+ * mouseX/Y/width/height/params(x,y,r) が全て前回と同じなら再計算せず前回値を返す。
+ * 毎フレーム呼ばれるがマウス移動/パラメータ変化がないフレームでは BigNumber 生成を回避できる。
+ */
+let complexMouseCache: {
+  mouseX: number;
+  mouseY: number;
+  width: number;
+  height: number;
+  paramsX: BigNumber;
+  paramsY: BigNumber;
+  paramsR: BigNumber;
+  complexMouseX: BigNumber;
+  complexMouseY: BigNumber;
+} | null = null;
+
 /** canvas上のxyピクセル座標から複素数平面上の座標を取り出す */
 const calculateComplexMouseXY = (
   mouseX: number,
@@ -167,6 +185,20 @@ const calculateComplexMouseXY = (
   height: number,
   currentParams: MandelbrotParams = getCurrentParams(),
 ) => {
+  const c = complexMouseCache;
+  if (
+    c != null &&
+    c.mouseX === mouseX &&
+    c.mouseY === mouseY &&
+    c.width === width &&
+    c.height === height &&
+    c.paramsX === currentParams.x &&
+    c.paramsY === currentParams.y &&
+    c.paramsR === currentParams.r
+  ) {
+    return { complexMouseX: c.complexMouseX, complexMouseY: c.complexMouseY };
+  }
+
   // [-1, 1]に変換
   const normalizedMouseX = new BigNumber(2 * mouseX).div(width).minus(1);
   const normalizedMouseY = new BigNumber(2 * mouseY).div(height).minus(1);
@@ -179,10 +211,19 @@ const calculateComplexMouseXY = (
     normalizedMouseY.times(currentParams.r).times(scaleY),
   );
 
-  return {
+  complexMouseCache = {
+    mouseX,
+    mouseY,
+    width,
+    height,
+    paramsX: currentParams.x,
+    paramsY: currentParams.y,
+    paramsR: currentParams.r,
     complexMouseX,
     complexMouseY,
   };
+
+  return { complexMouseX, complexMouseY };
 };
 
 /**
