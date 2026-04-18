@@ -1,7 +1,11 @@
 /// <reference lib="webworker" />
 
 import { generateLowResDiffSequence } from "@/math/low-res-diff-sequence";
-import { BLATableView, SKIP_BLA_ENTRY_UNTIL_THIS_L } from "@/workers/bla-table-item";
+import {
+  BLATableView,
+  ITEM_BYTE_LENGTH,
+  SKIP_BLA_ENTRY_UNTIL_THIS_L,
+} from "@/workers/bla-table-item";
 import { ComplexArrayView } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import { mulIm, mulRe, nNorm } from "../math/complex";
@@ -69,6 +73,11 @@ const calcHandler = (data: IterationWorkerParams) => {
     const maxRefIteration = xnView.length - 1;
     const blaRows = blaTableView.length;
 
+    // hot loopでのメソッド呼び出しを避けるためrawバッファをローカルに取り出す
+    const xnRaw = xnView.view;
+    const blaView = blaTableView.view;
+    const rowOffsets = blaTableView.rowOffsets;
+
     // Δn
     let deltaNRe = 0.0;
     let deltaNIm = 0.0;
@@ -77,10 +86,8 @@ const calcHandler = (data: IterationWorkerParams) => {
     //     = (cx + (pixelX - W/2) * deltaCScale) - (cx + (refPixelX - W/2) * deltaCScale)
     //     = (pixelX - refPixelX) * deltaCScale
     // cxとW/2が相殺される。BigNumbercのみなので、Δcはdoubleのみで計算できる。
-    const deltaC = {
-      re: (pixelX - refPixelX) * deltaCScale,
-      im: -(pixelY - refPixelY) * deltaCScale,
-    };
+    const deltaCRe = (pixelX - refPixelX) * deltaCScale;
+    const deltaCIm = -(pixelY - refPixelY) * deltaCScale;
 
     let iteration = 0;
     let refIteration = 0;
@@ -88,18 +95,25 @@ const calcHandler = (data: IterationWorkerParams) => {
     const bailoutRadius = 4.0;
 
     while (iteration < maxIteration) {
-      const zRe = xnView.getRe(refIteration) + deltaNRe;
-      const zIm = xnView.getIm(refIteration) + deltaNIm;
+      const refIdx2 = refIteration * 2;
+      const xRe = xnRaw[refIdx2];
+      const xIm = xnRaw[refIdx2 + 1];
+      const zRe = xRe + deltaNRe;
+      const zIm = xIm + deltaNIm;
       const zNorm = nNorm(zRe, zIm);
       if (zNorm > bailoutRadius) break;
 
       // rebase
       // https://fractalforums.org/fractal-mathematics-and-new-theories/28/another-solution-to-perturbation-glitches/4360
       const dzNorm = nNorm(deltaNRe, deltaNIm);
+      let curXRe = xRe;
+      let curXIm = xIm;
       if (zNorm < dzNorm || refIteration === maxRefIteration) {
         deltaNRe = zRe;
         deltaNIm = zIm;
         refIteration = 0;
+        curXRe = xnRaw[0];
+        curXIm = xnRaw[1];
       }
 
       // BLA
@@ -115,7 +129,8 @@ const calcHandler = (data: IterationWorkerParams) => {
           const jIdx = refM1 >> d;
           const checkM = (jIdx << d) + 1;
 
-          const r = blaTableView.getR(d, jIdx);
+          const byteOffset = rowOffsets[d * 2] + jIdx * ITEM_BYTE_LENGTH;
+          const r = blaView.getFloat64(byteOffset + 32, true);
           const isValid = dzNorm < r * r;
 
           if (refIteration === checkM && isValid) {
@@ -129,16 +144,22 @@ const calcHandler = (data: IterationWorkerParams) => {
 
       const hasBLA = blaRowIdx >= 0;
 
-      const skipped = hasBLA ? blaTableView.getL(blaRowIdx, blaColumnIdx) : 0;
+      let skipped = 0;
+      let blaByteOffset = 0;
+      if (hasBLA) {
+        blaByteOffset = rowOffsets[blaRowIdx * 2] + blaColumnIdx * ITEM_BYTE_LENGTH;
+        skipped = blaView.getInt32(blaByteOffset + 40, true);
+      }
       const n = refIteration + skipped;
 
       if (hasBLA && n < maxRefIteration) {
-        const ab = blaTableView.getAB(blaRowIdx, blaColumnIdx);
+        const aRe = blaView.getFloat64(blaByteOffset, true);
+        const aIm = blaView.getFloat64(blaByteOffset + 8, true);
+        const bRe = blaView.getFloat64(blaByteOffset + 16, true);
+        const bIm = blaView.getFloat64(blaByteOffset + 24, true);
 
-        const dzRe =
-          mulRe(ab[0], ab[1], deltaNRe, deltaNIm) + mulRe(ab[2], ab[3], deltaC.re, deltaC.im);
-        const dzIm =
-          mulIm(ab[0], ab[1], deltaNRe, deltaNIm) + mulIm(ab[2], ab[3], deltaC.re, deltaC.im);
+        const dzRe = mulRe(aRe, aIm, deltaNRe, deltaNIm) + mulRe(bRe, bIm, deltaCRe, deltaCIm);
+        const dzIm = mulIm(aRe, aIm, deltaNRe, deltaNIm) + mulIm(bRe, bIm, deltaCRe, deltaCIm);
 
         deltaNRe = dzRe;
         deltaNIm = dzIm;
@@ -151,11 +172,11 @@ const calcHandler = (data: IterationWorkerParams) => {
         const _deltaNIm = deltaNIm;
 
         // (2 * Xn + Δn) * Δn に展開して計算
-        const dzrT = xnView.getRe(refIteration) * 2 + _deltaNRe;
-        const dziT = xnView.getIm(refIteration) * 2 + _deltaNIm;
+        const dzrT = curXRe * 2 + _deltaNRe;
+        const dziT = curXIm * 2 + _deltaNIm;
 
-        deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.re;
-        deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.im;
+        deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaCRe;
+        deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaCIm;
 
         refIteration++;
         iteration++;

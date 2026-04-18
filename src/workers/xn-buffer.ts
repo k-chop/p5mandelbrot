@@ -13,7 +13,8 @@ export function encodeFloat64AsXnBuffer(source: Float64Array): SharedArrayBuffer
  * refOrbit(xn)をArrayBufferのまま扱い直接値取得できるようにしたラッパー
  */
 export class ComplexArrayView {
-  private view: Float64Array;
+  /** hot pathからの直接アクセス用にpublic。通常はget系メソッドを使うこと。 */
+  readonly view: Float64Array;
 
   constructor(buffer: SharedArrayBuffer) {
     this.view = new Float64Array(buffer);

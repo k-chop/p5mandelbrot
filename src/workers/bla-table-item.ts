@@ -1,6 +1,6 @@
 import type { Complex } from "@/math/complex";
 
-const ITEM_BYTE_LENGTH = 44;
+export const ITEM_BYTE_LENGTH = 44;
 
 /*
  * lがこれと同値までのblaをスキップする
@@ -117,10 +117,14 @@ export function decodeBLATableItems(buffer: ArrayBuffer): BLATableItem[][] {
  * BLATableを表現するbufferから直接値を取り出せるようにするラッパー
  */
 export class BLATableView {
-  private view: DataView;
+  /** hot pathからの直接アクセス用にpublic。通常はget系メソッドを使うこと。 */
+  readonly view: DataView;
   public readonly length: number;
-  /** 各行の[byteOffset, length]をフラットに格納。rowOffsets[rowIdx * 2] = byteOffset, rowOffsets[rowIdx * 2 + 1] = length */
-  private readonly rowOffsets: Int32Array;
+  /**
+   * 各行の[byteOffset, length]をフラットに格納。rowOffsets[rowIdx * 2] = byteOffset, rowOffsets[rowIdx * 2 + 1] = length。
+   * hot pathからの直接アクセス用にpublic。
+   */
+  readonly rowOffsets: Int32Array;
   /** getABの結果をアロケーションなしで返すための再利用バッファ */
   readonly abBuffer = new Float64Array(4);
 
