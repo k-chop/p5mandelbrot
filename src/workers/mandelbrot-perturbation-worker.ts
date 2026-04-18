@@ -67,6 +67,7 @@ const calcHandler = (data: IterationWorkerParams) => {
   ): number {
     const { xnView, blaTableView } = context;
     const maxRefIteration = xnView.length - 1;
+    const blaRows = blaTableView.length;
 
     // Δn
     let deltaNRe = 0.0;
@@ -104,15 +105,16 @@ const calcHandler = (data: IterationWorkerParams) => {
       const absDz = Math.sqrt(dzNorm);
 
       // BLA
-      let blaRowIdx = null;
-      let blaColumnIdx = null;
+      let blaRowIdx = -1;
+      let blaColumnIdx = -1;
 
       // refIteration === (jIdx << d) + 1と|dz| < rを満たす、最大のlを持つデータをblaTableから探す
       if (0 < refIteration) {
-        for (let d = startBLAIndex; d < blaTableView.length; d++) {
+        const refM1 = refIteration - 1;
+        for (let d = startBLAIndex; d < blaRows; d++) {
           // この辺まだよく分かっていない
-          const jIdx = Math.floor((refIteration - 1) / 2 ** d);
-          const checkM = jIdx * 2 ** d + 1;
+          const jIdx = refM1 >> d;
+          const checkM = (jIdx << d) + 1;
 
           const isValid = absDz < blaTableView.getR(d, jIdx);
 
@@ -125,13 +127,13 @@ const calcHandler = (data: IterationWorkerParams) => {
         }
       }
 
-      const hasBLA = blaRowIdx != null && blaColumnIdx != null;
+      const hasBLA = blaRowIdx >= 0;
 
-      const skipped = hasBLA ? blaTableView.getL(blaRowIdx!, blaColumnIdx!) : 0;
+      const skipped = hasBLA ? blaTableView.getL(blaRowIdx, blaColumnIdx) : 0;
       const n = refIteration + skipped;
 
       if (hasBLA && n < maxRefIteration) {
-        const ab = blaTableView.getAB(blaRowIdx!, blaColumnIdx!);
+        const ab = blaTableView.getAB(blaRowIdx, blaColumnIdx);
 
         const dzRe =
           mulRe(ab[0], ab[1], deltaNRe, deltaNIm) + mulRe(ab[2], ab[3], deltaC.re, deltaC.im);
