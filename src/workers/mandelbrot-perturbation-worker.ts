@@ -176,6 +176,9 @@ const calcHandler = (data: IterationWorkerParams) => {
   }
 
   let calculatedCount = 0;
+  // progress postMessageのスロットリング用。前回送信時刻からPROGRESS_INTERVAL_MS経過時のみ送る
+  let lastProgressSentAt = 0;
+  const PROGRESS_INTERVAL_MS = 50;
 
   for (let i = 0; i < xDiffs.length; i++) {
     const xDiff = xDiffs[i];
@@ -209,10 +212,14 @@ const calcHandler = (data: IterationWorkerParams) => {
 
       if (terminateChecker[workerIdx] !== 0) break;
 
-      self.postMessage({
-        type: "progress",
-        progress: calculatedCount / totalPixelCount,
-      });
+      const nowMs = performance.now();
+      if (nowMs - lastProgressSentAt >= PROGRESS_INTERVAL_MS) {
+        lastProgressSentAt = nowMs;
+        self.postMessage({
+          type: "progress",
+          progress: calculatedCount / totalPixelCount,
+        });
+      }
     }
 
     if (terminateChecker[workerIdx] !== 0) break;
