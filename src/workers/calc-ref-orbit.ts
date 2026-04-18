@@ -7,21 +7,19 @@ import {
   type BLATableView,
 } from "@/workers/bla-table-item";
 import type { ComplexArrayView } from "@/workers/xn-buffer";
-import { encodeComplexArray } from "@/workers/xn-buffer";
+import { encodeFloat64AsXnBuffer } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import wasmInit, { calculate as wasmCalculate } from "../../wasm-fp/pkg/apfp.js";
 import { calcRequiredLimbs, clampLimbs } from "../math/calc-required-limbs";
-import type { Complex, ComplexArbitrary } from "../math/complex";
+import type { ComplexArbitrary } from "../math/complex";
 import {
   add,
-  complex,
   complexArbitary,
   dAdd,
   dNorm,
   dReduce,
   dSquare,
   mul,
-  mulN,
   norm,
   pixelToComplexCoordinateComplexArbitrary,
   toComplex,
@@ -44,12 +42,14 @@ let wasmReady = false;
 /**
  * wasm (固定精度 big float) で reference orbit を計算する。
  * limb 数は呼び出し側で必ず決定して渡すこと。
+ *
+ * 戻り値は [re_0, im_0, re_1, im_1, ...] レイアウトのFloat64Array
  */
 function calcRefOrbitWasm(
   referencePoint: ComplexArbitrary,
   maxIteration: number,
   limbCount: number,
-): Complex[] {
+): Float64Array {
   const orbit = wasmCalculate({
     type: "reference_orbit",
     x: referencePoint.re.toFixed(),
@@ -57,24 +57,21 @@ function calcRefOrbitWasm(
     max_iter: maxIteration,
     active_limbs: limbCount,
   });
-
-  const n = orbit.length / 2;
-  const xn: Complex[] = Array.from({ length: n });
-
-  for (let i = 0; i < n; i++) {
-    xn[i] = { re: orbit[i * 2], im: orbit[i * 2 + 1] };
-  }
-
-  return xn;
+  return orbit;
 }
 
+/**
+ * BigNumberベースの JS フォールバックで reference orbit を計算する
+ *
+ * 戻り値は [re_0, im_0, re_1, im_1, ...] レイアウトのFloat64Array (実要素分にtrim済み)。
+ * 中断された場合は空のFloat64Array。
+ */
 function calcRefOrbit(
   center: ComplexArbitrary,
   maxIteration: number,
   terminateChecker: Uint8Array,
   workerIdx: number,
-): { xn: Complex[] } {
-  // [re_0, im_0, re_1, im_1, ...]
+): Float64Array {
   const xnn = new Float64Array(maxIteration * 2);
 
   let z = complexArbitary(0.0, 0.0);
@@ -102,41 +99,39 @@ function calcRefOrbit(
 
   // 中断された
   if (terminateChecker[workerIdx] !== 0) {
-    return { xn: [] };
+    return new Float64Array(0);
   }
 
-  const xn: Complex[] = [];
-
-  // FIXME: 後ほどFloat64Arrayのまま返すように変更する
-  for (let i = 0; i < n; i++) {
-    xn.push({ re: xnn[i * 2], im: xnn[i * 2 + 1] });
-  }
-
-  return { xn };
+  return xnn.slice(0, n * 2);
 }
 
 /**
  * 計算済みのReference OrbitからBLAの係数を計算する
+ *
+ * xn は [re_0, im_0, ...] レイアウトのFloat64Array。refLen = xn.length / 2。
  */
-function calcBLACoefficient(ref: Complex[], pixelSpacing: number) {
+function calcBLACoefficient(xn: Float64Array, refLen: number, pixelSpacing: number) {
   // Reference: https://mathr.co.uk/tmp/mandelbla.pdf
 
   const blaTable: BLATableItem[][] = [];
 
   const eps = 0.0001;
 
-  blaTable[0] = Array.from({ length: ref.length - 1 });
-  for (let i = 1; i < ref.length; i++) {
-    const z_m = ref[i];
-    const a = mulN(z_m, 2.0);
-    const b = complex(1.0, 0.0);
+  blaTable[0] = Array.from({ length: refLen - 1 });
+  for (let i = 1; i < refLen; i++) {
+    const zRe = xn[i * 2];
+    const zIm = xn[i * 2 + 1];
+    const aRe = zRe * 2;
+    const aIm = zIm * 2;
+    const a = { re: aRe, im: aIm };
+    const b = { re: 1.0, im: 0.0 };
 
-    const absA = Math.sqrt(norm(a));
+    const absA = Math.sqrt(aRe * aRe + aIm * aIm);
     const r = Math.max(0, (eps * absA - pixelSpacing) / (absA + 1));
     blaTable[0][i - 1] = { a, b, r, l: 1 };
   }
 
-  const max = Math.floor(Math.log2(ref.length));
+  const max = Math.floor(Math.log2(refLen));
 
   for (let d = 0; d <= max; d++) {
     const nextTableLength = Math.floor((blaTable[d].length + 1) / 2);
@@ -234,7 +229,7 @@ async function setup() {
         pixelHeight,
       );
 
-      let xn: Complex[] = [];
+      let xn: Float64Array = new Float64Array(0);
 
       // 1. wasm (固定精度 big float)
       if (useWasm && wasmReady) {
@@ -256,8 +251,7 @@ async function setup() {
 
       // 2. ローカルJS (BigNumber)
       if (xn.length === 0) {
-        const { xn: xn2 } = calcRefOrbit(referencePoint, maxIteration, terminateChecker, workerIdx);
-        xn = xn2;
+        xn = calcRefOrbit(referencePoint, maxIteration, terminateChecker, workerIdx);
         if (xn.length > 0) {
           console.debug(`${jobId}: ref orbit calculated with JS (BigNumber)`);
         }
@@ -271,12 +265,11 @@ async function setup() {
         return;
       }
 
-      // console.log("Reference orbit calculated", xn);
-
+      const refLen = xn.length / 2;
       const pixelSpacing = radius.toNumber() / Math.max(pixelWidth, pixelHeight);
-      const blaTable = calcBLACoefficient(xn, pixelSpacing);
+      const blaTable = calcBLACoefficient(xn, refLen, pixelSpacing);
 
-      const xnConverted = encodeComplexArray(xn);
+      const xnConverted = encodeFloat64AsXnBuffer(xn);
       const blaTableConverted = encodeBlaTableItems(blaTable);
 
       const elapsed = performance.now() - startedAt;

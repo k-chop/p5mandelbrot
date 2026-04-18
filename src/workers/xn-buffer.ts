@@ -1,18 +1,11 @@
 import type { Complex } from "@/math/complex";
 
-const COMPLEX_BYTE_LENGTH = 16;
-
-// このファイルはほとんどChatGPTくんによって生成されました
-
-export function encodeComplexArray(complexArray: Complex[]): SharedArrayBuffer {
-  const buffer = new SharedArrayBuffer(complexArray.length * COMPLEX_BYTE_LENGTH);
-  const view = new Float64Array(buffer);
-
-  complexArray.forEach((complex, index) => {
-    view[index * 2] = complex.re;
-    view[index * 2 + 1] = complex.im;
-  });
-
+/**
+ * [re0, im0, re1, im1, ...] レイアウトのFloat64ArrayをSharedArrayBufferに丸ごとコピーする
+ */
+export function encodeFloat64AsXnBuffer(source: Float64Array): SharedArrayBuffer {
+  const buffer = new SharedArrayBuffer(source.byteLength);
+  new Float64Array(buffer).set(source);
   return buffer;
 }
 
