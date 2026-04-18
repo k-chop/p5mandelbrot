@@ -131,10 +131,12 @@ const calcHandler = (data: IterationWorkerParams) => {
       const n = refIteration + skipped;
 
       if (hasBLA && n < maxRefIteration) {
-        const { aRe, aIm, bRe, bIm } = blaTableView.getAB(blaRowIdx!, blaColumnIdx!);
+        const ab = blaTableView.getAB(blaRowIdx!, blaColumnIdx!);
 
-        const dzRe = mulRe(aRe, aIm, deltaNRe, deltaNIm) + mulRe(bRe, bIm, deltaC.re, deltaC.im);
-        const dzIm = mulIm(aRe, aIm, deltaNRe, deltaNIm) + mulIm(bRe, bIm, deltaC.re, deltaC.im);
+        const dzRe =
+          mulRe(ab[0], ab[1], deltaNRe, deltaNIm) + mulRe(ab[2], ab[3], deltaC.re, deltaC.im);
+        const dzIm =
+          mulIm(ab[0], ab[1], deltaNRe, deltaNIm) + mulIm(ab[2], ab[3], deltaC.re, deltaC.im);
 
         deltaNRe = dzRe;
         deltaNIm = dzIm;

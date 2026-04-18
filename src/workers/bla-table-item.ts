@@ -55,30 +55,35 @@ export function decodeBLATableItem(view: DataView, offset: number): BLATableItem
 export function encodeBlaTableItems(items: BLATableItem[][]): SharedArrayBuffer {
   // 行の数と、それぞれの行の要素数を格納するのに必要なバイト数を加算
   let totalSize = 4; // 最初の4バイトは行の数
-  items.forEach((row) => {
+  for (let i = 0; i < items.length; i++) {
     totalSize += 4; // 各行の要素数を格納するための4バイト
-    totalSize += row.length * ITEM_BYTE_LENGTH; // 実際の各行のデータ
-  });
+    totalSize += items[i].length * ITEM_BYTE_LENGTH; // 実際の各行のデータ
+  }
 
   const buffer = new SharedArrayBuffer(totalSize);
-  const view = new Int32Array(buffer);
+  const view = new DataView(buffer);
 
   // 最初のエントリに行の数を設定
-  view[0] = items.length;
-  let offset = 1; // Int32のエントリとしてのオフセット
+  view.setInt32(0, items.length, true);
+  let byteOffset = 4;
 
-  items.forEach((row) => {
-    view[offset] = row.length; // 各行の要素数を設定
-    offset += 1; // 次の要素数のためにオフセットを1つ進める
+  for (let i = 0; i < items.length; i++) {
+    const row = items[i];
+    view.setInt32(byteOffset, row.length, true);
+    byteOffset += 4;
 
-    row.forEach((item) => {
-      const itemBuffer = encodeBlaTableItem(item);
-      // Int32のエントリではなく、バイトとしてのオフセットを計算する必要がある
-      const byteOffset = offset * 4;
-      new Uint8Array(buffer, byteOffset, ITEM_BYTE_LENGTH).set(new Uint8Array(itemBuffer));
-      offset += ITEM_BYTE_LENGTH / 4; // 次のアイテムのためにオフセットをアイテムのバイト長分進める
-    });
-  });
+    for (let j = 0; j < row.length; j++) {
+      const item = row[j];
+      // 中間ArrayBufferを作らず直接SharedArrayBufferに書き込む
+      view.setFloat64(byteOffset, item.a.re, true);
+      view.setFloat64(byteOffset + 8, item.a.im, true);
+      view.setFloat64(byteOffset + 16, item.b.re, true);
+      view.setFloat64(byteOffset + 24, item.b.im, true);
+      view.setFloat64(byteOffset + 32, item.r, true);
+      view.setInt32(byteOffset + 40, item.l, true);
+      byteOffset += ITEM_BYTE_LENGTH;
+    }
+  }
 
   return buffer;
 }
@@ -114,21 +119,22 @@ export function decodeBLATableItems(buffer: ArrayBuffer): BLATableItem[][] {
 export class BLATableView {
   private view: DataView;
   public readonly length: number;
-  public readonly offsetMap: { [rowIndex: number]: { byteOffset: number; length: number } };
+  /** 各行の[byteOffset, length]をフラットに格納。rowOffsets[rowIdx * 2] = byteOffset, rowOffsets[rowIdx * 2 + 1] = length */
+  private readonly rowOffsets: Int32Array;
+  /** getABの結果をアロケーションなしで返すための再利用バッファ */
+  readonly abBuffer = new Float64Array(4);
 
   constructor(buffer: SharedArrayBuffer) {
     this.view = new DataView(buffer);
 
     this.length = this.view.getInt32(0, true);
 
-    this.offsetMap = {};
+    this.rowOffsets = new Int32Array(this.length * 2);
     let byteOffset = 4; // ↑で読み込んだi32ひとつ分
     for (let idx = 0; idx < this.length; idx++) {
       const rowLength = this.view.getInt32(byteOffset, true);
-      this.offsetMap[idx] = {
-        byteOffset: byteOffset + 4, // itemの開始offsetが欲しいのでrowLength分は飛ばす
-        length: rowLength,
-      };
+      this.rowOffsets[idx * 2] = byteOffset + 4; // itemの開始offsetが欲しいのでrowLength分は飛ばす
+      this.rowOffsets[idx * 2 + 1] = rowLength;
 
       // 次のrowLengthのoffsetにセットしておく
       byteOffset += 4 + ITEM_BYTE_LENGTH * rowLength;
@@ -139,31 +145,39 @@ export class BLATableView {
    * 指定した位置のBLAItemが格納されているbyteOffsetを返す
    */
   getBLAItemOffset(rowIdx: number, columnIdx: number) {
-    const { byteOffset, length } = this.offsetMap[rowIdx];
-    if (columnIdx > length)
-      throw new Error(`Invalid offset specified: row: ${rowIdx}, ${columnIdx} > ${length}`);
-
-    return byteOffset + columnIdx * ITEM_BYTE_LENGTH;
+    return this.rowOffsets[rowIdx * 2] + columnIdx * ITEM_BYTE_LENGTH;
   }
 
+  /**
+   * 指定した位置のrを返す
+   */
   getR(rowIdx: number, columnIdx: number) {
-    const byteOffset = this.getBLAItemOffset(rowIdx, columnIdx);
+    const byteOffset = this.rowOffsets[rowIdx * 2] + columnIdx * ITEM_BYTE_LENGTH;
     return this.view.getFloat64(byteOffset + 32, true);
   }
 
+  /**
+   * 指定した位置のlを返す
+   */
   getL(rowIdx: number, columnIdx: number) {
-    const byteOffset = this.getBLAItemOffset(rowIdx, columnIdx);
-    return this.view.getInt32(byteOffset + 40, true); // l
+    const byteOffset = this.rowOffsets[rowIdx * 2] + columnIdx * ITEM_BYTE_LENGTH;
+    return this.view.getInt32(byteOffset + 40, true);
   }
 
-  getAB(rowIdx: number, columnIdx: number) {
-    const byteOffset = this.getBLAItemOffset(rowIdx, columnIdx);
+  /**
+   * 指定した位置のa, bの値をabBufferに書き込んで返す。
+   * abBuffer[0]=aRe, [1]=aIm, [2]=bRe, [3]=bIm
+   * 呼び出し側は次のgetAB呼び出し前に値を使い切ること。
+   */
+  getAB(rowIdx: number, columnIdx: number): Float64Array {
+    const byteOffset = this.rowOffsets[rowIdx * 2] + columnIdx * ITEM_BYTE_LENGTH;
+    const buf = this.abBuffer;
 
-    const aRe = this.view.getFloat64(byteOffset, true);
-    const aIm = this.view.getFloat64(byteOffset + 8, true);
-    const bRe = this.view.getFloat64(byteOffset + 16, true);
-    const bIm = this.view.getFloat64(byteOffset + 24, true);
+    buf[0] = this.view.getFloat64(byteOffset, true);
+    buf[1] = this.view.getFloat64(byteOffset + 8, true);
+    buf[2] = this.view.getFloat64(byteOffset + 16, true);
+    buf[3] = this.view.getFloat64(byteOffset + 24, true);
 
-    return { aRe, aIm, bRe, bIm };
+    return buf;
   }
 }
