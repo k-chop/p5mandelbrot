@@ -102,13 +102,12 @@ const calcHandler = (data: IterationWorkerParams) => {
         refIteration = 0;
       }
 
-      const absDz = Math.sqrt(dzNorm);
-
       // BLA
       let blaRowIdx = -1;
       let blaColumnIdx = -1;
 
       // refIteration === (jIdx << d) + 1と|dz| < rを満たす、最大のlを持つデータをblaTableから探す
+      // |dz| < r は sqrt を省くため dzNorm < r*r で判定する (r は生成時に非負が保証されている)
       if (0 < refIteration) {
         const refM1 = refIteration - 1;
         for (let d = startBLAIndex; d < blaRows; d++) {
@@ -116,7 +115,8 @@ const calcHandler = (data: IterationWorkerParams) => {
           const jIdx = refM1 >> d;
           const checkM = (jIdx << d) + 1;
 
-          const isValid = absDz < blaTableView.getR(d, jIdx);
+          const r = blaTableView.getR(d, jIdx);
+          const isValid = dzNorm < r * r;
 
           if (refIteration === checkM && isValid) {
             blaRowIdx = d;
