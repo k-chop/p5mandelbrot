@@ -12,6 +12,7 @@ import { updateStore, useStoreValue } from "@/store/store";
 import { invalidateRefOrbitCache } from "@/worker-pool/ref-orbit-cache";
 import { useEffect, useMemo, useState } from "react";
 import { BatchRenderViewer } from "./batch-render-viewer";
+import { BenchmarkViewer } from "./benchmark-viewer";
 import { EventViewer } from "./event-viewer";
 import { InterestingPointsViewer } from "./interesting-points-viewer";
 
@@ -28,6 +29,7 @@ export const DebugMode = () => {
         <TabsTrigger value="batch-render">Batch Render</TabsTrigger>
         <TabsTrigger value="event-viewer">Event Viewer</TabsTrigger>
         <TabsTrigger value="ip-debug">Interesting Points</TabsTrigger>
+        <TabsTrigger value="benchmark">Benchmark</TabsTrigger>
       </TabsList>
       <TabsContent value="batch-render">
         <BatchRenderViewer />
@@ -37,6 +39,9 @@ export const DebugMode = () => {
       </TabsContent>
       <TabsContent value="ip-debug">
         <InterestingPointsViewer />
+      </TabsContent>
+      <TabsContent value="benchmark">
+        <BenchmarkViewer />
       </TabsContent>
     </Tabs>
   );
