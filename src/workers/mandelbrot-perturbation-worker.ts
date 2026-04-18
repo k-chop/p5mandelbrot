@@ -217,11 +217,20 @@ const calcHandler = (data: IterationWorkerParams) => {
 
     if (terminateChecker[workerIdx] !== 0) break;
 
-    if (isSuperSampling) {
+    const isLastPass = i === xDiffs.length - 1;
+    if (isSuperSampling || isLastPass) {
+      // 最終passの結果はintermediateResultではなくresultとして送り、
+      // 別途末尾でiterationsを送り直す重複を避ける
       const elapsed = performance.now() - startedAt;
-      self.postMessage({ type: "result", iterations: scaledIterations, elapsed }, [
-        scaledIterations.buffer,
-      ]);
+      self.postMessage(
+        {
+          type: "result",
+          iterations: scaledIterations,
+          resolution: { width: scaledAreaWidth, height: scaledAreaHeight },
+          elapsed,
+        },
+        [scaledIterations.buffer],
+      );
     } else {
       self.postMessage(
         {
@@ -238,12 +247,6 @@ const calcHandler = (data: IterationWorkerParams) => {
     self.postMessage({
       type: "terminated",
     });
-  } else {
-    // console.debug(`${jobId}: completed`);
-  }
-  if (!isSuperSampling) {
-    const elapsed = performance.now() - startedAt;
-    self.postMessage({ type: "result", iterations, elapsed }, [iterations.buffer]);
   }
 };
 

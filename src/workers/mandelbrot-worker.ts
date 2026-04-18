@@ -75,5 +75,13 @@ self.addEventListener("message", (event) => {
   }
 
   const elapsed = performance.now() - startedAt;
-  self.postMessage({ type: "result", iterations, elapsed }, [iterations.buffer]);
+  self.postMessage(
+    {
+      type: "result",
+      iterations,
+      resolution: { width: areaPixelWidth, height: areaPixelHeight },
+      elapsed,
+    },
+    [iterations.buffer],
+  );
 });
