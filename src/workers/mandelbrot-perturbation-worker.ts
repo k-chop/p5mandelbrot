@@ -1,7 +1,11 @@
 /// <reference lib="webworker" />
 
 import { generateLowResDiffSequence } from "@/math/low-res-diff-sequence";
-import { BLATableView, SKIP_BLA_ENTRY_UNTIL_THIS_L } from "@/workers/bla-table-item";
+import {
+  BLATableView,
+  ITEM_BYTE_LENGTH,
+  SKIP_BLA_ENTRY_UNTIL_THIS_L,
+} from "@/workers/bla-table-item";
 import { ComplexArrayView } from "@/workers/xn-buffer";
 import BigNumber from "bignumber.js";
 import { mulIm, mulRe, nNorm } from "../math/complex";
@@ -69,6 +73,11 @@ const calcHandler = (data: IterationWorkerParams) => {
     const maxRefIteration = xnView.length - 1;
     const blaRows = blaTableView.length;
 
+    // hot loopでのメソッド呼び出しを避けるためrawバッファをローカルに取り出す
+    const xnRaw = xnView.view;
+    const blaView = blaTableView.view;
+    const rowOffsets = blaTableView.rowOffsets;
+
     // Δn
     let deltaNRe = 0.0;
     let deltaNIm = 0.0;
@@ -77,10 +86,8 @@ const calcHandler = (data: IterationWorkerParams) => {
     //     = (cx + (pixelX - W/2) * deltaCScale) - (cx + (refPixelX - W/2) * deltaCScale)
     //     = (pixelX - refPixelX) * deltaCScale
     // cxとW/2が相殺される。BigNumbercのみなので、Δcはdoubleのみで計算できる。
-    const deltaC = {
-      re: (pixelX - refPixelX) * deltaCScale,
-      im: -(pixelY - refPixelY) * deltaCScale,
-    };
+    const deltaCRe = (pixelX - refPixelX) * deltaCScale;
+    const deltaCIm = -(pixelY - refPixelY) * deltaCScale;
 
     let iteration = 0;
     let refIteration = 0;
@@ -88,37 +95,47 @@ const calcHandler = (data: IterationWorkerParams) => {
     const bailoutRadius = 4.0;
 
     while (iteration < maxIteration) {
-      const zRe = xnView.getRe(refIteration) + deltaNRe;
-      const zIm = xnView.getIm(refIteration) + deltaNIm;
+      const refIdx2 = refIteration * 2;
+      const xRe = xnRaw[refIdx2];
+      const xIm = xnRaw[refIdx2 + 1];
+      const zRe = xRe + deltaNRe;
+      const zIm = xIm + deltaNIm;
       const zNorm = nNorm(zRe, zIm);
       if (zNorm > bailoutRadius) break;
 
       // rebase
       // https://fractalforums.org/fractal-mathematics-and-new-theories/28/another-solution-to-perturbation-glitches/4360
       const dzNorm = nNorm(deltaNRe, deltaNIm);
+      let curXRe = xRe;
+      let curXIm = xIm;
       if (zNorm < dzNorm || refIteration === maxRefIteration) {
         deltaNRe = zRe;
         deltaNIm = zIm;
         refIteration = 0;
+        curXRe = xnRaw[0];
+        curXIm = xnRaw[1];
       }
-
-      const absDz = Math.sqrt(dzNorm);
 
       // BLA
       let blaRowIdx = -1;
       let blaColumnIdx = -1;
 
-      // refIteration === (jIdx << d) + 1と|dz| < rを満たす、最大のlを持つデータをblaTableから探す
+      // refIteration === (jIdx << d) + 1と|dz| < rを満たす、最大のlを持つデータをblaTableから探す。
+      // 条件 refIteration === (jIdx << d) + 1 は「refM1 (=refIteration-1) の下位 d bit が 0」と等価で、
+      // これを満たす最大の d は refM1 の trailing zeros 数。上限をこれで決めれば、条件不成立の d に対する
+      // blaView.getFloat64 の読み出しを省ける。
+      // |dz| < r は sqrt を省くため dzNorm < r*r で判定する (r は生成時に非負が保証されている)
       if (0 < refIteration) {
         const refM1 = refIteration - 1;
-        for (let d = startBLAIndex; d < blaRows; d++) {
-          // この辺まだよく分かっていない
+        // ctz(refM1): refM1===0 のときは上限なし (blaRows側に任せる)
+        const ctz = refM1 === 0 ? 32 : 31 - Math.clz32(refM1 & -refM1);
+        const maxD = ctz < blaRows ? ctz : blaRows - 1;
+        for (let d = startBLAIndex; d <= maxD; d++) {
           const jIdx = refM1 >> d;
-          const checkM = (jIdx << d) + 1;
+          const byteOffset = rowOffsets[d * 2] + jIdx * ITEM_BYTE_LENGTH;
+          const r = blaView.getFloat64(byteOffset + 32, true);
 
-          const isValid = absDz < blaTableView.getR(d, jIdx);
-
-          if (refIteration === checkM && isValid) {
+          if (dzNorm < r * r) {
             blaRowIdx = d;
             blaColumnIdx = jIdx;
           } else {
@@ -129,16 +146,22 @@ const calcHandler = (data: IterationWorkerParams) => {
 
       const hasBLA = blaRowIdx >= 0;
 
-      const skipped = hasBLA ? blaTableView.getL(blaRowIdx, blaColumnIdx) : 0;
+      let skipped = 0;
+      let blaByteOffset = 0;
+      if (hasBLA) {
+        blaByteOffset = rowOffsets[blaRowIdx * 2] + blaColumnIdx * ITEM_BYTE_LENGTH;
+        skipped = blaView.getInt32(blaByteOffset + 40, true);
+      }
       const n = refIteration + skipped;
 
       if (hasBLA && n < maxRefIteration) {
-        const ab = blaTableView.getAB(blaRowIdx, blaColumnIdx);
+        const aRe = blaView.getFloat64(blaByteOffset, true);
+        const aIm = blaView.getFloat64(blaByteOffset + 8, true);
+        const bRe = blaView.getFloat64(blaByteOffset + 16, true);
+        const bIm = blaView.getFloat64(blaByteOffset + 24, true);
 
-        const dzRe =
-          mulRe(ab[0], ab[1], deltaNRe, deltaNIm) + mulRe(ab[2], ab[3], deltaC.re, deltaC.im);
-        const dzIm =
-          mulIm(ab[0], ab[1], deltaNRe, deltaNIm) + mulIm(ab[2], ab[3], deltaC.re, deltaC.im);
+        const dzRe = mulRe(aRe, aIm, deltaNRe, deltaNIm) + mulRe(bRe, bIm, deltaCRe, deltaCIm);
+        const dzIm = mulIm(aRe, aIm, deltaNRe, deltaNIm) + mulIm(bRe, bIm, deltaCRe, deltaCIm);
 
         deltaNRe = dzRe;
         deltaNIm = dzIm;
@@ -151,11 +174,11 @@ const calcHandler = (data: IterationWorkerParams) => {
         const _deltaNIm = deltaNIm;
 
         // (2 * Xn + Δn) * Δn に展開して計算
-        const dzrT = xnView.getRe(refIteration) * 2 + _deltaNRe;
-        const dziT = xnView.getIm(refIteration) * 2 + _deltaNIm;
+        const dzrT = curXRe * 2 + _deltaNRe;
+        const dziT = curXIm * 2 + _deltaNIm;
 
-        deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.re;
-        deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaC.im;
+        deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaCRe;
+        deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaCIm;
 
         refIteration++;
         iteration++;
@@ -176,6 +199,9 @@ const calcHandler = (data: IterationWorkerParams) => {
   }
 
   let calculatedCount = 0;
+  // progress postMessageのスロットリング用。前回送信時刻からPROGRESS_INTERVAL_MS経過時のみ送る
+  let lastProgressSentAt = 0;
+  const PROGRESS_INTERVAL_MS = 50;
 
   for (let i = 0; i < xDiffs.length; i++) {
     const xDiff = xDiffs[i];
@@ -209,19 +235,32 @@ const calcHandler = (data: IterationWorkerParams) => {
 
       if (terminateChecker[workerIdx] !== 0) break;
 
-      self.postMessage({
-        type: "progress",
-        progress: calculatedCount / totalPixelCount,
-      });
+      const nowMs = performance.now();
+      if (nowMs - lastProgressSentAt >= PROGRESS_INTERVAL_MS) {
+        lastProgressSentAt = nowMs;
+        self.postMessage({
+          type: "progress",
+          progress: calculatedCount / totalPixelCount,
+        });
+      }
     }
 
     if (terminateChecker[workerIdx] !== 0) break;
 
-    if (isSuperSampling) {
+    const isLastPass = i === xDiffs.length - 1;
+    if (isSuperSampling || isLastPass) {
+      // 最終passの結果はintermediateResultではなくresultとして送り、
+      // 別途末尾でiterationsを送り直す重複を避ける
       const elapsed = performance.now() - startedAt;
-      self.postMessage({ type: "result", iterations: scaledIterations, elapsed }, [
-        scaledIterations.buffer,
-      ]);
+      self.postMessage(
+        {
+          type: "result",
+          iterations: scaledIterations,
+          resolution: { width: scaledAreaWidth, height: scaledAreaHeight },
+          elapsed,
+        },
+        [scaledIterations.buffer],
+      );
     } else {
       self.postMessage(
         {
@@ -238,12 +277,6 @@ const calcHandler = (data: IterationWorkerParams) => {
     self.postMessage({
       type: "terminated",
     });
-  } else {
-    // console.debug(`${jobId}: completed`);
-  }
-  if (!isSuperSampling) {
-    const elapsed = performance.now() - startedAt;
-    self.postMessage({ type: "result", iterations, elapsed }, [iterations.buffer]);
   }
 };
 

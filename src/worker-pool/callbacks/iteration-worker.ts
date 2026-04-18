@@ -26,7 +26,7 @@ export const onIterationWorkerProgress: IterationProgressCallback = (result, job
 };
 
 export const onIterationWorkerResult: IterationResultCallback = (result, job) => {
-  const { iterations, elapsed } = result;
+  const { iterations, resolution, elapsed } = result;
   const { rect } = job;
   const batchContext = getBatchContext(job.batchId);
 
@@ -36,17 +36,8 @@ export const onIterationWorkerResult: IterationResultCallback = (result, job) =>
   }
 
   const isSuperSampled = batchContext.mandelbrotParams.isSuperSampling;
-  const scale = isSuperSampled ? 2 : 1;
   const iterationsResult = new Uint32Array(iterations);
-  const iterBuffer = upsertIterationCache(
-    rect,
-    iterationsResult,
-    {
-      width: rect.width * scale,
-      height: rect.height * scale,
-    },
-    isSuperSampled,
-  );
+  const iterBuffer = upsertIterationCache(rect, iterationsResult, resolution, isSuperSampled);
 
   // jobを完了させる
   batchContext.progressMap.set(job.id, 1.0);
