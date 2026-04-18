@@ -1,4 +1,3 @@
-import { getBatchTrace, type WorkerEvent } from "@/event-viewer/event";
 import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
 import { startCalculation } from "@/mandelbrot";
 import {
@@ -17,24 +16,16 @@ import { computeStats, type Stats } from "./benchmark-stats";
 export type BenchmarkSample = {
   iteration: number;
   total: number;
-  refOrbitWallclock: number;
-  refOrbitSelf: number;
-  refOrbitOverhead: number;
-  iterPhaseWallclock: number;
-  iterWorkerMax: number;
-  iterWorkerMean: number;
-  postProcessing: number;
+  refOrbit: number;
+  iter: number;
+  iterMean: number;
 };
 
 const METRIC_KEYS = [
   "total",
-  "refOrbitWallclock",
-  "refOrbitSelf",
-  "refOrbitOverhead",
-  "iterPhaseWallclock",
-  "iterWorkerMax",
-  "iterWorkerMean",
-  "postProcessing",
+  "refOrbit",
+  "iter",
+  "iterMean",
 ] as const satisfies readonly (keyof Omit<BenchmarkSample, "iteration">)[];
 
 export type MetricKey = (typeof METRIC_KEYS)[number];
@@ -61,7 +52,11 @@ export type BenchmarkAllProgress = {
 };
 
 /**
- * trace eventから単一runの計測値を抽出する
+ * batchContextのspansから単一runの計測値を抽出する
+ *
+ * refOrbit: spans[name="reference_orbit"].elapsed
+ * iter: spans[name="iteration_*"].elapsedのmax (bottleneck worker)
+ * iterMean: 同じspansのmean
  */
 const extractSample = (
   iteration: number,
@@ -69,96 +64,24 @@ const extractSample = (
   t1: number,
   batchId: string,
 ): BenchmarkSample => {
-  const trace = getBatchTrace(batchId);
   const batchCtx = getBatchContext(batchId);
-
   const total = t1 - t0;
 
-  if (trace == null) {
-    return zeroSample(iteration, total);
+  if (batchCtx == null) {
+    return { iteration, total, refOrbit: 0, iter: 0, iterMean: 0 };
   }
 
-  const workerEvents = trace.worker;
+  const refOrbit = batchCtx.spans.find((s) => s.name === "reference_orbit")?.elapsed ?? 0;
 
-  const refEvents = workerEvents.filter((e) => e.workerId === "ref-orbit");
-  const iterEvents = workerEvents.filter((e) => e.workerId.startsWith("iteration-"));
+  const iterElapsed = batchCtx.spans
+    .filter((s) => s.name.startsWith("iteration_"))
+    .map((s) => s.elapsed);
+  const iter = iterElapsed.length > 0 ? Math.max(...iterElapsed) : 0;
+  const iterMean =
+    iterElapsed.length > 0 ? iterElapsed.reduce((a, b) => a + b, 0) / iterElapsed.length : 0;
 
-  const refLaunched = findEvent(refEvents, "launched");
-  const refCompleted = findEvent(refEvents, "completed");
-  const refOrbitWallclock =
-    refLaunched != null && refCompleted != null ? refCompleted.time - refLaunched.time : 0;
-
-  const refOrbitSelf = batchCtx?.spans.find((s) => s.name === "reference_orbit")?.elapsed ?? 0;
-  const refOrbitOverhead = refOrbitWallclock > 0 ? refOrbitWallclock - refOrbitSelf : 0;
-
-  const iterLaunchedTimes = iterEvents.filter((e) => e.type === "launched").map((e) => e.time);
-  const iterCompletedTimes = iterEvents.filter((e) => e.type === "completed").map((e) => e.time);
-
-  const iterStart = iterLaunchedTimes.length > 0 ? Math.min(...iterLaunchedTimes) : 0;
-  const iterEnd = iterCompletedTimes.length > 0 ? Math.max(...iterCompletedTimes) : 0;
-  const iterPhaseWallclock = iterEnd - iterStart;
-
-  const perWorker = computePerWorkerWallclock(iterEvents);
-  const iterWorkerMax = perWorker.length > 0 ? Math.max(...perWorker) : 0;
-  const iterWorkerMean =
-    perWorker.length > 0 ? perWorker.reduce((a, b) => a + b, 0) / perWorker.length : 0;
-
-  // onComplete発火時刻(t1)からbench基準で計測。iterEnd(absolute) との差は計算できないので、
-  // 代わりにspansのmax vs total で近似する... ではなく、iterEnd は AbsoluteTime(performance.timeOrigin + performance.now()) なので
-  // bench の t1 も同じ基準に合わせて引けばよい
-  const t1Abs = performance.timeOrigin + t1;
-  const postProcessing = iterEnd > 0 ? t1Abs - iterEnd : 0;
-
-  return {
-    iteration,
-    total,
-    refOrbitWallclock,
-    refOrbitSelf,
-    refOrbitOverhead,
-    iterPhaseWallclock,
-    iterWorkerMax,
-    iterWorkerMean,
-    postProcessing,
-  };
+  return { iteration, total, refOrbit, iter, iterMean };
 };
-
-/**
- * iter workerの launched→completed を workerId ごとにペアリングして elapsed を返す
- */
-const computePerWorkerWallclock = (events: WorkerEvent[]): number[] => {
-  const launchedMap = new Map<string, number>();
-  const results: number[] = [];
-  for (const e of events) {
-    if (e.type === "launched") {
-      launchedMap.set(e.workerId, e.time);
-    } else if (e.type === "completed") {
-      const l = launchedMap.get(e.workerId);
-      if (l != null) {
-        results.push(e.time - l);
-        launchedMap.delete(e.workerId);
-      }
-    }
-  }
-  return results;
-};
-
-/**
- * worker eventsから特定typeの最初のeventを探す
- */
-const findEvent = (events: WorkerEvent[], type: WorkerEvent["type"]) =>
-  events.find((e) => e.type === type);
-
-const zeroSample = (iteration: number, total: number): BenchmarkSample => ({
-  iteration,
-  total,
-  refOrbitWallclock: 0,
-  refOrbitSelf: 0,
-  refOrbitOverhead: 0,
-  iterPhaseWallclock: 0,
-  iterWorkerMax: 0,
-  iterWorkerMean: 0,
-  postProcessing: 0,
-});
 
 /**
  * BenchPOIから MandelbrotParams を組み立てる
@@ -265,7 +188,9 @@ export const runAllBenchmarks = async (
 };
 
 /**
- * ベンチマーク結果をmarkdown tableに整形する
+ * 単一POIのベンチマーク結果をmarkdownに整形する
+ *
+ * Samplesテーブル (# / total / refOrbit / iter) と Statsテーブル (metric / min / max / trimmedMean)
  */
 export const formatResultAsMarkdown = (result: BenchmarkResult): string => {
   const { poi, samples, stats } = result;
@@ -278,48 +203,45 @@ export const formatResultAsMarkdown = (result: BenchmarkResult): string => {
   lines.push("");
 
   lines.push("### Samples (ms)");
-  lines.push(
-    "| # | total | refOrbit(wc) | refOrbit(self) | iter(wc) | iter-max | iter-mean | post |",
-  );
-  lines.push(
-    "|---|------:|-------------:|---------------:|---------:|---------:|----------:|-----:|",
-  );
+  lines.push("| # | total | refOrbit | iter | iterMean |");
+  lines.push("|---|------:|---------:|-----:|---------:|");
   for (const s of samples) {
     lines.push(
-      `| ${s.iteration + 1} | ${fmt(s.total)} | ${fmt(s.refOrbitWallclock)} | ${fmt(s.refOrbitSelf)} | ${fmt(s.iterPhaseWallclock)} | ${fmt(s.iterWorkerMax)} | ${fmt(s.iterWorkerMean)} | ${fmt(s.postProcessing)} |`,
+      `| ${s.iteration + 1} | ${fmt(s.total)} | ${fmt(s.refOrbit)} | ${fmt(s.iter)} | ${fmt(s.iterMean)} |`,
     );
   }
   lines.push("");
 
   lines.push("### Stats (ms)");
-  lines.push("| metric | min | median | mean | max |");
-  lines.push("|--------|----:|-------:|-----:|----:|");
+  lines.push("| metric | min | max | trimmed-mean |");
+  lines.push("|--------|----:|----:|-------------:|");
   for (const key of METRIC_KEYS) {
     const s = stats[key];
-    lines.push(`| ${key} | ${fmt(s.min)} | ${fmt(s.median)} | ${fmt(s.mean)} | ${fmt(s.max)} |`);
+    lines.push(`| ${key} | ${fmt(s.min)} | ${fmt(s.max)} | ${fmt(s.trimmedMean)} |`);
   }
 
   return lines.join("\n");
 };
 
 /**
- * 複数POIをまたがったsummary tableをmarkdownで出力する
+ * 複数POIをまたがったsummaryをmarkdownで出力する
  *
- * 各POIの主要メトリクスのmedianを1行に並べる
+ * 各POIに対してtotal/ref/iterのtrimmed-meanと(min - max)を出力する
  */
 export const formatSummaryAsMarkdown = (results: BenchmarkResult[]): string => {
   const lines: string[] = [];
-  lines.push("## Summary (median ms)");
-  lines.push("| POI | total | ref(wc) | ref(self) | iter(wc) | iter-max | iter-mean | post |");
-  lines.push("|-----|------:|--------:|----------:|---------:|---------:|----------:|-----:|");
+  lines.push("## Summary (ms, trimmed-mean)");
   for (const r of results) {
-    const s = r.stats;
-    lines.push(
-      `| ${r.poi.label} | ${fmt(s.total.median)} | ${fmt(s.refOrbitWallclock.median)} | ${fmt(s.refOrbitSelf.median)} | ${fmt(s.iterPhaseWallclock.median)} | ${fmt(s.iterWorkerMax.median)} | ${fmt(s.iterWorkerMean.median)} | ${fmt(s.postProcessing.median)} |`,
-    );
+    lines.push(`${r.poi.label}:`);
+    lines.push(`- total: ${formatMetric(r.stats.total)}`);
+    lines.push(`- ref: ${formatMetric(r.stats.refOrbit)}`);
+    lines.push(`- iter: ${formatMetric(r.stats.iter)}`);
   }
   return lines.join("\n");
 };
+
+const formatMetric = (s: Stats): string =>
+  `${fmt(s.trimmedMean)}ms (${fmt(s.min)} - ${fmt(s.max)})`;
 
 /**
  * 複数ベンチマーク結果をまとめてmarkdownに整形する

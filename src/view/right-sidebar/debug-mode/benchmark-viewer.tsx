@@ -6,6 +6,7 @@ import {
   type BenchmarkAllProgress,
   type BenchmarkResult,
 } from "@/benchmark/benchmark-runner";
+import type { Stats } from "@/benchmark/benchmark-stats";
 import { Button } from "@/shadcn/components/ui/button";
 import { Checkbox } from "@/shadcn/components/ui/check";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
@@ -201,46 +202,40 @@ export const BenchmarkViewer = () => {
 };
 
 /**
- * 全POIのmedian値を1行ずつ並べたsummary table
+ * 全POIのtotal/ref/iterをPOIごとにまとめたシンプルなsummary
+ *
+ * フォーマット:
+ *   <label>:
+ *   - total: <trimmed>ms (<min> - <max>)
+ *   - ref: <trimmed>ms (<min> - <max>)
+ *   - iter: <trimmed>ms (<min> - <max>)
  */
 const SummarySection = ({ results }: { results: BenchmarkResult[] }) => {
   return (
-    <div className="overflow-x-auto">
-      <div className="mb-1 text-xs font-semibold">Summary (median ms)</div>
-      <Table className="text-xs">
-        <TableHeader>
-          <TableRow>
-            <TableHead>POI</TableHead>
-            <TableHead className="text-right">total</TableHead>
-            <TableHead className="text-right">ref(wc)</TableHead>
-            <TableHead className="text-right">ref(self)</TableHead>
-            <TableHead className="text-right">iter(wc)</TableHead>
-            <TableHead className="text-right">iter-max</TableHead>
-            <TableHead className="text-right">iter-mean</TableHead>
-            <TableHead className="text-right">post</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {results.map((r) => {
-            const s = r.stats;
-            return (
-              <TableRow key={r.poi.id}>
-                <TableCell>{r.poi.label}</TableCell>
-                <TableCell className="text-right">{fmt(s.total.median)}</TableCell>
-                <TableCell className="text-right">{fmt(s.refOrbitWallclock.median)}</TableCell>
-                <TableCell className="text-right">{fmt(s.refOrbitSelf.median)}</TableCell>
-                <TableCell className="text-right">{fmt(s.iterPhaseWallclock.median)}</TableCell>
-                <TableCell className="text-right">{fmt(s.iterWorkerMax.median)}</TableCell>
-                <TableCell className="text-right">{fmt(s.iterWorkerMean.median)}</TableCell>
-                <TableCell className="text-right">{fmt(s.postProcessing.median)}</TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+    <div>
+      <div className="mb-1 text-xs font-semibold">Summary (ms, trimmed-mean)</div>
+      <div className="space-y-2 font-mono text-xs">
+        {results.map((r) => (
+          <div key={r.poi.id}>
+            <div>{r.poi.label}:</div>
+            <MetricLine label="total" stats={r.stats.total} />
+            <MetricLine label="ref" stats={r.stats.refOrbit} />
+            <MetricLine label="iter" stats={r.stats.iter} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
+
+const MetricLine = ({ label, stats }: { label: string; stats: Stats }) => (
+  <div>
+    - {label}: <span className="font-semibold">{fmt(stats.trimmedMean)}ms</span>{" "}
+    <span className="text-muted-foreground">
+      ({fmt(stats.min)} - {fmt(stats.max)})
+    </span>
+  </div>
+);
 
 /**
  * 単一POIの実行結果（sampleテーブル + statsテーブル）を描画する
@@ -260,12 +255,9 @@ const ResultSection = ({ result }: { result: BenchmarkResult }) => {
             <TableRow>
               <TableHead>#</TableHead>
               <TableHead className="text-right">total</TableHead>
-              <TableHead className="text-right">ref(wc)</TableHead>
-              <TableHead className="text-right">ref(self)</TableHead>
-              <TableHead className="text-right">iter(wc)</TableHead>
-              <TableHead className="text-right">iter-max</TableHead>
-              <TableHead className="text-right">iter-mean</TableHead>
-              <TableHead className="text-right">post</TableHead>
+              <TableHead className="text-right">refOrbit</TableHead>
+              <TableHead className="text-right">iter</TableHead>
+              <TableHead className="text-right">iterMean</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -273,12 +265,9 @@ const ResultSection = ({ result }: { result: BenchmarkResult }) => {
               <TableRow key={s.iteration}>
                 <TableCell>{s.iteration + 1}</TableCell>
                 <TableCell className="text-right">{fmt(s.total)}</TableCell>
-                <TableCell className="text-right">{fmt(s.refOrbitWallclock)}</TableCell>
-                <TableCell className="text-right">{fmt(s.refOrbitSelf)}</TableCell>
-                <TableCell className="text-right">{fmt(s.iterPhaseWallclock)}</TableCell>
-                <TableCell className="text-right">{fmt(s.iterWorkerMax)}</TableCell>
-                <TableCell className="text-right">{fmt(s.iterWorkerMean)}</TableCell>
-                <TableCell className="text-right">{fmt(s.postProcessing)}</TableCell>
+                <TableCell className="text-right">{fmt(s.refOrbit)}</TableCell>
+                <TableCell className="text-right">{fmt(s.iter)}</TableCell>
+                <TableCell className="text-right">{fmt(s.iterMean)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -292,9 +281,8 @@ const ResultSection = ({ result }: { result: BenchmarkResult }) => {
             <TableRow>
               <TableHead>metric</TableHead>
               <TableHead className="text-right">min</TableHead>
-              <TableHead className="text-right">median</TableHead>
-              <TableHead className="text-right">mean</TableHead>
               <TableHead className="text-right">max</TableHead>
+              <TableHead className="text-right">trimmed-mean</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -304,9 +292,8 @@ const ResultSection = ({ result }: { result: BenchmarkResult }) => {
                 <TableRow key={key}>
                   <TableCell className="font-mono">{key}</TableCell>
                   <TableCell className="text-right">{fmt(s.min)}</TableCell>
-                  <TableCell className="text-right">{fmt(s.median)}</TableCell>
-                  <TableCell className="text-right">{fmt(s.mean)}</TableCell>
                   <TableCell className="text-right">{fmt(s.max)}</TableCell>
+                  <TableCell className="text-right">{fmt(s.trimmedMean)}</TableCell>
                 </TableRow>
               );
             })}
