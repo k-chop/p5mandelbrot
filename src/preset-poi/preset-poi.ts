@@ -1,4 +1,3 @@
-import { calcCoordPrecision } from "@/math/coord-precision";
 import type { MandelbrotWorkerType, POIData } from "@/types";
 import { isDevMode } from "@/utils/dev-mode";
 import BigNumber from "bignumber.js";
@@ -7,6 +6,9 @@ import { useSyncExternalStore } from "react";
 /** GCSプロキシのベースURL（Cloudflare Worker経由） */
 const GCS_BASE_URL =
   "https://p5mandelbrot-gcs-proxy.7bb81493-fc28-4b3b-918a-7098cdfffb9a.workers.dev";
+
+/** POI同一判定に使う仮想キャンバス幅（= 8Kディスプレイ相当） */
+const CANVAS_WIDTH_FOR_COMPARISON = 8192;
 
 /**
  * プリセットPOIの生データ型
@@ -122,21 +124,35 @@ export const getPresetPOIList = (): readonly PresetPOIRaw[] => presetPOIList;
  * 全件を一巡するまで同じPOIは返さない。一巡したら先頭に戻る。
  */
 /**
- * POIDataがプリセットリストに既登録かを判定する
+ * POIData と プリセットPOI が同じ地点を指しているかを判定する
  *
- * precision切り捨て後のx, y, r, Nで比較する。
+ * x, y, r それぞれ 1ピクセル未満の誤差 (|d| < 2r / CANVAS_WIDTH_FOR_COMPARISON)
+ * を許容する。N は完全一致。
+ *
+ * 判定不等式は `|d| * W < 2r` に変形して、BigNumber の除算
+ * (DECIMAL_PLACES=20 制約) を回避している。
+ */
+export const isSamePOI = (poi: POIData, preset: PresetPOIRaw): boolean => {
+  if (poi.N !== preset.N) return false;
+
+  const threshold = poi.r.times(2);
+  const presetX = new BigNumber(preset.x);
+  const presetY = new BigNumber(preset.y);
+  const presetR = new BigNumber(preset.r);
+
+  const dx = poi.x.minus(presetX).abs().times(CANVAS_WIDTH_FOR_COMPARISON);
+  if (!dx.lt(threshold)) return false;
+  const dy = poi.y.minus(presetY).abs().times(CANVAS_WIDTH_FOR_COMPARISON);
+  if (!dy.lt(threshold)) return false;
+  const dr = poi.r.minus(presetR).abs().times(CANVAS_WIDTH_FOR_COMPARISON);
+  return dr.lt(threshold);
+};
+
+/**
+ * POIDataがプリセットリストに既登録かを判定する
  */
 export const isRegisteredAsPreset = (poi: POIData): boolean => {
-  const precision = calcCoordPrecision(poi.r);
-  const px = poi.x.toPrecision(precision);
-  const py = poi.y.toPrecision(precision);
-  const pr = poi.r.toString();
-
-  return presetPOIList.some((preset) => {
-    const presetX = new BigNumber(preset.x).toPrecision(precision);
-    const presetY = new BigNumber(preset.y).toPrecision(precision);
-    return presetX === px && presetY === py && preset.r === pr && preset.N === poi.N;
-  });
+  return presetPOIList.some((preset) => isSamePOI(poi, preset));
 };
 
 export const getRandomPresetPOI = (): PresetPOIRaw => {
