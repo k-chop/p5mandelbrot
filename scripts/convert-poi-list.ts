@@ -11,7 +11,7 @@ import BigNumber from "bignumber.js";
 import { readFileSync, writeFileSync } from "node:fs";
 import type { PresetPOIRaw } from "../src/preset-poi/preset-poi";
 import { deserializePOIListFromText, serializePOIData } from "../src/store/sync-storage/poi-list";
-import { calcCoordPrecision } from "../src/math/coord-precision";
+import { R_PRECISION, calcCoordPrecision } from "../src/math/coord-precision";
 
 const inputFile = process.argv[2] ?? "point-list.txt";
 const outputFile = "point-list.json";
@@ -23,7 +23,8 @@ const poiList: Omit<PresetPOIRaw, "id">[] = poiDataList.map((poi) => {
   const precision = calcCoordPrecision(poi.r);
   const trimmedX = new BigNumber(poi.x.toPrecision(precision));
   const trimmedY = new BigNumber(poi.y.toPrecision(precision));
-  const serialized = serializePOIData({ ...poi, x: trimmedX, y: trimmedY });
+  const trimmedR = new BigNumber(poi.r.toPrecision(R_PRECISION));
+  const serialized = serializePOIData({ ...poi, x: trimmedX, y: trimmedY, r: trimmedR });
   const raw: Omit<PresetPOIRaw, "id"> = {
     x: serialized.x,
     y: serialized.y,

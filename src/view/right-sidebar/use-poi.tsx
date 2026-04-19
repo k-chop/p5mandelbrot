@@ -3,7 +3,7 @@ import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
 import { cloneParams, setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
 import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
 import { deletePreview, savePreview } from "@/store/preview-store";
-import { calcCoordPrecision } from "@/math/coord-precision";
+import { R_PRECISION, calcCoordPrecision } from "@/math/coord-precision";
 import BigNumber from "bignumber.js";
 import { useCallback } from "react";
 import { updateStore, useStoreValue } from "../../store/store";
@@ -21,6 +21,7 @@ export const usePOI = () => {
         ...newParams,
         x: new BigNumber(newParams.x.toPrecision(precision)),
         y: new BigNumber(newParams.y.toPrecision(precision)),
+        r: new BigNumber(newParams.r.toPrecision(R_PRECISION)),
       };
       const newPOI = createNewPOIData(trimmedParams, getCurrentPalette());
       const newPOIList = [newPOI, ...poiList];
