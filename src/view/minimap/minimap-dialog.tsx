@@ -4,9 +4,9 @@ import { setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-stat
 import {
   type PresetPOIRaw,
   getPresetThumbnailUrl,
+  isSamePOI,
   usePresetPOIList,
 } from "@/preset-poi/preset-poi";
-import { calcCoordPrecision } from "@/math/coord-precision";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { loadPreview } from "@/store/preview-store";
 import { useStoreValue } from "@/store/store";
@@ -315,14 +315,8 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
     // ユーザーPOIと重複するプリセットIDを収集（ユーザーPOI優先で表示するため）
     const duplicatePresetIds = new Set<string>();
     for (const userPOI of userPOIList) {
-      const precision = calcCoordPrecision(userPOI.r);
-      const ux = userPOI.x.toPrecision(precision);
-      const uy = userPOI.y.toPrecision(precision);
-      const ur = userPOI.r.toString();
       for (const preset of presetList) {
-        const px = new BigNumber(preset.x).toPrecision(precision);
-        const py = new BigNumber(preset.y).toPrecision(precision);
-        if (px === ux && py === uy && preset.r === ur && preset.N === userPOI.N) {
+        if (isSamePOI(userPOI, preset)) {
           duplicatePresetIds.add(preset.id);
         }
       }

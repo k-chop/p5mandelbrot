@@ -42,24 +42,6 @@ export const useThumbnailBatch = (onCapture: (id: string, dataUrl: string) => Pr
   const onCaptureRef = useRef(onCapture);
   onCaptureRef.current = onCapture;
 
-  /** 描画完了を検知してキャプチャ→次へ進む */
-  useEffect(() => {
-    if (!waitingForRenderRef.current) return;
-    if (typeof progress === "string") return;
-
-    // 描画完了: 次のフレームでキャプチャ
-    waitingForRenderRef.current = false;
-    const currentTarget = queueRef.current[indexRef.current];
-
-    requestCanvasImage(POI_THUMBNAIL_SIZE, (dataUrl) => {
-      void onCaptureRef.current(currentTarget.id, dataUrl).then(() => {
-        generatedRef.current += 1;
-        indexRef.current += 1;
-        processNext();
-      });
-    });
-  }, [progress]);
-
   /** キュー内の次のターゲットを処理する */
   const processNext = useCallback(() => {
     const queue = queueRef.current;
@@ -91,6 +73,24 @@ export const useThumbnailBatch = (onCapture: (id: string, dataUrl: string) => Pr
 
     waitingForRenderRef.current = true;
   }, []);
+
+  /** 描画完了を検知してキャプチャ→次へ進む */
+  useEffect(() => {
+    if (!waitingForRenderRef.current) return;
+    if (typeof progress === "string") return;
+
+    // 描画完了: 次のフレームでキャプチャ
+    waitingForRenderRef.current = false;
+    const currentTarget = queueRef.current[indexRef.current];
+
+    requestCanvasImage(POI_THUMBNAIL_SIZE, (dataUrl) => {
+      void onCaptureRef.current(currentTarget.id, dataUrl).then(() => {
+        generatedRef.current += 1;
+        indexRef.current += 1;
+        processNext();
+      });
+    });
+  }, [progress, processNext]);
 
   /** バッチ生成を開始する */
   const start = useCallback(

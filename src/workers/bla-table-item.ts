@@ -21,37 +21,6 @@ export type BLATableItem = {
 
 // このファイルはほとんどChatGPTくんによって生成されました
 
-export function encodeBlaTableItem(item: BLATableItem): ArrayBuffer {
-  const buffer = new ArrayBuffer(ITEM_BYTE_LENGTH);
-  const floatView = new Float64Array(buffer, 0, 5); // 8 bytes * 5
-  const intView = new Int32Array(buffer, 40, 1); // 4 bytes
-
-  floatView[0] = item.a.re;
-  floatView[1] = item.a.im;
-  floatView[2] = item.b.re;
-  floatView[3] = item.b.im;
-  floatView[4] = item.r;
-  intView[0] = item.l;
-
-  return buffer;
-}
-
-export function decodeBLATableItem(view: DataView, offset: number): BLATableItem {
-  const aRe = view.getFloat64(offset, true); // a.re
-  const aIm = view.getFloat64(offset + 8, true); // a.im
-  const bRe = view.getFloat64(offset + 16, true); // b.re
-  const bIm = view.getFloat64(offset + 24, true); // b.im
-  const r = view.getFloat64(offset + 32, true); // r
-  const l = view.getInt32(offset + 40, true); // l
-
-  return {
-    a: { re: aRe, im: aIm },
-    b: { re: bRe, im: bIm },
-    r,
-    l,
-  };
-}
-
 export function encodeBlaTableItems(items: BLATableItem[][]): SharedArrayBuffer {
   // 行の数と、それぞれの行の要素数を格納するのに必要なバイト数を加算
   let totalSize = 4; // 最初の4バイトは行の数
@@ -79,7 +48,8 @@ export function encodeBlaTableItems(items: BLATableItem[][]): SharedArrayBuffer 
       view.setFloat64(byteOffset + 8, item.a.im, true);
       view.setFloat64(byteOffset + 16, item.b.re, true);
       view.setFloat64(byteOffset + 24, item.b.im, true);
-      view.setFloat64(byteOffset + 32, item.r, true);
+      // encode時にr²として保存しておく。hot loopでは|dz|<rの判定をdzNorm < r²で行いたいため
+      view.setFloat64(byteOffset + 32, item.r * item.r, true);
       view.setInt32(byteOffset + 40, item.l, true);
       byteOffset += ITEM_BYTE_LENGTH;
     }
@@ -88,45 +58,49 @@ export function encodeBlaTableItems(items: BLATableItem[][]): SharedArrayBuffer 
   return buffer;
 }
 
-export function decodeBLATableItems(buffer: ArrayBuffer): BLATableItem[][] {
-  const view = new DataView(buffer);
-  const rows = view.getInt32(0, true); // 最初のエントリは行の数
-  const items: BLATableItem[][] = [];
-
-  let offset = 1; // Int32のエントリとしてのオフセット
-
-  for (let i = 0; i < rows; i++) {
-    const rowLength = view.getInt32(offset * 4, true);
-    const rowItems: BLATableItem[] = [];
-    offset += 1; // 次の要素数のためにオフセットを1つ進める
-
-    for (let j = 0; j < rowLength; j++) {
-      // Int32のエントリではなく、バイトとしてのオフセットを計算する
-      const byteOffset = offset * 4;
-
-      rowItems.push(decodeBLATableItem(view, byteOffset));
-      offset += ITEM_BYTE_LENGTH / 4; // 次のアイテムのためにオフセットをアイテムのバイト長分進める
-    }
-    items.push(rowItems);
-  }
-
-  return items;
-}
-
 /**
  * BLATableを表現するbufferから直接値を取り出せるようにするラッパー
+ *
+ * # ストレージフォーマット (little-endian)
+ *
+ * ```
+ * [i32]                行数 (= BLATableの段数)
+ * 各行:
+ *   [i32]              その行の要素数
+ *   要素 × 要素数 (1要素あたり ITEM_BYTE_LENGTH = 44 bytes):
+ *     [f64]  offset  0 : a.re
+ *     [f64]  offset  8 : a.im
+ *     [f64]  offset 16 : b.re
+ *     [f64]  offset 24 : b.im
+ *     [f64]  offset 32 : r²  (注: rではなくr²を格納。hot loopで dzNorm < r² で判定したいため)
+ *     [i32]  offset 40 : l
+ * ```
+ *
+ * # アクセス方法
+ *
+ * hot pathからの直接アクセスを想定しているためget系メソッドは提供しない。
+ * 以下のpublicフィールドを直接参照する:
+ * - `view`: buffer全体のDataView
+ * - `length`: 行数 (BLATableの段数)
+ * - `rowOffsets`: 各行の[byteOffset, length]をフラットに格納したInt32Array
+ *    - `rowOffsets[rowIdx * 2]`     = その行の先頭要素のbyteOffset
+ *    - `rowOffsets[rowIdx * 2 + 1]` = その行の要素数
+ *
+ * 指定位置 (rowIdx, columnIdx) の要素にアクセスするには:
+ * ```ts
+ * const byteOffset = rowOffsets[rowIdx * 2] + columnIdx * ITEM_BYTE_LENGTH;
+ * const aRe = view.getFloat64(byteOffset,      true);
+ * const aIm = view.getFloat64(byteOffset +  8, true);
+ * const bRe = view.getFloat64(byteOffset + 16, true);
+ * const bIm = view.getFloat64(byteOffset + 24, true);
+ * const rSq = view.getFloat64(byteOffset + 32, true);
+ * const l   = view.getInt32  (byteOffset + 40, true);
+ * ```
  */
 export class BLATableView {
-  /** hot pathからの直接アクセス用にpublic。通常はget系メソッドを使うこと。 */
   readonly view: DataView;
-  public readonly length: number;
-  /**
-   * 各行の[byteOffset, length]をフラットに格納。rowOffsets[rowIdx * 2] = byteOffset, rowOffsets[rowIdx * 2 + 1] = length。
-   * hot pathからの直接アクセス用にpublic。
-   */
+  readonly length: number;
   readonly rowOffsets: Int32Array;
-  /** getABの結果をアロケーションなしで返すための再利用バッファ */
-  readonly abBuffer = new Float64Array(4);
 
   constructor(buffer: SharedArrayBuffer) {
     this.view = new DataView(buffer);
@@ -143,45 +117,5 @@ export class BLATableView {
       // 次のrowLengthのoffsetにセットしておく
       byteOffset += 4 + ITEM_BYTE_LENGTH * rowLength;
     }
-  }
-
-  /**
-   * 指定した位置のBLAItemが格納されているbyteOffsetを返す
-   */
-  getBLAItemOffset(rowIdx: number, columnIdx: number) {
-    return this.rowOffsets[rowIdx * 2] + columnIdx * ITEM_BYTE_LENGTH;
-  }
-
-  /**
-   * 指定した位置のrを返す
-   */
-  getR(rowIdx: number, columnIdx: number) {
-    const byteOffset = this.rowOffsets[rowIdx * 2] + columnIdx * ITEM_BYTE_LENGTH;
-    return this.view.getFloat64(byteOffset + 32, true);
-  }
-
-  /**
-   * 指定した位置のlを返す
-   */
-  getL(rowIdx: number, columnIdx: number) {
-    const byteOffset = this.rowOffsets[rowIdx * 2] + columnIdx * ITEM_BYTE_LENGTH;
-    return this.view.getInt32(byteOffset + 40, true);
-  }
-
-  /**
-   * 指定した位置のa, bの値をabBufferに書き込んで返す。
-   * abBuffer[0]=aRe, [1]=aIm, [2]=bRe, [3]=bIm
-   * 呼び出し側は次のgetAB呼び出し前に値を使い切ること。
-   */
-  getAB(rowIdx: number, columnIdx: number): Float64Array {
-    const byteOffset = this.rowOffsets[rowIdx * 2] + columnIdx * ITEM_BYTE_LENGTH;
-    const buf = this.abBuffer;
-
-    buf[0] = this.view.getFloat64(byteOffset, true);
-    buf[1] = this.view.getFloat64(byteOffset + 8, true);
-    buf[2] = this.view.getFloat64(byteOffset + 16, true);
-    buf[3] = this.view.getFloat64(byteOffset + 24, true);
-
-    return buf;
   }
 }
