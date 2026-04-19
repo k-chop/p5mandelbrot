@@ -124,7 +124,7 @@ const calcHandler = (data: IterationWorkerParams) => {
       // 条件 refIteration === (jIdx << d) + 1 は「refM1 (=refIteration-1) の下位 d bit が 0」と等価で、
       // これを満たす最大の d は refM1 の trailing zeros 数。上限をこれで決めれば、条件不成立の d に対する
       // blaView.getFloat64 の読み出しを省ける。
-      // |dz| < r は sqrt を省くため dzNorm < r*r で判定する (r は生成時に非負が保証されている)
+      // |dz| < r は sqrt を省くため dzNorm < r² で判定する (encode時にr²を書き込んでいる)
       if (0 < refIteration) {
         const refM1 = refIteration - 1;
         // ctz(refM1): refM1===0 のときは上限なし (blaRows側に任せる)
@@ -133,9 +133,9 @@ const calcHandler = (data: IterationWorkerParams) => {
         for (let d = startBLAIndex; d <= maxD; d++) {
           const jIdx = refM1 >> d;
           const byteOffset = rowOffsets[d * 2] + jIdx * ITEM_BYTE_LENGTH;
-          const r = blaView.getFloat64(byteOffset + 32, true);
+          const rSq = blaView.getFloat64(byteOffset + 32, true);
 
-          if (dzNorm < r * r) {
+          if (dzNorm < rSq) {
             blaRowIdx = d;
             blaColumnIdx = jIdx;
           } else {

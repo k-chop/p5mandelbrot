@@ -30,7 +30,8 @@ export function encodeBlaTableItem(item: BLATableItem): ArrayBuffer {
   floatView[1] = item.a.im;
   floatView[2] = item.b.re;
   floatView[3] = item.b.im;
-  floatView[4] = item.r;
+  // encode時にr²として保存しておく。hot loopでは|dz|<rの判定をdzNorm < r²で行いたいため
+  floatView[4] = item.r * item.r;
   intView[0] = item.l;
 
   return buffer;
@@ -41,13 +42,13 @@ export function decodeBLATableItem(view: DataView, offset: number): BLATableItem
   const aIm = view.getFloat64(offset + 8, true); // a.im
   const bRe = view.getFloat64(offset + 16, true); // b.re
   const bIm = view.getFloat64(offset + 24, true); // b.im
-  const r = view.getFloat64(offset + 32, true); // r
+  const rSq = view.getFloat64(offset + 32, true); // r²
   const l = view.getInt32(offset + 40, true); // l
 
   return {
     a: { re: aRe, im: aIm },
     b: { re: bRe, im: bIm },
-    r,
+    r: Math.sqrt(rSq),
     l,
   };
 }
@@ -79,7 +80,8 @@ export function encodeBlaTableItems(items: BLATableItem[][]): SharedArrayBuffer 
       view.setFloat64(byteOffset + 8, item.a.im, true);
       view.setFloat64(byteOffset + 16, item.b.re, true);
       view.setFloat64(byteOffset + 24, item.b.im, true);
-      view.setFloat64(byteOffset + 32, item.r, true);
+      // encode時にr²として保存しておく。hot loopでは|dz|<rの判定をdzNorm < r²で行いたいため
+      view.setFloat64(byteOffset + 32, item.r * item.r, true);
       view.setInt32(byteOffset + 40, item.l, true);
       byteOffset += ITEM_BYTE_LENGTH;
     }
@@ -157,7 +159,8 @@ export class BLATableView {
    */
   getR(rowIdx: number, columnIdx: number) {
     const byteOffset = this.rowOffsets[rowIdx * 2] + columnIdx * ITEM_BYTE_LENGTH;
-    return this.view.getFloat64(byteOffset + 32, true);
+    // storageにはr²が入っているためsqrtして返す
+    return Math.sqrt(this.view.getFloat64(byteOffset + 32, true));
   }
 
   /**
