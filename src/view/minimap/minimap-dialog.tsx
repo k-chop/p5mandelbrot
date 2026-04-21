@@ -10,7 +10,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shadcn/components/ui/popover";
 import { loadPreview } from "@/store/preview-store";
-import { useStoreValue } from "@/store/store";
+import { updateStore, useStoreValue } from "@/store/store";
 import type { POIData } from "@/types";
 import BigNumber from "bignumber.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -157,9 +157,10 @@ const ClusterPopover = ({ cluster, onJump }: { cluster: Cluster; onJump: () => v
 
   return (
     <div
-      className="grid max-h-72 gap-1.5 overflow-y-auto"
+      className="grid max-h-72 gap-1.5 overflow-y-auto overscroll-contain"
       style={{
         gridTemplateColumns: `repeat(${Math.min(cluster.pins.length, 3)}, 80px)`,
+        touchAction: "pan-y",
       }}
     >
       {cluster.pins.map((pin) => (
@@ -331,6 +332,8 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
 
   const handleJump = useCallback(() => {
     onOpenChange(false);
+    // 選択結果をキャンバスでしっかり見せるためPOI drawerも閉じる
+    updateStore("poiDrawerSnap", "closed");
   }, [onOpenChange]);
 
   if (!open) return null;

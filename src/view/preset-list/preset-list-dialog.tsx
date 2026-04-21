@@ -13,6 +13,7 @@ import {
 import { Alert, AlertDescription } from "@/shadcn/components/ui/alert";
 import { Button } from "@/shadcn/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
+import { updateStore } from "@/store/store";
 import { isDevMode } from "@/utils/dev-mode";
 import {
   type ThumbnailTarget,
@@ -195,6 +196,8 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
               onJump={() => {
                 jumpToPreset(poi);
                 onOpenChange(false);
+                // 選択結果をキャンバスで見せるためPOI drawerも閉じる
+                updateStore("poiDrawerSnap", "closed");
               }}
               onDelete={() => handleDelete(poi.id)}
             />
