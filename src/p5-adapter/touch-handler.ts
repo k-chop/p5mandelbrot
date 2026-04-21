@@ -1,10 +1,8 @@
 import { getStore } from "@/store/store";
-import { isMobileViewport } from "@/view/use-is-mobile";
 import type p5 from "p5";
 import {
   changeDraggingState,
   changeToMousePressedState,
-  changeToMouseReleasedState,
   confirmPinchGesture,
   p5MouseReleased,
   startPinchGesture,
@@ -141,16 +139,10 @@ export const onP5TouchEnded = (p: p5, ev: TouchEvent | undefined): boolean => {
   }
 
   if (ev.touches.length === 0) {
-    if (singleTouchMoved) {
-      // スワイプ確定 → 既存のmouseReleasedフローへ
-      p5MouseReleased(p, new MouseEvent("mouseup"));
-    } else if (!isMobileViewport()) {
-      // デスクトップ幅でのタップ: 既存のclick→zoomを発火
-      p5MouseReleased(p, new MouseEvent("mouseup"));
-    } else {
-      // モバイル幅でのタップ: ズームせず状態だけリセット
-      changeToMouseReleasedState();
-    }
+    // スワイプ確定 (移動あり) / タップ (移動なし) どちらも既存mouseReleasedに委譲:
+    //   - 移動あり: moveTo でパン確定
+    //   - 移動なし: タップ位置を中心にscaleTo (ピンチ以外の拡大手段)
+    p5MouseReleased(p, new MouseEvent("mouseup"));
     singleTouchStart = null;
     singleTouchMoved = false;
     gestureActive = false;
