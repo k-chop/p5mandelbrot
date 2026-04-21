@@ -21,6 +21,15 @@ let pinchStartDistance: number | null = null;
 let singleTouchStart: { x: number; y: number } | null = null;
 /** 1本指タッチがしきい値を超えて移動したか */
 let singleTouchMoved = false;
+/**
+ * canvas向けのgesture処理中かどうか
+ *
+ * p5はtouchイベントをwindowにバインドするため、UI要素上のタッチでも
+ * 本ハンドラが呼ばれる。touchStartedでUI判定してgesture開始をスキップした
+ * 場合、後続のtouchMoved/touchEndedでもfalse返却でpreventDefaultしないよう
+ * このフラグで識別する (= UI上のタップで synthesized click が潰れるのを防ぐ)。
+ */
+let gestureActive = false;
 
 /**
  * 2本指のclient座標間距離を計算
@@ -68,6 +77,8 @@ export const onP5TouchStarted = (p: p5, ev: TouchEvent | undefined): boolean => 
   if (isOnUIOverlay(ev as unknown as MouseEvent)) return true;
   if (getStore("canvasLocked")) return false;
 
+  gestureActive = true;
+
   if (ev.touches.length >= 2) {
     pinchStartDistance = pinchDistance(ev);
     startPinchGesture(p);
@@ -89,6 +100,7 @@ export const onP5TouchStarted = (p: p5, ev: TouchEvent | undefined): boolean => 
  */
 export const onP5TouchMoved = (p: p5, ev: TouchEvent | undefined): boolean => {
   if (!ev) return true;
+  if (!gestureActive) return true;
   if (getStore("canvasLocked")) return false;
 
   if (pinchStartDistance !== null && ev.touches.length >= 2) {
@@ -122,6 +134,7 @@ export const onP5TouchMoved = (p: p5, ev: TouchEvent | undefined): boolean => {
  */
 export const onP5TouchEnded = (p: p5, ev: TouchEvent | undefined): boolean => {
   if (!ev) return true;
+  if (!gestureActive) return true;
   if (getStore("canvasLocked")) return false;
 
   if (pinchStartDistance !== null) {
@@ -129,6 +142,7 @@ export const onP5TouchEnded = (p: p5, ev: TouchEvent | undefined): boolean => {
     pinchStartDistance = null;
     singleTouchStart = null;
     singleTouchMoved = false;
+    if (ev.touches.length === 0) gestureActive = false;
     return false;
   }
 
@@ -145,6 +159,7 @@ export const onP5TouchEnded = (p: p5, ev: TouchEvent | undefined): boolean => {
     }
     singleTouchStart = null;
     singleTouchMoved = false;
+    gestureActive = false;
   }
 
   return false;
