@@ -270,14 +270,14 @@ export const SettingsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-h-[90vh] max-w-[calc(100vw-2rem)] overflow-y-auto md:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <IconSettings className="size-5" />
             {t("Settings", "operations.settings")}
           </DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-8 pt-2">
+        <div className="grid grid-cols-1 gap-8 pt-2 md:grid-cols-2">
           <div className="flex flex-col gap-8">
             <RenderingSection />
           </div>
