@@ -35,18 +35,18 @@ export const BumpPill = () => {
     setManualN(N + bumpAmount);
   };
 
-  const positionClass = isMobile ? "bottom-7 left-1/2 -translate-x-1/2" : "bottom-20 left-3";
+  const positionClass = isMobile ? "bottom-10 left-1/2 -translate-x-1/2" : "bottom-20 left-3";
 
   return (
     <button
       type="button"
       onClick={handleClick}
       className={clsx(
-        "fixed z-[95] flex items-center gap-1.5 rounded-full border border-[var(--tomato-9)] bg-[#1c1c24]/95 px-4 py-2 text-sm font-medium text-[var(--sage-12)] shadow-lg backdrop-blur-sm transition hover:bg-[#26262e]/95 active:scale-95",
+        "fixed z-[95] flex items-center gap-1.5 rounded-full border-2 border-[var(--tomato-10)] bg-[#1c1c24]/95 px-4 py-2 text-sm font-medium text-[var(--sage-12)] shadow-[0_0_20px_rgba(229,77,46,0.4),0_4px_12px_rgba(0,0,0,0.6)] backdrop-blur-sm transition hover:bg-[#26262e]/95 active:scale-95",
         positionClass,
       )}
     >
-      <TriangleAlert className="size-4 text-[var(--tomato-11)]" />
+      <TriangleAlert className="size-[18px] shrink-0 text-[var(--tomato-11)]" />
       <span>{t("Increase N by 30%", "bump.increaseN")}</span>
     </button>
   );
