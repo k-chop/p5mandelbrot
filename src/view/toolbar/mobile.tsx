@@ -25,7 +25,7 @@ import { PaletteEditor } from "../right-sidebar/palette-editor";
 
 /** モバイル用の丸型フローティングアイコンボタンの共通クラス */
 const FLOATING_BUTTON_CLASS =
-  "size-11 rounded-full border-[#2a2a3a] bg-[#1c1c24]/95 shadow-[0_4px_12px_rgba(0,0,0,0.4)] backdrop-blur-sm";
+  "size-16 rounded-full border-[#2a2a3a] bg-[#1c1c24]/95 shadow-[0_4px_12px_rgba(0,0,0,0.4)] backdrop-blur-sm";
 
 type MobileToolbarProps = {
   openShare: () => void;
@@ -43,7 +43,7 @@ const HamburgerMenu = ({ openShare, openSS, openJump, openSettings }: MobileTool
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon" aria-label="Menu" className={FLOATING_BUTTON_CLASS}>
-            <IconMenu2 className="size-5" />
+            <IconMenu2 className="size-8" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" sideOffset={8} className="min-w-48">
@@ -74,17 +74,17 @@ const HamburgerMenu = ({ openShare, openSS, openJump, openSettings }: MobileTool
   );
 };
 
-/** 右上: I'm Feeling Lucky + Palette */
+/** 右上: I'm Feeling Lucky + Palette (縦並び、上からLucky→Palette) */
 const TopRightActions = () => (
-  <div className="fixed top-3 right-3 z-100 flex gap-2">
+  <div className="fixed top-3 right-3 z-100 flex flex-col gap-2">
     <Button
       variant="default"
       size="icon"
       aria-label="I'm Feeling Lucky"
-      className="size-11 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+      className="size-16 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
       onClick={performRandomJump}
     >
-      <IconDice className="size-5" />
+      <IconDice className="size-8" />
     </Button>
     <Popover>
       <PopoverTrigger asChild>
@@ -94,7 +94,7 @@ const TopRightActions = () => (
           aria-label="Palette"
           className={FLOATING_BUTTON_CLASS}
         >
-          <IconPalette className="size-5" />
+          <IconPalette className="size-8" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -129,7 +129,7 @@ const POIToggleFab = () => {
         className={FLOATING_BUTTON_CLASS}
         onClick={() => updateStoreWith("poiPanelOpen", (v) => !v)}
       >
-        <IconLayoutSidebar className="size-5" />
+        <IconLayoutSidebar className="size-8" />
       </Button>
     </div>
   );
