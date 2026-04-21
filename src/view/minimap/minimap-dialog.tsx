@@ -400,7 +400,7 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
           </span>
         </div>
         <div
-          className="relative aspect-square w-full overflow-hidden rounded border border-[#2a2a3a]"
+          className="relative aspect-square w-full rounded border border-[#2a2a3a]"
           style={{ maxWidth: MAX_DISPLAY_SIZE }}
         >
           <img
