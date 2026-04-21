@@ -56,8 +56,18 @@ const SuggestRedirect = () => {
 /** POIパネルのヘッダー */
 export const POIPanelHeader = () => {
   const t = useT();
+  const isMobile = useIsMobile();
   const [presetOpened, { open: openPreset, close: closePreset }] = useModalState();
   const [minimapOpened, { open: openMinimap, close: closeMinimap }] = useModalState();
+
+  /** ×ボタン: モバイルならDrawerをclosedへ、デスクトップなら従来通りpoiPanelOpen toggle */
+  const handleClose = () => {
+    if (isMobile) {
+      updateStore("poiDrawerSnap", "closed");
+    } else {
+      updateStoreWith("poiPanelOpen", (v) => !v);
+    }
+  };
 
   return (
     <>
@@ -76,7 +86,7 @@ export const POIPanelHeader = () => {
           </div>
         </div>
         <button
-          onClick={() => updateStoreWith("poiPanelOpen", (v) => !v)}
+          onClick={handleClose}
           className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
         >
           <IconX size={18} />

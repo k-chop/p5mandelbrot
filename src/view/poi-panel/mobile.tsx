@@ -35,7 +35,7 @@ const POIPanelSmallContent = () => {
   const { poiList, addPOI, applyPOI } = usePOI();
 
   return (
-    <div className="mt-auto flex h-[200px] items-center gap-2 overflow-x-auto px-3 pb-2">
+    <div className="flex h-[200px] items-center gap-2 overflow-x-auto px-3 pb-2">
       <button
         type="button"
         onClick={() => addPOI(cloneCurrentParams())}
