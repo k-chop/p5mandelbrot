@@ -28,7 +28,7 @@ export const POIPanelMobile = () => {
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={handleSnapChange}
     >
-      <DrawerContent className="bg-[#161620]/97 backdrop-blur-sm">
+      <DrawerContent className="h-[100dvh] bg-[#161620]/97 backdrop-blur-sm data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-[100dvh]">
         <VisuallyHidden.Root>
           <DrawerTitle>Points of Interest</DrawerTitle>
         </VisuallyHidden.Root>
