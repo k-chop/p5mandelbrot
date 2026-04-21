@@ -76,7 +76,7 @@ const HamburgerMenu = ({ openShare, openSS, openJump, openSettings }: MobileTool
 
 /** 右上: I'm Feeling Lucky + Palette (縦並び、上からLucky→Palette) */
 const TopRightActions = () => (
-  <div className="fixed top-3 right-3 z-100 flex flex-col gap-2">
+  <div className="fixed top-3 right-3 z-100 flex flex-col gap-3">
     <Button
       variant="default"
       size="icon"
