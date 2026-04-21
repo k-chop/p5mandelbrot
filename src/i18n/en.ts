@@ -84,6 +84,9 @@ export const en = {
   "footer.calcIteration": "Calculate Iteration",
   "footer.elapsedPrefix": "elapsed: ",
 
+  // bump
+  "bump.lowN": "Low N",
+
   // instructions
   "instructions.mouse": "Mouse",
   "instructions.keys": "Keys",

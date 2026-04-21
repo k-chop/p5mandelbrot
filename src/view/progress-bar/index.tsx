@@ -1,6 +1,8 @@
 import { useT } from "@/i18n/context";
 import { useStoreValue } from "@/store/store";
 import { useIsMobile } from "@/view/use-is-mobile";
+import { BumpPill } from "../bump-pill";
+import { BUMP_DISPLAY_THRESHOLD } from "../bump-pill/bump-state";
 import { Footer } from "../footer";
 
 /**
@@ -35,12 +37,15 @@ const MobileProgressBar = () => {
   const progress = useStoreValue("progress");
   const r = useStoreValue("r");
   const N = useStoreValue("N");
+  const nHitRatio = useStoreValue("nHitRatio");
 
   const isDone = typeof progress === "object" && progress !== null;
   const percent = isDone ? 100 : typeof progress === "string" ? parseProgressPercent(progress) : 0;
   const elapsedText = isDone ? `${t("elapsed: ", "footer.elapsedPrefix")}${progress.total}ms` : "";
   const rText = r ? `r:${r.toPrecision(4)}` : "";
-  const statsText = `${rText} N:${N}`;
+  const showNWarning = nHitRatio != null && nHitRatio > BUMP_DISPLAY_THRESHOLD;
+  const nText = showNWarning ? `⚠ N:${N}` : `N:${N}`;
+  const statsText = `${rText} ${nText}`;
 
   return (
     <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-[60] h-5">
@@ -70,5 +75,10 @@ const DesktopProgressBar = () => (
 /** フローティング進捗バー (モバイル時は細ライン+footerに切替) */
 export const ProgressBar = () => {
   const isMobile = useIsMobile();
-  return isMobile ? <MobileProgressBar /> : <DesktopProgressBar />;
+  return (
+    <>
+      {isMobile ? <MobileProgressBar /> : <DesktopProgressBar />}
+      <BumpPill />
+    </>
+  );
 };

@@ -155,6 +155,11 @@ export interface BatchContext {
   startedAt: number;
   finishedAt?: number;
   spans: Span[];
+
+  /** iteration値が N に到達した画素の累積数 (描画済みtile全体) */
+  nHitCount: number;
+  /** 累積画素数 (描画済みtile全体) */
+  totalPixelCount: number;
 }
 
 export type InitialOmittedBatchContextKeys =
@@ -163,7 +168,9 @@ export type InitialOmittedBatchContextKeys =
   | "progressMap"
   | "startedAt"
   | "refProgress"
-  | "spans";
+  | "spans"
+  | "nHitCount"
+  | "totalPixelCount";
 
 export type JobType = "calc-iteration" | "calc-ref-orbit";
 

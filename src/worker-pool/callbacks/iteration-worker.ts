@@ -39,6 +39,14 @@ export const onIterationWorkerResult: IterationResultCallback = (result, job) =>
   const iterationsResult = new Uint32Array(iterations);
   const iterBuffer = upsertIterationCache(rect, iterationsResult, resolution, isSuperSampled);
 
+  const maxIter = batchContext.mandelbrotParams.N;
+  let hitCount = 0;
+  for (let i = 0; i < iterationsResult.length; i++) {
+    if (iterationsResult[i] === maxIter) hitCount++;
+  }
+  batchContext.nHitCount += hitCount;
+  batchContext.totalPixelCount += iterationsResult.length;
+
   // jobを完了させる
   batchContext.progressMap.set(job.id, 1.0);
   addTraceEvent("worker", { type: "completed", workerId: getWorkerId(job) });

@@ -59,6 +59,8 @@ type Store = {
 
   // state
   progress: string | ResultSpans;
+  /** 直近描画のiteration=N到達率 (0..1)。描画未完了や集計不能時はnull */
+  nHitRatio: number | null;
   /** 現在使用中のrenderer */
   rendererType: "webgpu" | "p5js";
   /** Debug Mode中か否か */
@@ -109,6 +111,7 @@ const store: Store = {
   supersamplingHeight: 1080,
   // state
   progress: "",
+  nHitRatio: null,
   rendererType: "p5js",
   isDebugMode: false,
   showInterestingPoints: false,

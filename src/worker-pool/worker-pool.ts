@@ -65,6 +65,18 @@ export const clearBatchContext = () => {
 };
 
 /**
+ * 最新バッチの iteration=N 到達率 (0..1) を返す
+ *
+ * 描画完了済みの場合のみ値を返し、未完了/集計不能時は null
+ */
+export const getNHitRatio = (): number | null => {
+  const batchContext = getLatestBatchContext();
+  if (!batchContext || !batchContext.finishedAt) return null;
+  if (batchContext.totalPixelCount === 0) return null;
+  return batchContext.nHitCount / batchContext.totalPixelCount;
+};
+
+/**
  * Footerで表示するための進捗情報をbatchContextから取得する
  */
 export const getProgressData = (): string | ResultSpans => {
@@ -156,6 +168,8 @@ export function registerBatch(
     startedAt: performance.now(),
     refProgress: -1,
     spans: [],
+    nHitCount: 0,
+    totalPixelCount: 0,
   });
 
   tickWorkerPool();
