@@ -43,14 +43,12 @@ const MobileProgressBar = () => {
   const statsText = `${rText} N:${N}`;
 
   return (
-    <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-[60] h-4">
+    <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-[60] h-5">
       <div className="absolute inset-x-0 top-0 bottom-[3px] flex items-center justify-between gap-2 bg-[#1c1c24]/70 px-2 backdrop-blur-sm">
-        <span className="truncate font-mono text-[10px] leading-none text-muted-foreground">
+        <span className="truncate font-mono text-xs leading-none text-muted-foreground">
           {statsText}
         </span>
-        <span className="truncate text-[10px] leading-none text-muted-foreground">
-          {elapsedText}
-        </span>
+        <span className="truncate text-xs leading-none text-muted-foreground">{elapsedText}</span>
       </div>
       <div className="absolute right-0 bottom-0 left-0 h-[3px] bg-gray-700/30">
         <div
