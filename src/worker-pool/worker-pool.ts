@@ -1,5 +1,4 @@
 import { addTraceEvent, removeBatchTrace, startBatchTrace } from "@/event-viewer/event";
-import { getStore } from "@/store/store";
 import type {
   BatchContext,
   CalcIterationJob,
@@ -7,10 +6,8 @@ import type {
   InitialOmittedBatchContextKeys,
   MandelbrotJob,
   MandelbrotRenderingUnit,
-  MandelbrotWorkerType,
   ResultSpans,
 } from "@/types";
-import { mandelbrotWorkerTypes } from "@/types";
 import { throttle } from "es-toolkit";
 import {
   calcNormalizedWorkerIndex,
@@ -94,16 +91,6 @@ export const getProgressData = (): string | ResultSpans => {
   const progress = progressList.reduce((a, b) => a + b, 0) / progressList.length;
 
   return `Generating... ${Math.floor(progress * 100)}%`;
-};
-
-export const cycleWorkerType = (): MandelbrotWorkerType => {
-  const currentMode = getStore("mode");
-
-  const currentIndex = mandelbrotWorkerTypes.findIndex((v) => v === currentMode);
-
-  const nextMode = mandelbrotWorkerTypes[(currentIndex + 1) % mandelbrotWorkerTypes.length];
-
-  return nextMode;
 };
 
 export function registerBatch(

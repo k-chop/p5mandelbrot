@@ -92,7 +92,6 @@ export const en = {
   "instructions.changeCenter": "Change center",
   "instructions.interactiveZoom": "Interactive zoom and change center",
   "instructions.changePalette": "Change Palette",
-  "instructions.toggleMode": "Toggle mode",
   "instructions.resetR": "Reset r to 2.0",
   "instructions.supersampling": "Supersampling(x2) current location",
   "instructions.changeMaxIteration": "Change max iteration (±100)",

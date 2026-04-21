@@ -12,7 +12,6 @@ import {
 import { startCalculation } from "@/mandelbrot";
 import { calcAutoN } from "@/mandelbrot-state/auto-iteration";
 import {
-  cycleMode,
   getAutoIterationEnabled,
   getCurrentParams,
   getManualN,
@@ -643,7 +642,6 @@ export const keyInputHandler = (event: KeyboardEvent) => {
   if (event.key === "0") resetIterationCount();
   if (event.key === "9") setDeepIterationCount();
   if (event.key === "r") resetRadius();
-  if (event.key === "m") cycleMode();
   if (event.key === "ArrowDown") {
     const { width, height } = getCanvasSize();
     applyAutoIteration(width / 2, height / 2, 1 / rate, width, height);

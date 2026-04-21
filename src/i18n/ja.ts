@@ -92,7 +92,6 @@ export const ja: Dictionary = {
   "instructions.changeCenter": "ドラッグで中心を移動",
   "instructions.interactiveZoom": "ドラッグ開始点を中心に動的なズーム",
   "instructions.changePalette": "パレット変更",
-  "instructions.toggleMode": "モード切替",
   "instructions.resetR": "r を 2.0 にリセット",
   "instructions.supersampling": "現在位置をスーパーサンプリング(x2)",
   "instructions.changeMaxIteration": "最大iterationを変更 (±100)",

@@ -42,11 +42,6 @@ export const Instructions = () => {
         <div>{t("Change Palette")}</div>
 
         <div>
-          <Kbd>m</Kbd>
-        </div>
-        <div>{t("Toggle mode")}</div>
-
-        <div>
           <Kbd>r</Kbd>
         </div>
         <div>{t("Reset r to 2.0")}</div>

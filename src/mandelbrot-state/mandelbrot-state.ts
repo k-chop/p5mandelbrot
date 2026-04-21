@@ -1,9 +1,18 @@
 import { getCanvasSize } from "@/rendering/renderer";
 import { getStore, updateStore } from "@/store/store";
-import type { MandelbrotParams, OffsetParams } from "@/types";
+import type { MandelbrotParams, MandelbrotWorkerType, OffsetParams } from "@/types";
+import { PERTURBATION_THRESHOLD } from "@/utils/palette-encoding";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
-import { cycleWorkerType } from "@/worker-pool/worker-pool";
 import BigNumber from "bignumber.js";
+
+/**
+ * r に応じて最適な worker mode を決定する
+ *
+ * r が double precision の実用閾値 (PERTURBATION_THRESHOLD) を下回ると
+ * normal では解像度不足でぼやけるため、自動的にperturbationを選ぶ。
+ */
+const modeForR = (r: BigNumber): MandelbrotWorkerType =>
+  r.isLessThan(PERTURBATION_THRESHOLD) ? "perturbation" : "normal";
 
 const DEFAULT_N = 500;
 
@@ -76,10 +85,14 @@ const isSameParams = (a: MandelbrotParams, b: MandelbrotParams) =>
   a.isSuperSampling === b.isSuperSampling;
 
 export const setCurrentParams = (params: Partial<MandelbrotParams>) => {
-  const needModeChange = params.mode != null && currentParams.mode !== params.mode;
   const needResetOffset = params.r != null && !currentParams.r.eq(params.r);
 
-  currentParams = { ...currentParams, ...params };
+  const merged = { ...currentParams, ...params };
+  // modeは常に r から自動決定 (呼び出し側からのmode指定は無視)
+  merged.mode = modeForR(merged.r);
+  const needModeChange = currentParams.mode !== merged.mode;
+
+  currentParams = merged;
 
   updateStore("r", currentParams.r);
   updateStore("N", currentParams.N);
@@ -142,12 +155,6 @@ export const setDeepIterationCount = () => {
 };
 
 export const resetRadius = () => setCurrentParams({ r: new BigNumber("2.0") });
-
-export const cycleMode = () => {
-  const mode = cycleWorkerType();
-  setCurrentParams({ mode });
-  setOffsetParams({ x: 0, y: 0 });
-};
 
 export const radiusTimesTo = (times: number) => {
   if (1 < times && currentParams.r.times(times).gte(5)) {

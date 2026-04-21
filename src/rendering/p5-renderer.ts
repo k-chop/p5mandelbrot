@@ -9,7 +9,6 @@ import { getIterationCache } from "@/iteration-buffer/iteration-buffer";
 import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "@/rendering/common";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { clamp } from "@/math/util";
-import { PERTURBATION_THRESHOLD } from "@/utils/palette-encoding";
 import type p5 from "p5";
 import type { InterestingPoint } from "../interesting-points/find-interesting-points";
 import type { Rect } from "../math/rect";
@@ -174,18 +173,6 @@ export const drawUICurrentParams = (
 
   const nLabel = autoIterationEnabled ? `N: ${params.N} [auto]` : `N: ${params.N}`;
   p.text(`r: ${params.r.toPrecision(10)}\n${nLabel}`, 4, 14);
-
-  const isNotEnoughPrecision =
-    params.mode === "normal" && params.r.isLessThan(PERTURBATION_THRESHOLD);
-  if (isNotEnoughPrecision) {
-    p.textSize(16);
-    p.textAlign(p.CENTER, p.CENTER);
-    p.text(
-      `Not enough precision.\nSwitch to perturbation mode by [m] key!`,
-      p.width / 2,
-      p.height / 2,
-    );
-  }
 };
 
 /**

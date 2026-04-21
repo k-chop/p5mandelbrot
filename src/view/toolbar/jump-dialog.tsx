@@ -16,7 +16,6 @@ import {
 import { Input } from "@/shadcn/components/ui/input";
 import { Label } from "@/shadcn/components/ui/label";
 import { Textarea } from "@/shadcn/components/ui/textarea";
-import { PERTURBATION_THRESHOLD } from "@/utils/palette-encoding";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
 
@@ -158,10 +157,9 @@ export const JumpDialog = ({ open, onOpenChange }: JumpDialogProps) => {
         return;
       }
 
-      const mode = r.isLessThan(PERTURBATION_THRESHOLD) ? "perturbation" : "normal";
-
       setManualN(N);
-      setCurrentParams({ x, y, r, N, mode });
+      // modeはsetCurrentParams側でrから自動決定される
+      setCurrentParams({ x, y, r, N });
       clearIterationCache();
 
       // ダイアログを閉じてリセット
