@@ -24,26 +24,34 @@ const parseProgressPercent = (s: string): number => {
 };
 
 /**
- * モバイル用の細ラインプログレスバー + 完了時footer
+ * モバイル用の細ラインプログレスバー + 常時表示footer
  *
- * - 描画中: 画面下端3pxの細いプログレスラインのみ
- * - 完了後: 16px高の薄背景footerにelapsed表示 + 下端3pxにフルバー
+ * - 左: r と N を常時表示 (canvas上のUI描画と同等の情報)
+ * - 右: 完了後は elapsed を表示
+ * - 下端3pxにプログレスライン (描画中は進行率, 完了後はフル)
  */
 const MobileProgressBar = () => {
   const t = useT();
   const progress = useStoreValue("progress");
+  const r = useStoreValue("r");
+  const N = useStoreValue("N");
 
   const isDone = typeof progress === "object" && progress !== null;
   const percent = isDone ? 100 : typeof progress === "string" ? parseProgressPercent(progress) : 0;
   const elapsedText = isDone ? `${t("elapsed: ", "footer.elapsedPrefix")}${progress.total}ms` : "";
+  const rText = r ? `r:${r.toPrecision(4)}` : "";
+  const statsText = `${rText} N:${N}`;
 
   return (
     <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-[60] h-4">
-      {isDone && (
-        <div className="absolute inset-x-0 top-0 bottom-[3px] flex items-center justify-end bg-[#1c1c24]/70 px-2 backdrop-blur-sm">
-          <span className="text-[10px] leading-none text-muted-foreground">{elapsedText}</span>
-        </div>
-      )}
+      <div className="absolute inset-x-0 top-0 bottom-[3px] flex items-center justify-between gap-2 bg-[#1c1c24]/70 px-2 backdrop-blur-sm">
+        <span className="truncate font-mono text-[10px] leading-none text-muted-foreground">
+          {statsText}
+        </span>
+        <span className="truncate text-[10px] leading-none text-muted-foreground">
+          {elapsedText}
+        </span>
+      </div>
       <div className="absolute right-0 bottom-0 left-0 h-[3px] bg-gray-700/30">
         <div
           className="h-full bg-primary transition-all duration-150"

@@ -9,6 +9,7 @@ import { getIterationCache } from "@/iteration-buffer/iteration-buffer";
 import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "@/rendering/common";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { clamp } from "@/math/util";
+import { isMobileViewport } from "@/view/use-is-mobile";
 import type p5 from "p5";
 import type { InterestingPoint } from "../interesting-points/find-interesting-points";
 import type { Rect } from "../math/rect";
@@ -159,12 +160,16 @@ export const drawUIScaleRate = (p: p5, scaleFactor: number) => {
 
 /**
  * 現状の描画位置に関する情報をcanvasにUIとして描画する
+ *
+ * モバイル幅ではfloating iconsと重なるので描画せず、HTML側の footer に表示する。
  */
 export const drawUICurrentParams = (
   p: p5,
   params: MandelbrotParams,
   autoIterationEnabled: boolean,
 ) => {
+  if (isMobileViewport()) return;
+
   p.textAlign(p.LEFT, p.BASELINE);
   p.fill(255);
   p.stroke(0);
@@ -177,8 +182,12 @@ export const drawUICurrentParams = (
 
 /**
  * 現在マウスが指している位置のiteration数をcanvasにUIとして描画する
+ *
+ * モバイルではマウス追従のカーソルが存在しないため描画しない。
  */
 export const drawUIIterationAtCursor = (p: p5, iteration: string | number) => {
+  if (isMobileViewport()) return;
+
   p.textAlign(p.RIGHT, p.TOP);
   p.fill(255);
   p.stroke(0);
