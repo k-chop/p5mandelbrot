@@ -10,6 +10,7 @@ import { COLLAPSED_STRIP_WIDTH, POIPanel } from "./poi-panel";
 import { ProgressBar } from "./progress-bar";
 import { SupersamplingOverlay } from "./supersampling-overlay";
 import { Toolbar } from "./toolbar";
+import { useIsMobile } from "./use-is-mobile";
 import { PanelLayoutProvider, useExclusivePanels, usePanelLayout } from "./use-panel-layout";
 
 /**
@@ -21,18 +22,20 @@ import { PanelLayoutProvider, useExclusivePanels, usePanelLayout } from "./use-p
 const useCanvasPositionAdjust = () => {
   const isDebugMode = useStoreValue("isDebugMode");
   const poiPanelOpen = useStoreValue("poiPanelOpen");
+  const isMobile = useIsMobile();
   const { debugPanelWidth, poiPanelWidth } = usePanelLayout();
 
   useEffect(() => {
     const wrapper = document.getElementById("canvas-wrapper");
     if (!wrapper) return;
 
-    const debugWidth = isDebugMode ? debugPanelWidth : 0;
-    const poiWidth = poiPanelOpen ? poiPanelWidth : COLLAPSED_STRIP_WIDTH;
+    // モバイルではデバッグパネル非表示・POIはBottomSheetで上に乗るためオフセット不要
+    const debugWidth = !isMobile && isDebugMode ? debugPanelWidth : 0;
+    const poiWidth = isMobile ? 0 : poiPanelOpen ? poiPanelWidth : COLLAPSED_STRIP_WIDTH;
 
     wrapper.style.left = `${debugWidth}px`;
     wrapper.style.right = `${poiWidth}px`;
-  }, [isDebugMode, poiPanelOpen, debugPanelWidth, poiPanelWidth]);
+  }, [isMobile, isDebugMode, poiPanelOpen, debugPanelWidth, poiPanelWidth]);
 };
 
 /** AppRoot内部（PanelLayoutProvider内で動作する） */
