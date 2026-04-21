@@ -1,4 +1,3 @@
-import { SimpleTooltip } from "@/components/simple-tooltip";
 import { ValueSlider } from "@/components/slider-wrapper";
 import { useT } from "@/i18n/context";
 import { resizeTo } from "@/p5-adapter/p5-adapter";
@@ -28,6 +27,11 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <h3 className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
     {children}
   </h3>
+);
+
+/** 設定項目の補足説明 (項目直下に小さい文字で常時表示) */
+const FieldDescription = ({ children }: { children: React.ReactNode }) => (
+  <p className="mt-1 text-xs text-muted-foreground">{children}</p>
 );
 
 /** Worker数の選択肢を生成 */
@@ -97,7 +101,7 @@ const RenderingSection = () => {
         </div>
       )}
 
-      <SimpleTooltip content={t("Approximately 10x faster. Recommended to keep ON.")}>
+      <div>
         <div className="flex items-center space-x-2">
           <Switch
             id="settings-use-wasm"
@@ -108,7 +112,10 @@ const RenderingSection = () => {
             {t("Use Wasm for reference orbit")}
           </Label>
         </div>
-      </SimpleTooltip>
+        <FieldDescription>
+          {t("Approximately 10x faster. Recommended to keep ON.")}
+        </FieldDescription>
+      </div>
 
       <div>
         <div className="mb-1 ml-2 text-sm">
@@ -169,15 +176,7 @@ const ExplorationSection = () => {
         />
       </div>
 
-      <SimpleTooltip
-        content={
-          <>
-            {t("Marks interesting points on the fractal.")}
-            <br />
-            {t("Click a marker to zoom into its center.")}
-          </>
-        }
-      >
+      <div>
         <div className="flex items-center space-x-2">
           <Switch
             id="settings-interesting-points"
@@ -188,7 +187,12 @@ const ExplorationSection = () => {
             {t("Show point marker")}
           </Label>
         </div>
-      </SimpleTooltip>
+        <FieldDescription>
+          {t("Marks interesting points on the fractal.")}
+          <br />
+          {t("Click a marker to zoom into its center.")}
+        </FieldDescription>
+      </div>
     </div>
   );
 };
@@ -228,21 +232,19 @@ const AboutSection = () => {
       </Dialog>
 
       <div className="flex items-center space-x-2">
-        <SimpleTooltip content={t("Switch language")}>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => updateStore("locale", locale === "en" ? "ja" : "en")}
-          >
-            {locale === "en" ? "JA" : "EN"}
-          </Button>
-        </SimpleTooltip>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => updateStore("locale", locale === "en" ? "ja" : "en")}
+        >
+          {locale === "en" ? "JA" : "EN"}
+        </Button>
         <Label className="text-sm text-muted-foreground">
           {locale === "en" ? "English" : "日本語"}
         </Label>
       </div>
 
-      <SimpleTooltip content={t("Shows debug data obtained from rendering results.")}>
+      <div>
         <div className="flex items-center space-x-2">
           <Switch
             id="settings-debug-mode"
@@ -253,7 +255,10 @@ const AboutSection = () => {
             {t("Debug Mode")}
           </Label>
         </div>
-      </SimpleTooltip>
+        <FieldDescription>
+          {t("Shows debug data obtained from rendering results.")}
+        </FieldDescription>
+      </div>
     </div>
   );
 };
