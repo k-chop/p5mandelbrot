@@ -1,5 +1,5 @@
 import { getStore } from "@/store/store";
-import { MOBILE_MAX_WIDTH } from "@/view/use-is-mobile";
+import { isMobileViewport } from "@/view/use-is-mobile";
 import type p5 from "p5";
 import {
   changeDraggingState,
@@ -50,12 +50,6 @@ const syncP5MousePos = (p: p5, x: number, y: number): void => {
   (p as unknown as { mouseX: number; mouseY: number }).mouseX = x;
   (p as unknown as { mouseX: number; mouseY: number }).mouseY = y;
 };
-
-/**
- * 現在のビューポートがモバイル幅かどうか
- */
-const isMobileViewport = (): boolean =>
-  window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`).matches;
 
 /**
  * p5のp.touches配列からcanvasローカル座標を取り出す

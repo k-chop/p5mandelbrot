@@ -54,6 +54,7 @@ import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";
 import { getProgressData } from "@/worker-pool/worker-pool";
 import BigNumber from "bignumber.js";
 import type p5 from "p5";
+import { isMobileViewport } from "@/view/use-is-mobile";
 import { disableCanvasTouchAction } from "./touch-handler";
 import { isInside } from "./utils";
 
@@ -666,7 +667,9 @@ export const keyInputHandler = (event: KeyboardEvent) => {
  * 機能が無効またはキャッシュが不十分な場合はポイントをクリアする。
  */
 const scheduleInterestingPointsDetection = (): void => {
-  if (!getStore("showInterestingPoints") && !getStore("alwaysComputeIPDebugData")) {
+  // モバイルではタップズームに統一しmarkerは常に非表示。計算も走らせない (debugモードは除く)
+  const showMarkers = !isMobileViewport() && getStore("showInterestingPoints");
+  if (!showMarkers && !getStore("alwaysComputeIPDebugData")) {
     currentInterestingPoints = [];
     return;
   }
@@ -774,7 +777,7 @@ export const p5Draw = (p: p5) => {
 
   drawUICurrentParams(p, getCurrentParams(), getAutoIterationEnabled());
   drawUIIterationAtCursor(p, getStore("iteration"));
-  if (getStore("showInterestingPoints")) {
+  if (getStore("showInterestingPoints") && !isMobileViewport()) {
     const hoveredPoint =
       draggingMode === undefined
         ? findHitInterestingPoint(p.mouseX, p.mouseY, currentInterestingPoints)

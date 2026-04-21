@@ -16,6 +16,7 @@ import { Switch } from "@/shadcn/components/ui/switch";
 import { toast } from "sonner";
 import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
 import { DEFAULT_WORKER_COUNT } from "@/store/sync-storage/settings";
+import { useIsMobile } from "@/view/use-is-mobile";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { IconHelp, IconSettings } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
@@ -155,6 +156,7 @@ const RenderingSection = () => {
 /** 右カラム: Exploration セクション */
 const ExplorationSection = () => {
   const t = useT();
+  const isMobile = useIsMobile();
   const zoomRate = useStoreValue("zoomRate");
   const show = useStoreValue("showInterestingPoints");
   const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
@@ -176,23 +178,26 @@ const ExplorationSection = () => {
         />
       </div>
 
-      <div>
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="settings-interesting-points"
-            checked={show}
-            onCheckedChange={() => updateStoreWith("showInterestingPoints", (v) => !v)}
-          />
-          <Label htmlFor="settings-interesting-points" className="cursor-pointer text-sm">
-            {t("Show point marker")}
-          </Label>
+      {/* モバイルでは point marker は常に非表示なので設定項目も隠す */}
+      {!isMobile && (
+        <div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="settings-interesting-points"
+              checked={show}
+              onCheckedChange={() => updateStoreWith("showInterestingPoints", (v) => !v)}
+            />
+            <Label htmlFor="settings-interesting-points" className="cursor-pointer text-sm">
+              {t("Show point marker")}
+            </Label>
+          </div>
+          <FieldDescription>
+            {t("Marks interesting points on the fractal.")}
+            <br />
+            {t("Click a marker to zoom into its center.")}
+          </FieldDescription>
         </div>
-        <FieldDescription>
-          {t("Marks interesting points on the fractal.")}
-          <br />
-          {t("Click a marker to zoom into its center.")}
-        </FieldDescription>
-      </div>
+      )}
     </div>
   );
 };
