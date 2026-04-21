@@ -377,7 +377,7 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-h-[95vh] max-w-[min(95vw,1056px)] overflow-y-auto p-4"
+        className="max-h-[95vh] w-[calc(100vw-2rem)] max-w-[1056px] overflow-y-auto p-4"
         aria-describedby={undefined}
       >
         <DialogHeader>
