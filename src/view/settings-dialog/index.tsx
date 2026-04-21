@@ -280,7 +280,7 @@ export const SettingsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-[calc(100vw-2rem)] overflow-y-auto md:max-w-3xl">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-y-auto md:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <IconSettings className="size-5" />
