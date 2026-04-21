@@ -9,9 +9,14 @@ import { POICardPreview } from "../right-sidebar/poi-card-preview";
 import { usePOI } from "../right-sidebar/use-poi";
 import { PanelContent, POIPanelHeader } from "./index";
 
-/** vaul snapPoints: 完全非表示 / 横ストリップ (追加ボタン+サムネイル1行) / フル */
-const SNAP_CLOSED = 0;
-const SNAP_SMALL = "280px";
+/**
+ * vaul snapPoints: 完全非表示 / 横ストリップ (追加ボタン+サムネイル1行) / フル
+ *
+ * closedは `"0px"` にする必要がある (`0` は vaul の useEffect 内の truthy check で
+ * 弾かれて activeSnapPoint の変化に反応しない)。
+ */
+const SNAP_CLOSED = "0px";
+const SNAP_SMALL = "240px";
 const SNAP_FULL = 1;
 const SNAP_POINTS = [SNAP_CLOSED, SNAP_SMALL, SNAP_FULL] as const;
 
@@ -40,7 +45,7 @@ const POIPanelSmallContent = () => {
   const saveButtonAspect = canvasSize.width / canvasSize.height;
 
   return (
-    <div className="flex h-[200px] items-center gap-2 overflow-x-auto px-3 pb-2">
+    <div className="flex h-[180px] items-center gap-2 overflow-x-auto px-3">
       <button
         type="button"
         onClick={() => addPOI(cloneCurrentParams())}
