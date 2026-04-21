@@ -8,11 +8,12 @@ import {
   usePresetPOIList,
 } from "@/preset-poi/preset-poi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shadcn/components/ui/popover";
 import { loadPreview } from "@/store/preview-store";
 import { useStoreValue } from "@/store/store";
 import type { POIData } from "@/types";
 import BigNumber from "bignumber.js";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 /** ミニマップの最大表示サイズ(px) */
 const MAX_DISPLAY_SIZE = 1024;
@@ -128,37 +129,7 @@ const jumpToUserPOI = (poi: POIData) => {
 };
 
 /**
- * ピンの位置 (%) に応じてポップオーバーの配置を決定する
- *
- * 端に近い場合は逆方向に表示し、はみ出しを防ぐ。
- */
-const popoverPosition = (cx: number, cy: number): React.CSSProperties => {
-  const style: React.CSSProperties = {};
-
-  // 縦方向: 上端15%以内なら下に、それ以外は上に表示
-  if (cy < 15) {
-    style.top = "100%";
-    style.marginTop = 8;
-  } else {
-    style.bottom = "100%";
-    style.marginBottom = 8;
-  }
-
-  // 横方向: 左端/右端に近ければ寄せる、それ以外は中央
-  if (cx < 20) {
-    style.left = 0;
-  } else if (cx > 80) {
-    style.right = 0;
-  } else {
-    style.left = "50%";
-    style.transform = "translateX(-50%)";
-  }
-
-  return style;
-};
-
-/**
- * クラスタのホバーポップオーバー
+ * クラスタのサムネイル一覧 (Popover中身)
  */
 const ClusterPopover = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void }) => {
   const [thumbnails, setThumbnails] = useState<Record<string, string | null>>({});
@@ -222,12 +193,12 @@ const ClusterPopover = ({ cluster, onJump }: { cluster: Cluster; onJump: () => v
 
 /**
  * ミニマップ上のピン（またはクラスタ）を描画するコンポーネント
+ *
+ * 複数ピンのクラスタ: タップで Radix Popover (portal) が開いてサムネイル一覧表示。
+ * 単一ピン: タップで直接ジャンプ。
  */
 const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void }) => {
-  const [showPopover, setShowPopover] = useState(false);
-  const pinRef = useRef<HTMLDivElement>(null);
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const [open, setOpen] = useState(false);
 
   const isSingle = cluster.pins.length === 1;
   const hasMixed = !isSingle && new Set(cluster.pins.map((p) => p.source)).size > 1;
@@ -237,68 +208,58 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
       ? PRESET_COLOR
       : USER_POI_COLOR;
 
-  const handleMouseEnter = () => {
-    if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current);
-      hideTimeoutRef.current = null;
-    }
-    setShowPopover(true);
+  const handleJumpAndClose = () => {
+    setOpen(false);
+    onJump();
   };
 
-  const handleMouseLeave = () => {
-    hideTimeoutRef.current = setTimeout(() => {
-      setShowPopover(false);
-    }, 200);
-  };
-
-  return (
+  const pinEl = (
     <div
-      ref={pinRef}
       className="absolute"
       style={{
         left: `${cluster.cx}%`,
         top: `${cluster.cy}%`,
         transform: "translate(-50%, -50%)",
-        zIndex: showPopover ? 50 : 10,
+        zIndex: 10,
       }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
-      {/* ピン本体 */}
       <div
         className="flex items-center justify-center rounded-full border-2 border-white/80 shadow-lg shadow-black/50 transition-transform hover:scale-125"
         style={{
           backgroundColor: primaryColor,
-          width: isSingle ? 14 : 22,
-          height: isSingle ? 14 : 22,
+          width: isSingle ? 18 : 26,
+          height: isSingle ? 18 : 26,
           cursor: "pointer",
         }}
         onClick={(e) => {
-          e.stopPropagation();
           if (isSingle) {
+            e.stopPropagation();
             cluster.pins[0].jumpAction();
             onJump();
           }
         }}
       >
         {!isSingle && (
-          <span className="text-[10px] font-bold text-white">{cluster.pins.length}</span>
+          <span className="text-[11px] font-bold text-white">{cluster.pins.length}</span>
         )}
       </div>
-
-      {/* ポップオーバー */}
-      {showPopover && (
-        <div
-          ref={popoverRef}
-          className="absolute z-50 w-fit rounded-lg border border-white/10 bg-[#1e1e2e]/95 p-2 shadow-xl backdrop-blur-sm"
-          style={popoverPosition(cluster.cx, cluster.cy)}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
-          <ClusterPopover cluster={cluster} onJump={onJump} />
-        </div>
-      )}
     </div>
+  );
+
+  if (isSingle) return pinEl;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{pinEl}</PopoverTrigger>
+      <PopoverContent
+        side="top"
+        align="center"
+        collisionPadding={16}
+        className="w-fit max-w-[min(92vw,360px)] p-2"
+      >
+        <ClusterPopover cluster={cluster} onJump={handleJumpAndClose} />
+      </PopoverContent>
+    </Popover>
   );
 };
 
@@ -377,7 +338,7 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-h-[95vh] w-[calc(100vw-2rem)] max-w-[1056px] overflow-y-auto p-4"
+        className="flex max-h-[95vh] w-[calc(100vw-2rem)] max-w-[1056px] flex-col p-4"
         aria-describedby={undefined}
       >
         <DialogHeader>
@@ -399,19 +360,22 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
             My POI ({userCount})
           </span>
         </div>
-        <div
-          className="relative aspect-square w-full rounded border border-[#2a2a3a]"
-          style={{ maxWidth: MAX_DISPLAY_SIZE }}
-        >
-          <img
-            src={`${import.meta.env.BASE_URL ?? "/"}minimap.png`}
-            alt="Mandelbrot set minimap"
-            className="block size-full"
-            draggable={false}
-          />
-          {clusters.map((cluster, i) => (
-            <ClusterPin key={i} cluster={cluster} onJump={handleJump} />
-          ))}
+        {/* ミニマップをスクロール可能なコンテナに入れる。中身は固定サイズなので小さいviewportではパンして閲覧 */}
+        <div className="min-h-0 flex-1 overflow-auto rounded border border-[#2a2a3a]">
+          <div
+            className="relative aspect-square"
+            style={{ width: MAX_DISPLAY_SIZE, maxWidth: "none" }}
+          >
+            <img
+              src={`${import.meta.env.BASE_URL ?? "/"}minimap.png`}
+              alt="Mandelbrot set minimap"
+              className="block size-full"
+              draggable={false}
+            />
+            {clusters.map((cluster, i) => (
+              <ClusterPin key={i} cluster={cluster} onJump={handleJump} />
+            ))}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
