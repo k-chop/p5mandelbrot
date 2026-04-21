@@ -85,7 +85,7 @@ export const ja: Dictionary = {
   "footer.elapsedPrefix": "処理時間: ",
 
   // bump
-  "bump.lowN": "N不足",
+  "bump.increaseN": "Nを30%増やす",
 
   // instructions
   "instructions.mouse": "マウス",

@@ -35,9 +35,7 @@ export const BumpPill = () => {
     setManualN(N + bumpAmount);
   };
 
-  const positionClass = isMobile
-    ? "bottom-7 left-1/2 -translate-x-1/2"
-    : "right-4 bottom-5 -translate-x-0";
+  const positionClass = isMobile ? "bottom-7 left-1/2 -translate-x-1/2" : "bottom-20 left-3";
 
   return (
     <button
@@ -49,8 +47,7 @@ export const BumpPill = () => {
       )}
     >
       <TriangleAlert className="size-4 text-[var(--tomato-11)]" />
-      <span>{t("Low N", "bump.lowN")}</span>
-      <span className="font-mono">+30%</span>
+      <span>{t("Increase N by 30%", "bump.increaseN")}</span>
     </button>
   );
 };
