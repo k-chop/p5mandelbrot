@@ -1,5 +1,6 @@
 import { useT } from "@/i18n/context";
 import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { getCanvasSize } from "@/rendering/renderer";
 import { Drawer, DrawerContent, DrawerTitle } from "@/shadcn/components/ui/drawer";
 import { updateStore, useStoreValue } from "@/store/store";
 import { IconCirclePlus } from "@tabler/icons-react";
@@ -10,7 +11,7 @@ import { PanelContent, POIPanelHeader } from "./index";
 
 /** vaul snapPoints: 完全非表示 / 横ストリップ (追加ボタン+サムネイル1行) / フル */
 const SNAP_CLOSED = 0;
-const SNAP_SMALL = "240px";
+const SNAP_SMALL = "280px";
 const SNAP_FULL = 1;
 const SNAP_POINTS = [SNAP_CLOSED, SNAP_SMALL, SNAP_FULL] as const;
 
@@ -34,12 +35,17 @@ const POIPanelSmallContent = () => {
   const t = useT();
   const { poiList, addPOI, applyPOI } = usePOI();
 
+  // 現在のcanvasアスペクトに合わせてSaveボタンを縦長にする (モバイルは縦長canvas想定)
+  const canvasSize = getCanvasSize();
+  const saveButtonAspect = canvasSize.width / canvasSize.height;
+
   return (
     <div className="flex h-[200px] items-center gap-2 overflow-x-auto px-3 pb-2">
       <button
         type="button"
         onClick={() => addPOI(cloneCurrentParams())}
-        className="flex aspect-square h-full shrink-0 flex-col items-center justify-center gap-1 rounded bg-primary/90 px-2 text-primary-foreground transition-colors hover:bg-primary"
+        style={{ aspectRatio: saveButtonAspect }}
+        className="flex h-full shrink-0 flex-col items-center justify-center gap-1 rounded bg-primary/90 px-2 text-primary-foreground transition-colors hover:bg-primary"
       >
         <IconCirclePlus size={28} />
         <span className="text-xs">{t("Save POI")}</span>
@@ -95,7 +101,11 @@ export const POIPanelMobile = () => {
             </div>
           </>
         ) : (
-          <POIPanelSmallContent />
+          <>
+            {/* ドラッグハンドル掴みやすいように上部の非スクロールゾーンを大きく取る */}
+            <div className="h-6 shrink-0" />
+            <POIPanelSmallContent />
+          </>
         )}
       </DrawerContent>
     </Drawer>
