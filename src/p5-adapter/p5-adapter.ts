@@ -54,6 +54,7 @@ import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";
 import { getProgressData } from "@/worker-pool/worker-pool";
 import BigNumber from "bignumber.js";
 import type p5 from "p5";
+import { disableCanvasTouchAction } from "./touch-handler";
 import { isInside } from "./utils";
 
 // p5.jsのcanvas操作状態を管理したりcallbackを定義しておくファイル
@@ -76,7 +77,9 @@ let pendingCanvasImageHeight = 0;
  */
 let isTranslatingMainBuffer = false;
 /** どのドラッグ操作をしているか */
-let draggingMode: "move" | "zoom" | undefined = undefined;
+let draggingMode: "move" | "zoom" | "pinch" | undefined = undefined;
+/** ピンチ操作中のscaleFactor */
+let pinchScaleFactor = 1;
 /** 前回処理からの累計時間 (palette animation用) */
 let elapsed = 0;
 /** canvas内でマウスクリックが開始されたかどうか */
@@ -314,6 +317,42 @@ export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
 };
 
 /**
+ * ピンチ操作開始時の状態をセットアップする
+ *
+ * 以降の描画でキャンバス中心を基準にpinchScaleFactor倍の拡縮プレビューが走る。
+ */
+export const startPinchGesture = (p: p5) => {
+  cancelInterestingPointsComputation();
+  currentInterestingPoints = [];
+
+  mouseClickedOn = { mouseX: p.width / 2, mouseY: p.height / 2 };
+  mouseClickStartedInside = true;
+  mouseDragged = true;
+  draggingMode = "pinch";
+  pinchScaleFactor = 1;
+  isTranslatingMainBuffer = true;
+};
+
+/**
+ * ピンチ操作中のscaleFactorを更新する
+ */
+export const updatePinchGesture = (scaleFactor: number) => {
+  pinchScaleFactor = scaleFactor;
+};
+
+/**
+ * ピンチ操作終了時に現在のscaleFactorで拡縮を確定する
+ */
+export const confirmPinchGesture = (p: p5) => {
+  if (draggingMode === "pinch") {
+    scaleTo(pinchScaleFactor, { x: mouseClickedOn.mouseX, y: mouseClickedOn.mouseY });
+  }
+  changeCursor(p, p.CROSS);
+  changeToMouseReleasedState();
+  pinchScaleFactor = 1;
+};
+
+/**
  * ドラッグした分だけ位置を移動する
  */
 export const moveTo = (dragOffset: { pixelDiffX: number; pixelDiffY: number }) => {
@@ -431,6 +470,8 @@ export const p5Setup = async (p: p5) => {
   const canvas = p.createCanvas(width, height);
   // canvas上での右クリックを無効化
   canvas.elt.addEventListener("contextmenu", (e: Event) => e.preventDefault());
+  // ブラウザ標準のピンチズーム/スクロールを抑止 (タッチ操作は p.touchStarted 等で処理)
+  disableCanvasTouchAction(canvas.elt as HTMLCanvasElement);
   resetScaleParams();
 
   p.colorMode(p.HSB, 360, 100, 100, 100);
@@ -682,11 +723,12 @@ export const p5Draw = (p: p5) => {
       x = pixelDiffX;
       y = pixelDiffY;
       lastTranslationOffset = { x, y, width: undefined, height: undefined };
-    } else if (draggingMode === "zoom") {
+    } else if (draggingMode === "zoom" || draggingMode === "pinch") {
       const { mouseX, mouseY } = mouseClickedOn;
-      scaleFactor = calcInteractiveScaleFactor(p, mouseClickedOn);
+      scaleFactor =
+        draggingMode === "pinch" ? pinchScaleFactor : calcInteractiveScaleFactor(p, mouseClickedOn);
 
-      // クリック位置を画面の中心に置く
+      // 基準位置を画面の中心に置く (zoom: クリック位置, pinch: キャンバス中心)
       const offsetX = p.width / 2 - mouseX * scaleFactor;
       const offsetY = p.height / 2 - mouseY * scaleFactor;
 
