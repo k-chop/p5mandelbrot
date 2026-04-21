@@ -38,6 +38,8 @@ type Store = {
   canvasLocked: boolean;
   /** POIパネルの開閉状態 */
   poiPanelOpen: boolean;
+  /** モバイル時のPOI Drawer状態 (closed=非表示 / small=横ストリップ / full=画面全体) */
+  poiDrawerSnap: "closed" | "small" | "full";
 
   // mandelbrot state
   /** reference orbit計算にwasmを使うかどうか */
@@ -93,6 +95,7 @@ const store: Store = {
   // UI state
   canvasLocked: false,
   poiPanelOpen: true,
+  poiDrawerSnap: "closed",
   // mandelbrot state
   useWasm: true,
   manualLimbsOverride: null,

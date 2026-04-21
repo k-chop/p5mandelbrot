@@ -38,7 +38,7 @@ const MobileProgressBar = () => {
   const elapsedText = isDone ? `${t("elapsed: ", "footer.elapsedPrefix")}${progress.total}ms` : "";
 
   return (
-    <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-50 h-4">
+    <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-[60] h-4">
       {isDone && (
         <div className="absolute inset-x-0 top-0 bottom-[3px] flex items-center justify-end bg-[#1c1c24]/70 px-2 backdrop-blur-sm">
           <span className="text-[10px] leading-none text-muted-foreground">{elapsedText}</span>

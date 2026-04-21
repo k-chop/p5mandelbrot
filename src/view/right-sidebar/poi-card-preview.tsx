@@ -4,9 +4,11 @@ import React, { useEffect, useState } from "react";
 
 type Props = {
   poi: POIData;
+  /** サムネイルのアスペクト比指定 ("square": 1:1クロップ表示, "natural": 元画像のアスペクトを保持) */
+  aspect?: "square" | "natural";
 };
 
-export const POICardPreview = React.memo(({ poi }: Props) => {
+export const POICardPreview = React.memo(({ poi, aspect = "square" }: Props) => {
   const [data, setData] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -38,20 +40,20 @@ export const POICardPreview = React.memo(({ poi }: Props) => {
     };
   }, [poi.id, previewChanged]);
 
+  const isSquare = aspect === "square";
+  const containerClass = isSquare
+    ? "flex w-full aspect-square items-center justify-center border-2"
+    : "flex h-full items-center justify-center border-2";
+  const imgClass = isSquare ? "w-full aspect-square object-cover" : "h-full w-auto object-contain";
+
   if (isLoading) {
-    return (
-      <div className="flex w-full aspect-square items-center justify-center border-2">
-        loading...
-      </div>
-    );
+    return <div className={containerClass}>loading...</div>;
   }
 
   if (data == null) {
-    return (
-      <div className="flex w-full aspect-square items-center justify-center border-2">No Image</div>
-    );
+    return <div className={containerClass}>No Image</div>;
   }
 
-  return <img src={data} className="w-full aspect-square object-cover" />;
+  return <img src={data} className={imgClass} />;
 });
 POICardPreview.displayName = "POICardPreview";
