@@ -81,11 +81,11 @@ const calcForZoomIn = (
     suggestedN = currentN;
   } else if (maxedRatio <= 0.6) {
     if (highestNonMaxed > 0) {
-      suggestedN = Math.max(currentN, highestNonMaxed * 2);
+      suggestedN = Math.max(currentN, Math.ceil(highestNonMaxed * 1.5));
     }
   } else if (maxedRatio < 1.0) {
     if (highestNonMaxed > 10) {
-      suggestedN = Math.max(currentN, Math.ceil(highestNonMaxed * 1.5));
+      suggestedN = Math.max(currentN, Math.ceil(highestNonMaxed * 1.3));
     }
   } else {
     // 狭域の全サンプルがmaxed: 広域サンプルで境界付近か判定
