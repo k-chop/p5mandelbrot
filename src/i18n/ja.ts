@@ -82,6 +82,7 @@ export const ja: Dictionary = {
   "footer.invalidResult": "無効な結果",
   "footer.calcRefOrbit": "参照軌道の計算",
   "footer.calcIteration": "Iteration",
+  "footer.elapsedPrefix": "処理時間: ",
 
   // instructions
   "instructions.mouse": "マウス",

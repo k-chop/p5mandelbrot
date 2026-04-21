@@ -1,3 +1,4 @@
+import { useT } from "@/i18n/context";
 import { useStoreValue } from "@/store/store";
 import { useIsMobile } from "@/view/use-is-mobile";
 import { Footer } from "../footer";
@@ -26,20 +27,21 @@ const parseProgressPercent = (s: string): number => {
  * モバイル用の細ラインプログレスバー + 完了時footer
  *
  * - 描画中: 画面下端3pxの細いプログレスラインのみ
- * - 完了後: 12px高の薄背景footerにelapsed表示 + 下端3pxにフルバー
+ * - 完了後: 16px高の薄背景footerにelapsed表示 + 下端3pxにフルバー
  */
 const MobileProgressBar = () => {
+  const t = useT();
   const progress = useStoreValue("progress");
 
   const isDone = typeof progress === "object" && progress !== null;
   const percent = isDone ? 100 : typeof progress === "string" ? parseProgressPercent(progress) : 0;
-  const elapsedText = isDone ? `${progress.total}ms` : "";
+  const elapsedText = isDone ? `${t("elapsed: ", "footer.elapsedPrefix")}${progress.total}ms` : "";
 
   return (
-    <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-50 h-3">
+    <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-50 h-4">
       {isDone && (
         <div className="absolute inset-x-0 top-0 bottom-[3px] flex items-center justify-end bg-[#1c1c24]/70 px-2 backdrop-blur-sm">
-          <span className="text-[9px] leading-none text-muted-foreground">{elapsedText}</span>
+          <span className="text-[10px] leading-none text-muted-foreground">{elapsedText}</span>
         </div>
       )}
       <div className="absolute right-0 bottom-0 left-0 h-[3px] bg-gray-700/30">

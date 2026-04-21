@@ -82,6 +82,7 @@ export const en = {
   "footer.invalidResult": "Invalid Result",
   "footer.calcRefOrbit": "Calculate Reference Orbit",
   "footer.calcIteration": "Calculate Iteration",
+  "footer.elapsedPrefix": "elapsed: ",
 
   // instructions
   "instructions.mouse": "Mouse",

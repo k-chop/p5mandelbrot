@@ -118,7 +118,7 @@ const POIToggleFab = () => {
 
   return (
     <div
-      className={`fixed right-3 bottom-6 z-100 transition-opacity duration-200 ${
+      className={`fixed right-3 bottom-7 z-100 transition-opacity duration-200 ${
         poiPanelOpen ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
