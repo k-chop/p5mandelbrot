@@ -5,6 +5,9 @@ const AUTO_N_SCALE_FACTOR = 50;
 const DEFAULT_N = 500;
 const GRID_SIZE = 16;
 
+/** currentNがこの値以上のときに増加率を緩やかにする */
+const GENTLE_GROWTH_THRESHOLD = 100_000;
+
 /**
  * ズーム操作時に適切なNを計算する
  *
@@ -77,15 +80,19 @@ const calcForZoomIn = (
 
   let suggestedN = currentN;
 
+  const isGentle = currentN >= GENTLE_GROWTH_THRESHOLD;
+  const midRatioMul = isGentle ? 1.5 : 2;
+  const highRatioMul = isGentle ? 1.3 : 1.5;
+
   if (maxedRatio < 0.05) {
     suggestedN = currentN;
   } else if (maxedRatio <= 0.6) {
     if (highestNonMaxed > 0) {
-      suggestedN = Math.max(currentN, Math.ceil(highestNonMaxed * 1.5));
+      suggestedN = Math.max(currentN, Math.ceil(highestNonMaxed * midRatioMul));
     }
   } else if (maxedRatio < 1.0) {
     if (highestNonMaxed > 10) {
-      suggestedN = Math.max(currentN, Math.ceil(highestNonMaxed * 1.3));
+      suggestedN = Math.max(currentN, Math.ceil(highestNonMaxed * highRatioMul));
     }
   } else {
     // 狭域の全サンプルがmaxed: 広域サンプルで境界付近か判定
