@@ -30,6 +30,13 @@ let singleTouchMoved = false;
  * このフラグで識別する (= UI上のタップで synthesized click が潰れるのを防ぐ)。
  */
 let gestureActive = false;
+/**
+ * このジェスチャ中に一度でもピンチが発生したか
+ *
+ * ピンチ後に最後の指が離れる touchEnded で tap/swipe 扱いの zoomTo/moveTo が
+ * 誤発火しないよう抑止するために使う。
+ */
+let pinchOccurredInThisGesture = false;
 
 /**
  * 2本指のclient座標間距離を計算
@@ -75,6 +82,7 @@ export const onP5TouchStarted = (p: p5, ev: TouchEvent | undefined): boolean => 
 
   if (ev.touches.length >= 2) {
     pinchStartDistance = pinchDistance(ev);
+    pinchOccurredInThisGesture = true;
     startPinchGesture(p);
   } else if (ev.touches.length === 1) {
     const pos = getCanvasLocalTouch(p, 0);
@@ -136,22 +144,28 @@ export const onP5TouchEnded = (p: p5, ev: TouchEvent | undefined): boolean => {
     pinchStartDistance = null;
     singleTouchStart = null;
     singleTouchMoved = false;
-    if (ev.touches.length === 0) gestureActive = false;
+    if (ev.touches.length === 0) {
+      gestureActive = false;
+      pinchOccurredInThisGesture = false;
+    }
     return false;
   }
 
   if (ev.touches.length === 0) {
-    if (singleTouchMoved) {
-      // スワイプ確定 → 既存mouseReleasedでmoveTo
-      p5MouseReleased(p, new MouseEvent("mouseup"));
-    } else {
-      // タップ → 画面中央を基準にズームイン (タップ位置では動かさない)
-      zoomTo(false);
-      changeToMouseReleasedState();
+    if (!pinchOccurredInThisGesture) {
+      if (singleTouchMoved) {
+        // スワイプ確定 → 既存mouseReleasedでmoveTo
+        p5MouseReleased(p, new MouseEvent("mouseup"));
+      } else {
+        // タップ → 画面中央を基準にズームイン (タップ位置では動かさない)
+        zoomTo(false);
+        changeToMouseReleasedState();
+      }
     }
     singleTouchStart = null;
     singleTouchMoved = false;
     gestureActive = false;
+    pinchOccurredInThisGesture = false;
   }
 
   return false;
