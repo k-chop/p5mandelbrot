@@ -14,16 +14,16 @@ import type { POIData } from "@/types";
 import BigNumber from "bignumber.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-/** ミニマップの表示サイズ(px) */
-const DISPLAY_SIZE = 1024;
+/** ミニマップの最大表示サイズ(px) */
+const MAX_DISPLAY_SIZE = 1024;
 
 /** ミニマップの複素平面パラメータ */
 const MAP_CENTER_X = -0.75;
 const MAP_CENTER_Y = 0;
 const MAP_R = 1.5;
 
-/** クラスタリングの距離閾値(px) */
-const CLUSTER_RADIUS = 20;
+/** クラスタリングの距離閾値 (% — ミニマップサイズに対する割合) */
+const CLUSTER_RADIUS_PERCENT = 2;
 
 /** ピンの色 */
 const PRESET_COLOR = "#3b82f6";
@@ -56,28 +56,29 @@ type Cluster = {
 };
 
 /**
- * 複素座標をミニマップのピクセル座標に変換する
+ * 複素座標をミニマップ上の% (0-100) に変換する
  */
-const complexToPixel = (re: number, im: number): { x: number; y: number } => {
+const complexToPercent = (re: number, im: number): { x: number; y: number } => {
   const rangeX = MAP_R * 2;
   const rangeY = MAP_R * 2;
-  const x = ((re - (MAP_CENTER_X - MAP_R)) / rangeX) * DISPLAY_SIZE;
-  const y = ((MAP_CENTER_Y + MAP_R - im) / rangeY) * DISPLAY_SIZE;
+  const x = ((re - (MAP_CENTER_X - MAP_R)) / rangeX) * 100;
+  const y = ((MAP_CENTER_Y + MAP_R - im) / rangeY) * 100;
   return { x, y };
 };
 
 /**
- * ピンを貪欲法でクラスタリングする
+ * ピンを貪欲法でクラスタリングする (%単位)
  */
 const clusterPins = (pins: Pin[]): Cluster[] => {
   const clusters: Cluster[] = [];
+  const r = CLUSTER_RADIUS_PERCENT;
 
   for (const pin of pins) {
     let merged = false;
     for (const cluster of clusters) {
       const dx = pin.x - cluster.cx;
       const dy = pin.y - cluster.cy;
-      if (dx * dx + dy * dy <= CLUSTER_RADIUS * CLUSTER_RADIUS) {
+      if (dx * dx + dy * dy <= r * r) {
         cluster.pins.push(pin);
         // クラスタ中心を再計算
         cluster.cx = cluster.pins.reduce((sum, p) => sum + p.x, 0) / cluster.pins.length;
@@ -126,19 +127,16 @@ const jumpToUserPOI = (poi: POIData) => {
   setSerializedPalette(poi.serializedPalette);
 };
 
-/** ポップオーバーの幅(px) */
-const POPOVER_WIDTH = 260;
-
 /**
- * ピンの位置に応じてポップオーバーの配置を決定する
+ * ピンの位置 (%) に応じてポップオーバーの配置を決定する
  *
  * 端に近い場合は逆方向に表示し、はみ出しを防ぐ。
  */
 const popoverPosition = (cx: number, cy: number): React.CSSProperties => {
   const style: React.CSSProperties = {};
 
-  // 縦方向: 上端に近ければ下に、それ以外は上に表示
-  if (cy < 120) {
+  // 縦方向: 上端15%以内なら下に、それ以外は上に表示
+  if (cy < 15) {
     style.top = "100%";
     style.marginTop = 8;
   } else {
@@ -147,9 +145,9 @@ const popoverPosition = (cx: number, cy: number): React.CSSProperties => {
   }
 
   // 横方向: 左端/右端に近ければ寄せる、それ以外は中央
-  if (cx < POPOVER_WIDTH / 2 + 16) {
+  if (cx < 20) {
     style.left = 0;
-  } else if (cx > DISPLAY_SIZE - POPOVER_WIDTH / 2 - 16) {
+  } else if (cx > 80) {
     style.right = 0;
   } else {
     style.left = "50%";
@@ -258,8 +256,8 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
       ref={pinRef}
       className="absolute"
       style={{
-        left: cluster.cx,
-        top: cluster.cy,
+        left: `${cluster.cx}%`,
+        top: `${cluster.cy}%`,
         transform: "translate(-50%, -50%)",
         zIndex: showPopover ? 50 : 10,
       }}
@@ -332,9 +330,9 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
       if (duplicatePresetIds.has(poi.id)) continue;
       const re = Number(poi.x);
       const im = Number(poi.y);
-      const { x, y } = complexToPixel(re, im);
+      const { x, y } = complexToPercent(re, im);
       // 表示範囲外はスキップ
-      if (x < 0 || x > DISPLAY_SIZE || y < 0 || y > DISPLAY_SIZE) continue;
+      if (x < 0 || x > 100 || y < 0 || y > 100) continue;
       pins.push({
         x,
         y,
@@ -350,8 +348,8 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
     for (const poi of userPOIList) {
       const re = poi.x.toNumber();
       const im = poi.y.toNumber();
-      const { x, y } = complexToPixel(re, im);
-      if (x < 0 || x > DISPLAY_SIZE || y < 0 || y > DISPLAY_SIZE) continue;
+      const { x, y } = complexToPercent(re, im);
+      if (x < 0 || x > 100 || y < 0 || y > 100) continue;
       pins.push({
         x,
         y,
@@ -378,7 +376,10 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] max-w-fit p-4" aria-describedby={undefined}>
+      <DialogContent
+        className="max-h-[95vh] max-w-[min(95vw,1056px)] overflow-y-auto p-4"
+        aria-describedby={undefined}
+      >
         <DialogHeader>
           <DialogTitle>Minimap</DialogTitle>
         </DialogHeader>
@@ -399,14 +400,13 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
           </span>
         </div>
         <div
-          className="relative overflow-hidden rounded border border-[#2a2a3a]"
-          style={{ width: DISPLAY_SIZE, height: DISPLAY_SIZE }}
+          className="relative aspect-square w-full overflow-hidden rounded border border-[#2a2a3a]"
+          style={{ maxWidth: MAX_DISPLAY_SIZE }}
         >
           <img
             src={`${import.meta.env.BASE_URL ?? "/"}minimap.png`}
             alt="Mandelbrot set minimap"
-            className="block"
-            style={{ width: DISPLAY_SIZE, height: DISPLAY_SIZE }}
+            className="block size-full"
             draggable={false}
           />
           {clusters.map((cluster, i) => (
