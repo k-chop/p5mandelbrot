@@ -41,8 +41,10 @@ const POIPanelSmallContent = () => {
   const { poiList, addPOI, applyPOI } = usePOI();
 
   // 現在のcanvasアスペクトに合わせてSaveボタンを縦長にする (モバイルは縦長canvas想定)
+  // 初期化前はcanvasSizeが0/0でNaNになるので正方形(=1)にフォールバック
   const canvasSize = getCanvasSize();
-  const saveButtonAspect = canvasSize.width / canvasSize.height;
+  const rawAspect = canvasSize.width / canvasSize.height;
+  const saveButtonAspect = Number.isFinite(rawAspect) && rawAspect > 0 ? rawAspect : 1;
 
   return (
     <div className="flex h-[180px] items-center gap-2 overflow-x-auto px-3">
