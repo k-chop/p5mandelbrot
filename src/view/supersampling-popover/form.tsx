@@ -37,12 +37,25 @@ const PRESETS: Preset[] = [
   { label: "8K (7680x4320)", width: 7680, height: 4320 },
 ];
 
+/**
+ * Display Size プリセット用の物理px解像度を返す
+ *
+ * 論理px (window.screen.width/height) にdevicePixelRatioを掛けて物理解像度化する。
+ * モバイル (例: Pixel 6a 論理412×915, dpr=2.625) で真の実機解像度 (~1081×2403) を
+ * supersamplingに指定するために使う。
+ */
+const getPhysicalDisplaySize = (): { width: number; height: number } => ({
+  width: Math.round(window.screen.width * window.devicePixelRatio),
+  height: Math.round(window.screen.height * window.devicePixelRatio),
+});
+
 /** 現在の幅・高さに一致するプリセットキーを返す。なければ "custom" */
 const findPresetKey = (width: number, height: number): string => {
   const match = PRESETS.find((p) => p.width === width && p.height === height);
   if (match) return match.label;
 
-  if (width === window.screen.width && height === window.screen.height) {
+  const physical = getPhysicalDisplaySize();
+  if (width === physical.width && height === physical.height) {
     return "display";
   }
 
@@ -68,8 +81,9 @@ export const SupersamplingForm = () => {
     setPresetKey(key);
 
     if (key === "display") {
-      const w = clampSize(window.screen.width, MIN_SIZE, MAX_WIDTH);
-      const h = clampSize(window.screen.height, MIN_SIZE, MAX_HEIGHT);
+      const physical = getPhysicalDisplaySize();
+      const w = clampSize(physical.width, MIN_SIZE, MAX_WIDTH);
+      const h = clampSize(physical.height, MIN_SIZE, MAX_HEIGHT);
       setWidth(w);
       setHeight(h);
       updateStore("supersamplingWidth", w);
@@ -113,7 +127,8 @@ export const SupersamplingForm = () => {
     setCurrentParams({ isSuperSampling: true });
   };
 
-  const displaySizeLabel = `${t("Display Size", "settings.displaySize")} (${window.screen.width}x${window.screen.height})`;
+  const physicalDisplay = getPhysicalDisplaySize();
+  const displaySizeLabel = `${t("Display Size", "settings.displaySize")} (${physicalDisplay.width}x${physicalDisplay.height})`;
 
   return (
     <div className="flex flex-col gap-3">
