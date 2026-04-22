@@ -79,7 +79,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
   }, []);
 
   /** 閉じるアニメーションの時間 (ms) */
-  const CLOSE_ANIMATION_MS = 200;
+  const CLOSE_ANIMATION_MS = 250;
 
   const handleClose = useCallback(() => {
     if (isClosing) return;
@@ -134,7 +134,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
 
   return (
     <div
-      className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-[opacity,transform] duration-200 ease-out ${
+      className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-[opacity,transform] duration-[250ms] ease-out ${
         isClosing ? "opacity-0 scale-95" : "opacity-100 scale-100"
       }`}
       onMouseDown={handleBackgroundEvent}
