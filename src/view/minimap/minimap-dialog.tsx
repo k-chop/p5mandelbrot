@@ -164,6 +164,7 @@ const ClusterPopover = ({ cluster, onJump }: { cluster: Cluster; onJump: () => v
       }}
       onTouchStartCapture={(e) => e.stopPropagation()}
       onTouchMoveCapture={(e) => e.stopPropagation()}
+      onWheelCapture={(e) => e.stopPropagation()}
     >
       {cluster.pins.map((pin) => (
         <button
