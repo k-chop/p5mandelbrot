@@ -141,7 +141,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
     >
       {/* Dialog本体 */}
       <div
-        className={`flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-lg border border-white/15 bg-background shadow-2xl transition-[opacity,transform] duration-200 ease-out ${
+        className={`flex h-full w-full flex-col overflow-hidden rounded-lg border border-white/15 bg-background shadow-2xl transition-[opacity,transform] duration-200 ease-out ${
           isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
         }`}
       >
