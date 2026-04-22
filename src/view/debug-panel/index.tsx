@@ -1,12 +1,16 @@
 import { updateStore, useStoreValue } from "@/store/store";
+import { useIsMobile } from "@/view/use-is-mobile";
 import { IconX } from "@tabler/icons-react";
 import { DebugMode } from "../right-sidebar/debug-mode/debug-mode";
 import { usePanelLayout } from "../use-panel-layout";
 
-/** 左側スライドインデバッグパネル */
+/** 左側スライドインデバッグパネル (モバイル時は非表示) */
 export const DebugPanel = () => {
+  const isMobile = useIsMobile();
   const isDebugMode = useStoreValue("isDebugMode");
   const { debugPanelWidth } = usePanelLayout();
+
+  if (isMobile) return null;
 
   return (
     <div

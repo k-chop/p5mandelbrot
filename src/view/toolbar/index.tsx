@@ -2,12 +2,15 @@ import { SimpleTooltip } from "@/components/simple-tooltip";
 import { useT } from "@/i18n/context";
 import { Button } from "@/shadcn/components/ui/button";
 import { updateStoreWith, useStoreValue } from "@/store/store";
+import { SupersamplingDialog } from "@/view/supersampling-popover/dialog";
+import { useIsMobile } from "@/view/use-is-mobile";
 import { IconBug, IconLayoutSidebar, IconNavigation, IconSettings } from "@tabler/icons-react";
-import { Actions } from "../header/actions";
+import { Actions, ShareDialogHost } from "../header/actions";
 import { useModalState } from "../modal/use-modal-state";
 import { PalettePopover } from "../palette-popover";
 import { SettingsDialog } from "../settings-dialog";
 import { JumpDialog } from "./jump-dialog";
+import { MobileToolbar } from "./mobile";
 
 /** デバッグパネルの開閉トグルボタン */
 const DebugPanelToggle = () => {
@@ -46,14 +49,65 @@ const POIPanelToggle = () => {
   );
 };
 
-/** フローティングツールバー（左上固定） */
-export const Toolbar = () => {
+type OpenHandlers = {
+  openShare: () => void;
+  openSS: () => void;
+  openJump: () => void;
+  openSettings: () => void;
+};
+
+/** デスクトップ幅のツールバー内容 (従来レイアウト) */
+const DesktopToolbarBody = ({ openShare, openJump, openSettings }: OpenHandlers) => {
   const t = useT();
-  const [settingsOpened, { open: openSettings, close: closeSettings }] = useModalState();
+  return (
+    <div className="fixed top-3 left-3 z-100 flex items-center gap-2 rounded-xl border border-[#2a2a3a] bg-[#1c1c24]/95 px-3 py-2 backdrop-blur-sm">
+      <Actions onOpenShare={openShare} />
+      <div className="bg-border mx-1 h-6 w-px" />
+      <PalettePopover />
+      <Button variant="outline" size="sm" onClick={openJump}>
+        <IconNavigation className="mr-1 size-5" />
+        {t("Jump", "toolbar.jump")}
+      </Button>
+      <Button variant="outline" size="sm" onClick={openSettings}>
+        <IconSettings className="mr-1 size-5" />
+        {t("Settings", "operations.settings")}
+      </Button>
+      <div className="bg-border mx-1 h-6 w-px" />
+      <DebugPanelToggle />
+      <POIPanelToggle />
+    </div>
+  );
+};
+
+/** フローティングツールバー (デスクトップ/モバイルで切替) */
+export const Toolbar = () => {
+  const isMobile = useIsMobile();
+  const [shareOpened, { open: openShare, close: closeShare }] = useModalState();
+  const [ssOpened, { open: openSS, close: closeSS }] = useModalState();
   const [jumpOpened, { open: openJump, close: closeJump }] = useModalState();
+  const [settingsOpened, { open: openSettings, close: closeSettings }] = useModalState();
+
+  const openHandlers: OpenHandlers = {
+    openShare,
+    openSS,
+    openJump,
+    openSettings,
+  };
 
   return (
     <>
+      <ShareDialogHost
+        open={shareOpened}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) closeShare();
+        }}
+      />
+      <SupersamplingDialog
+        open={ssOpened}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) closeSS();
+        }}
+      />
       <SettingsDialog
         open={settingsOpened}
         onOpenChange={(isOpen) => {
@@ -66,22 +120,7 @@ export const Toolbar = () => {
           if (!isOpen) closeJump();
         }}
       />
-      <div className="fixed top-3 left-3 z-100 flex items-center gap-2 rounded-xl border border-[#2a2a3a] bg-[#1c1c24]/95 px-3 py-2 backdrop-blur-sm">
-        <Actions />
-        <div className="bg-border mx-1 h-6 w-px" />
-        <PalettePopover />
-        <Button variant="outline" size="sm" onClick={openJump}>
-          <IconNavigation className="mr-1 size-5" />
-          {t("Jump", "toolbar.jump")}
-        </Button>
-        <Button variant="outline" size="sm" onClick={openSettings}>
-          <IconSettings className="mr-1 size-5" />
-          {t("Settings", "operations.settings")}
-        </Button>
-        <div className="bg-border mx-1 h-6 w-px" />
-        <DebugPanelToggle />
-        <POIPanelToggle />
-      </div>
+      {isMobile ? <MobileToolbar {...openHandlers} /> : <DesktopToolbarBody {...openHandlers} />}
     </>
   );
 };

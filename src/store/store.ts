@@ -38,6 +38,8 @@ type Store = {
   canvasLocked: boolean;
   /** POIパネルの開閉状態 */
   poiPanelOpen: boolean;
+  /** モバイル時のPOI Drawer状態 (closed=非表示 / small=横ストリップ / full=画面全体) */
+  poiDrawerSnap: "closed" | "small" | "full";
 
   // mandelbrot state
   /** reference orbit計算にwasmを使うかどうか */
@@ -57,6 +59,8 @@ type Store = {
 
   // state
   progress: string | ResultSpans;
+  /** 直近描画のiteration=N到達率 (0..1)。描画未完了や集計不能時はnull */
+  nHitRatio: number | null;
   /** 現在使用中のrenderer */
   rendererType: "webgpu" | "p5js";
   /** Debug Mode中か否か */
@@ -93,6 +97,7 @@ const store: Store = {
   // UI state
   canvasLocked: false,
   poiPanelOpen: true,
+  poiDrawerSnap: "closed",
   // mandelbrot state
   useWasm: true,
   manualLimbsOverride: null,
@@ -106,6 +111,7 @@ const store: Store = {
   supersamplingHeight: 1080,
   // state
   progress: "",
+  nHitRatio: null,
   rendererType: "p5js",
   isDebugMode: false,
   showInterestingPoints: false,

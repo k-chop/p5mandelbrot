@@ -12,7 +12,14 @@ import {
 } from "@/preset-poi/preset-poi";
 import { Alert, AlertDescription } from "@/shadcn/components/ui/alert";
 import { Button } from "@/shadcn/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shadcn/components/ui/dialog";
+import { updateStore } from "@/store/store";
 import { isDevMode } from "@/utils/dev-mode";
 import {
   type ThumbnailTarget,
@@ -20,6 +27,7 @@ import {
 } from "@/view/thumbnail-batch/use-thumbnail-batch";
 import { IconCloud, IconFolder, IconPhoto, IconRefresh, IconTrash } from "@tabler/icons-react";
 import BigNumber from "bignumber.js";
+import { VisuallyHidden } from "radix-ui";
 import { useCallback, useState } from "react";
 
 type PresetListDialogProps = {
@@ -110,9 +118,14 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={isRunning ? undefined : onOpenChange}>
-      <DialogContent className="max-h-[80vh] max-w-6xl" aria-describedby={undefined}>
+      <DialogContent className="max-h-[80dvh] max-w-6xl">
         <DialogHeader>
           <DialogTitle>{t("Preset List", "preset.title")}</DialogTitle>
+          <VisuallyHidden.Root>
+            <DialogDescription>
+              {t("Preset POI list", "dialog.description.presetList")}
+            </DialogDescription>
+          </VisuallyHidden.Root>
         </DialogHeader>
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
@@ -184,7 +197,7 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
           className="grid auto-rows-min gap-2 overflow-y-auto pr-1"
           style={{
             gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-            maxHeight: "calc(80vh - 160px)",
+            maxHeight: "calc(80dvh - 160px)",
           }}
         >
           {presetList.map((poi) => (
@@ -195,6 +208,8 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
               onJump={() => {
                 jumpToPreset(poi);
                 onOpenChange(false);
+                // 選択結果をキャンバスで見せるためPOI drawerも閉じる
+                updateStore("poiDrawerSnap", "closed");
               }}
               onDelete={() => handleDelete(poi.id)}
             />

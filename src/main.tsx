@@ -10,6 +10,7 @@ import {
   p5Setup,
   zoomTo,
 } from "./p5-adapter/p5-adapter";
+import { onP5TouchEnded, onP5TouchMoved, onP5TouchStarted } from "./p5-adapter/touch-handler";
 import { isInside, isOnUIOverlay } from "./p5-adapter/utils";
 import { createStore, getStore, updateStore } from "./store/store";
 import { readPOIListFromStorage } from "./store/sync-storage/poi-list";
@@ -57,6 +58,10 @@ const sketch = (p: p5) => {
 
     zoomTo(event.deltaY > 0);
   };
+
+  p.touchStarted = (ev: TouchEvent | undefined) => onP5TouchStarted(p, ev);
+  p.touchMoved = (ev: TouchEvent | undefined) => onP5TouchMoved(p, ev);
+  p.touchEnded = (ev: TouchEvent | undefined) => onP5TouchEnded(p, ev);
 
   p.keyPressed = (event: KeyboardEvent | undefined) => {
     if (getStore("canvasLocked")) return;

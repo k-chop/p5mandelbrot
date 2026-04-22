@@ -9,7 +9,7 @@ import { getIterationCache } from "@/iteration-buffer/iteration-buffer";
 import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "@/rendering/common";
 import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { clamp } from "@/math/util";
-import { PERTURBATION_THRESHOLD } from "@/utils/palette-encoding";
+import { isMobileViewport } from "@/view/use-is-mobile";
 import type p5 from "p5";
 import type { InterestingPoint } from "../interesting-points/find-interesting-points";
 import type { Rect } from "../math/rect";
@@ -140,11 +140,17 @@ export const drawUICrossHair = (p: p5) => {
 };
 
 /**
- * カーソル位置に倍率を表示
+ * 倍率を表示
  *
- * interactive zoom中に表示する
+ * interactive zoom(右クリックドラッグ)とピンチ操作中に表示する。
+ * placement="cursor": カーソル位置追従 (PC右クリック用)
+ * placement="top-center": 画面中央上部固定 (モバイルピンチ用、利き手問わず指で隠れない位置)
  */
-export const drawUIScaleRate = (p: p5, scaleFactor: number) => {
+export const drawUIScaleRate = (
+  p: p5,
+  scaleFactor: number,
+  placement: "cursor" | "top-center" = "cursor",
+) => {
   p.fill(255);
   p.stroke(0);
   p.strokeWeight(4);
@@ -152,20 +158,31 @@ export const drawUIScaleRate = (p: p5, scaleFactor: number) => {
 
   const { text, size } = scaleRateText(scaleFactor);
 
+  if (placement === "top-center") {
+    const x = Math.floor(p.width / 2 - size / 2);
+    const y = 30;
+    p.text(text, x, y);
+    return;
+  }
+
   const x = clamp(p.mouseX, 0, p.width - size);
   const y = clamp(p.mouseY, 0, p.height - 25);
 
-  p.text(`${text}`, x + 10, y + 20);
+  p.text(text, x + 10, y + 20);
 };
 
 /**
  * 現状の描画位置に関する情報をcanvasにUIとして描画する
+ *
+ * モバイル幅ではfloating iconsと重なるので描画せず、HTML側の footer に表示する。
  */
 export const drawUICurrentParams = (
   p: p5,
   params: MandelbrotParams,
   autoIterationEnabled: boolean,
 ) => {
+  if (isMobileViewport()) return;
+
   p.textAlign(p.LEFT, p.BASELINE);
   p.fill(255);
   p.stroke(0);
@@ -174,24 +191,16 @@ export const drawUICurrentParams = (
 
   const nLabel = autoIterationEnabled ? `N: ${params.N} [auto]` : `N: ${params.N}`;
   p.text(`r: ${params.r.toPrecision(10)}\n${nLabel}`, 4, 14);
-
-  const isNotEnoughPrecision =
-    params.mode === "normal" && params.r.isLessThan(PERTURBATION_THRESHOLD);
-  if (isNotEnoughPrecision) {
-    p.textSize(16);
-    p.textAlign(p.CENTER, p.CENTER);
-    p.text(
-      `Not enough precision.\nSwitch to perturbation mode by [m] key!`,
-      p.width / 2,
-      p.height / 2,
-    );
-  }
 };
 
 /**
  * 現在マウスが指している位置のiteration数をcanvasにUIとして描画する
+ *
+ * モバイルではマウス追従のカーソルが存在しないため描画しない。
  */
 export const drawUIIterationAtCursor = (p: p5, iteration: string | number) => {
+  if (isMobileViewport()) return;
+
   p.textAlign(p.RIGHT, p.TOP);
   p.fill(255);
   p.stroke(0);

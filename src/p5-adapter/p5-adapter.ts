@@ -12,7 +12,6 @@ import {
 import { startCalculation } from "@/mandelbrot";
 import { calcAutoN } from "@/mandelbrot-state/auto-iteration";
 import {
-  cycleMode,
   getAutoIterationEnabled,
   getCurrentParams,
   getManualN,
@@ -51,9 +50,11 @@ import { getCanvasSize, initRenderer, renderToCanvas, resizeCanvas } from "@/ren
 import { getStore, updateStore } from "@/store/store";
 import type { MandelbrotParams } from "@/types";
 import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";
-import { getProgressData } from "@/worker-pool/worker-pool";
+import { getNHitRatio, getProgressData } from "@/worker-pool/worker-pool";
 import BigNumber from "bignumber.js";
 import type p5 from "p5";
+import { isMobileViewport } from "@/view/use-is-mobile";
+import { disableCanvasTouchAction } from "./touch-handler";
 import { isInside } from "./utils";
 
 // p5.jsのcanvas操作状態を管理したりcallbackを定義しておくファイル
@@ -76,7 +77,9 @@ let pendingCanvasImageHeight = 0;
  */
 let isTranslatingMainBuffer = false;
 /** どのドラッグ操作をしているか */
-let draggingMode: "move" | "zoom" | undefined = undefined;
+let draggingMode: "move" | "zoom" | "pinch" | undefined = undefined;
+/** ピンチ操作中のscaleFactor */
+let pinchScaleFactor = 1;
 /** 前回処理からの累計時間 (palette animation用) */
 let elapsed = 0;
 /** canvas内でマウスクリックが開始されたかどうか */
@@ -157,6 +160,7 @@ const syncStoreValues = (p: p5) => {
   }
 
   updateStore("progress", progress);
+  updateStore("nHitRatio", getNHitRatio());
 };
 
 /**
@@ -314,6 +318,62 @@ export const changeDraggingState = (state: "move" | "zoom", p: p5) => {
 };
 
 /**
+ * ピンチ操作開始時の状態をセットアップする
+ *
+ * 以降の描画でキャンバス中心を基準にpinchScaleFactor倍の拡縮プレビューが走る。
+ */
+export const startPinchGesture = (p: p5) => {
+  cancelInterestingPointsComputation();
+  currentInterestingPoints = [];
+
+  mouseClickedOn = { mouseX: p.width / 2, mouseY: p.height / 2 };
+  mouseClickStartedInside = true;
+  mouseDragged = true;
+  draggingMode = "pinch";
+  pinchScaleFactor = 1;
+  isTranslatingMainBuffer = true;
+};
+
+/** 縮小側の最小スケール (r=0で到達) */
+const MIN_PINCH_SCALE = 0.01;
+
+/**
+ * ピンチ距離比 r を scaleFactor にマッピングする
+ *
+ * - 1 ≤ r ≤ 2 : 線形で zoomRate 倍まで到達 (微調整しやすいレンジ)
+ * - r > 2     : tanh で 2*zoomRate に漸近 (行き過ぎ防止)
+ * - r < 1     : 線形で r=0 → MIN_PINCH_SCALE まで下がる
+ */
+const pinchScaleFromRatio = (r: number, zoomRate: number): number => {
+  if (r < 1) return Math.max(MIN_PINCH_SCALE, MIN_PINCH_SCALE + (1 - MIN_PINCH_SCALE) * r);
+  if (r <= 2) return 1 + (zoomRate - 1) * (r - 1);
+  return zoomRate + zoomRate * Math.tanh(r - 2);
+};
+
+/**
+ * ピンチ操作中のscaleFactorを更新する
+ *
+ * 指間距離比 (現在距離 / 開始距離) を受け取り、設定 zoomRate に応じた倍率を計算する。
+ * マッピング詳細は pinchScaleFromRatio を参照。
+ */
+export const updatePinchGesture = (distanceRatio: number) => {
+  const zoomRate = getStore("zoomRate");
+  pinchScaleFactor = pinchScaleFromRatio(distanceRatio, zoomRate);
+};
+
+/**
+ * ピンチ操作終了時に現在のscaleFactorで拡縮を確定する
+ */
+export const confirmPinchGesture = (p: p5) => {
+  if (draggingMode === "pinch") {
+    scaleTo(pinchScaleFactor, { x: mouseClickedOn.mouseX, y: mouseClickedOn.mouseY });
+  }
+  changeCursor(p, p.CROSS);
+  changeToMouseReleasedState();
+  pinchScaleFactor = 1;
+};
+
+/**
  * ドラッグした分だけ位置を移動する
  */
 export const moveTo = (dragOffset: { pixelDiffX: number; pixelDiffY: number }) => {
@@ -431,6 +491,8 @@ export const p5Setup = async (p: p5) => {
   const canvas = p.createCanvas(width, height);
   // canvas上での右クリックを無効化
   canvas.elt.addEventListener("contextmenu", (e: Event) => e.preventDefault());
+  // ブラウザ標準のピンチズーム/スクロールを抑止 (タッチ操作は p.touchStarted 等で処理)
+  disableCanvasTouchAction(canvas.elt as HTMLCanvasElement);
   resetScaleParams();
 
   p.colorMode(p.HSB, 360, 100, 100, 100);
@@ -601,7 +663,6 @@ export const keyInputHandler = (event: KeyboardEvent) => {
   if (event.key === "0") resetIterationCount();
   if (event.key === "9") setDeepIterationCount();
   if (event.key === "r") resetRadius();
-  if (event.key === "m") cycleMode();
   if (event.key === "ArrowDown") {
     const { width, height } = getCanvasSize();
     applyAutoIteration(width / 2, height / 2, 1 / rate, width, height);
@@ -625,7 +686,9 @@ export const keyInputHandler = (event: KeyboardEvent) => {
  * 機能が無効またはキャッシュが不十分な場合はポイントをクリアする。
  */
 const scheduleInterestingPointsDetection = (): void => {
-  if (!getStore("showInterestingPoints") && !getStore("alwaysComputeIPDebugData")) {
+  // モバイルではタップズームに統一しmarkerは常に非表示。計算も走らせない (debugモードは除く)
+  const showMarkers = !isMobileViewport() && getStore("showInterestingPoints");
+  if (!showMarkers && !getStore("alwaysComputeIPDebugData")) {
     currentInterestingPoints = [];
     return;
   }
@@ -682,11 +745,12 @@ export const p5Draw = (p: p5) => {
       x = pixelDiffX;
       y = pixelDiffY;
       lastTranslationOffset = { x, y, width: undefined, height: undefined };
-    } else if (draggingMode === "zoom") {
+    } else if (draggingMode === "zoom" || draggingMode === "pinch") {
       const { mouseX, mouseY } = mouseClickedOn;
-      scaleFactor = calcInteractiveScaleFactor(p, mouseClickedOn);
+      scaleFactor =
+        draggingMode === "pinch" ? pinchScaleFactor : calcInteractiveScaleFactor(p, mouseClickedOn);
 
-      // クリック位置を画面の中心に置く
+      // 基準位置を画面の中心に置く (zoom: クリック位置, pinch: キャンバス中心)
       const offsetX = p.width / 2 - mouseX * scaleFactor;
       const offsetY = p.height / 2 - mouseY * scaleFactor;
 
@@ -726,13 +790,16 @@ export const p5Draw = (p: p5) => {
     case "zoom":
       drawUIScaleRate(p, scaleFactor);
       break;
+    case "pinch":
+      drawUIScaleRate(p, scaleFactor, "top-center");
+      break;
   }
 
   syncStoreValues(p);
 
   drawUICurrentParams(p, getCurrentParams(), getAutoIterationEnabled());
   drawUIIterationAtCursor(p, getStore("iteration"));
-  if (getStore("showInterestingPoints")) {
+  if (getStore("showInterestingPoints") && !isMobileViewport()) {
     const hoveredPoint =
       draggingMode === undefined
         ? findHitInterestingPoint(p.mouseX, p.mouseY, currentInterestingPoints)

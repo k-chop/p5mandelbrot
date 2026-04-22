@@ -71,6 +71,8 @@ export const usePOI = () => {
     setCurrentParams(cloneParams(poi));
     clearIterationCache();
     setSerializedPalette(poi.serializedPalette);
+    // 選択結果をキャンバスで見せるためモバイルのPOI drawerを閉じる (デスクトップは無害)
+    updateStore("poiDrawerSnap", "closed");
   }, []);
 
   return {

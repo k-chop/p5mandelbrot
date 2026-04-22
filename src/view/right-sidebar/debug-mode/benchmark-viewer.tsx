@@ -9,7 +9,13 @@ import {
 import type { Stats } from "@/benchmark/benchmark-stats";
 import { Button } from "@/shadcn/components/ui/button";
 import { Checkbox } from "@/shadcn/components/ui/check";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shadcn/components/ui/dialog";
 import { Label } from "@/shadcn/components/ui/label";
 import { Slider } from "@/shadcn/components/ui/slider";
 import {
@@ -21,6 +27,7 @@ import {
   TableRow,
 } from "@/shadcn/components/ui/table";
 import { IconCircleCheck, IconCopy } from "@tabler/icons-react";
+import { VisuallyHidden } from "radix-ui";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -179,6 +186,9 @@ export const BenchmarkViewer = () => {
         <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Benchmark running...</DialogTitle>
+            <VisuallyHidden.Root>
+              <DialogDescription>Benchmark progress</DialogDescription>
+            </VisuallyHidden.Root>
           </DialogHeader>
           {progress ? (
             <div className="space-y-2 text-sm">

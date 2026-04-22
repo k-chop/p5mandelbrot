@@ -1,4 +1,3 @@
-import { SimpleTooltip } from "@/components/simple-tooltip";
 import { ValueSlider } from "@/components/slider-wrapper";
 import { useT } from "@/i18n/context";
 import { resizeTo } from "@/p5-adapter/p5-adapter";
@@ -10,15 +9,23 @@ import {
   setRenderer,
 } from "@/rendering/common";
 import { Button } from "@/shadcn/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shadcn/components/ui/dialog";
 import { Label } from "@/shadcn/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
 import { Switch } from "@/shadcn/components/ui/switch";
 import { toast } from "sonner";
 import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
 import { DEFAULT_WORKER_COUNT } from "@/store/sync-storage/settings";
+import { useIsMobile } from "@/view/use-is-mobile";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { IconHelp, IconSettings } from "@tabler/icons-react";
+import { VisuallyHidden } from "radix-ui";
 import { useEffect, useState } from "react";
 import { Instructions } from "../header/instructions";
 import { useModalState } from "../modal/use-modal-state";
@@ -28,6 +35,11 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <h3 className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
     {children}
   </h3>
+);
+
+/** 設定項目の補足説明 (項目直下に小さい文字で常時表示) */
+const FieldDescription = ({ children }: { children: React.ReactNode }) => (
+  <p className="mt-1 text-xs text-muted-foreground">{children}</p>
 );
 
 /** Worker数の選択肢を生成 */
@@ -97,7 +109,7 @@ const RenderingSection = () => {
         </div>
       )}
 
-      <SimpleTooltip content={t("Approximately 10x faster. Recommended to keep ON.")}>
+      <div>
         <div className="flex items-center space-x-2">
           <Switch
             id="settings-use-wasm"
@@ -108,7 +120,10 @@ const RenderingSection = () => {
             {t("Use Wasm for reference orbit")}
           </Label>
         </div>
-      </SimpleTooltip>
+        <FieldDescription>
+          {t("Approximately 10x faster. Recommended to keep ON.")}
+        </FieldDescription>
+      </div>
 
       <div>
         <div className="mb-1 ml-2 text-sm">
@@ -148,6 +163,7 @@ const RenderingSection = () => {
 /** 右カラム: Exploration セクション */
 const ExplorationSection = () => {
   const t = useT();
+  const isMobile = useIsMobile();
   const zoomRate = useStoreValue("zoomRate");
   const show = useStoreValue("showInterestingPoints");
   const [zoomRatePreview, setZoomRatePreview] = useState(zoomRate);
@@ -169,26 +185,26 @@ const ExplorationSection = () => {
         />
       </div>
 
-      <SimpleTooltip
-        content={
-          <>
+      {/* モバイルでは point marker は常に非表示なので設定項目も隠す */}
+      {!isMobile && (
+        <div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="settings-interesting-points"
+              checked={show}
+              onCheckedChange={() => updateStoreWith("showInterestingPoints", (v) => !v)}
+            />
+            <Label htmlFor="settings-interesting-points" className="cursor-pointer text-sm">
+              {t("Show point marker")}
+            </Label>
+          </div>
+          <FieldDescription>
             {t("Marks interesting points on the fractal.")}
             <br />
             {t("Click a marker to zoom into its center.")}
-          </>
-        }
-      >
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="settings-interesting-points"
-            checked={show}
-            onCheckedChange={() => updateStoreWith("showInterestingPoints", (v) => !v)}
-          />
-          <Label htmlFor="settings-interesting-points" className="cursor-pointer text-sm">
-            {t("Show point marker")}
-          </Label>
+          </FieldDescription>
         </div>
-      </SimpleTooltip>
+      )}
     </div>
   );
 };
@@ -222,27 +238,30 @@ const AboutSection = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-3xl">{t("Instructions")}</DialogTitle>
+            <VisuallyHidden.Root>
+              <DialogDescription>
+                {t("Usage instructions", "dialog.description.instructions")}
+              </DialogDescription>
+            </VisuallyHidden.Root>
           </DialogHeader>
           <Instructions />
         </DialogContent>
       </Dialog>
 
       <div className="flex items-center space-x-2">
-        <SimpleTooltip content={t("Switch language")}>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => updateStore("locale", locale === "en" ? "ja" : "en")}
-          >
-            {locale === "en" ? "JA" : "EN"}
-          </Button>
-        </SimpleTooltip>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => updateStore("locale", locale === "en" ? "ja" : "en")}
+        >
+          {locale === "en" ? "JA" : "EN"}
+        </Button>
         <Label className="text-sm text-muted-foreground">
           {locale === "en" ? "English" : "日本語"}
         </Label>
       </div>
 
-      <SimpleTooltip content={t("Shows debug data obtained from rendering results.")}>
+      <div>
         <div className="flex items-center space-x-2">
           <Switch
             id="settings-debug-mode"
@@ -253,7 +272,10 @@ const AboutSection = () => {
             {t("Debug Mode")}
           </Label>
         </div>
-      </SimpleTooltip>
+        <FieldDescription>
+          {t("Shows debug data obtained from rendering results.")}
+        </FieldDescription>
+      </div>
     </div>
   );
 };
@@ -270,14 +292,19 @@ export const SettingsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-y-auto md:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <IconSettings className="size-5" />
             {t("Settings", "operations.settings")}
           </DialogTitle>
+          <VisuallyHidden.Root>
+            <DialogDescription>
+              {t("Application settings", "dialog.description.settings")}
+            </DialogDescription>
+          </VisuallyHidden.Root>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-8 pt-2">
+        <div className="grid grid-cols-1 gap-8 pt-2 md:grid-cols-2">
           <div className="flex flex-col gap-8">
             <RenderingSection />
           </div>

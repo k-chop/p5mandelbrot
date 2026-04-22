@@ -1,5 +1,4 @@
 import { addTraceEvent, removeBatchTrace, startBatchTrace } from "@/event-viewer/event";
-import { getStore } from "@/store/store";
 import type {
   BatchContext,
   CalcIterationJob,
@@ -7,10 +6,8 @@ import type {
   InitialOmittedBatchContextKeys,
   MandelbrotJob,
   MandelbrotRenderingUnit,
-  MandelbrotWorkerType,
   ResultSpans,
 } from "@/types";
-import { mandelbrotWorkerTypes } from "@/types";
 import { throttle } from "es-toolkit";
 import {
   calcNormalizedWorkerIndex,
@@ -68,6 +65,18 @@ export const clearBatchContext = () => {
 };
 
 /**
+ * 最新バッチの iteration=N 到達率 (0..1) を返す
+ *
+ * 描画完了済みの場合のみ値を返し、未完了/集計不能時は null
+ */
+export const getNHitRatio = (): number | null => {
+  const batchContext = getLatestBatchContext();
+  if (!batchContext || !batchContext.finishedAt) return null;
+  if (batchContext.totalPixelCount === 0) return null;
+  return batchContext.nHitCount / batchContext.totalPixelCount;
+};
+
+/**
  * Footerで表示するための進捗情報をbatchContextから取得する
  */
 export const getProgressData = (): string | ResultSpans => {
@@ -94,16 +103,6 @@ export const getProgressData = (): string | ResultSpans => {
   const progress = progressList.reduce((a, b) => a + b, 0) / progressList.length;
 
   return `Generating... ${Math.floor(progress * 100)}%`;
-};
-
-export const cycleWorkerType = (): MandelbrotWorkerType => {
-  const currentMode = getStore("mode");
-
-  const currentIndex = mandelbrotWorkerTypes.findIndex((v) => v === currentMode);
-
-  const nextMode = mandelbrotWorkerTypes[(currentIndex + 1) % mandelbrotWorkerTypes.length];
-
-  return nextMode;
 };
 
 export function registerBatch(
@@ -169,6 +168,8 @@ export function registerBatch(
     startedAt: performance.now(),
     refProgress: -1,
     spans: [],
+    nHitCount: 0,
+    totalPixelCount: 0,
   });
 
   tickWorkerPool();

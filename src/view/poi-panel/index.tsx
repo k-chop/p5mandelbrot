@@ -7,7 +7,9 @@ import { isGithubPages } from "@/utils/location";
 import { useModalState } from "@/view/modal/use-modal-state";
 import { MinimapDialog } from "@/view/minimap/minimap-dialog";
 import { PresetListDialog } from "@/view/preset-list/preset-list-dialog";
+import { useIsMobile } from "@/view/use-is-mobile";
 import { IconCirclePlus, IconLayoutSidebar, IconList, IconMap, IconX } from "@tabler/icons-react";
+import { POIPanelMobile } from "./mobile";
 import { POI } from "../right-sidebar/poi";
 import { POICardPreview } from "../right-sidebar/poi-card-preview";
 import { POIHistories } from "../right-sidebar/poi-histories";
@@ -18,7 +20,7 @@ import { usePanelLayout } from "../use-panel-layout";
 export const COLLAPSED_STRIP_WIDTH = 80;
 
 /** POIパネル内のコンテンツ */
-const PanelContent = () => {
+export const PanelContent = () => {
   if (isGithubPages()) {
     return <SuggestRedirect />;
   }
@@ -52,10 +54,20 @@ const SuggestRedirect = () => {
 };
 
 /** POIパネルのヘッダー */
-const POIPanelHeader = () => {
+export const POIPanelHeader = () => {
   const t = useT();
+  const isMobile = useIsMobile();
   const [presetOpened, { open: openPreset, close: closePreset }] = useModalState();
   const [minimapOpened, { open: openMinimap, close: closeMinimap }] = useModalState();
+
+  /** ×ボタン: モバイルならDrawerをclosedへ、デスクトップなら従来通りpoiPanelOpen toggle */
+  const handleClose = () => {
+    if (isMobile) {
+      updateStore("poiDrawerSnap", "closed");
+    } else {
+      updateStoreWith("poiPanelOpen", (v) => !v);
+    }
+  };
 
   return (
     <>
@@ -74,7 +86,7 @@ const POIPanelHeader = () => {
           </div>
         </div>
         <button
-          onClick={() => updateStoreWith("poiPanelOpen", (v) => !v)}
+          onClick={handleClose}
           className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
         >
           <IconX size={18} />
@@ -133,10 +145,15 @@ const CollapsedStrip = () => {
   );
 };
 
-/** 右側スライドインPOIパネル */
+/** 右側スライドインPOIパネル (モバイル時はBottomSheetに切り替え) */
 export const POIPanel = () => {
+  const isMobile = useIsMobile();
   const poiPanelOpen = useStoreValue("poiPanelOpen");
   const { poiPanelWidth } = usePanelLayout();
+
+  if (isMobile) {
+    return <POIPanelMobile />;
+  }
 
   return (
     <div

@@ -82,6 +82,10 @@ export const ja: Dictionary = {
   "footer.invalidResult": "無効な結果",
   "footer.calcRefOrbit": "参照軌道の計算",
   "footer.calcIteration": "Iteration",
+  "footer.elapsedPrefix": "処理時間: ",
+
+  // bump
+  "bump.increaseN": "最大反復数を増やす",
 
   // instructions
   "instructions.mouse": "マウス",
@@ -91,7 +95,6 @@ export const ja: Dictionary = {
   "instructions.changeCenter": "ドラッグで中心を移動",
   "instructions.interactiveZoom": "ドラッグ開始点を中心に動的なズーム",
   "instructions.changePalette": "パレット変更",
-  "instructions.toggleMode": "モード切替",
   "instructions.resetR": "r を 2.0 にリセット",
   "instructions.supersampling": "現在位置をスーパーサンプリング(x2)",
   "instructions.changeMaxIteration": "最大iterationを変更 (±100)",
@@ -117,6 +120,24 @@ export const ja: Dictionary = {
   "settings.generate": "生成",
   "settings.useWasm": "Reference Orbit計算にWasmを使用",
   "settings.useWasmTooltip": "10倍ほど高速になるのでON推奨",
+
+  // supersampling
+  "supersampling.result": "Supersamplingの結果",
+  "supersampling.actualSize": "原寸で表示",
+  "supersampling.fitToScreen": "全体を表示",
+
+  // dialog descriptions (a11y用、視覚的には非表示)
+  "dialog.description.share": "現在の表示をURLで共有",
+  "dialog.description.jump": "指定した座標にジャンプ",
+  "dialog.description.settings": "アプリケーション設定",
+  "dialog.description.instructions": "操作方法の説明",
+  "dialog.description.minimap": "保存したPOIの全体マップ",
+  "dialog.description.presetList": "プリセットPOI一覧",
+  "dialog.description.poiPanel": "保存したPOI",
+  "dialog.description.supersampling": "スーパーサンプリング設定",
+  "dialog.description.benchmark": "ベンチマーク進行状況",
+  "dialog.description.poiExport": "保存したPOIをエクスポート",
+  "dialog.description.poiImport": "テキストからPOIをインポート",
 
   // debug mode
   "debug.alwaysComputeDebugData": "常にデバッグデータを計算",
