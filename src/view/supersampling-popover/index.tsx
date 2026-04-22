@@ -2,14 +2,16 @@ import { useT } from "@/i18n/context";
 import { Button } from "@/shadcn/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shadcn/components/ui/popover";
 import { Expand } from "lucide-react";
+import { useState } from "react";
 import { SupersamplingForm } from "./form";
 
 /** スーパーサンプリング設定ポップオーバー (デスクトップ用) */
 export const SupersamplingPopover = () => {
   const t = useT();
+  const [open, setOpen] = useState(false);
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm">
           <Expand className="mr-1 size-5" />
@@ -21,7 +23,7 @@ export const SupersamplingPopover = () => {
         align="start"
         sideOffset={8}
       >
-        <SupersamplingForm />
+        <SupersamplingForm onAfterGenerate={() => setOpen(false)} />
       </PopoverContent>
     </Popover>
   );

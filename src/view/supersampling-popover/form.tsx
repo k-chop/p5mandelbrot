@@ -66,8 +66,9 @@ const findPresetKey = (width: number, height: number): string => {
  * スーパーサンプリング設定フォーム
  *
  * PopoverContent や DialogContent の中に直接配置して使う。
+ * Generate押下後に任意の後処理を行いたい場合は onAfterGenerate を渡す (e.g. Dialog自動close)。
  */
-export const SupersamplingForm = () => {
+export const SupersamplingForm = ({ onAfterGenerate }: { onAfterGenerate?: () => void } = {}) => {
   const t = useT();
   const storedWidth = useStoreValue("supersamplingWidth");
   const storedHeight = useStoreValue("supersamplingHeight");
@@ -125,6 +126,7 @@ export const SupersamplingForm = () => {
   /** スーパーサンプリング実行 */
   const handleGenerate = () => {
     setCurrentParams({ isSuperSampling: true });
+    onAfterGenerate?.();
   };
 
   const physicalDisplay = getPhysicalDisplaySize();

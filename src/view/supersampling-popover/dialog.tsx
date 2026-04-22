@@ -30,7 +30,7 @@ export const SupersamplingDialog = ({
             </DialogDescription>
           </VisuallyHidden.Root>
         </DialogHeader>
-        <SupersamplingForm />
+        <SupersamplingForm onAfterGenerate={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
   );
