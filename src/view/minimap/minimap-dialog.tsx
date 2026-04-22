@@ -208,7 +208,12 @@ const ClusterPopover = ({ cluster, onJump }: { cluster: Cluster; onJump: () => v
         >
           <div className="aspect-square w-full bg-black/40">
             {thumbnails[pin.id] && (
-              <img src={thumbnails[pin.id]!} alt={pin.label} className="size-full object-cover" />
+              <img
+                crossOrigin="anonymous"
+                src={thumbnails[pin.id]!}
+                alt={pin.label}
+                className="size-full object-cover"
+              />
             )}
           </div>
         </button>

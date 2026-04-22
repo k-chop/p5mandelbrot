@@ -240,6 +240,7 @@ const PresetCard = ({
         className="relative aspect-square w-full overflow-hidden bg-[#0a0a14]"
       >
         <img
+          crossOrigin="anonymous"
           src={thumbnailUrl}
           alt={`Preset ${poi.id}`}
           className="h-full w-full object-cover"
