@@ -6,7 +6,7 @@ import { useStoreValue } from "@/store/store";
 import { cancelBatch } from "@/worker-pool/worker-pool";
 import { Download, Expand, Shrink, X } from "lucide-react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Footer } from "../footer";
+import { ProgressBarInline } from "../progress-bar";
 
 interface SupersamplingOverlayProps {
   onClose?: () => void;
@@ -210,9 +210,9 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
           </div>
         </div>
 
-        {/* Progress (描画の進捗/結果)。Dialog内部に置いて操作ボタンと被らないように */}
-        <div className="shrink-0 border-t border-white/10 px-4 py-2 text-xs text-muted-foreground">
-          <Progress />
+        {/* Progress (描画の進捗/結果)。モバイルfooterと同じ薄帯スタイルでDialog下部に埋め込み */}
+        <div className="shrink-0 border-t border-white/10">
+          <ProgressBarInline />
         </div>
 
         {/* Footer: 拡大切替 + ダウンロード (生成中はdisable) */}
@@ -239,7 +239,3 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
 SupersamplingOverlayComponent.displayName = "SupersamplingOverlay";
 
 export const SupersamplingOverlay = memo(SupersamplingOverlayComponent);
-
-const Progress = () => {
-  return <Footer />;
-};

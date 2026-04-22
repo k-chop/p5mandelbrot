@@ -26,13 +26,15 @@ const parseProgressPercent = (s: string): number => {
 };
 
 /**
- * モバイル用の細ラインプログレスバー + 常時表示footer
+ * 薄い帯状のプログレスバー本体 (モバイル画面下/SupersamplingOverlay内で共用)
  *
  * - 左: r と N を常時表示 (canvas上のUI描画と同等の情報)
  * - 右: 完了後は elapsed を表示
  * - 下端3pxにプログレスライン (描画中は進行率, 完了後はフル)
+ *
+ * 配置用のposition/z-indexは呼び出し側で付ける。
  */
-const MobileProgressBar = () => {
+export const ProgressBarInline = () => {
   const t = useT();
   const progress = useStoreValue("progress");
   const r = useStoreValue("r");
@@ -48,7 +50,7 @@ const MobileProgressBar = () => {
   const statsText = `${rText} ${nText}`;
 
   return (
-    <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-[60] h-5">
+    <div className="relative h-5 w-full">
       <div className="absolute inset-x-0 top-0 bottom-[3px] flex items-center justify-between gap-2 bg-[#1c1c24]/70 px-2 backdrop-blur-sm">
         <span className="truncate font-mono text-xs leading-none text-muted-foreground">
           {statsText}
@@ -64,6 +66,15 @@ const MobileProgressBar = () => {
     </div>
   );
 };
+
+/**
+ * モバイル画面下部固定の進捗バー (ProgressBarInlineを画面下端にpin)
+ */
+const MobileProgressBar = () => (
+  <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-[60]">
+    <ProgressBarInline />
+  </div>
+);
 
 /** デスクトップ用の詳細プログレスバー (従来の左下w-125固定) */
 const DesktopProgressBar = () => (
