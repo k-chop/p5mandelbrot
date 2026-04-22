@@ -120,6 +120,9 @@ export const en = {
   "settings.generate": "Generate",
   "settings.useWasm": "Use Wasm for reference orbit",
   "settings.useWasmTooltip": "Approximately 10x faster. Recommended to keep ON.",
+  // supersampling
+  "supersampling.result": "Supersampling Result",
+
   // dialog descriptions (a11y用、視覚的には非表示)
   "dialog.description.share": "Share current view by URL",
   "dialog.description.jump": "Jump to specified coordinates",

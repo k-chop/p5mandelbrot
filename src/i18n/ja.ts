@@ -121,6 +121,9 @@ export const ja: Dictionary = {
   "settings.useWasm": "Reference Orbit計算にWasmを使用",
   "settings.useWasmTooltip": "10倍ほど高速になるのでON推奨",
 
+  // supersampling
+  "supersampling.result": "Supersamplingの結果",
+
   // dialog descriptions (a11y用、視覚的には非表示)
   "dialog.description.share": "現在の表示をURLで共有",
   "dialog.description.jump": "指定した座標にジャンプ",

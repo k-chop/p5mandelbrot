@@ -1,5 +1,7 @@
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { useT } from "@/i18n/context";
 import { getPrevBatchId } from "@/mandelbrot-state/mandelbrot-state";
+import { Button } from "@/shadcn/components/ui/button";
 import { useStoreValue } from "@/store/store";
 import { cancelBatch } from "@/worker-pool/worker-pool";
 import { Download, Expand, Shrink, X } from "lucide-react";
@@ -10,11 +12,11 @@ interface SupersamplingOverlayProps {
   onClose?: () => void;
 }
 
-/** overlay上の丸型ボタンのベースクラス (メインUIのsize-16に揃える) */
-const CIRCLE_BUTTON_BASE_CLASS =
-  "size-16 rounded-full bg-black/80 text-white/80 border border-white/20 backdrop-blur-sm shadow-lg flex items-center justify-center transition-colors";
+/** 閉じるアニメーションの時間 (ms)。Dialogの見た目に合わせる */
+const CLOSE_ANIMATION_MS = 200;
 
 const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) => {
+  const t = useT();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [fitMode, setFitMode] = useState(true);
@@ -27,7 +29,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
     scrollTop: 0,
   });
 
-  // progress が object (ResultSpans = 計測完了) のとき描画完了。保存ボタンの出し分けに使う
+  // progress が object (ResultSpans = 計測完了) のとき描画完了。保存ボタン等の出し分けに使う
   const progress = useStoreValue("progress");
   const isRenderComplete = typeof progress === "object" && progress !== null;
 
@@ -77,9 +79,6 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
   const handleBackgroundEvent = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
-
-  /** 閉じるアニメーションの時間 (ms) */
-  const CLOSE_ANIMATION_MS = 250;
 
   const handleClose = useCallback(() => {
     if (isClosing) return;
@@ -134,92 +133,103 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
 
   return (
     <div
-      className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-sm p-2 transition-[opacity,transform] duration-[250ms] ease-out ${
-        isClosing ? "opacity-0 translate-y-full" : "opacity-100 translate-y-0"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 backdrop-blur-sm transition-opacity duration-200 ease-out ${
+        isClosing ? "opacity-0" : "opacity-100"
       }`}
       onMouseDown={handleBackgroundEvent}
       onClick={handleBackgroundEvent}
     >
-      {/* キャンバスコンテナ */}
+      {/* Dialog本体 */}
       <div
-        ref={containerRef}
-        className={`rounded-xl border border-white/20 shadow-2xl bg-black/40 ${
-          fitMode
-            ? "w-full h-full flex items-center justify-center"
-            : "w-full h-full overflow-auto cursor-grab active:cursor-grabbing"
+        className={`flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-lg border border-white/15 bg-background shadow-2xl transition-[opacity,transform] duration-200 ease-out ${
+          isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
         }`}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        onTouchStartCapture={(e) => e.stopPropagation()}
-        onTouchMoveCapture={(e) => e.stopPropagation()}
-        style={fitMode ? {} : { cursor: dragState.isDragging ? "grabbing" : "grab" }}
       >
-        {/* ローディングスピナー - canvasの下に表示 */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-black/80 text-white px-6 py-4 rounded-lg shadow-lg backdrop-blur-sm border border-white/20">
-            <div className="flex items-center gap-3">
-              <LoadingSpinner />
-              <span className="text-sm font-medium">Supersampling...</span>
-            </div>
+        {/* Header: タイトル + × */}
+        <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-2">
+          <h2 className="text-base font-semibold">
+            {t("Supersampling Result", "supersampling.result")}
+          </h2>
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label="Close"
+            className="rounded p-1 text-foreground/80 transition-colors hover:bg-foreground/10 hover:text-foreground"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+
+        {/* Content: canvasコンテナ */}
+        <div className="relative min-h-0 flex-1">
+          <div
+            ref={containerRef}
+            className={
+              fitMode
+                ? "flex h-full w-full items-center justify-center"
+                : "h-full w-full cursor-grab overflow-auto active:cursor-grabbing"
+            }
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onTouchStartCapture={(e) => e.stopPropagation()}
+            onTouchMoveCapture={(e) => e.stopPropagation()}
+            style={fitMode ? {} : { cursor: dragState.isDragging ? "grabbing" : "grab" }}
+          >
+            {/* ローディングスピナー - 描画完了までcanvasの背後に表示 */}
+            {!isRenderComplete && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="flex items-center gap-3 rounded-lg border border-white/20 bg-black/80 px-6 py-4 text-white shadow-lg backdrop-blur-sm">
+                  <LoadingSpinner />
+                  <span className="text-sm font-medium">Supersampling...</span>
+                </div>
+              </div>
+            )}
+
+            <canvas
+              key="supersampling-canvas"
+              id="supersampling-canvas"
+              ref={canvasRef}
+              className={
+                fitMode
+                  ? "relative z-10 max-h-full max-w-full object-contain"
+                  : "relative z-10 block"
+              }
+              style={
+                fitMode
+                  ? {}
+                  : {
+                      imageRendering: "pixelated",
+                      minWidth: "100%",
+                      minHeight: "100%",
+                      display: "block",
+                    }
+              }
+            />
           </div>
         </div>
 
-        <canvas
-          key="supersampling-canvas"
-          id="supersampling-canvas"
-          ref={canvasRef}
-          className={
-            fitMode ? "max-w-full max-h-full object-contain relative z-10" : "block relative z-10"
-          }
-          style={
-            fitMode
-              ? {}
-              : {
-                  imageRendering: "pixelated",
-                  minWidth: "100%",
-                  minHeight: "100%",
-                  display: "block",
-                }
-          }
-        />
-      </div>
-
-      {/* 左上の閉じるボタン (丸型、メインUIと同じtop-3 left-3) */}
-      <div className="absolute top-3 left-3 z-20">
-        <button
-          type="button"
-          onClick={handleClose}
-          className={`${CIRCLE_BUTTON_BASE_CLASS} hover:bg-red-500/70 hover:text-white`}
-          aria-label="Close"
-        >
-          <X className="size-8" />
-        </button>
-      </div>
-
-      {/* 右上のコントロール (縦並び: Fit切替 + 保存、保存は描画完了時のみ) */}
-      <div className="absolute top-3 right-3 z-20 flex flex-col gap-5">
-        <button
-          type="button"
-          onClick={handleToggleFitMode}
-          className={`${CIRCLE_BUTTON_BASE_CLASS} hover:bg-white/20 hover:text-white`}
-          aria-label={fitMode ? "Actual Size" : "Fit to Screen"}
-        >
-          {fitMode ? <Expand className="size-8" /> : <Shrink className="size-8" />}
-        </button>
-        {isRenderComplete && (
-          <button
-            type="button"
-            onClick={handleSave}
-            className="size-16 rounded-full bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(0,0,0,0.4)] flex items-center justify-center transition-colors hover:bg-primary/90"
-            aria-label="Save image"
+        {/* Footer: 拡大切替 + ダウンロード (生成中はdisable) */}
+        <div className="flex shrink-0 items-center justify-center gap-3 border-t border-white/10 px-4 py-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleToggleFitMode}
+            disabled={!isRenderComplete}
           >
-            <Download className="size-8" />
-          </button>
-        )}
+            {fitMode ? <Expand className="mr-1 size-4" /> : <Shrink className="mr-1 size-4" />}
+            {fitMode ? "Actual Size" : "Fit to Screen"}
+          </Button>
+          <Button variant="default" size="sm" onClick={handleSave} disabled={!isRenderComplete}>
+            <Download className="mr-1 size-4" />
+            {t("Save Image", "header.saveImage")}
+          </Button>
+        </div>
       </div>
-      <div className="absolute bottom-4 z-1 w-full px-8">
+
+      {/* 描画進行状況 (背景のoverlay上、Dialogの外に配置) */}
+      <div className="pointer-events-none absolute bottom-4 z-1 w-full px-8">
         <Progress />
       </div>
     </div>
