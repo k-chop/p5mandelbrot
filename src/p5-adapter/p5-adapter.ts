@@ -335,15 +335,27 @@ export const startPinchGesture = (p: p5) => {
 };
 
 /**
+ * ピンチ距離比 r を scaleFactor にマッピングする
+ *
+ * - 1 ≤ r ≤ 2 : 線形で zoomRate 倍まで到達 (微調整しやすいレンジ)
+ * - r > 2     : tanh で 2*zoomRate に漸近 (行き過ぎ防止)
+ * - r < 1     : 1/r を同じ関数に通し逆数を取る (縮小側は対称)
+ */
+const pinchScaleFromRatio = (r: number, zoomRate: number): number => {
+  if (r < 1) return 1 / pinchScaleFromRatio(1 / r, zoomRate);
+  if (r <= 2) return 1 + (zoomRate - 1) * (r - 1);
+  return zoomRate + zoomRate * Math.tanh(r - 2);
+};
+
+/**
  * ピンチ操作中のscaleFactorを更新する
  *
- * 指間距離比 (現在距離 / 開始距離) を受け取り、設定の zoomRate を指数的に反映する。
- * r=2 で zoomRate倍、r=0.5 で 1/zoomRate倍 となるようマッピングする
- * (PC右クリックドラッグの calcInteractiveScaleFactor と同等の感覚)。
+ * 指間距離比 (現在距離 / 開始距離) を受け取り、設定 zoomRate に応じた倍率を計算する。
+ * マッピング詳細は pinchScaleFromRatio を参照。
  */
 export const updatePinchGesture = (distanceRatio: number) => {
   const zoomRate = getStore("zoomRate");
-  pinchScaleFactor = Math.pow(zoomRate, Math.log2(distanceRatio));
+  pinchScaleFactor = pinchScaleFromRatio(distanceRatio, zoomRate);
 };
 
 /**
