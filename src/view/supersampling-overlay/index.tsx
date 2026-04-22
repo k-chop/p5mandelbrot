@@ -210,6 +210,11 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
           </div>
         </div>
 
+        {/* Progress (描画の進捗/結果)。Dialog内部に置いて操作ボタンと被らないように */}
+        <div className="shrink-0 border-t border-white/10 px-4 py-2 text-xs text-muted-foreground">
+          <Progress />
+        </div>
+
         {/* Footer: 拡大切替 + ダウンロード (生成中はdisable) */}
         <div className="flex shrink-0 items-center justify-center gap-3 border-t border-white/10 px-4 py-3">
           <Button
@@ -226,11 +231,6 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
             {t("Save Image", "header.saveImage")}
           </Button>
         </div>
-      </div>
-
-      {/* 描画進行状況 (背景のoverlay上、Dialogの外に配置) */}
-      <div className="pointer-events-none absolute bottom-4 z-1 w-full px-8">
-        <Progress />
       </div>
     </div>
   );
