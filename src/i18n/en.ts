@@ -85,7 +85,7 @@ export const en = {
   "footer.elapsedPrefix": "elapsed: ",
 
   // bump
-  "bump.increaseN": "Increase N by 30%",
+  "bump.increaseN": "Increase max iteration",
 
   // instructions
   "instructions.mouse": "Mouse",

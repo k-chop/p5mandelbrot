@@ -6,8 +6,12 @@ import clsx from "clsx";
 import { TriangleAlert } from "lucide-react";
 import { makeParamsHash, recordBump, shouldShowBumpPill } from "./bump-state";
 
-/** バンプ率: 現在のNに +30% 上積みする */
-const BUMP_RATE = 0.3;
+/** 小Nで固定増加に切り替える閾値。未満は固定量、以上は比率で上積みする */
+const BUMP_THRESHOLD = 10000;
+/** N<BUMP_THRESHOLD時の固定増加量 */
+const BUMP_STEP_SMALL = 2000;
+/** N>=BUMP_THRESHOLD時の増加率 (+30%) */
+const BUMP_RATE_LARGE = 0.3;
 
 /**
  * iteration=N到達率が高いときだけ表示される「N不足→バンプ」操作ピル
@@ -31,7 +35,8 @@ export const BumpPill = () => {
 
   const handleClick = () => {
     recordBump(nHitRatio, paramsHash);
-    const bumpAmount = Math.max(1, Math.floor(N * BUMP_RATE));
+    const bumpAmount =
+      N < BUMP_THRESHOLD ? BUMP_STEP_SMALL : Math.max(1, Math.floor(N * BUMP_RATE_LARGE));
     setManualN(N + bumpAmount);
   };
 
@@ -47,7 +52,7 @@ export const BumpPill = () => {
       )}
     >
       <TriangleAlert className="size-[18px] shrink-0 text-[var(--tomato-11)]" />
-      <span>{t("Increase N by 30%", "bump.increaseN")}</span>
+      <span>{t("Increase max iteration", "bump.increaseN")}</span>
     </button>
   );
 };
