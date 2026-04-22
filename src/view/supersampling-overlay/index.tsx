@@ -215,23 +215,28 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
           <ProgressBarInline />
         </div>
 
-        {/* Footer: 拡大切替 + ダウンロード (生成中はdisable) */}
-        <div className="flex shrink-0 items-center justify-center gap-3 border-t border-white/10 px-4 py-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleToggleFitMode}
-            disabled={!isRenderComplete}
-          >
-            {fitMode ? <Expand className="mr-1 size-4" /> : <Shrink className="mr-1 size-4" />}
-            {fitMode
-              ? t("Actual Size", "supersampling.actualSize")
-              : t("Fit to Screen", "supersampling.fitToScreen")}
-          </Button>
-          <Button variant="default" size="sm" onClick={handleSave} disabled={!isRenderComplete}>
-            <Download className="mr-1 size-4" />
-            {t("Save Image", "header.saveImage")}
-          </Button>
+        {/* Footer: 拡大切替 + ダウンロード (生成中はdisable)。
+            ボタンの境目を中央に固定するため grid-cols-2 で左右均等分配 */}
+        <div className="grid shrink-0 grid-cols-2 items-center gap-3 border-t border-white/10 px-4 py-3">
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleToggleFitMode}
+              disabled={!isRenderComplete}
+            >
+              {fitMode ? <Expand className="mr-1 size-4" /> : <Shrink className="mr-1 size-4" />}
+              {fitMode
+                ? t("Actual Size", "supersampling.actualSize")
+                : t("Fit to Screen", "supersampling.fitToScreen")}
+            </Button>
+          </div>
+          <div className="flex justify-start">
+            <Button variant="default" size="sm" onClick={handleSave} disabled={!isRenderComplete}>
+              <Download className="mr-1 size-4" />
+              {t("Save Image", "header.saveImage")}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
