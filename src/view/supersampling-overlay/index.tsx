@@ -134,8 +134,8 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
 
   return (
     <div
-      className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-[opacity,transform] duration-[250ms] ease-out ${
-        isClosing ? "opacity-0 scale-95" : "opacity-100 scale-100"
+      className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-sm p-2 transition-[opacity,transform] duration-[250ms] ease-out ${
+        isClosing ? "opacity-0 translate-y-full" : "opacity-100 translate-y-0"
       }`}
       onMouseDown={handleBackgroundEvent}
       onClick={handleBackgroundEvent}
@@ -143,11 +143,11 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
       {/* キャンバスコンテナ */}
       <div
         ref={containerRef}
-        className={
+        className={`rounded-xl border border-white/20 shadow-2xl bg-black/40 ${
           fitMode
             ? "w-full h-full flex items-center justify-center"
             : "w-full h-full overflow-auto cursor-grab active:cursor-grabbing"
-        }
+        }`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
