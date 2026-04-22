@@ -96,7 +96,10 @@ export const POIPanelMobile = () => {
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={handleSnapChange}
     >
-      <DrawerContent className="h-[100dvh] bg-[#161620]/97 pb-4 backdrop-blur-sm data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-[100dvh]">
+      <DrawerContent
+        className="h-[100dvh] bg-[#161620]/97 pb-4 backdrop-blur-sm data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-[100dvh]"
+        aria-describedby={undefined}
+      >
         <VisuallyHidden.Root>
           <DrawerTitle>Points of Interest</DrawerTitle>
         </VisuallyHidden.Root>
