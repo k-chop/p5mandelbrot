@@ -336,9 +336,14 @@ export const startPinchGesture = (p: p5) => {
 
 /**
  * ピンチ操作中のscaleFactorを更新する
+ *
+ * 指間距離比 (現在距離 / 開始距離) を受け取り、設定の zoomRate を指数的に反映する。
+ * r=2 で zoomRate倍、r=0.5 で 1/zoomRate倍 となるようマッピングする
+ * (PC右クリックドラッグの calcInteractiveScaleFactor と同等の感覚)。
  */
-export const updatePinchGesture = (scaleFactor: number) => {
-  pinchScaleFactor = scaleFactor;
+export const updatePinchGesture = (distanceRatio: number) => {
+  const zoomRate = getStore("zoomRate");
+  pinchScaleFactor = Math.pow(zoomRate, Math.log2(distanceRatio));
 };
 
 /**
@@ -769,6 +774,9 @@ export const p5Draw = (p: p5) => {
       break;
     case "zoom":
       drawUIScaleRate(p, scaleFactor);
+      break;
+    case "pinch":
+      drawUIScaleRate(p, scaleFactor, "top-center");
       break;
   }
 

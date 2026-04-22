@@ -140,11 +140,17 @@ export const drawUICrossHair = (p: p5) => {
 };
 
 /**
- * カーソル位置に倍率を表示
+ * 倍率を表示
  *
- * interactive zoom中に表示する
+ * interactive zoom(右クリックドラッグ)とピンチ操作中に表示する。
+ * placement="cursor": カーソル位置追従 (PC右クリック用)
+ * placement="top-center": 画面中央上部固定 (モバイルピンチ用、利き手問わず指で隠れない位置)
  */
-export const drawUIScaleRate = (p: p5, scaleFactor: number) => {
+export const drawUIScaleRate = (
+  p: p5,
+  scaleFactor: number,
+  placement: "cursor" | "top-center" = "cursor",
+) => {
   p.fill(255);
   p.stroke(0);
   p.strokeWeight(4);
@@ -152,10 +158,17 @@ export const drawUIScaleRate = (p: p5, scaleFactor: number) => {
 
   const { text, size } = scaleRateText(scaleFactor);
 
+  if (placement === "top-center") {
+    const x = Math.floor(p.width / 2 - size / 2);
+    const y = 30;
+    p.text(text, x, y);
+    return;
+  }
+
   const x = clamp(p.mouseX, 0, p.width - size);
   const y = clamp(p.mouseY, 0, p.height - 25);
 
-  p.text(`${text}`, x + 10, y + 20);
+  p.text(text, x + 10, y + 20);
 };
 
 /**
