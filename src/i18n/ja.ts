@@ -123,6 +123,8 @@ export const ja: Dictionary = {
 
   // supersampling
   "supersampling.result": "Supersamplingの結果",
+  "supersampling.actualSize": "元のサイズで表示",
+  "supersampling.fitToScreen": "ウィンドウに合わせる",
 
   // dialog descriptions (a11y用、視覚的には非表示)
   "dialog.description.share": "現在の表示をURLで共有",

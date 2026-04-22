@@ -122,6 +122,8 @@ export const en = {
   "settings.useWasmTooltip": "Approximately 10x faster. Recommended to keep ON.",
   // supersampling
   "supersampling.result": "Supersampling Result",
+  "supersampling.actualSize": "Actual Size",
+  "supersampling.fitToScreen": "Fit to Screen",
 
   // dialog descriptions (a11y用、視覚的には非表示)
   "dialog.description.share": "Share current view by URL",

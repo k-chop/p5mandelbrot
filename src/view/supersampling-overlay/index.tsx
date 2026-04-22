@@ -224,7 +224,9 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
             disabled={!isRenderComplete}
           >
             {fitMode ? <Expand className="mr-1 size-4" /> : <Shrink className="mr-1 size-4" />}
-            {fitMode ? "Actual Size" : "Fit to Screen"}
+            {fitMode
+              ? t("Actual Size", "supersampling.actualSize")
+              : t("Fit to Screen", "supersampling.fitToScreen")}
           </Button>
           <Button variant="default" size="sm" onClick={handleSave} disabled={!isRenderComplete}>
             <Download className="mr-1 size-4" />
