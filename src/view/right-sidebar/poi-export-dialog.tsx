@@ -1,12 +1,19 @@
 import { useT } from "@/i18n/context";
 import { Button } from "@/shadcn/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shadcn/components/ui/dialog";
 import { Textarea } from "@/shadcn/components/ui/textarea";
 import { toast } from "sonner";
 import { serializePOIListToText } from "@/store/sync-storage/poi-list";
 import { useStoreValue } from "@/store/store";
 import { ClickFeedback, useClickFeedback } from "@/view/components/click-feedback";
 import { IconCircleCheck, IconCopy } from "@tabler/icons-react";
+import { VisuallyHidden } from "radix-ui";
 import type { POIData } from "../../types";
 
 type POIExportDialogProps = {
@@ -40,6 +47,11 @@ export const POIExportDialog = ({ open, onOpenChange }: POIExportDialogProps) =>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("Export POI", "poi.exportTitle")}</DialogTitle>
+          <VisuallyHidden.Root>
+            <DialogDescription>
+              {t("Export saved POIs", "dialog.description.poiExport")}
+            </DialogDescription>
+          </VisuallyHidden.Root>
         </DialogHeader>
 
         <div className="text-sm text-muted-foreground">

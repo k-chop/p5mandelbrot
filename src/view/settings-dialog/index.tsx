@@ -9,7 +9,13 @@ import {
   setRenderer,
 } from "@/rendering/common";
 import { Button } from "@/shadcn/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shadcn/components/ui/dialog";
 import { Label } from "@/shadcn/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
 import { Switch } from "@/shadcn/components/ui/switch";
@@ -19,6 +25,7 @@ import { DEFAULT_WORKER_COUNT } from "@/store/sync-storage/settings";
 import { useIsMobile } from "@/view/use-is-mobile";
 import { prepareWorkerPool } from "@/worker-pool/pool-instance";
 import { IconHelp, IconSettings } from "@tabler/icons-react";
+import { VisuallyHidden } from "radix-ui";
 import { useEffect, useState } from "react";
 import { Instructions } from "../header/instructions";
 import { useModalState } from "../modal/use-modal-state";
@@ -231,6 +238,11 @@ const AboutSection = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-3xl">{t("Instructions")}</DialogTitle>
+            <VisuallyHidden.Root>
+              <DialogDescription>
+                {t("Usage instructions", "dialog.description.instructions")}
+              </DialogDescription>
+            </VisuallyHidden.Root>
           </DialogHeader>
           <Instructions />
         </DialogContent>
@@ -286,6 +298,11 @@ export const SettingsDialog = ({
             <IconSettings className="size-5" />
             {t("Settings", "operations.settings")}
           </DialogTitle>
+          <VisuallyHidden.Root>
+            <DialogDescription>
+              {t("Application settings", "dialog.description.settings")}
+            </DialogDescription>
+          </VisuallyHidden.Root>
         </DialogHeader>
         <div className="grid grid-cols-1 gap-8 pt-2 md:grid-cols-2">
           <div className="flex flex-col gap-8">

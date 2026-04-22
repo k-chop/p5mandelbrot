@@ -1,6 +1,12 @@
 import { useT } from "@/i18n/context";
 import { Button } from "@/shadcn/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shadcn/components/ui/dialog";
 import { Textarea } from "@/shadcn/components/ui/textarea";
 import {
   deserializePOIListFromText,
@@ -9,6 +15,7 @@ import {
 } from "@/store/sync-storage/poi-list";
 import { updateStore, useStoreValue } from "@/store/store";
 import { IconDownload } from "@tabler/icons-react";
+import { VisuallyHidden } from "radix-ui";
 import { useMemo, useState } from "react";
 import type { POIData } from "../../types";
 
@@ -53,6 +60,11 @@ export const POIImportDialog = ({ open, onOpenChange }: POIImportDialogProps) =>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("Import POI", "poi.importTitle")}</DialogTitle>
+          <VisuallyHidden.Root>
+            <DialogDescription>
+              {t("Import POIs from text", "dialog.description.poiImport")}
+            </DialogDescription>
+          </VisuallyHidden.Root>
         </DialogHeader>
 
         <Textarea

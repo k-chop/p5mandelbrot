@@ -1,7 +1,12 @@
 import { useT } from "@/i18n/context";
 import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
 import { getCanvasSize } from "@/rendering/renderer";
-import { Drawer, DrawerContent, DrawerTitle } from "@/shadcn/components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/shadcn/components/ui/drawer";
 import { updateStore, useStoreValue } from "@/store/store";
 import { IconCirclePlus } from "@tabler/icons-react";
 import { VisuallyHidden } from "radix-ui";
@@ -78,6 +83,7 @@ const POIPanelSmallContent = () => {
  * storeの `poiDrawerSnap` と vaul の activeSnapPoint を双方向同期する。
  */
 export const POIPanelMobile = () => {
+  const t = useT();
   const snap = useStoreValue("poiDrawerSnap");
   const activeSnapPoint =
     snap === "closed" ? SNAP_CLOSED : snap === "small" ? SNAP_SMALL : SNAP_FULL;
@@ -96,12 +102,12 @@ export const POIPanelMobile = () => {
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={handleSnapChange}
     >
-      <DrawerContent
-        className="h-[100dvh] bg-[#161620]/97 pb-4 backdrop-blur-sm data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-[100dvh]"
-        aria-describedby={undefined}
-      >
+      <DrawerContent className="h-[100dvh] bg-[#161620]/97 pb-4 backdrop-blur-sm data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-[100dvh]">
         <VisuallyHidden.Root>
           <DrawerTitle>Points of Interest</DrawerTitle>
+          <DrawerDescription>
+            {t("Saved Points of Interest", "dialog.description.poiPanel")}
+          </DrawerDescription>
         </VisuallyHidden.Root>
         {snap === "full" ? (
           <>

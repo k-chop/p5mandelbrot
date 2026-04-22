@@ -1,4 +1,5 @@
 import { setSerializedPalette } from "@/camera/palette";
+import { useT } from "@/i18n/context";
 import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
 import { setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
 import {
@@ -7,12 +8,19 @@ import {
   isSamePOI,
   usePresetPOIList,
 } from "@/preset-poi/preset-poi";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shadcn/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shadcn/components/ui/popover";
 import { loadPreview } from "@/store/preview-store";
 import { updateStore, useStoreValue } from "@/store/store";
 import type { POIData } from "@/types";
 import BigNumber from "bignumber.js";
+import { VisuallyHidden } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /** ミニマップの最大表示サイズ(px) */
@@ -294,6 +302,7 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
  * 近接するピンはクラスタリングされ、ホバーでサムネイル一覧を表示する。
  */
 export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
+  const t = useT();
   const userPOIList: POIData[] = useStoreValue("poi");
   const presetList = usePresetPOIList();
 
@@ -363,12 +372,14 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="flex max-h-[95dvh] w-[calc(100vw-2rem)] max-w-[1056px] flex-col p-4"
-        aria-describedby={undefined}
-      >
+      <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] max-w-[1056px] flex-col p-4">
         <DialogHeader>
           <DialogTitle>Minimap</DialogTitle>
+          <VisuallyHidden.Root>
+            <DialogDescription>
+              {t("Overview map of saved POIs", "dialog.description.minimap")}
+            </DialogDescription>
+          </VisuallyHidden.Root>
         </DialogHeader>
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">

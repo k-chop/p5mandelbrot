@@ -121,6 +121,19 @@ export const ja: Dictionary = {
   "settings.useWasm": "Reference Orbit計算にWasmを使用",
   "settings.useWasmTooltip": "10倍ほど高速になるのでON推奨",
 
+  // dialog descriptions (a11y用、視覚的には非表示)
+  "dialog.description.share": "現在の表示をURLで共有",
+  "dialog.description.jump": "指定した座標にジャンプ",
+  "dialog.description.settings": "アプリケーション設定",
+  "dialog.description.instructions": "操作方法の説明",
+  "dialog.description.minimap": "保存したPOIの全体マップ",
+  "dialog.description.presetList": "プリセットPOI一覧",
+  "dialog.description.poiPanel": "保存したPOI",
+  "dialog.description.supersampling": "スーパーサンプリング設定",
+  "dialog.description.benchmark": "ベンチマーク進行状況",
+  "dialog.description.poiExport": "保存したPOIをエクスポート",
+  "dialog.description.poiImport": "テキストからPOIをインポート",
+
   // debug mode
   "debug.alwaysComputeDebugData": "常にデバッグデータを計算",
   "debug.alwaysComputeTooltip1": "このタブが閉じていてもデバッグデータを計算します。",

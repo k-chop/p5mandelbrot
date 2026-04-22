@@ -1,11 +1,18 @@
 import { Button } from "@/shadcn/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shadcn/components/ui/dialog";
 import { toast } from "sonner";
 import { isDevMode } from "@/utils/dev-mode";
 import type { ShareData } from "@/utils/mandelbrot-url-params";
 import { ClickFeedback, useClickFeedback } from "@/view/components/click-feedback";
 import { useT } from "@/i18n/context";
 import { IconCircleCheck, IconCopy, IconExternalLink, IconPhoto } from "@tabler/icons-react";
+import { VisuallyHidden } from "radix-ui";
 
 const PRODUCTION_ORIGIN = "https://p5mandelbrot.pages.dev";
 
@@ -77,6 +84,11 @@ export const ShareDialog = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t("Share", "header.share")}</DialogTitle>
+          <VisuallyHidden.Root>
+            <DialogDescription>
+              {t("Share current view by URL", "dialog.description.share")}
+            </DialogDescription>
+          </VisuallyHidden.Root>
         </DialogHeader>
 
         <div className="flex gap-4">

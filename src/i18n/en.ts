@@ -120,6 +120,19 @@ export const en = {
   "settings.generate": "Generate",
   "settings.useWasm": "Use Wasm for reference orbit",
   "settings.useWasmTooltip": "Approximately 10x faster. Recommended to keep ON.",
+  // dialog descriptions (a11y用、視覚的には非表示)
+  "dialog.description.share": "Share current view by URL",
+  "dialog.description.jump": "Jump to specified coordinates",
+  "dialog.description.settings": "Application settings",
+  "dialog.description.instructions": "Usage instructions",
+  "dialog.description.minimap": "Overview map of saved POIs",
+  "dialog.description.presetList": "Preset POI list",
+  "dialog.description.poiPanel": "Saved Points of Interest",
+  "dialog.description.supersampling": "Supersampling settings",
+  "dialog.description.benchmark": "Benchmark progress",
+  "dialog.description.poiExport": "Export saved POIs",
+  "dialog.description.poiImport": "Import POIs from text",
+
   // debug mode
   "debug.alwaysComputeDebugData": "Always compute debug data",
   "debug.alwaysComputeTooltip1": "Computes debug data even when this tab is closed.",
