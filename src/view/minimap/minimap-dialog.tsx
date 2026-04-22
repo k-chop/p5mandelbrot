@@ -213,6 +213,14 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
     onJump();
   };
 
+  // PCのマウスhoverで開閉、モバイルタッチ時はRadixのclick→onOpenChange任せ
+  const handleMouseEnter = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse") setOpen(true);
+  };
+  const handleMouseLeave = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse") setOpen(false);
+  };
+
   const pinEl = (
     <div
       className="absolute"
@@ -222,6 +230,8 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
         transform: "translate(-50%, -50%)",
         zIndex: 10,
       }}
+      onPointerEnter={handleMouseEnter}
+      onPointerLeave={handleMouseLeave}
     >
       <div
         className="flex items-center justify-center rounded-full border-2 border-white/80 shadow-lg shadow-black/50 transition-transform hover:scale-125"
@@ -247,6 +257,8 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
         align="center"
         collisionPadding={16}
         className="w-fit max-w-[min(92vw,360px)] p-2"
+        onPointerEnter={handleMouseEnter}
+        onPointerLeave={handleMouseLeave}
       >
         <ClusterPopover cluster={cluster} onJump={handleJumpAndClose} />
       </PopoverContent>
