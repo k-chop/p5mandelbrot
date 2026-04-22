@@ -30,6 +30,17 @@ const FLOATING_BUTTON_CLASS =
 /** モバイル用DropdownMenuItemの共通クラス (タップ領域拡大) */
 const MOBILE_MENU_ITEM_CLASS = "gap-2 py-3 text-base";
 
+/**
+ * トリガー押下直後にfocusを外す。
+ *
+ * Radix Dialog/Popover/Dropdown open時に外側(toolbar)へaria-hiddenが付与され、
+ * focusを保持したままのtriggerがaria-hidden祖先内に残ると警告が出る。
+ * pointer操作のときだけ解除すればよく、キーボード操作には影響させない。
+ */
+const blurOnPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+  e.currentTarget.blur();
+};
+
 type MobileToolbarProps = {
   openShare: () => void;
   openSS: () => void;
@@ -57,7 +68,13 @@ const HamburgerMenu = ({ openShare, openSS, openJump, openSettings }: MobileTool
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon" aria-label="Menu" className={FLOATING_BUTTON_CLASS}>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Menu"
+            className={FLOATING_BUTTON_CLASS}
+            onPointerDown={blurOnPointerDown}
+          >
             <IconMenu2 className="size-8" />
           </Button>
         </DropdownMenuTrigger>
@@ -104,6 +121,7 @@ const TopRightActions = () => {
         aria-label="I'm Feeling Lucky"
         className="size-16 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
         onClick={performRandomJump}
+        onPointerDown={blurOnPointerDown}
       >
         <IconDice className="size-8" />
       </Button>
@@ -114,6 +132,7 @@ const TopRightActions = () => {
             size="icon"
             aria-label="Palette"
             className={FLOATING_BUTTON_CLASS}
+            onPointerDown={blurOnPointerDown}
           >
             <IconPalette className="size-8" />
           </Button>
@@ -149,6 +168,7 @@ const POIToggleFab = () => {
         aria-label="Open POI drawer"
         className={FLOATING_BUTTON_CLASS}
         onClick={() => updateStore("poiDrawerSnap", "small")}
+        onPointerDown={blurOnPointerDown}
       >
         <IconLayoutSidebar className="size-8" />
       </Button>
