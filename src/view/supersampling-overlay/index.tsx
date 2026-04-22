@@ -18,6 +18,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [fitMode, setFitMode] = useState(true);
+  const [isClosing, setIsClosing] = useState(false);
   const [dragState, setDragState] = useState({
     isDragging: false,
     startX: 0,
@@ -77,23 +78,31 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
     e.stopPropagation();
   }, []);
 
+  /** 閉じるアニメーションの時間 (ms) */
+  const CLOSE_ANIMATION_MS = 200;
+
   const handleClose = useCallback(() => {
-    // 閉じるときにcanvasのメモリ解放しておく
-    const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement;
-    if (canvas) {
-      canvas.width = 0;
-      canvas.height = 0;
-    }
+    if (isClosing) return;
+    setIsClosing(true);
+    // fadeアニメ完了後に実DOM cleanupを行う
+    setTimeout(() => {
+      const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement;
+      if (canvas) {
+        canvas.width = 0;
+        canvas.height = 0;
+      }
 
-    const overlay = document.getElementById("supersampling-overlay");
-    if (overlay) {
-      overlay.style.display = "";
-    }
-    // 処理中だったらバッチを止める
-    cancelBatch(getPrevBatchId());
+      const overlay = document.getElementById("supersampling-overlay");
+      if (overlay) {
+        overlay.style.display = "";
+      }
+      // 処理中だったらバッチを止める
+      cancelBatch(getPrevBatchId());
 
-    onClose?.();
-  }, [onClose]);
+      setIsClosing(false);
+      onClose?.();
+    }, CLOSE_ANIMATION_MS);
+  }, [isClosing, onClose]);
 
   /** supersampling結果canvasをPNGとしてダウンロード */
   const handleSave = useCallback(() => {
@@ -125,7 +134,9 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+      className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-[opacity,transform] duration-200 ease-out ${
+        isClosing ? "opacity-0 scale-95" : "opacity-100 scale-100"
+      }`}
       onMouseDown={handleBackgroundEvent}
       onClick={handleBackgroundEvent}
     >
@@ -175,8 +186,8 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
         />
       </div>
 
-      {/* 左上の閉じるボタン (丸型) */}
-      <div className="absolute top-4 left-4 z-20">
+      {/* 左上の閉じるボタン (丸型、メインUIと同じtop-3 left-3) */}
+      <div className="absolute top-3 left-3 z-20">
         <button
           type="button"
           onClick={handleClose}
@@ -188,7 +199,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
       </div>
 
       {/* 右上のコントロール (縦並び: Fit切替 + 保存、保存は描画完了時のみ) */}
-      <div className="absolute top-4 right-4 z-20 flex flex-col gap-3">
+      <div className="absolute top-3 right-3 z-20 flex flex-col gap-5">
         <button
           type="button"
           onClick={handleToggleFitMode}
@@ -201,7 +212,7 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
           <button
             type="button"
             onClick={handleSave}
-            className={`${CIRCLE_BUTTON_BASE_CLASS} hover:bg-white/20 hover:text-white`}
+            className="size-16 rounded-full bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(0,0,0,0.4)] flex items-center justify-center transition-colors hover:bg-primary/90"
             aria-label="Save image"
           >
             <Download className="size-8" />
