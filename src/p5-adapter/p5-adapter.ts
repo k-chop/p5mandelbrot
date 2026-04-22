@@ -334,15 +334,18 @@ export const startPinchGesture = (p: p5) => {
   isTranslatingMainBuffer = true;
 };
 
+/** 縮小側の最小スケール (r=0で到達) */
+const MIN_PINCH_SCALE = 0.01;
+
 /**
  * ピンチ距離比 r を scaleFactor にマッピングする
  *
  * - 1 ≤ r ≤ 2 : 線形で zoomRate 倍まで到達 (微調整しやすいレンジ)
  * - r > 2     : tanh で 2*zoomRate に漸近 (行き過ぎ防止)
- * - r < 1     : 1/r を同じ関数に通し逆数を取る (縮小側は対称)
+ * - r < 1     : 線形で r=0 → MIN_PINCH_SCALE まで下がる
  */
 const pinchScaleFromRatio = (r: number, zoomRate: number): number => {
-  if (r < 1) return 1 / pinchScaleFromRatio(1 / r, zoomRate);
+  if (r < 1) return Math.max(MIN_PINCH_SCALE, MIN_PINCH_SCALE + (1 - MIN_PINCH_SCALE) * r);
   if (r <= 2) return 1 + (zoomRate - 1) * (r - 1);
   return zoomRate + zoomRate * Math.tanh(r - 2);
 };
