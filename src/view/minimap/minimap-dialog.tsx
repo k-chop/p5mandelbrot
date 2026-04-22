@@ -13,7 +13,7 @@ import { loadPreview } from "@/store/preview-store";
 import { updateStore, useStoreValue } from "@/store/store";
 import type { POIData } from "@/types";
 import BigNumber from "bignumber.js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /** ミニマップの最大表示サイズ(px) */
 const MAX_DISPLAY_SIZE = 1024;
@@ -216,12 +216,30 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
   };
 
   // PCのマウスhoverで開閉、モバイルタッチ時はRadixのclick→onOpenChange任せ
+  // trigger↔content間のgapを通過中に閉じないよう、leaveはdelay付きでcloseしenterでcancelする
+  const closeTimerRef = useRef<number | null>(null);
+  const cancelClose = () => {
+    if (closeTimerRef.current !== null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
   const handleMouseEnter = (e: React.PointerEvent) => {
-    if (e.pointerType === "mouse") setOpen(true);
+    if (e.pointerType !== "mouse") return;
+    cancelClose();
+    setOpen(true);
   };
   const handleMouseLeave = (e: React.PointerEvent) => {
-    if (e.pointerType === "mouse") setOpen(false);
+    if (e.pointerType !== "mouse") return;
+    cancelClose();
+    closeTimerRef.current = window.setTimeout(() => {
+      setOpen(false);
+      closeTimerRef.current = null;
+    }, 150);
   };
+  useEffect(() => {
+    return cancelClose;
+  }, []);
 
   const pinEl = (
     <div
