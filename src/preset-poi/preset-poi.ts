@@ -3,9 +3,7 @@ import { isDevMode } from "@/utils/dev-mode";
 import BigNumber from "bignumber.js";
 import { useSyncExternalStore } from "react";
 
-/** GCSプロキシのベースURL（Cloudflare Worker経由） */
-const GCS_BASE_URL =
-  "https://p5mandelbrot-gcs-proxy.7bb81493-fc28-4b3b-918a-7098cdfffb9a.workers.dev";
+const GCS_BASE_URL = "https://storage.googleapis.com/p5mandelbrot-preset-poi";
 
 /** POI同一判定に使う仮想キャンバス幅（= 8Kディスプレイ相当） */
 const CANVAS_WIDTH_FOR_COMPARISON = 8192;
