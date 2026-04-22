@@ -1,12 +1,18 @@
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { getPrevBatchId } from "@/mandelbrot-state/mandelbrot-state";
+import { useStoreValue } from "@/store/store";
 import { cancelBatch } from "@/worker-pool/worker-pool";
+import { Download, Expand, Shrink, X } from "lucide-react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Footer } from "../footer";
 
 interface SupersamplingOverlayProps {
   onClose?: () => void;
 }
+
+/** overlay上の丸型ボタンのベースクラス (メインUIのsize-16に揃える) */
+const CIRCLE_BUTTON_BASE_CLASS =
+  "size-16 rounded-full bg-black/80 text-white/80 border border-white/20 backdrop-blur-sm shadow-lg flex items-center justify-center transition-colors";
 
 const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,6 +25,10 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
     scrollLeft: 0,
     scrollTop: 0,
   });
+
+  // progress が object (ResultSpans = 計測完了) のとき描画完了。保存ボタンの出し分けに使う
+  const progress = useStoreValue("progress");
+  const isRenderComplete = typeof progress === "object" && progress !== null;
 
   const handleToggleFitMode = useCallback(() => {
     setFitMode((prev) => !prev);
@@ -85,6 +95,21 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
     onClose?.();
   }, [onClose]);
 
+  /** supersampling結果canvasをPNGとしてダウンロード */
+  const handleSave = useCallback(() => {
+    const canvas = document.getElementById("supersampling-canvas") as HTMLCanvasElement | null;
+    if (!canvas) return;
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.download = `mandelbrot-${Date.now()}.png`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+    }, "image/png");
+  }, []);
+
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -116,6 +141,8 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onTouchStartCapture={(e) => e.stopPropagation()}
+        onTouchMoveCapture={(e) => e.stopPropagation()}
         style={fitMode ? {} : { cursor: dragState.isDragging ? "grabbing" : "grab" }}
       >
         {/* ローディングスピナー - canvasの下に表示 */}
@@ -148,31 +175,38 @@ const SupersamplingOverlayComponent = ({ onClose }: SupersamplingOverlayProps) =
         />
       </div>
 
-      {/* 左上の閉じるボタン */}
+      {/* 左上の閉じるボタン (丸型) */}
       <div className="absolute top-4 left-4 z-20">
         <button
+          type="button"
           onClick={handleClose}
-          className="p-2 text-white/80 bg-black/80 hover:text-white hover:bg-red-500/70 rounded-full shadow-lg transition-colors backdrop-blur-sm border border-white/20"
+          className={`${CIRCLE_BUTTON_BASE_CLASS} hover:bg-red-500/70 hover:text-white`}
+          aria-label="Close"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <X className="size-8" />
         </button>
       </div>
 
-      {/* 右上のコントロール */}
-      <div className="absolute top-4 right-4 z-20">
+      {/* 右上のコントロール (縦並び: Fit切替 + 保存、保存は描画完了時のみ) */}
+      <div className="absolute top-4 right-4 z-20 flex flex-col gap-3">
         <button
+          type="button"
           onClick={handleToggleFitMode}
-          className="px-3 py-1 text-sm bg-blue-500/90 text-white rounded shadow-lg hover:bg-blue-600/90 transition-colors backdrop-blur-sm"
+          className={`${CIRCLE_BUTTON_BASE_CLASS} hover:bg-white/20 hover:text-white`}
+          aria-label={fitMode ? "Actual Size" : "Fit to Screen"}
         >
-          {fitMode ? "Actual Size" : "Fit to Screen"}
+          {fitMode ? <Expand className="size-8" /> : <Shrink className="size-8" />}
         </button>
+        {isRenderComplete && (
+          <button
+            type="button"
+            onClick={handleSave}
+            className={`${CIRCLE_BUTTON_BASE_CLASS} hover:bg-white/20 hover:text-white`}
+            aria-label="Save image"
+          >
+            <Download className="size-8" />
+          </button>
+        )}
       </div>
       <div className="absolute bottom-4 z-1 w-full px-8">
         <Progress />
