@@ -27,6 +27,9 @@ import { PaletteEditor } from "../right-sidebar/palette-editor";
 const FLOATING_BUTTON_CLASS =
   "size-16 rounded-full border-[#2a2a3a] bg-[#1c1c24]/95 shadow-[0_4px_12px_rgba(0,0,0,0.4)] backdrop-blur-sm";
 
+/** モバイル用DropdownMenuItemの共通クラス (タップ領域拡大) */
+const MOBILE_MENU_ITEM_CLASS = "gap-2 py-3 text-base";
+
 type MobileToolbarProps = {
   openShare: () => void;
   openSS: () => void;
@@ -58,26 +61,26 @@ const HamburgerMenu = ({ openShare, openSS, openJump, openSettings }: MobileTool
             <IconMenu2 className="size-8" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" sideOffset={8} className="min-w-48">
-          <DropdownMenuItem onSelect={openShare}>
-            <IconShare className="size-4" />
+        <DropdownMenuContent align="start" sideOffset={8} className="min-w-60">
+          <DropdownMenuItem onSelect={openShare} className={MOBILE_MENU_ITEM_CLASS}>
+            <IconShare className="size-5" />
             {t("Share", "header.share")}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => performSaveImage(t)}>
-            <IconDownload className="size-4" />
+          <DropdownMenuItem onSelect={() => performSaveImage(t)} className={MOBILE_MENU_ITEM_CLASS}>
+            <IconDownload className="size-5" />
             {t("Save Image")}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={openSS}>
-            <IconMaximize className="size-4" />
+          <DropdownMenuItem onSelect={openSS} className={MOBILE_MENU_ITEM_CLASS}>
+            <IconMaximize className="size-5" />
             {t("Supersampling x2", "header.supersamplingX2")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={openJump}>
-            <IconNavigation className="size-4" />
+          <DropdownMenuItem onSelect={openJump} className={MOBILE_MENU_ITEM_CLASS}>
+            <IconNavigation className="size-5" />
             {t("Jump", "toolbar.jump")}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={openSettings}>
-            <IconSettings className="size-4" />
+          <DropdownMenuItem onSelect={openSettings} className={MOBILE_MENU_ITEM_CLASS}>
+            <IconSettings className="size-5" />
             {t("Settings", "operations.settings")}
           </DropdownMenuItem>
         </DropdownMenuContent>
