@@ -162,6 +162,8 @@ const ClusterPopover = ({ cluster, onJump }: { cluster: Cluster; onJump: () => v
         gridTemplateColumns: `repeat(${Math.min(cluster.pins.length, 3)}, 80px)`,
         touchAction: "pan-y",
       }}
+      onTouchStartCapture={(e) => e.stopPropagation()}
+      onTouchMoveCapture={(e) => e.stopPropagation()}
     >
       {cluster.pins.map((pin) => (
         <button
