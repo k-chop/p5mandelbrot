@@ -195,8 +195,7 @@ const ClusterPopover = ({ cluster, onJump }: { cluster: Cluster; onJump: () => v
 /**
  * ミニマップ上のピン（またはクラスタ）を描画するコンポーネント
  *
- * 複数ピンのクラスタ: タップで Radix Popover (portal) が開いてサムネイル一覧表示。
- * 単一ピン: タップで直接ジャンプ。
+ * タップで Radix Popover (portal) が開いてサムネイル一覧表示（1件でも表示）。
  */
 const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void }) => {
   const [open, setOpen] = useState(false);
@@ -232,13 +231,6 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
           height: isSingle ? 18 : 26,
           cursor: "pointer",
         }}
-        onClick={(e) => {
-          if (isSingle) {
-            e.stopPropagation();
-            cluster.pins[0].jumpAction();
-            onJump();
-          }
-        }}
       >
         {!isSingle && (
           <span className="text-[11px] font-bold text-white">{cluster.pins.length}</span>
@@ -246,8 +238,6 @@ const ClusterPin = ({ cluster, onJump }: { cluster: Cluster; onJump: () => void 
       </div>
     </div>
   );
-
-  if (isSingle) return pinEl;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
