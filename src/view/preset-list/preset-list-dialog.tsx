@@ -4,6 +4,7 @@ import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
 import { setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
 import {
   type PresetPOIRaw,
+  getPresetDisplayLabel,
   getPresetThumbnailUrl,
   initializePresetPOIList,
   isGCSMode,
@@ -196,7 +197,7 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
         <div
           className="grid auto-rows-min gap-2 overflow-y-auto pr-1"
           style={{
-            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
             maxHeight: "calc(80dvh - 160px)",
           }}
         >
@@ -247,6 +248,8 @@ const PresetCard = ({
   onDelete: () => void;
 }) => {
   const thumbnailUrl = getPresetThumbnailUrl(poi.id, revision);
+  const label = getPresetDisplayLabel(poi);
+  const r = new BigNumber(poi.r);
 
   return (
     <div className="group overflow-hidden rounded border border-[#2a2a3a] bg-[#1e1e2e] transition-colors hover:border-primary/50">
@@ -257,7 +260,7 @@ const PresetCard = ({
         <img
           crossOrigin="anonymous"
           src={thumbnailUrl}
-          alt={`Preset ${poi.id}`}
+          alt={`Preset ${label}`}
           className="h-full w-full object-cover"
           onError={(e) => {
             e.currentTarget.style.display = "none";
@@ -267,19 +270,22 @@ const PresetCard = ({
           Jump
         </div>
       </button>
-      <div className="flex items-center justify-between px-2 py-1 text-xs">
-        <span>
-          <span className="text-muted-foreground">#{poi.id}</span>{" "}
-          <span className="text-muted-foreground">N:</span>
-          {poi.N}
-        </span>
+      <div className="flex items-center justify-between gap-1 px-2 pt-0.5 pb-1">
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-display text-base font-bold leading-tight" title={label}>
+            {label}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            N:{poi.N} r:{r.toPrecision(3)}
+          </div>
+        </div>
         {isDevMode() && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
-            className="text-muted-foreground hover:text-destructive rounded p-0.5 transition-colors"
+            className="shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:text-destructive"
           >
             <IconTrash className="size-3.5" />
           </button>

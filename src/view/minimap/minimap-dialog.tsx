@@ -4,6 +4,7 @@ import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
 import { setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
 import {
   type PresetPOIRaw,
+  getPresetDisplayLabel,
   getPresetThumbnailUrl,
   isSamePOI,
   usePresetPOIList,
@@ -332,7 +333,7 @@ export const MinimapDialog = ({ open, onOpenChange }: MinimapDialogProps) => {
         y,
         source: "preset",
         id: poi.id,
-        label: `#${poi.id} N:${poi.N}`,
+        label: `${getPresetDisplayLabel(poi)} N:${poi.N}`,
         thumbnailUrl: getPresetThumbnailUrl(poi.id),
         jumpAction: () => jumpToPreset(poi),
       });

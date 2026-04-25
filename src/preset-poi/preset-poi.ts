@@ -14,6 +14,11 @@ const CANVAS_WIDTH_FOR_COMPARISON = 8192;
  */
 export interface PresetPOIRaw {
   id: string;
+  /**
+   * 表示用の名前（Title Case想定、例: "The Ember Eye"）
+   * 未定義時はUI側で `#${id}` にフォールバックする
+   */
+  name?: string;
   x: string;
   y: string;
   r: string;
@@ -21,6 +26,16 @@ export interface PresetPOIRaw {
   mode: MandelbrotWorkerType;
   palette?: string;
 }
+
+/**
+ * プリセットの表示用ラベルを返す
+ * nameがあればname、なければ `#${id}`（ゼロ埋めは外す）を返す
+ */
+export const getPresetDisplayLabel = (poi: PresetPOIRaw): string => {
+  if (poi.name) return poi.name;
+  const n = parseInt(poi.id, 10);
+  return Number.isNaN(n) ? `#${poi.id}` : `#${n}`;
+};
 
 /** 読み込み済みのプリセットPOIリスト */
 let presetPOIList: readonly PresetPOIRaw[] = [];
