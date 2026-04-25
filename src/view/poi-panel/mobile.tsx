@@ -13,6 +13,7 @@ import { VisuallyHidden } from "radix-ui";
 import { POICardPreview } from "../right-sidebar/poi-card-preview";
 import { usePOI } from "../right-sidebar/use-poi";
 import { PanelContent, POIPanelHeader } from "./index";
+import { usePOIScrollRef, useScrollSaver } from "./poi-scroll-context";
 
 /**
  * vaul snapPoints: 完全非表示 / 横ストリップ (追加ボタン+サムネイル1行) / フル
@@ -44,6 +45,8 @@ const snapValueToState = (v: number | string | null): "closed" | "small" | "full
 const POIPanelSmallContent = () => {
   const t = useT();
   const { poiList, addPOI, applyPOI } = usePOI();
+  const ref = usePOIScrollRef("mobileSmall");
+  const { setScrollContainer, handleScroll } = useScrollSaver(ref, "horizontal");
 
   // 現在のcanvasアスペクトに合わせてSaveボタンを縦長にする (モバイルは縦長canvas想定)
   // 初期化前はcanvasSizeが0/0でNaNになるので正方形(=1)にフォールバック
@@ -52,7 +55,11 @@ const POIPanelSmallContent = () => {
   const saveButtonAspect = Number.isFinite(rawAspect) && rawAspect > 0 ? rawAspect : 1;
 
   return (
-    <div className="flex h-[180px] items-center gap-2 overflow-x-auto px-3">
+    <div
+      ref={setScrollContainer}
+      onScroll={handleScroll}
+      className="flex h-[180px] items-center gap-2 overflow-x-auto px-3"
+    >
       <button
         type="button"
         onClick={() => addPOI(cloneCurrentParams())}
