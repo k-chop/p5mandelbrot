@@ -29,7 +29,7 @@ import {
 import { IconCloud, IconFolder, IconPhoto, IconRefresh, IconTrash } from "@tabler/icons-react";
 import BigNumber from "bignumber.js";
 import { VisuallyHidden } from "radix-ui";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 type PresetListDialogProps = {
   open: boolean;
@@ -66,6 +66,47 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
   const [feedback, setFeedback] = useState<{ type: "info" | "error"; message: string } | null>(
     null,
   );
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const savedScrollTopRef = useRef(0);
+
+  /** id降順で表示する（id文字列をparseInt、失敗時は文字列比較fallback） */
+  const sortedPresetList = useMemo(() => {
+    return [...presetList].sort((a, b) => {
+      const aN = parseInt(a.id, 10);
+      const bN = parseInt(b.id, 10);
+      if (Number.isNaN(aN) || Number.isNaN(bN)) return b.id.localeCompare(a.id);
+      return bN - aN;
+    });
+  }, [presetList]);
+
+  /** ダイアログを閉じる際にscrollTopを退避し、必ずonOpenChange(false)経由で閉じる */
+  const closeAndSaveScroll = useCallback(() => {
+    savedScrollTopRef.current = scrollContainerRef.current?.scrollTop ?? 0;
+    onOpenChange(false);
+  }, [onOpenChange]);
+
+  /** Radix Dialog側からの開閉（ESC・外側クリック・×ボタン）でもscrollTopを退避 */
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => {
+      if (!newOpen) {
+        savedScrollTopRef.current = scrollContainerRef.current?.scrollTop ?? 0;
+      }
+      onOpenChange(newOpen);
+    },
+    [onOpenChange],
+  );
+
+  /**
+   * Radix DialogのContentはPortalマウントが遅延するため、useEffectでは
+   * ref.currentがまだnullになる。ref callbackでattachされた瞬間にscrollTopを
+   * 復元する形にして、確実にDOMが揃ってから書き込む。
+   */
+  const setScrollContainer = useCallback((node: HTMLDivElement | null) => {
+    scrollContainerRef.current = node;
+    if (node) {
+      node.scrollTop = savedScrollTopRef.current;
+    }
+  }, []);
 
   const handleCapture = useCallback(async (id: string, dataUrl: string) => {
     await fetch(`http://localhost:8080/api/preset-poi/${id}/thumbnail`, {
@@ -118,7 +159,7 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
   const isRunning = batchState.status === "running";
 
   return (
-    <Dialog open={open} onOpenChange={isRunning ? undefined : onOpenChange}>
+    <Dialog open={open} onOpenChange={isRunning ? undefined : handleOpenChange}>
       <DialogContent className="max-h-[80dvh] max-w-6xl">
         <DialogHeader>
           <DialogTitle>{t("Preset List", "preset.title")}</DialogTitle>
@@ -195,20 +236,21 @@ export const PresetListDialog = ({ open, onOpenChange }: PresetListDialogProps) 
           </Alert>
         )}
         <div
+          ref={setScrollContainer}
           className="grid auto-rows-min gap-2 overflow-y-auto pr-1"
           style={{
             gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
             maxHeight: "calc(80dvh - 160px)",
           }}
         >
-          {presetList.map((poi) => (
+          {sortedPresetList.map((poi) => (
             <PresetCard
               key={poi.id}
               poi={poi}
               revision={revision}
               onJump={() => {
                 jumpToPreset(poi);
-                onOpenChange(false);
+                closeAndSaveScroll();
                 // 選択結果をキャンバスで見せるためPOI drawerも閉じる
                 updateStore("poiDrawerSnap", "closed");
               }}

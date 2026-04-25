@@ -9,7 +9,14 @@ import { MinimapDialog } from "@/view/minimap/minimap-dialog";
 import { PresetListDialog } from "@/view/preset-list/preset-list-dialog";
 import { useIsMobile } from "@/view/use-is-mobile";
 import { IconCirclePlus, IconLayoutSidebar, IconList, IconMap, IconX } from "@tabler/icons-react";
+import { useMemo, useRef } from "react";
 import { POIPanelMobile } from "./mobile";
+import {
+  type POIScrollRefs,
+  POIScrollProvider,
+  usePOIScrollRef,
+  useScrollSaver,
+} from "./poi-scroll-context";
 import { POI } from "../right-sidebar/poi";
 import { POICardPreview } from "../right-sidebar/poi-card-preview";
 import { POIHistories } from "../right-sidebar/poi-histories";
@@ -111,9 +118,15 @@ export const POIPanelHeader = () => {
 /** 閉じた時に右端に表示されるミニPOIストリップ */
 const CollapsedStrip = () => {
   const { poiList, addPOI, applyPOI } = usePOI();
+  const ref = usePOIScrollRef("collapsedStrip");
+  const { setScrollContainer, handleScroll } = useScrollSaver(ref);
 
   return (
-    <div className="absolute top-0 left-0 h-full w-20 overflow-y-scroll border-r border-[#3a3a4a] bg-[#1e1e2e]">
+    <div
+      ref={setScrollContainer}
+      onScroll={handleScroll}
+      className="absolute top-0 left-0 h-full w-20 overflow-y-scroll border-r border-[#3a3a4a] bg-[#1e1e2e]"
+    >
       <div className="sticky top-0 z-10 flex flex-col items-center gap-1.5 bg-[#1e1e2e] px-1.5 pt-1.5 pb-2">
         <button
           onClick={() => updateStore("poiPanelOpen", true)}
@@ -150,33 +163,50 @@ export const POIPanel = () => {
   const isMobile = useIsMobile();
   const poiPanelOpen = useStoreValue("poiPanelOpen");
   const { poiPanelWidth } = usePanelLayout();
+  // デスクトップ/モバイル切り替え時もスクロール位置を共有するため、ここで保持する
+  const mainRef = useRef(0);
+  const collapsedStripRef = useRef(0);
+  const mobileSmallRef = useRef(0);
+  // refオブジェクトは安定なので value も初回のみ生成する (deps空でOK)
+  const scrollRefs = useMemo<POIScrollRefs>(
+    () => ({ main: mainRef, collapsedStrip: collapsedStripRef, mobileSmall: mobileSmallRef }),
+    [],
+  );
 
   if (isMobile) {
-    return <POIPanelMobile />;
+    return (
+      <POIScrollProvider value={scrollRefs}>
+        <POIPanelMobile />
+      </POIScrollProvider>
+    );
   }
 
   return (
-    <div
-      style={{
-        width: `${poiPanelWidth}px`,
-        transform: poiPanelOpen
-          ? "translateX(0)"
-          : `translateX(calc(100% - ${COLLAPSED_STRIP_WIDTH}px))`,
-      }}
-      className={`fixed top-0 right-0 z-90 flex h-full flex-col border-l border-[#2a2a3a] transition-transform duration-300 ${
-        poiPanelOpen ? "bg-[#161620]/97 shadow-[-4px_0_16px_rgba(0,0,0,0.5)] backdrop-blur-sm" : ""
-      }`}
-    >
-      {poiPanelOpen ? (
-        <>
-          <POIPanelHeader />
-          <div className="flex min-h-0 grow flex-col overflow-y-auto px-2 pt-2">
-            <PanelContent />
-          </div>
-        </>
-      ) : (
-        <CollapsedStrip />
-      )}
-    </div>
+    <POIScrollProvider value={scrollRefs}>
+      <div
+        style={{
+          width: `${poiPanelWidth}px`,
+          transform: poiPanelOpen
+            ? "translateX(0)"
+            : `translateX(calc(100% - ${COLLAPSED_STRIP_WIDTH}px))`,
+        }}
+        className={`fixed top-0 right-0 z-90 flex h-full flex-col border-l border-[#2a2a3a] transition-transform duration-300 ${
+          poiPanelOpen
+            ? "bg-[#161620]/97 shadow-[-4px_0_16px_rgba(0,0,0,0.5)] backdrop-blur-sm"
+            : ""
+        }`}
+      >
+        {poiPanelOpen ? (
+          <>
+            <POIPanelHeader />
+            <div className="flex min-h-0 grow flex-col overflow-y-auto px-2 pt-2">
+              <PanelContent />
+            </div>
+          </>
+        ) : (
+          <CollapsedStrip />
+        )}
+      </div>
+    </POIScrollProvider>
   );
 };

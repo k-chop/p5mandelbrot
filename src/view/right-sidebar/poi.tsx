@@ -5,6 +5,7 @@ import { Button } from "@/shadcn/components/ui/button";
 import { loadPreview, savePreview } from "@/store/preview-store";
 import type { POIData } from "@/types";
 import { useModalState } from "@/view/modal/use-modal-state";
+import { usePOIScrollRef, useScrollSaver } from "@/view/poi-panel/poi-scroll-context";
 import {
   type ThumbnailTarget,
   useThumbnailBatch,
@@ -33,6 +34,9 @@ export const POI = () => {
   const { poiList, addPOI, deletePOIAt, applyPOI, regenerateThumbnailPOI } = usePOI();
   const [exportOpened, { open: openExport, close: closeExport }] = useModalState();
   const [importOpened, { open: openImport, close: closeImport }] = useModalState();
+
+  const ref = usePOIScrollRef("main");
+  const { setScrollContainer, handleScroll } = useScrollSaver(ref);
 
   const handleCapture = useCallback(async (id: string, dataUrl: string) => {
     savePreview(id, dataUrl);
@@ -129,7 +133,11 @@ export const POI = () => {
         }}
       />
 
-      <div className="min-h-10 grow basis-0 overflow-y-scroll">
+      <div
+        ref={setScrollContainer}
+        onScroll={handleScroll}
+        className="min-h-10 grow basis-0 overflow-y-scroll"
+      >
         <div
           className="grid gap-2 p-1 pr-2"
           style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))" }}
