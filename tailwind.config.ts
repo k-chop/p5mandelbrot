@@ -17,6 +17,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ['"Spectral"', "serif"],
+      },
       colors: {
         border: "var(--border)",
         input: "var(--input)",
