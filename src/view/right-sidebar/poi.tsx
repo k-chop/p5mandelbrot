@@ -5,12 +5,13 @@ import { Button } from "@/shadcn/components/ui/button";
 import { loadPreview, savePreview } from "@/store/preview-store";
 import type { POIData } from "@/types";
 import { useModalState } from "@/view/modal/use-modal-state";
+import { usePOIScrollRef } from "@/view/poi-panel/poi-scroll-context";
 import {
   type ThumbnailTarget,
   useThumbnailBatch,
 } from "@/view/thumbnail-batch/use-thumbnail-batch";
 import { IconCirclePlus, IconDownload, IconPhoto, IconUpload } from "@tabler/icons-react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { POICard } from "./poi-card";
 import { POIExportDialog } from "./poi-export-dialog";
@@ -33,6 +34,34 @@ export const POI = () => {
   const { poiList, addPOI, deletePOIAt, applyPOI, regenerateThumbnailPOI } = usePOI();
   const [exportOpened, { open: openExport, close: closeExport }] = useModalState();
   const [importOpened, { open: openImport, close: closeImport }] = useModalState();
+
+  // POIPanelから提供されるscroll位置保存ref。Provider外で使われる場合はnull
+  const savedScrollTopRef = usePOIScrollRef();
+  const rafIdRef = useRef<number | null>(null);
+
+  /** ref attach時に保存済みscrollTopを復元する */
+  const setScrollContainer = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (node && savedScrollTopRef) {
+        node.scrollTop = savedScrollTopRef.current;
+      }
+    },
+    [savedScrollTopRef],
+  );
+
+  /** rAFでtrailing throttleしながら最新のscrollTopを保存 */
+  const handleScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      if (!savedScrollTopRef) return;
+      const scrollTop = e.currentTarget.scrollTop;
+      if (rafIdRef.current != null) cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = requestAnimationFrame(() => {
+        savedScrollTopRef.current = scrollTop;
+        rafIdRef.current = null;
+      });
+    },
+    [savedScrollTopRef],
+  );
 
   const handleCapture = useCallback(async (id: string, dataUrl: string) => {
     savePreview(id, dataUrl);
@@ -129,7 +158,11 @@ export const POI = () => {
         }}
       />
 
-      <div className="min-h-10 grow basis-0 overflow-y-scroll">
+      <div
+        ref={setScrollContainer}
+        onScroll={handleScroll}
+        className="min-h-10 grow basis-0 overflow-y-scroll"
+      >
         <div
           className="grid gap-2 p-1 pr-2"
           style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))" }}

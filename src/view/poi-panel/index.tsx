@@ -9,7 +9,9 @@ import { MinimapDialog } from "@/view/minimap/minimap-dialog";
 import { PresetListDialog } from "@/view/preset-list/preset-list-dialog";
 import { useIsMobile } from "@/view/use-is-mobile";
 import { IconCirclePlus, IconLayoutSidebar, IconList, IconMap, IconX } from "@tabler/icons-react";
+import { useRef } from "react";
 import { POIPanelMobile } from "./mobile";
+import { POIScrollProvider } from "./poi-scroll-context";
 import { POI } from "../right-sidebar/poi";
 import { POICardPreview } from "../right-sidebar/poi-card-preview";
 import { POIHistories } from "../right-sidebar/poi-histories";
@@ -150,33 +152,43 @@ export const POIPanel = () => {
   const isMobile = useIsMobile();
   const poiPanelOpen = useStoreValue("poiPanelOpen");
   const { poiPanelWidth } = usePanelLayout();
+  // デスクトップ/モバイル切り替え時もスクロール位置を共有するため、ここで保持する
+  const savedScrollTopRef = useRef(0);
 
   if (isMobile) {
-    return <POIPanelMobile />;
+    return (
+      <POIScrollProvider value={savedScrollTopRef}>
+        <POIPanelMobile />
+      </POIScrollProvider>
+    );
   }
 
   return (
-    <div
-      style={{
-        width: `${poiPanelWidth}px`,
-        transform: poiPanelOpen
-          ? "translateX(0)"
-          : `translateX(calc(100% - ${COLLAPSED_STRIP_WIDTH}px))`,
-      }}
-      className={`fixed top-0 right-0 z-90 flex h-full flex-col border-l border-[#2a2a3a] transition-transform duration-300 ${
-        poiPanelOpen ? "bg-[#161620]/97 shadow-[-4px_0_16px_rgba(0,0,0,0.5)] backdrop-blur-sm" : ""
-      }`}
-    >
-      {poiPanelOpen ? (
-        <>
-          <POIPanelHeader />
-          <div className="flex min-h-0 grow flex-col overflow-y-auto px-2 pt-2">
-            <PanelContent />
-          </div>
-        </>
-      ) : (
-        <CollapsedStrip />
-      )}
-    </div>
+    <POIScrollProvider value={savedScrollTopRef}>
+      <div
+        style={{
+          width: `${poiPanelWidth}px`,
+          transform: poiPanelOpen
+            ? "translateX(0)"
+            : `translateX(calc(100% - ${COLLAPSED_STRIP_WIDTH}px))`,
+        }}
+        className={`fixed top-0 right-0 z-90 flex h-full flex-col border-l border-[#2a2a3a] transition-transform duration-300 ${
+          poiPanelOpen
+            ? "bg-[#161620]/97 shadow-[-4px_0_16px_rgba(0,0,0,0.5)] backdrop-blur-sm"
+            : ""
+        }`}
+      >
+        {poiPanelOpen ? (
+          <>
+            <POIPanelHeader />
+            <div className="flex min-h-0 grow flex-col overflow-y-auto px-2 pt-2">
+              <PanelContent />
+            </div>
+          </>
+        ) : (
+          <CollapsedStrip />
+        )}
+      </div>
+    </POIScrollProvider>
   );
 };
