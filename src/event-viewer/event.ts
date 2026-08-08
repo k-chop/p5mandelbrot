@@ -20,9 +20,7 @@ export type WorkerEvent = EventBase & {
   );
 
 // Renderer Event ==================================================
-export type RendererEvent = EventBase & {
-  /* common type */
-} & (
+export type RendererEvent = EventBase & {/* common type */} & (
     | {
         type: "iterationBufferProcessing";
         resolution: number; // 現状は一度に処理されるiterationBufferの解像度は同一になっているためeventにつき1つで良い
@@ -37,9 +35,11 @@ export type RendererEvent = EventBase & {
   );
 
 // Job Event ==================================================
-export type JobEvent = EventBase & {
-  /* common type */
-} & { type: "jobCountChanged"; running: number; waiting: number };
+export type JobEvent = EventBase & {/* common type */} & {
+  type: "jobCountChanged";
+  running: number;
+  waiting: number;
+};
 
 // イベント定義ここまで =======================================
 
