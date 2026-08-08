@@ -1,16 +1,16 @@
-import { changePaletteFromPresets, cycleCurrentPaletteOffset, setPalette } from "@/camera/palette";
-import type { InterestingPoint } from "@/interesting-points/find-interesting-points";
+import { changePaletteFromPresets, cycleCurrentPaletteOffset, setPalette } from "../camera/palette";
+import type { InterestingPoint } from "../interesting-points/find-interesting-points";
 import {
   cancelInterestingPointsComputation,
   computeInterestingPointsAsync,
-} from "@/interesting-points/interesting-points-worker-facade";
+} from "../interesting-points/interesting-points-worker-facade";
 import {
   consolidateIterationCache,
   getIterationCache,
   getIterationTimeAt,
-} from "@/iteration-buffer/iteration-buffer";
-import { startCalculation } from "@/mandelbrot";
-import { calcAutoN } from "@/mandelbrot-state/auto-iteration";
+} from "../iteration-buffer/iteration-buffer";
+import { startCalculation } from "../mandelbrot";
+import { calcAutoN } from "../mandelbrot-state/auto-iteration";
 import {
   getAutoIterationEnabled,
   getCurrentParams,
@@ -26,9 +26,9 @@ import {
   setOffsetParams,
   setScaleParams,
   toggleAutoIteration,
-} from "@/mandelbrot-state/mandelbrot-state";
-import { addCurrentLocationToPOIHistory, initializePOIHistory } from "@/poi-history/poi-history";
-import { initializePresetPOIList } from "@/preset-poi/preset-poi";
+} from "../mandelbrot-state/mandelbrot-state";
+import { addCurrentLocationToPOIHistory, initializePOIHistory } from "../poi-history/poi-history";
+import { initializePresetPOIList } from "../preset-poi/preset-poi";
 import {
   getRenderer,
   initializeCanvasSize,
@@ -38,22 +38,22 @@ import {
   setRenderer,
   setWebGPUInitialized,
   setWebGPUInitializing,
-} from "@/rendering/common";
+} from "../rendering/common";
 import {
   drawUICrossHair,
   drawUICurrentParams,
   drawUIInterestingPoints,
   drawUIIterationAtCursor,
   drawUIScaleRate,
-} from "@/rendering/p5-renderer";
-import { getCanvasSize, initRenderer, renderToCanvas, resizeCanvas } from "@/rendering/renderer";
-import { getStore, updateStore } from "@/store/store";
-import type { MandelbrotParams } from "@/types";
-import { extractMandelbrotParams } from "@/utils/mandelbrot-url-params";
-import { getNHitRatio, getProgressData } from "@/worker-pool/worker-pool";
+} from "../rendering/p5-renderer";
+import { getCanvasSize, initRenderer, renderToCanvas, resizeCanvas } from "../rendering/renderer";
+import { getStore, updateStore } from "../store/store";
+import type { MandelbrotParams } from "../types";
+import { extractMandelbrotParams } from "../utils/mandelbrot-url-params";
+import { getNHitRatio, getProgressData } from "../worker-pool/worker-pool";
 import BigNumber from "bignumber.js";
 import type p5 from "p5";
-import { isMobileViewport } from "@/view/use-is-mobile";
+import { isMobileViewport } from "../view/use-is-mobile";
 import { disableCanvasTouchAction } from "./touch-handler";
 import { isInside } from "./utils";
 

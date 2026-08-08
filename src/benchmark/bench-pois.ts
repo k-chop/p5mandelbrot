@@ -1,4 +1,4 @@
-import type { MandelbrotWorkerType } from "@/types";
+import type { MandelbrotWorkerType } from "../types";
 
 /**
  * ベンチマーク用の固定POI定義

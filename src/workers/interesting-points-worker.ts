@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 declare const self: DedicatedWorkerGlobalScope;
 
-import { findInterestingPoints } from "@/interesting-points/find-interesting-points";
+import { findInterestingPoints } from "../interesting-points/find-interesting-points";
 import type {
   InterestingPointsComputeRequest,
   InterestingPointsComputeResponse,

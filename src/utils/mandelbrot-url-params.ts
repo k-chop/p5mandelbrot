@@ -1,10 +1,10 @@
-import { getCurrentPalette } from "@/camera/palette";
-import { deserializePalette } from "@/color";
-import type { Palette } from "@/color/model";
-import { calcCoordPrecision } from "@/math/coord-precision";
-import { safeParseInt } from "@/math/util";
-import type { MandelbrotWorkerType } from "@/types";
-import { mandelbrotWorkerTypes } from "@/types";
+import { getCurrentPalette } from "../camera/palette";
+import { deserializePalette } from "../color";
+import type { Palette } from "../color/model";
+import { calcCoordPrecision } from "../math/coord-precision";
+import { safeParseInt } from "../math/util";
+import type { MandelbrotWorkerType } from "../types";
+import { mandelbrotWorkerTypes } from "../types";
 import BigNumber from "bignumber.js";
 import { decodeNumber, encodeNumber } from "./number-encoding";
 import { decodePalette, encodePalette, PERTURBATION_THRESHOLD } from "./palette-encoding";

@@ -1,7 +1,7 @@
-import { useT } from "@/i18n/context";
-import { setManualN } from "@/mandelbrot-state/mandelbrot-state";
-import { useStoreValue } from "@/store/store";
-import { useIsMobile } from "@/view/use-is-mobile";
+import { useT } from "../../i18n/context";
+import { setManualN } from "../../mandelbrot-state/mandelbrot-state";
+import { useStoreValue } from "../../store/store";
+import { useIsMobile } from "../use-is-mobile";
 import clsx from "clsx";
 import { TriangleAlert } from "lucide-react";
 import { makeParamsHash, recordBump, shouldShowBumpPill } from "./bump-state";

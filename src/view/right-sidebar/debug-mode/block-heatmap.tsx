@@ -1,8 +1,8 @@
 import type {
   BlockDebugInfo,
   InterestingPoint,
-} from "@/interesting-points/find-interesting-points";
-import { getCanvasSize } from "@/rendering/renderer";
+} from "../../../interesting-points/find-interesting-points";
+import { getCanvasSize } from "../../../rendering/renderer";
 import { type MouseEvent, memo, useCallback, useEffect, useRef, useState } from "react";
 
 const MINIMAP_WIDTH = 600;

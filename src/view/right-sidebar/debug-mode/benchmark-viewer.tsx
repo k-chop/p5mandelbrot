@@ -1,23 +1,23 @@
-import { BENCH_POIS } from "@/benchmark/bench-pois";
+import { BENCH_POIS } from "../../../benchmark/bench-pois";
 import {
   formatAllResultsAsMarkdown,
   METRIC_KEYS,
   runAllBenchmarks,
   type BenchmarkAllProgress,
   type BenchmarkResult,
-} from "@/benchmark/benchmark-runner";
-import type { Stats } from "@/benchmark/benchmark-stats";
-import { Button } from "@/shadcn/components/ui/button";
-import { Checkbox } from "@/shadcn/components/ui/check";
+} from "../../../benchmark/benchmark-runner";
+import type { Stats } from "../../../benchmark/benchmark-stats";
+import { Button } from "../../../shadcn/components/ui/button";
+import { Checkbox } from "../../../shadcn/components/ui/check";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/shadcn/components/ui/dialog";
-import { Label } from "@/shadcn/components/ui/label";
-import { Slider } from "@/shadcn/components/ui/slider";
+} from "../../../shadcn/components/ui/dialog";
+import { Label } from "../../../shadcn/components/ui/label";
+import { Slider } from "../../../shadcn/components/ui/slider";
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/shadcn/components/ui/table";
+} from "../../../shadcn/components/ui/table";
 import { IconCircleCheck, IconCopy } from "@tabler/icons-react";
 import { VisuallyHidden } from "radix-ui";
 import { useMemo, useState } from "react";

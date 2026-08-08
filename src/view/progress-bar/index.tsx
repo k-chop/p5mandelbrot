@@ -1,6 +1,6 @@
-import { useT } from "@/i18n/context";
-import { useStoreValue } from "@/store/store";
-import { useIsMobile } from "@/view/use-is-mobile";
+import { useT } from "../../i18n/context";
+import { useStoreValue } from "../../store/store";
+import { useIsMobile } from "../use-is-mobile";
 import { BumpPill } from "../bump-pill";
 import { BUMP_DISPLAY_THRESHOLD } from "../bump-pill/bump-state";
 import { Footer } from "../footer";

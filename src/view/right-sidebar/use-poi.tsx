@@ -1,15 +1,15 @@
-import { getCurrentPalette, setSerializedPalette } from "@/camera/palette";
-import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
-import { cloneParams, setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
-import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
-import { deletePreview, savePreview } from "@/store/preview-store";
-import { R_PRECISION, calcCoordPrecision } from "@/math/coord-precision";
+import { getCurrentPalette, setSerializedPalette } from "../../camera/palette";
+import { clearIterationCache } from "../../iteration-buffer/iteration-buffer";
+import { cloneParams, setCurrentParams, setManualN } from "../../mandelbrot-state/mandelbrot-state";
+import { requestCanvasImage } from "../../p5-adapter/p5-adapter";
+import { deletePreview, savePreview } from "../../store/preview-store";
+import { R_PRECISION, calcCoordPrecision } from "../../math/coord-precision";
 import BigNumber from "bignumber.js";
 import { useCallback } from "react";
 import { updateStore, useStoreValue } from "../../store/store";
 import { createNewPOIData, writePOIListToStorage } from "../../store/sync-storage/poi-list";
 import type { MandelbrotParams, POIData } from "../../types";
-import { POI_THUMBNAIL_SIZE } from "@/constants";
+import { POI_THUMBNAIL_SIZE } from "../../constants";
 
 export const usePOI = () => {
   const poiList: POIData[] = useStoreValue("poi");

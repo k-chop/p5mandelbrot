@@ -1,4 +1,4 @@
-import { getStore } from "@/store/store";
+import { getStore } from "../store/store";
 import type p5 from "p5";
 import {
   changeDraggingState,

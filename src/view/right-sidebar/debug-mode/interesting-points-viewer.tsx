@@ -1,22 +1,22 @@
-import { SimpleTooltip } from "@/components/simple-tooltip";
-import { useT } from "@/i18n/context";
-import { exportEvalData } from "@/interesting-points/export-eval-data";
-import type { BlockDebugInfo } from "@/interesting-points/find-interesting-points";
-import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
-import { getCanvasSize } from "@/rendering/renderer";
-import { Button } from "@/shadcn/components/ui/button";
-import { Label } from "@/shadcn/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
+import { SimpleTooltip } from "../../../components/simple-tooltip";
+import { useT } from "../../../i18n/context";
+import { exportEvalData } from "../../../interesting-points/export-eval-data";
+import type { BlockDebugInfo } from "../../../interesting-points/find-interesting-points";
+import { requestCanvasImage } from "../../../p5-adapter/p5-adapter";
+import { getCanvasSize } from "../../../rendering/renderer";
+import { Button } from "../../../shadcn/components/ui/button";
+import { Label } from "../../../shadcn/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "../../../shadcn/components/ui/radio-group";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shadcn/components/ui/select";
-import { Switch } from "@/shadcn/components/ui/switch";
+} from "../../../shadcn/components/ui/select";
+import { Switch } from "../../../shadcn/components/ui/switch";
 import { toast } from "sonner";
-import { updateStoreWith, useStoreValue } from "@/store/store";
+import { updateStoreWith, useStoreValue } from "../../../store/store";
 import { useMemo, useState } from "react";
 import { BlockHeatmap } from "./block-heatmap";
 import { PointDetailPanel } from "./point-detail-panel";

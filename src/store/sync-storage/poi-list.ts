@@ -1,4 +1,4 @@
-import type { Palette } from "@/color";
+import type { Palette } from "../../color";
 import BigNumber from "bignumber.js";
 import type { MandelbrotParams, POIData } from "../../types";
 

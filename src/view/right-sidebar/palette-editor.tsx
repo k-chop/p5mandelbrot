@@ -3,20 +3,20 @@ import {
   setCurrentPaletteLength,
   setCurrentPaletteOffset,
   setPalette,
-} from "@/camera/palette";
-import { ValueSlider } from "@/components/slider-wrapper";
+} from "../../camera/palette";
+import { ValueSlider } from "../../components/slider-wrapper";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shadcn/components/ui/select";
-import { Separator } from "@/shadcn/components/ui/separator";
-import { Slider } from "@/shadcn/components/ui/slider";
-import { useT } from "@/i18n/context";
-import { getStore, updateStore, useStoreValue } from "@/store/store";
-import { LRUCache } from "@/utils/lru-cache";
+} from "../../shadcn/components/ui/select";
+import { Separator } from "../../shadcn/components/ui/separator";
+import { Slider } from "../../shadcn/components/ui/slider";
+import { useT } from "../../i18n/context";
+import { getStore, updateStore, useStoreValue } from "../../store/store";
+import { LRUCache } from "../../utils/lru-cache";
 import { useEffect, useRef, useState } from "react";
 
 interface PalettePreviewProps {

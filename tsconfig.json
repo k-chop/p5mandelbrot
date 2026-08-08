@@ -13,10 +13,7 @@
     "noEmit": true,
     "noImplicitReturns": true,
     "skipLibCheck": true,
-    "jsx": "react-jsx",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "jsx": "react-jsx"
   },
   "include": ["src"],
   "exclude": ["src/server"],

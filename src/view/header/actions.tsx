@@ -1,19 +1,19 @@
-import { getCurrentPalette, setSerializedPalette } from "@/camera/palette";
-import { SimpleTooltip } from "@/components/simple-tooltip";
-import { type TFunction, useT } from "@/i18n/context";
-import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
+import { getCurrentPalette, setSerializedPalette } from "../../camera/palette";
+import { SimpleTooltip } from "../../components/simple-tooltip";
+import { type TFunction, useT } from "../../i18n/context";
+import { clearIterationCache } from "../../iteration-buffer/iteration-buffer";
 import {
   getCurrentParams,
   setCurrentParams,
   setManualN,
-} from "@/mandelbrot-state/mandelbrot-state";
-import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
-import { getRandomPresetPOI } from "@/preset-poi/preset-poi";
-import { getCanvasSize } from "@/rendering/renderer";
-import { Button } from "@/shadcn/components/ui/button";
+} from "../../mandelbrot-state/mandelbrot-state";
+import { requestCanvasImage } from "../../p5-adapter/p5-adapter";
+import { getRandomPresetPOI } from "../../preset-poi/preset-poi";
+import { getCanvasSize } from "../../rendering/renderer";
+import { Button } from "../../shadcn/components/ui/button";
 import { toast } from "sonner";
-import { buildShareData, type ShareData } from "@/utils/mandelbrot-url-params";
-import { SupersamplingPopover } from "@/view/supersampling-popover";
+import { buildShareData, type ShareData } from "../../utils/mandelbrot-url-params";
+import { SupersamplingPopover } from "../supersampling-popover";
 import { IconDice, IconDownload, IconShare } from "@tabler/icons-react";
 import BigNumber from "bignumber.js";
 import { useEffect, useState } from "react";

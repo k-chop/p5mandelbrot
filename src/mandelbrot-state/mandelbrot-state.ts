@@ -1,8 +1,8 @@
-import { getCanvasSize } from "@/rendering/renderer";
-import { getStore, updateStore } from "@/store/store";
-import type { MandelbrotParams, MandelbrotWorkerType, OffsetParams } from "@/types";
-import { PERTURBATION_THRESHOLD } from "@/utils/palette-encoding";
-import { prepareWorkerPool } from "@/worker-pool/pool-instance";
+import { getCanvasSize } from "../rendering/renderer";
+import { getStore, updateStore } from "../store/store";
+import type { MandelbrotParams, MandelbrotWorkerType, OffsetParams } from "../types";
+import { PERTURBATION_THRESHOLD } from "../utils/palette-encoding";
+import { prepareWorkerPool } from "../worker-pool/pool-instance";
 import BigNumber from "bignumber.js";
 
 /**

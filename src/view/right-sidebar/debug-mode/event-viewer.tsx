@@ -7,9 +7,9 @@ import {
   type JobEvent,
   type RendererEvent,
   type WorkerEvent,
-} from "@/event-viewer/event";
-import type { AbsoluteTime } from "@/event-viewer/time";
-import { Switch } from "@/shadcn/components/ui/switch";
+} from "../../../event-viewer/event";
+import type { AbsoluteTime } from "../../../event-viewer/time";
+import { Switch } from "../../../shadcn/components/ui/switch";
 import { useState, useSyncExternalStore } from "react";
 
 type EventType = "worker" | "renderer" | "job";

@@ -1,7 +1,7 @@
-import { setSerializedPalette } from "@/camera/palette";
-import { useT } from "@/i18n/context";
-import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
-import { setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
+import { setSerializedPalette } from "../../camera/palette";
+import { useT } from "../../i18n/context";
+import { clearIterationCache } from "../../iteration-buffer/iteration-buffer";
+import { setCurrentParams, setManualN } from "../../mandelbrot-state/mandelbrot-state";
 import {
   type PresetPOIRaw,
   getPresetDisplayLabel,
@@ -10,22 +10,19 @@ import {
   isGCSMode,
   setGCSMode,
   usePresetPOIList,
-} from "@/preset-poi/preset-poi";
-import { Alert, AlertDescription } from "@/shadcn/components/ui/alert";
-import { Button } from "@/shadcn/components/ui/button";
+} from "../../preset-poi/preset-poi";
+import { Alert, AlertDescription } from "../../shadcn/components/ui/alert";
+import { Button } from "../../shadcn/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/shadcn/components/ui/dialog";
-import { updateStore } from "@/store/store";
-import { isDevMode } from "@/utils/dev-mode";
-import {
-  type ThumbnailTarget,
-  useThumbnailBatch,
-} from "@/view/thumbnail-batch/use-thumbnail-batch";
+} from "../../shadcn/components/ui/dialog";
+import { updateStore } from "../../store/store";
+import { isDevMode } from "../../utils/dev-mode";
+import { type ThumbnailTarget, useThumbnailBatch } from "../thumbnail-batch/use-thumbnail-batch";
 import { IconCloud, IconFolder, IconPhoto, IconRefresh, IconTrash } from "@tabler/icons-react";
 import BigNumber from "bignumber.js";
 import { VisuallyHidden } from "radix-ui";

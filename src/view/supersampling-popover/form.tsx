@@ -1,16 +1,16 @@
-import { useT } from "@/i18n/context";
-import { setCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { Button } from "@/shadcn/components/ui/button";
-import { Input } from "@/shadcn/components/ui/input";
-import { Label } from "@/shadcn/components/ui/label";
+import { useT } from "../../i18n/context";
+import { setCurrentParams } from "../../mandelbrot-state/mandelbrot-state";
+import { Button } from "../../shadcn/components/ui/button";
+import { Input } from "../../shadcn/components/ui/input";
+import { Label } from "../../shadcn/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shadcn/components/ui/select";
-import { updateStore, useStoreValue } from "@/store/store";
+} from "../../shadcn/components/ui/select";
+import { updateStore, useStoreValue } from "../../store/store";
 import { Expand } from "lucide-react";
 import { useState } from "react";
 

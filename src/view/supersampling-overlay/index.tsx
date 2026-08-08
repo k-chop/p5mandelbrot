@@ -1,9 +1,9 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
-import { useT } from "@/i18n/context";
-import { getPrevBatchId } from "@/mandelbrot-state/mandelbrot-state";
-import { Button } from "@/shadcn/components/ui/button";
-import { useStoreValue } from "@/store/store";
-import { cancelBatch } from "@/worker-pool/worker-pool";
+import { LoadingSpinner } from "../../components/loading-spinner";
+import { useT } from "../../i18n/context";
+import { getPrevBatchId } from "../../mandelbrot-state/mandelbrot-state";
+import { Button } from "../../shadcn/components/ui/button";
+import { useStoreValue } from "../../store/store";
+import { cancelBatch } from "../../worker-pool/worker-pool";
 import { Download, Expand, Shrink, X } from "lucide-react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { ProgressBarInline } from "../progress-bar";

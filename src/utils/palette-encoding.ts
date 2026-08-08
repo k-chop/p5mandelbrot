@@ -1,5 +1,5 @@
-import { deserializePalette } from "@/color";
-import type { Palette } from "@/color/model";
+import { deserializePalette } from "../color";
+import type { Palette } from "../color/model";
 
 export const PERTURBATION_THRESHOLD = 3.5e-14;
 

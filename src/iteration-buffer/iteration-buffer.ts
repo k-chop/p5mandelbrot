@@ -1,6 +1,6 @@
-import { bufferLocalLogicalIndex } from "@/rendering/common";
-import type { Resolution } from "@/rendering/p5-renderer";
-import { getCanvasSize } from "@/rendering/renderer";
+import { bufferLocalLogicalIndex } from "../rendering/common";
+import type { Resolution } from "../rendering/p5-renderer";
+import { getCanvasSize } from "../rendering/renderer";
 import { debounce } from "es-toolkit";
 import type { Rect } from "../math/rect";
 import type { IterationBuffer } from "../types";

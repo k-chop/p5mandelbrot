@@ -1,14 +1,14 @@
-import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
-import { startCalculation } from "@/mandelbrot";
+import { clearIterationCache } from "../iteration-buffer/iteration-buffer";
+import { startCalculation } from "../mandelbrot";
 import {
   getCurrentParams,
   getPrevBatchId,
   markAsRenderedWithCurrentParams,
   setCurrentParams,
-} from "@/mandelbrot-state/mandelbrot-state";
-import type { MandelbrotParams } from "@/types";
-import { getBatchContext } from "@/worker-pool/worker-pool";
-import { invalidateRefOrbitCache } from "@/worker-pool/ref-orbit-cache";
+} from "../mandelbrot-state/mandelbrot-state";
+import type { MandelbrotParams } from "../types";
+import { getBatchContext } from "../worker-pool/worker-pool";
+import { invalidateRefOrbitCache } from "../worker-pool/ref-orbit-cache";
 import BigNumber from "bignumber.js";
 import type { BenchPOI } from "./bench-pois";
 import { computeStats, type Stats } from "./benchmark-stats";

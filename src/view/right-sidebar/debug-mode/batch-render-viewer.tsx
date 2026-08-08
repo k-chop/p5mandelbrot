@@ -1,10 +1,10 @@
 import type {
   BatchRenderEntry,
   WorkerRenderArea,
-} from "@/batch-render-history/batch-render-history";
-import { useBatchRenderHistory } from "@/batch-render-history/use-batch-render-history";
-import type { Rect } from "@/math/rect";
-import { getCanvasSize } from "@/rendering/renderer";
+} from "../../../batch-render-history/batch-render-history";
+import { useBatchRenderHistory } from "../../../batch-render-history/use-batch-render-history";
+import type { Rect } from "../../../math/rect";
+import { getCanvasSize } from "../../../rendering/renderer";
 import { useState } from "react";
 
 const MINIMAP_WIDTH = 300;

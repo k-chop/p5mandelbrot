@@ -1,4 +1,4 @@
-import type { Rect } from "@/math/rect";
+import type { Rect } from "../math/rect";
 
 export interface WorkerRenderArea {
   workerId: string;

@@ -1,19 +1,19 @@
-import { useT } from "@/i18n/context";
-import { Button } from "@/shadcn/components/ui/button";
+import { useT } from "../../i18n/context";
+import { Button } from "../../shadcn/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/shadcn/components/ui/dialog";
-import { Textarea } from "@/shadcn/components/ui/textarea";
+} from "../../shadcn/components/ui/dialog";
+import { Textarea } from "../../shadcn/components/ui/textarea";
 import {
   deserializePOIListFromText,
   mergePOIList,
   writePOIListToStorage,
-} from "@/store/sync-storage/poi-list";
-import { updateStore, useStoreValue } from "@/store/store";
+} from "../../store/sync-storage/poi-list";
+import { updateStore, useStoreValue } from "../../store/store";
 import { IconDownload } from "@tabler/icons-react";
 import { VisuallyHidden } from "radix-ui";
 import { useMemo, useState } from "react";

@@ -1,10 +1,7 @@
-import type {
-  BlockDebugInfo,
-  InterestingPointsDebugData,
-} from "@/interesting-points/find-interesting-points";
-import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { getCanvasSize } from "@/rendering/renderer";
-import { getStore } from "@/store/store";
+import type { BlockDebugInfo, InterestingPointsDebugData } from "./find-interesting-points";
+import { getCurrentParams } from "../mandelbrot-state/mandelbrot-state";
+import { getCanvasSize } from "../rendering/renderer";
+import { getStore } from "../store/store";
 
 /** scoreStatsの型 */
 export interface ScoreStats {

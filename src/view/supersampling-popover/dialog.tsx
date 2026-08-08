@@ -1,11 +1,11 @@
-import { useT } from "@/i18n/context";
+import { useT } from "../../i18n/context";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/shadcn/components/ui/dialog";
+} from "../../shadcn/components/ui/dialog";
 import { VisuallyHidden } from "radix-ui";
 import { SupersamplingForm } from "./form";
 

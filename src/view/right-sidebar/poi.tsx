@@ -1,15 +1,12 @@
-import { useT } from "@/i18n/context";
-import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { Alert, AlertDescription } from "@/shadcn/components/ui/alert";
-import { Button } from "@/shadcn/components/ui/button";
-import { loadPreview, savePreview } from "@/store/preview-store";
-import type { POIData } from "@/types";
-import { useModalState } from "@/view/modal/use-modal-state";
-import { usePOIScrollRef, useScrollSaver } from "@/view/poi-panel/poi-scroll-context";
-import {
-  type ThumbnailTarget,
-  useThumbnailBatch,
-} from "@/view/thumbnail-batch/use-thumbnail-batch";
+import { useT } from "../../i18n/context";
+import { cloneCurrentParams } from "../../mandelbrot-state/mandelbrot-state";
+import { Alert, AlertDescription } from "../../shadcn/components/ui/alert";
+import { Button } from "../../shadcn/components/ui/button";
+import { loadPreview, savePreview } from "../../store/preview-store";
+import type { POIData } from "../../types";
+import { useModalState } from "../modal/use-modal-state";
+import { usePOIScrollRef, useScrollSaver } from "../poi-panel/poi-scroll-context";
+import { type ThumbnailTarget, useThumbnailBatch } from "../thumbnail-batch/use-thumbnail-batch";
 import { IconCirclePlus, IconDownload, IconPhoto, IconUpload } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";

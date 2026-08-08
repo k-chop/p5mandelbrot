@@ -1,6 +1,6 @@
-import { useT } from "@/i18n/context";
-import { Button } from "@/shadcn/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shadcn/components/ui/popover";
+import { useT } from "../../i18n/context";
+import { Button } from "../../shadcn/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "../../shadcn/components/ui/popover";
 import { IconPalette } from "@tabler/icons-react";
 import { PaletteEditor } from "../right-sidebar/palette-editor";
 

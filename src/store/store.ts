@@ -1,6 +1,6 @@
-import type { Locale } from "@/i18n/types";
-import type { InterestingPointsDebugData } from "@/interesting-points/find-interesting-points";
-import type { POIData, ResultSpans } from "@/types";
+import type { Locale } from "../i18n/types";
+import type { InterestingPointsDebugData } from "../interesting-points/find-interesting-points";
+import type { POIData, ResultSpans } from "../types";
 import BigNumber from "bignumber.js";
 import { eventmit } from "eventmit";
 import { useEffect, useState } from "react";
