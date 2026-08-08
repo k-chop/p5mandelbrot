@@ -1,4 +1,4 @@
-import { Slider } from "@/shadcn/components/ui/slider";
+import { Slider } from "../shadcn/components/ui/slider";
 import React from "react";
 
 type Mark = { valueForSlider: number; value: string };

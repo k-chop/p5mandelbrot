@@ -1,5 +1,5 @@
-import { updateStore, useStoreValue } from "@/store/store";
-import { useIsMobile } from "@/view/use-is-mobile";
+import { updateStore, useStoreValue } from "../../store/store";
+import { useIsMobile } from "../use-is-mobile";
 import { IconX } from "@tabler/icons-react";
 import { DebugMode } from "../right-sidebar/debug-mode/debug-mode";
 import { usePanelLayout } from "../use-panel-layout";

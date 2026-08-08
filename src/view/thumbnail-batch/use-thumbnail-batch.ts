@@ -1,10 +1,10 @@
-import { setSerializedPalette } from "@/camera/palette";
-import { POI_THUMBNAIL_SIZE } from "@/constants";
-import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
-import { setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
-import { requestCanvasImage } from "@/p5-adapter/p5-adapter";
-import { useStoreValue } from "@/store/store";
-import type { MandelbrotWorkerType } from "@/types";
+import { setSerializedPalette } from "../../camera/palette";
+import { POI_THUMBNAIL_SIZE } from "../../constants";
+import { clearIterationCache } from "../../iteration-buffer/iteration-buffer";
+import { setCurrentParams, setManualN } from "../../mandelbrot-state/mandelbrot-state";
+import { requestCanvasImage } from "../../p5-adapter/p5-adapter";
+import { useStoreValue } from "../../store/store";
+import type { MandelbrotWorkerType } from "../../types";
 import BigNumber from "bignumber.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 

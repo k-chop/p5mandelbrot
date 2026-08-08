@@ -1,7 +1,7 @@
 import { getStore } from "../store";
 
-import type { Locale } from "@/i18n/types";
-import type { RendererType } from "@/rendering/common";
+import type { Locale } from "../../i18n/types";
+import type { RendererType } from "../../rendering/common";
 
 export type Settings = {
   locale: Locale;

@@ -1,11 +1,11 @@
-import { useT } from "@/i18n/context";
-import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
+import { useT } from "../../i18n/context";
+import { clearIterationCache } from "../../iteration-buffer/iteration-buffer";
 import {
   getCurrentParams,
   setCurrentParams,
   setManualN,
-} from "@/mandelbrot-state/mandelbrot-state";
-import { Button } from "@/shadcn/components/ui/button";
+} from "../../mandelbrot-state/mandelbrot-state";
+import { Button } from "../../shadcn/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,10 +13,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shadcn/components/ui/dialog";
-import { Input } from "@/shadcn/components/ui/input";
-import { Label } from "@/shadcn/components/ui/label";
-import { Textarea } from "@/shadcn/components/ui/textarea";
+} from "../../shadcn/components/ui/dialog";
+import { Input } from "../../shadcn/components/ui/input";
+import { Label } from "../../shadcn/components/ui/label";
+import { Textarea } from "../../shadcn/components/ui/textarea";
 import BigNumber from "bignumber.js";
 import { VisuallyHidden } from "radix-ui";
 import { useState } from "react";

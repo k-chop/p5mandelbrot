@@ -1,4 +1,4 @@
-import { updateStore, useStoreValue } from "@/store/store";
+import { updateStore, useStoreValue } from "../store/store";
 import { createContext, use, useEffect, useState } from "react";
 import { useIsWideViewport } from "./debug-panel/use-is-wide-viewport";
 import { COLLAPSED_STRIP_WIDTH } from "./poi-panel";

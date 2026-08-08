@@ -4,9 +4,9 @@ import {
   deserializePalette,
   othersPalettes,
   type Palette,
-} from "@/color";
-import { updatePaletteData } from "@/rendering/renderer";
-import { getStore, updateStore } from "@/store/store";
+} from "../color";
+import { updatePaletteData } from "../rendering/renderer";
+import { getStore, updateStore } from "../store/store";
 
 // 描画時に使うpaletteの状態に関するファイル
 

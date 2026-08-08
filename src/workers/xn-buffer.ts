@@ -1,4 +1,4 @@
-import type { Complex } from "@/math/complex";
+import type { Complex } from "../math/complex";
 
 /**
  * [re0, im0, re1, im1, ...] レイアウトのFloat64ArrayをSharedArrayBufferに丸ごとコピーする

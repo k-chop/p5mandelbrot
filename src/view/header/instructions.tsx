@@ -1,5 +1,5 @@
-import { Kbd } from "@/components/kbd";
-import { useT } from "@/i18n/context";
+import { Kbd } from "../../components/kbd";
+import { useT } from "../../i18n/context";
 
 export const Instructions = () => {
   const t = useT();

@@ -1,11 +1,11 @@
-import { getCurrentPalette, setPalette } from "@/camera/palette";
-import type { Palette } from "@/color";
-import { addTraceEvent } from "@/event-viewer/event";
-import { getIterationCache } from "@/iteration-buffer/iteration-buffer";
-import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "@/rendering/common";
-import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import type { Rect } from "@/math/rect";
-import type { IterationBuffer } from "@/types";
+import { getCurrentPalette, setPalette } from "../camera/palette";
+import type { Palette } from "../color";
+import { addTraceEvent } from "../event-viewer/event";
+import { getIterationCache } from "../iteration-buffer/iteration-buffer";
+import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "./common";
+import { getCurrentParams } from "../mandelbrot-state/mandelbrot-state";
+import type { Rect } from "../math/rect";
+import type { IterationBuffer } from "../types";
 import tgpu, {
   type StorageFlag,
   type TgpuBindGroup,

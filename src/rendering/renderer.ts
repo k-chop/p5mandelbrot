@@ -1,6 +1,6 @@
-import type { Palette } from "@/color";
-import type { Rect } from "@/math/rect";
-import type { IterationBuffer } from "@/types";
+import type { Palette } from "../color";
+import type { Rect } from "../math/rect";
+import type { IterationBuffer } from "../types";
 import type p5 from "p5";
 import { getRenderer } from "./common";
 

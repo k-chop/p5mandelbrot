@@ -1,4 +1,4 @@
-import { addTraceEvent } from "@/event-viewer/event";
+import { addTraceEvent } from "../../event-viewer/event";
 import { getWorkerId } from "../pool-instance";
 import { setRefOrbitCache } from "../ref-orbit-cache";
 import { completeJob } from "../task-queue";

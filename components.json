@@ -8,11 +8,5 @@
     "css": "src/style.css",
     "baseColor": "slate",
     "cssVariables": true
-  },
-  "aliases": {
-    "components": "@/shadcn/components",
-    "utils": "@/shadcn/utils",
-    "lib": "@/shadcn/lib",
-    "hooks": "@/shadcn/hooks"
   }
 }

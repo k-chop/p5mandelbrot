@@ -1,15 +1,15 @@
-import { forceReRender, getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
+import { forceReRender, getCurrentParams } from "../../../mandelbrot-state/mandelbrot-state";
 import {
   calcRequiredLimbs,
   clampLimbs,
   MAX_LIMBS,
   totalBitsFromLimbs,
-} from "@/math/calc-required-limbs";
-import { calcCoordPrecision } from "@/math/coord-precision";
-import { Slider } from "@/shadcn/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shadcn/components/ui/tabs";
-import { updateStore, useStoreValue } from "@/store/store";
-import { invalidateRefOrbitCache } from "@/worker-pool/ref-orbit-cache";
+} from "../../../math/calc-required-limbs";
+import { calcCoordPrecision } from "../../../math/coord-precision";
+import { Slider } from "../../../shadcn/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../shadcn/components/ui/tabs";
+import { updateStore, useStoreValue } from "../../../store/store";
+import { invalidateRefOrbitCache } from "../../../worker-pool/ref-orbit-cache";
 import { useEffect, useMemo, useState } from "react";
 import { BatchRenderViewer } from "./batch-render-viewer";
 import { BenchmarkViewer } from "./benchmark-viewer";

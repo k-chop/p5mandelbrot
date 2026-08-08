@@ -1,8 +1,8 @@
-import { useT } from "@/i18n/context";
+import { useT } from "../../../i18n/context";
 import type {
   BlockDebugInfo,
   InterestingPoint,
-} from "@/interesting-points/find-interesting-points";
+} from "../../../interesting-points/find-interesting-points";
 
 /**
  * 選択されたブロック/ポイントの詳細情報を表示するパネル

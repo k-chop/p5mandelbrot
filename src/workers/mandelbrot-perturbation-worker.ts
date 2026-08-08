@@ -1,12 +1,8 @@
 /// <reference lib="webworker" />
 
-import { generateLowResDiffSequence } from "@/math/low-res-diff-sequence";
-import {
-  BLATableView,
-  ITEM_BYTE_LENGTH,
-  SKIP_BLA_ENTRY_UNTIL_THIS_L,
-} from "@/workers/bla-table-item";
-import { ComplexArrayView } from "@/workers/xn-buffer";
+import { generateLowResDiffSequence } from "../math/low-res-diff-sequence";
+import { BLATableView, ITEM_BYTE_LENGTH, SKIP_BLA_ENTRY_UNTIL_THIS_L } from "./bla-table-item";
+import { ComplexArrayView } from "./xn-buffer";
 import BigNumber from "bignumber.js";
 import { mulIm, mulRe, nNorm } from "../math/complex";
 import type { IterationWorkerParams } from "../types";

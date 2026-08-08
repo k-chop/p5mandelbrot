@@ -5,9 +5,9 @@ import {
   SKIP_BLA_ENTRY_UNTIL_THIS_L,
   type BLATableItem,
   type BLATableView,
-} from "@/workers/bla-table-item";
-import type { ComplexArrayView } from "@/workers/xn-buffer";
-import { encodeFloat64AsXnBuffer } from "@/workers/xn-buffer";
+} from "./bla-table-item";
+import type { ComplexArrayView } from "./xn-buffer";
+import { encodeFloat64AsXnBuffer } from "./xn-buffer";
 import BigNumber from "bignumber.js";
 import wasmInit, { calculate as wasmCalculate } from "../../wasm-fp/pkg/apfp.js";
 import { calcRequiredLimbs, clampLimbs } from "../math/calc-required-limbs";

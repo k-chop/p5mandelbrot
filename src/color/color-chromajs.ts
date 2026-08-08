@@ -1,4 +1,4 @@
-import { safeParseInt } from "@/math/util";
+import { safeParseInt } from "../math/util";
 import chroma from "chroma-js";
 import { BasePalette } from "./color";
 import type { Palette, RGB } from "./model";

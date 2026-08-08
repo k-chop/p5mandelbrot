@@ -3,13 +3,13 @@ import {
   markAsRendered,
   markNeedsRerender,
   needsRerender,
-} from "@/camera/palette";
-import type { Palette } from "@/color";
-import { getIterationCache } from "@/iteration-buffer/iteration-buffer";
-import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "@/rendering/common";
-import { getCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { clamp } from "@/math/util";
-import { isMobileViewport } from "@/view/use-is-mobile";
+} from "../camera/palette";
+import type { Palette } from "../color";
+import { getIterationCache } from "../iteration-buffer/iteration-buffer";
+import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "./common";
+import { getCurrentParams } from "../mandelbrot-state/mandelbrot-state";
+import { clamp } from "../math/util";
+import { isMobileViewport } from "../view/use-is-mobile";
 import type p5 from "p5";
 import type { InterestingPoint } from "../interesting-points/find-interesting-points";
 import type { Rect } from "../math/rect";

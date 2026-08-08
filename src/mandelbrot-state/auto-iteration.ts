@@ -1,4 +1,4 @@
-import { getIterationCache, sampleIterationsInRegion } from "@/iteration-buffer/iteration-buffer";
+import { getIterationCache, sampleIterationsInRegion } from "../iteration-buffer/iteration-buffer";
 
 const INITIAL_R = 2.0;
 const AUTO_N_SCALE_FACTOR = 50;

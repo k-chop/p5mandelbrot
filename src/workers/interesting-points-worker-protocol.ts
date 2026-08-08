@@ -1,7 +1,7 @@
 import type {
   InterestingPoint,
   InterestingPointsDebugData,
-} from "@/interesting-points/find-interesting-points";
+} from "../interesting-points/find-interesting-points";
 
 /** メインスレッド → Worker へのリクエスト */
 export interface InterestingPointsComputeRequest {

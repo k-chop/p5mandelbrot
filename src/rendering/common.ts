@@ -1,11 +1,11 @@
-import { markNeedsRerender } from "@/camera/palette";
+import { markNeedsRerender } from "../camera/palette";
 import {
   scaleIterationCacheAroundPoint,
   setIterationCache,
   translateRectInIterationCache,
-} from "@/iteration-buffer/iteration-buffer";
-import type { Rect } from "@/math/rect";
-import { getStore, updateStore } from "@/store/store";
+} from "../iteration-buffer/iteration-buffer";
+import type { Rect } from "../math/rect";
+import { getStore, updateStore } from "../store/store";
 import type { Resolution } from "./p5-renderer";
 import { addIterationBuffer } from "./renderer";
 

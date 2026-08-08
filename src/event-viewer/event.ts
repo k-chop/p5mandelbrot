@@ -1,4 +1,4 @@
-import type { Rect } from "@/math/rect";
+import type { Rect } from "../math/rect";
 import { debounce } from "es-toolkit";
 import { nowAbs, type AbsoluteTime } from "./time";
 

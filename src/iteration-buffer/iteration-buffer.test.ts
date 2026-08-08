@@ -1,4 +1,4 @@
-import type { IterationBuffer } from "@/types";
+import type { IterationBuffer } from "../types";
 import { describe, expect, it } from "vitest";
 import { scaleIterationCacheAroundPoint, scaleRectAroundPoint } from "./iteration-buffer";
 

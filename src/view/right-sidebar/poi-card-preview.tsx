@@ -1,5 +1,5 @@
-import { loadPreview, useTrackChangePreview } from "@/store/preview-store";
-import type { POIData } from "@/types";
+import { loadPreview, useTrackChangePreview } from "../../store/preview-store";
+import type { POIData } from "../../types";
 import React, { useEffect, useState } from "react";
 
 type Props = {

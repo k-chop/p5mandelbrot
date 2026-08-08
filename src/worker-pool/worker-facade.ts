@@ -1,5 +1,5 @@
-import { getStore } from "@/store/store";
-import { calcCoordPrecision } from "@/math/coord-precision";
+import { getStore } from "../store/store";
+import { calcCoordPrecision } from "../math/coord-precision";
 import type {
   BatchContext,
   CalcIterationJob,
@@ -10,10 +10,10 @@ import type {
   MandelbrotWorkerType,
   RefOrbitProgress,
   RefOrbitResult,
-} from "@/types";
-import { type RefOrbitShutdown } from "@/types";
-import { refOrbitWorkerPath, workerPaths } from "@/workers";
-import type { RefOrbitContext } from "@/workers/calc-ref-orbit";
+} from "../types";
+import { type RefOrbitShutdown } from "../types";
+import { refOrbitWorkerPath, workerPaths } from "../workers";
+import type { RefOrbitContext } from "../workers/calc-ref-orbit";
 
 export interface IterationResult {
   type: "result" | "terminated";

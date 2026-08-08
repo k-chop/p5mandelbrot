@@ -1,14 +1,14 @@
-import { useT } from "@/i18n/context";
-import { Button } from "@/shadcn/components/ui/button";
+import { useT } from "../../i18n/context";
+import { Button } from "../../shadcn/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/shadcn/components/ui/dropdown";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shadcn/components/ui/popover";
-import { updateStore, useStoreValue } from "@/store/store";
+} from "../../shadcn/components/ui/dropdown";
+import { Popover, PopoverContent, PopoverTrigger } from "../../shadcn/components/ui/popover";
+import { updateStore, useStoreValue } from "../../store/store";
 import {
   IconDice,
   IconDownload,

@@ -1,13 +1,13 @@
-import { useT } from "@/i18n/context";
-import { cloneCurrentParams } from "@/mandelbrot-state/mandelbrot-state";
-import { getCanvasSize } from "@/rendering/renderer";
+import { useT } from "../../i18n/context";
+import { cloneCurrentParams } from "../../mandelbrot-state/mandelbrot-state";
+import { getCanvasSize } from "../../rendering/renderer";
 import {
   Drawer,
   DrawerContent,
   DrawerDescription,
   DrawerTitle,
-} from "@/shadcn/components/ui/drawer";
-import { updateStore, useStoreValue } from "@/store/store";
+} from "../../shadcn/components/ui/drawer";
+import { updateStore, useStoreValue } from "../../store/store";
 import { IconCirclePlus } from "@tabler/icons-react";
 import { VisuallyHidden } from "radix-ui";
 import { POICardPreview } from "../right-sidebar/poi-card-preview";

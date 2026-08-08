@@ -1,29 +1,29 @@
-import { ValueSlider } from "@/components/slider-wrapper";
-import { useT } from "@/i18n/context";
-import { resizeTo } from "@/p5-adapter/p5-adapter";
-import type { RendererType } from "@/rendering/common";
+import { ValueSlider } from "../../components/slider-wrapper";
+import { useT } from "../../i18n/context";
+import { resizeTo } from "../../p5-adapter/p5-adapter";
+import type { RendererType } from "../../rendering/common";
 import {
   getRenderer,
   isWebGPUInitialized,
   isWebGPUSupported,
   setRenderer,
-} from "@/rendering/common";
-import { Button } from "@/shadcn/components/ui/button";
+} from "../../rendering/common";
+import { Button } from "../../shadcn/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/shadcn/components/ui/dialog";
-import { Label } from "@/shadcn/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/shadcn/components/ui/radio-group";
-import { Switch } from "@/shadcn/components/ui/switch";
+} from "../../shadcn/components/ui/dialog";
+import { Label } from "../../shadcn/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "../../shadcn/components/ui/radio-group";
+import { Switch } from "../../shadcn/components/ui/switch";
 import { toast } from "sonner";
-import { updateStore, updateStoreWith, useStoreValue } from "@/store/store";
-import { DEFAULT_WORKER_COUNT } from "@/store/sync-storage/settings";
-import { useIsMobile } from "@/view/use-is-mobile";
-import { prepareWorkerPool } from "@/worker-pool/pool-instance";
+import { updateStore, updateStoreWith, useStoreValue } from "../../store/store";
+import { DEFAULT_WORKER_COUNT } from "../../store/sync-storage/settings";
+import { useIsMobile } from "../use-is-mobile";
+import { prepareWorkerPool } from "../../worker-pool/pool-instance";
 import { IconHelp, IconSettings } from "@tabler/icons-react";
 import { VisuallyHidden } from "radix-ui";
 import { useEffect, useState } from "react";

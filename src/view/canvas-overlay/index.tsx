@@ -1,5 +1,5 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
-import { useStoreValue } from "@/store/store";
+import { LoadingSpinner } from "../../components/loading-spinner";
+import { useStoreValue } from "../../store/store";
 
 export const CanvasOverlay = () => {
   const progress = useStoreValue("progress");

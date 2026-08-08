@@ -1,12 +1,12 @@
-import { finalizeBatch, recordWorkerResult } from "@/batch-render-history/batch-render-history";
-import { addTraceEvent } from "@/event-viewer/event";
+import { finalizeBatch, recordWorkerResult } from "../../batch-render-history/batch-render-history";
+import { addTraceEvent } from "../../event-viewer/event";
 import {
   consolidateIterationCache,
   notifyIterationCacheUpdate,
   upsertIterationCache,
-} from "@/iteration-buffer/iteration-buffer";
-import { addIterationBuffer } from "@/rendering/renderer";
-import type { CalcIterationJob, IterationIntermediateResult } from "@/types";
+} from "../../iteration-buffer/iteration-buffer";
+import { addIterationBuffer } from "../../rendering/renderer";
+import type { CalcIterationJob, IterationIntermediateResult } from "../../types";
 import { getWorkerId } from "../pool-instance";
 import { completeJob, hasWaitingJob, isBatchCompleted } from "../task-queue";
 import type { IterationProgressCallback, IterationResultCallback } from "../worker-facade";

@@ -1,6 +1,6 @@
-import { getStore, updateStore } from "@/store/store";
-import type { JobType, MandelbrotWorkerType } from "@/types";
-import { type MandelbrotJob } from "@/types";
+import { getStore, updateStore } from "../store/store";
+import type { JobType, MandelbrotWorkerType } from "../types";
+import { type MandelbrotJob } from "../types";
 import {
   onIterationWorkerIntermediateResult,
   onIterationWorkerProgress,

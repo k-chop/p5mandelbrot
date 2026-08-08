@@ -1,5 +1,5 @@
-import type { MandelbrotWorkerType, POIData } from "@/types";
-import { isDevMode } from "@/utils/dev-mode";
+import type { MandelbrotWorkerType, POIData } from "../types";
+import { isDevMode } from "../utils/dev-mode";
 import BigNumber from "bignumber.js";
 import { useSyncExternalStore } from "react";
 

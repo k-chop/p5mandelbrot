@@ -1,6 +1,6 @@
-import { useT } from "@/i18n/context";
-import { Separator } from "@/shadcn/components/ui/separator";
-import type { ResultSpans, Span } from "@/types";
+import { useT } from "../../i18n/context";
+import { Separator } from "../../shadcn/components/ui/separator";
+import type { ResultSpans, Span } from "../../types";
 import clsx from "clsx";
 import { Tooltip } from "radix-ui";
 import React from "react";

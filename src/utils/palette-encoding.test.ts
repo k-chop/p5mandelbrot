@@ -1,5 +1,5 @@
-import { chromaJsPalettes, d3ChromaticPalettes, othersPalettes } from "@/color";
-import type { Palette } from "@/color/model";
+import { chromaJsPalettes, d3ChromaticPalettes, othersPalettes } from "../color";
+import type { Palette } from "../color/model";
 import { describe, expect, it } from "vitest";
 import { decodePalette, encodePalette } from "./palette-encoding";
 

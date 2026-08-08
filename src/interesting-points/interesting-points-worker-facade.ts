@@ -1,12 +1,9 @@
-import type {
-  InterestingPoint,
-  InterestingPointsDebugData,
-} from "@/interesting-points/find-interesting-points";
-import InterestingPointsWorker from "@/workers/interesting-points-worker?worker&inline";
+import type { InterestingPoint, InterestingPointsDebugData } from "./find-interesting-points";
+import InterestingPointsWorker from "../workers/interesting-points-worker?worker&inline";
 import type {
   InterestingPointsComputeRequest,
   InterestingPointsComputeResponse,
-} from "@/workers/interesting-points-worker-protocol";
+} from "../workers/interesting-points-worker-protocol";
 
 /** 計算結果の型 */
 export interface InterestingPointsResult {

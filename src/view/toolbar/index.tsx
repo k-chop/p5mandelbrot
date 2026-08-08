@@ -1,9 +1,9 @@
-import { SimpleTooltip } from "@/components/simple-tooltip";
-import { useT } from "@/i18n/context";
-import { Button } from "@/shadcn/components/ui/button";
-import { updateStoreWith, useStoreValue } from "@/store/store";
-import { SupersamplingDialog } from "@/view/supersampling-popover/dialog";
-import { useIsMobile } from "@/view/use-is-mobile";
+import { SimpleTooltip } from "../../components/simple-tooltip";
+import { useT } from "../../i18n/context";
+import { Button } from "../../shadcn/components/ui/button";
+import { updateStoreWith, useStoreValue } from "../../store/store";
+import { SupersamplingDialog } from "../supersampling-popover/dialog";
+import { useIsMobile } from "../use-is-mobile";
 import { IconBug, IconLayoutSidebar, IconNavigation, IconSettings } from "@tabler/icons-react";
 import { Actions, ShareDialogHost } from "../header/actions";
 import { useModalState } from "../modal/use-modal-state";

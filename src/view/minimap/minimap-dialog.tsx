@@ -1,25 +1,25 @@
-import { setSerializedPalette } from "@/camera/palette";
-import { useT } from "@/i18n/context";
-import { clearIterationCache } from "@/iteration-buffer/iteration-buffer";
-import { setCurrentParams, setManualN } from "@/mandelbrot-state/mandelbrot-state";
+import { setSerializedPalette } from "../../camera/palette";
+import { useT } from "../../i18n/context";
+import { clearIterationCache } from "../../iteration-buffer/iteration-buffer";
+import { setCurrentParams, setManualN } from "../../mandelbrot-state/mandelbrot-state";
 import {
   type PresetPOIRaw,
   getPresetDisplayLabel,
   getPresetThumbnailUrl,
   isSamePOI,
   usePresetPOIList,
-} from "@/preset-poi/preset-poi";
+} from "../../preset-poi/preset-poi";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/shadcn/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shadcn/components/ui/popover";
-import { loadPreview } from "@/store/preview-store";
-import { updateStore, useStoreValue } from "@/store/store";
-import type { POIData } from "@/types";
+} from "../../shadcn/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "../../shadcn/components/ui/popover";
+import { loadPreview } from "../../store/preview-store";
+import { updateStore, useStoreValue } from "../../store/store";
+import type { POIData } from "../../types";
 import BigNumber from "bignumber.js";
 import { VisuallyHidden } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
