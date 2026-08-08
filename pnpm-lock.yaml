@@ -54,8 +54,8 @@ importers:
         specifier: 4.1.1
         version: 4.1.1
       lucide-react:
-        specifier: 0.577.0
-        version: 0.577.0(react@19.2.4)
+        specifier: 1.30.0
+        version: 1.30.0(react@19.2.4)
       neverthrow:
         specifier: 8.2.0
         version: 8.2.0
@@ -2053,8 +2053,8 @@ packages:
   lodash.throttle@4.1.1:
     resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
 
-  lucide-react@0.577.0:
-    resolution: {integrity: sha512-4LjoFv2eEPwYDPg/CUdBJQSDfPyzXCRrVW1X7jrx/trgxnxkHFjnVZINbzvzxjN70dxychOfg+FTYwBiS3pQ5A==}
+  lucide-react@1.30.0:
+    resolution: {integrity: sha512-tUIr2jXLbWpCkdtH8XP7P7YppM9ueWgTky99lpWDY6z5REs6B+O6ZQ3U5tHkUUY59ANyOv/PBcs8E4Fe3KO3eA==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -3987,7 +3987,7 @@ snapshots:
 
   lodash.throttle@4.1.1: {}
 
-  lucide-react@0.577.0(react@19.2.4):
+  lucide-react@1.30.0(react@19.2.4):
     dependencies:
       react: 19.2.4
 
