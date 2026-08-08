@@ -118,10 +118,10 @@ export const calcTargetRectsFromOffsetRects = (
     const sideX = Math.max(minSide, Math.ceil(width / sideXCount));
     const sideY = Math.max(minSide, Math.ceil(height / sideYCount));
 
-    for (let y = rect.y; y < endY; ) {
+    for (let y = rect.y; y < endY;) {
       const remainY = endY - y;
       const h = remainY <= sideY ? remainY : remainY - sideY < minSide ? remainY : sideY;
-      for (let x = rect.x; x < endX; ) {
+      for (let x = rect.x; x < endX;) {
         const remainX = endX - x;
         const w = remainX <= sideX ? remainX : remainX - sideX < minSide ? remainX : sideX;
         result.push({ x, y, width: w, height: h });
