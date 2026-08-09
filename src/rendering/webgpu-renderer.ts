@@ -58,9 +58,27 @@ const UniformSchema = d.struct({
   width: d.f32,
   height: d.f32,
   iterationBufferCount: d.f32,
+  totalPixelCount: d.f32,
 });
 
 const PaletteSchema = d.arrayOf(d.vec4f, 8192); // FIXME: paletteの最大サイズ分固定で確保している（手抜き）
+
+/** metadataに格納できるiteration bufferの最大数 */
+const META_ENTRY_MAX = 1024;
+
+/**
+ * metadata 1エントリあたりのf32数
+ *
+ * compute.wgsl の META_STRIDE およびFIELD_*の並びと一致させること。
+ * shader側はこのbufferを array<f32> として読むため、structはtightly packedである必要がある。
+ */
+const META_STRIDE = 14;
+
+/** compute shaderのworkgroupサイズ。compute.wgsl の @workgroup_size と一致させること */
+const COMPUTE_WORKGROUP_SIZE = 64;
+
+/** dispatchWorkgroupsの1次元あたりの上限。超える分はshader側のgrid-strideループで処理する */
+const MAX_COMPUTE_WORKGROUPS = 65535;
 
 const IterationInputMetadataSchema = d.arrayOf(
   d.struct({
@@ -72,9 +90,18 @@ const IterationInputMetadataSchema = d.arrayOf(
     resolutionHeight: d.f32,
     bufferLength: d.f32,
     isSuperSampled: d.f32,
+    dataStart: d.f32,
+    pixelStart: d.f32,
+    clipX: d.f32,
+    clipY: d.f32,
+    clipWidth: d.f32,
+    clipHeight: d.f32,
   }),
-  1024,
+  META_ENTRY_MAX,
 );
+
+/** metadata書き込み用の使い回しバッファ。毎フレームのallocを避けるために持つ */
+const metadataScratch = new Float32Array(META_ENTRY_MAX * META_STRIDE);
 
 export const getCanvasSize: Renderer["getCanvasSize"] = () => ({
   width,
@@ -116,6 +143,100 @@ export const initRenderer: Renderer["initRenderer"] = async (w, h) => {
   }
 };
 
+const clampInt = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+/**
+ * iteration bufferの内容をGPUのinput bufferとmetadata bufferに書き込む
+ *
+ * 各itemについてcanvasでクリップした宛先ピクセル数を求め、その前置和(pixelStart)をmetadataに載せる。
+ * compute shaderはこの前置和を二分探索することで、1スレッド1宛先ピクセルで処理できる。
+ *
+ * 戻り値は全itemの宛先ピクセル数の合計 (= compute shaderに必要なthread数)
+ */
+const writeIterationInputs = (
+  items: IterationBuffer[],
+  canvasWidth: number,
+  canvasHeight: number,
+): number => {
+  let bufferByteOffset = 0;
+  let dataStart = 0;
+  let pixelStart = 0;
+
+  for (let idx = 0; idx < items.length; idx++) {
+    const { rect, buffer, resolution, isSuperSampled } = items[idx];
+
+    // scaleRectAroundPointがwidth/heightを丸めずに返すためrectは小数になりうる。
+    // 従来shader側の i32() で切り捨てていたので、同じ値をCPU側で作る
+    const rectX = Math.trunc(rect.x);
+    const rectY = Math.trunc(rect.y);
+    const rectWidth = Math.trunc(rect.width);
+    const rectHeight = Math.trunc(rect.height);
+
+    const clipX = clampInt(rectX, 0, canvasWidth);
+    const clipY = clampInt(rectY, 0, canvasHeight);
+    const clipWidth = clampInt(rectX + rectWidth, 0, canvasWidth) - clipX;
+    const clipHeight = clampInt(rectY + rectHeight, 0, canvasHeight) - clipY;
+
+    const offset = idx * META_STRIDE;
+    metadataScratch[offset] = rectX;
+    metadataScratch[offset + 1] = rectY;
+    metadataScratch[offset + 2] = rectWidth;
+    metadataScratch[offset + 3] = rectHeight;
+    metadataScratch[offset + 4] = resolution.width;
+    metadataScratch[offset + 5] = resolution.height;
+    metadataScratch[offset + 6] = buffer.length;
+    metadataScratch[offset + 7] = isSuperSampled ? 1 : 0;
+    metadataScratch[offset + 8] = dataStart;
+    metadataScratch[offset + 9] = pixelStart;
+    metadataScratch[offset + 10] = clipX;
+    metadataScratch[offset + 11] = clipY;
+    metadataScratch[offset + 12] = clipWidth;
+    metadataScratch[offset + 13] = clipHeight;
+
+    device.queue.writeBuffer(
+      root.unwrap(iterationInputBuffer),
+      bufferByteOffset,
+      buffer,
+      0,
+      buffer.length,
+    );
+
+    bufferByteOffset += buffer.byteLength;
+    dataStart += buffer.length;
+    pixelStart += clipWidth * clipHeight;
+  }
+
+  device.queue.writeBuffer(
+    root.unwrap(iterationInputMetadataBuffer),
+    0,
+    metadataScratch,
+    0,
+    items.length * META_STRIDE,
+  );
+
+  return pixelStart;
+};
+
+/**
+ * iterationInputBufferからiterations[]へコピーするcompute passを積む
+ *
+ * 1スレッドが1宛先ピクセルを担当するので、dispatch数は宛先ピクセル数から決まる
+ */
+const encodeCopyComputePass = (encoder: GPUCommandEncoder, totalPixelCount: number) => {
+  if (totalPixelCount === 0) return;
+
+  const workgroupCount = Math.min(
+    Math.ceil(totalPixelCount / COMPUTE_WORKGROUP_SIZE),
+    MAX_COMPUTE_WORKGROUPS,
+  );
+
+  const computePass = encoder.beginComputePass();
+  computePass.setPipeline(computePipeline);
+  computePass.setBindGroup(0, root.unwrap(bindGroup));
+  computePass.dispatchWorkgroups(workgroupCount);
+  computePass.end();
+};
+
 export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) => {
   if (isFlushing) return;
   if (!gpuInitialized) {
@@ -128,7 +249,6 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
   const palette = getCurrentPalette();
 
   // queueに積まれたiteration bufferをGPUBufferに書き込む
-  let bufferByteOffset = 0;
   const maxBufferSize = iterationInputBuffer.buffer.size;
 
   // 解像度（rect.width/resolution.width）が荒い順にソートする
@@ -152,6 +272,9 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
     const nextSize = iterBuffer.buffer.byteLength;
     const resolution = iterBuffer.rect.width / iterBuffer.resolution.width;
 
+    // metadataに載る数を超えないようにする
+    if (processableCount >= META_ENTRY_MAX) break;
+
     // バッファサイズオーバーチェック
     if (tempBufferByteOffset + nextSize > maxBufferSize) {
       const remaining = iterationBufferQueue.length - processableCount;
@@ -171,6 +294,25 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
     processableCount++;
   }
 
+  let totalPixelCount = 0;
+
+  if (0 < processableCount) {
+    const remaining = iterationBufferQueue.length - processableCount;
+    const resolution =
+      iterationBufferQueue[0].rect.width / iterationBufferQueue[0].resolution.width;
+
+    const items = iterationBufferQueue.splice(0, processableCount);
+    totalPixelCount = writeIterationInputs(items, canvasWidth, canvasHeight);
+
+    addTraceEvent("renderer", {
+      type: "iterationBufferProcessing",
+      resolution,
+      count: processableCount,
+      remaining,
+      rects: items.map((item) => item.rect),
+    });
+  }
+
   // write uniform buffer
   uniformBuffer.write({
     maxIterations: params.N,
@@ -183,67 +325,15 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
     width: width ?? canvasWidth,
     height: height ?? canvasHeight,
     iterationBufferCount: processableCount,
+    totalPixelCount,
   });
-
-  if (0 < processableCount) {
-    const remaining = iterationBufferQueue.length - processableCount;
-
-    const resolution =
-      iterationBufferQueue[0].rect.width / iterationBufferQueue[0].resolution.width;
-    const rects: Rect[] = [];
-
-    // 処理可能な数だけ処理
-    for (let idx = 0; idx < processableCount; idx++) {
-      const iteration = iterationBufferQueue.shift()!;
-      const { rect, buffer, resolution, isSuperSampled } = iteration;
-      rects.push(rect);
-
-      iterationInputMetadataBuffer.writePartial([
-        {
-          idx,
-          value: {
-            rectX: rect.x,
-            rectY: rect.y,
-            rectWidth: rect.width,
-            rectHeight: rect.height,
-            resolutionWidth: resolution.width,
-            resolutionHeight: resolution.height,
-            bufferLength: buffer.length,
-            isSuperSampled: isSuperSampled ? 1 : 0,
-          },
-        },
-      ]);
-
-      device.queue.writeBuffer(
-        root.unwrap(iterationInputBuffer),
-        bufferByteOffset,
-        buffer,
-        0,
-        buffer.length,
-      );
-
-      bufferByteOffset += buffer.byteLength;
-    }
-
-    addTraceEvent("renderer", {
-      type: "iterationBufferProcessing",
-      resolution,
-      count: processableCount,
-      remaining,
-      rects,
-    });
-  }
 
   // 毎フレームのunifiedIterationBufferの転送は不要
   // GPUのcompute shaderによってiterationInputBufferからiterationBufferに直接書き込まれる
 
   const encoder = device.createCommandEncoder();
 
-  const computePass = encoder.beginComputePass();
-  computePass.setPipeline(computePipeline);
-  computePass.setBindGroup(0, root.unwrap(bindGroup));
-  computePass.dispatchWorkgroups(64);
-  computePass.end();
+  encodeCopyComputePass(encoder, totalPixelCount);
 
   const renderPass = encoder.beginRenderPass({
     colorAttachments: [
@@ -274,6 +364,7 @@ export const flushIterationBufferQueue = async (): Promise<void> => {
   if (!gpuInitialized || iterationBufferQueue.length === 0) return;
 
   isFlushing = true;
+
   try {
     // iterationBufferを0クリアして古い位置のデータを除去
     {
@@ -292,6 +383,8 @@ export const flushIterationBufferQueue = async (): Promise<void> => {
       let processableCount = 0;
 
       for (let i = 0; i < iterationBufferQueue.length; i++) {
+        if (processableCount >= META_ENTRY_MAX) break;
+
         const nextSize = iterationBufferQueue[i].buffer.byteLength;
         if (tempByteOffset + nextSize > maxBufferSize) break;
         tempByteOffset += nextSize;
@@ -299,6 +392,9 @@ export const flushIterationBufferQueue = async (): Promise<void> => {
       }
 
       if (processableCount === 0) break;
+
+      const items = iterationBufferQueue.splice(0, processableCount);
+      const totalPixelCount = writeIterationInputs(items, canvasWidth, canvasHeight);
 
       uniformBuffer.write({
         maxIterations: params.N,
@@ -311,46 +407,11 @@ export const flushIterationBufferQueue = async (): Promise<void> => {
         width: canvasWidth,
         height: canvasHeight,
         iterationBufferCount: processableCount,
+        totalPixelCount,
       });
 
-      let bufferByteOffset = 0;
-      for (let idx = 0; idx < processableCount; idx++) {
-        const iteration = iterationBufferQueue.shift()!;
-        const { rect, buffer, resolution, isSuperSampled } = iteration;
-
-        iterationInputMetadataBuffer.writePartial([
-          {
-            idx,
-            value: {
-              rectX: rect.x,
-              rectY: rect.y,
-              rectWidth: rect.width,
-              rectHeight: rect.height,
-              resolutionWidth: resolution.width,
-              resolutionHeight: resolution.height,
-              bufferLength: buffer.length,
-              isSuperSampled: isSuperSampled ? 1 : 0,
-            },
-          },
-        ]);
-
-        device.queue.writeBuffer(
-          root.unwrap(iterationInputBuffer),
-          bufferByteOffset,
-          buffer,
-          0,
-          buffer.length,
-        );
-
-        bufferByteOffset += buffer.byteLength;
-      }
-
       const encoder = device.createCommandEncoder();
-      const computePass = encoder.beginComputePass();
-      computePass.setPipeline(computePipeline);
-      computePass.setBindGroup(0, root.unwrap(bindGroup));
-      computePass.dispatchWorkgroups(64);
-      computePass.end();
+      encodeCopyComputePass(encoder, totalPixelCount);
       device.queue.submit([encoder.finish()]);
 
       await device.queue.onSubmittedWorkDone();
