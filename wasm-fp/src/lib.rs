@@ -2,6 +2,7 @@ pub mod complex;
 pub mod fixed;
 
 use complex::ComplexFixed;
+use fixed::{Fixed2048, PRODUCT_LIMBS};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -23,26 +24,44 @@ pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
     let c = ComplexFixed::parse(&req.x, &req.y);
     let limbs = (req.active_limbs as usize).clamp(2, fixed::LIMBS);
 
-    let mut z = ComplexFixed::ZERO;
     let mut result = Vec::with_capacity((req.max_iter as usize + 1) * 2);
 
-    for _ in 0..=req.max_iter {
-        let re2 = z.re.square_with_limbs(limbs);
-        let im2 = z.im.square_with_limbs(limbs);
+    // 全部ループの外で確保して使い回す。
+    // 下位リムは ZERO 初期化のあと assign_* が一切触らないので 0 のまま保たれ、
+    // 毎反復の 256/512 バイトのゼロ埋めが不要になる
+    let mut z_re = Fixed2048::ZERO;
+    let mut z_im = Fixed2048::ZERO;
+    let mut re2 = Fixed2048::ZERO;
+    let mut im2 = Fixed2048::ZERO;
+    let mut norm = Fixed2048::ZERO;
+    let mut re_plus_im = Fixed2048::ZERO;
+    let mut sum_sq = Fixed2048::ZERO;
+    let mut partial = Fixed2048::ZERO;
+    let mut two_re_im = Fixed2048::ZERO;
+    let mut re2_minus_im2 = Fixed2048::ZERO;
+    let mut product = [0u64; PRODUCT_LIMBS];
 
-        if re2.add_with_limbs(&im2, limbs).ge_integer(4) {
+    for _ in 0..=req.max_iter {
+        re2.assign_square(&z_re, &mut product, limbs);
+        im2.assign_square(&z_im, &mut product, limbs);
+
+        norm.assign_add(&re2, &im2, limbs);
+        if norm.ge_integer(4) {
             break;
         }
 
-        result.push(z.re.to_f64());
-        result.push(z.im.to_f64());
+        result.push(z_re.to_f64());
+        result.push(z_im.to_f64());
 
-        let sum_sq = z.re.add_with_limbs(&z.im, limbs).square_with_limbs(limbs);
-        let two_re_im = sum_sq.sub_with_limbs(&re2, limbs).sub_with_limbs(&im2, limbs);
-        z = ComplexFixed::new(
-            re2.sub_with_limbs(&im2, limbs).add_with_limbs(&c.re, limbs),
-            two_re_im.add_with_limbs(&c.im, limbs),
-        );
+        re_plus_im.assign_add(&z_re, &z_im, limbs);
+        sum_sq.assign_square(&re_plus_im, &mut product, limbs);
+        partial.assign_sub(&sum_sq, &re2, limbs);
+        two_re_im.assign_sub(&partial, &im2, limbs);
+        re2_minus_im2.assign_sub(&re2, &im2, limbs);
+
+        // ここから先で z_re / z_im は読まれないので直接上書きしてよい
+        z_re.assign_add(&re2_minus_im2, &c.re, limbs);
+        z_im.assign_add(&two_re_im, &c.im, limbs);
     }
 
     result
@@ -253,6 +272,122 @@ mod tests {
                     max_rel_err,
                 );
             }
+        }
+    }
+
+    /// f64列のビットパターンからFNV-1a 64bitハッシュを計算する。
+    ///
+    /// 値ではなくビット表現を見るので1 ulpのズレも検出できる。
+    fn fingerprint(values: &[f64]) -> u64 {
+        let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+        for v in values {
+            for byte in v.to_bits().to_le_bytes() {
+                hash ^= byte as u64;
+                hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+            }
+        }
+        hash
+    }
+
+    /// reference orbitの出力をビット単位で固定する。
+    ///
+    /// 多倍長ループの最適化は「結果を変えない」ことが前提なので、その網として置く。
+    /// `start = LIMBS - active_limbs` で処理範囲が変わるため、active_limbsを散らして
+    /// 各経路を踏ませている。座標はベンチPOIから採った。
+    ///
+    /// 固定小数点の整数演算は厳密なのでnativeとwasmで結果は一致する
+    /// (wasmにu64×u64→u128命令がなくエミュレーションになるだけで、値は変わらない)。
+    #[test]
+    fn reference_orbit_golden() {
+        // (label, x, y, active_limbs, expected_len, expected_hash)
+        //
+        // 座標はベンチPOIから採ったが、`parse` が指数表記を受け付けないので
+        // 平坦な10進表記のPOIだけを使い、limb数を散らして経路を稼いでいる
+        let cases: [(&str, &str, &str, usize, usize, u64); 7] = [
+            (
+                "heavy-n-light-iter / 32 limbs",
+                "0.2701237597337648151468089210872559290330585338404586945480880642375286137466902863822947734726893678732504691531952149442643761738093667891894268910326695338694216593260",
+                "0.005009229312393684589400299097118026037794249881626541648326951827106797599030593628796825598542781592179428913547715184471643655974682851388677903558858892738831120008779",
+                32,
+                100002,
+                0x617f_be71_2def_58ee,
+            ),
+            (
+                "near-limit-r / 20 limbs",
+                "-1.985431296887969044721988138339037045398752353280122548176356785008878894488002857818709939311012154727312872245691295555857927156116551713491273570391631953112744174284050322871930097072956531371247097550158111955545307507768618388752719145048639818261597001257070993410988006089774692899255182968917497055643378",
+                "0.00008094566790713635928731856114890272349977083094141477987325680750771455145183991184099169198273681548096125157108480819602059398983618495749743473569032420823472992148832489802445840829528011749260671881094621472355137545023613891352307304720120504353365736031702902620685818160251849859601866554526858411899763435",
+                20,
+                39874,
+                0x15ad_49fd_a514_5f59,
+            ),
+            (
+                "heavy-n-light-iter / 13 limbs",
+                "0.2701237597337648151468089210872559290330585338404586945480880642375286137466902863822947734726893678732504691531952149442643761738093667891894268910326695338694216593260",
+                "0.005009229312393684589400299097118026037794249881626541648326951827106797599030593628796825598542781592179428913547715184471643655974682851388677903558858892738831120008779",
+                13,
+                100002,
+                0x617f_be71_2def_58ee,
+            ),
+            (
+                "average / 12 limbs",
+                "-0.1676207162349056453900744774333783193005197110324296103021506839670336963944761096283498843437517249662495064340",
+                "1.041381743556022807777969631287024604640137412409919918004050409356921295688038523364011670587986007389832633330",
+                12,
+                100002,
+                0xa881_f4d2_fd92_4839,
+            ),
+            (
+                "near-limit-r / 9 limbs",
+                "-1.985431296887969044721988138339037045398752353280122548176356785008878894488002857818709939311012154727312872245691295555857927156116551713491273570391631953112744174284050322871930097072956531371247097550158111955545307507768618388752719145048639818261597001257070993410988006089774692899255182968917497055643378",
+                "0.00008094566790713635928731856114890272349977083094141477987325680750771455145183991184099169198273681548096125157108480819602059398983618495749743473569032420823472992148832489802445840829528011749260671881094621472355137545023613891352307304720120504353365736031702902620685818160251849859601866554526858411899763435",
+                9,
+                33464,
+                0xc240_4f54_736c_aee4,
+            ),
+            (
+                "spiral-1 / 5 limbs",
+                "-1.75877372414934711425534628637",
+                "0.0189731857413472618503959717914",
+                5,
+                36384,
+                0x2ff9_aeec_b969_a841,
+            ),
+            (
+                // 精度が最低なので途中でescapeする経路を踏むはず
+                "spiral-2 / 2 limbs",
+                "0.44355403336204611582297533053673447703",
+                "0.37223875916880398875574744516183097028",
+                2,
+                7544,
+                0x1bab_157a_aee9_c896,
+            ),
+        ];
+
+        const MAX_ITER: u32 = 50000;
+
+        let actual: Vec<(usize, u64)> = cases
+            .iter()
+            .map(|(_, x, y, limbs, _, _)| {
+                let req = CalculationRequest {
+                    r#type: "reference_orbit".into(),
+                    x: (*x).into(),
+                    y: (*y).into(),
+                    max_iter: MAX_ITER,
+                    active_limbs: *limbs as u32,
+                };
+                let result = perform_calculation(req);
+                (result.len(), fingerprint(&result))
+            })
+            .collect();
+
+        // 全件出してから検証する。goldenを作り直すときはこの出力を貼る
+        for ((label, ..), (len, hash)) in cases.iter().zip(&actual) {
+            println!("{label}: len={len} hash=0x{hash:016x}");
+        }
+
+        for ((label, .., expected_len, expected_hash), (len, hash)) in cases.iter().zip(&actual) {
+            assert_eq!(len, expected_len, "{label}: 出力長が変わった");
+            assert_eq!(hash, expected_hash, "{label}: 出力がビット単位で変わった");
         }
     }
 }

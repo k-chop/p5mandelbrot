@@ -8,7 +8,7 @@ const FRAC_LIMBS: usize = LIMBS - 1;
 /// 小数部ビット数
 const FRAC_BITS: usize = FRAC_LIMBS * 64;
 /// 乗算の中間積リム数
-const PRODUCT_LIMBS: usize = LIMBS * 2;
+pub(crate) const PRODUCT_LIMBS: usize = LIMBS * 2;
 
 /// 2048-bit fixed-point number: 64-bit integer + 1984-bit fraction.
 ///
@@ -38,6 +38,11 @@ impl Fixed2048 {
         self.limbs.iter().all(|&x| x == 0)
     }
 
+    /// `limbs[..start]` が 0 だと分かっている場合のゼロ判定。
+    fn is_zero_from(&self, start: usize) -> bool {
+        self.limbs[start..].iter().all(|&x| x == 0)
+    }
+
     pub fn negate(&self) -> Self {
         if self.is_zero() {
             *self
@@ -59,28 +64,26 @@ impl Fixed2048 {
         Ordering::Equal
     }
 
-    fn add_limbs_ranged(a: &[u64; LIMBS], b: &[u64; LIMBS], start: usize) -> [u64; LIMBS] {
-        let mut result = [0u64; LIMBS];
+    /// `dst[start..] = a + b`。`dst[..start]` には触らない。
+    fn add_limbs_into(dst: &mut [u64; LIMBS], a: &[u64; LIMBS], b: &[u64; LIMBS], start: usize) {
         let mut carry = 0u64;
         for i in start..LIMBS {
             let (s1, c1) = a[i].overflowing_add(b[i]);
             let (s2, c2) = s1.overflowing_add(carry);
-            result[i] = s2;
+            dst[i] = s2;
             carry = c1 as u64 + c2 as u64;
         }
-        result
     }
 
-    fn sub_limbs_ranged(a: &[u64; LIMBS], b: &[u64; LIMBS], start: usize) -> [u64; LIMBS] {
-        let mut result = [0u64; LIMBS];
+    /// `dst[start..] = a - b` (a >= b 前提)。`dst[..start]` には触らない。
+    fn sub_limbs_into(dst: &mut [u64; LIMBS], a: &[u64; LIMBS], b: &[u64; LIMBS], start: usize) {
         let mut borrow = 0u64;
         for i in start..LIMBS {
             let (s1, b1) = a[i].overflowing_sub(b[i]);
             let (s2, b2) = s1.overflowing_sub(borrow);
-            result[i] = s2;
+            dst[i] = s2;
             borrow = b1 as u64 + b2 as u64;
         }
-        result
     }
 
     /// フル精度加算。`add_with_limbs(other, LIMBS)` と等価。
@@ -90,21 +93,53 @@ impl Fixed2048 {
 
     /// 上位 `active_limbs` 個のリムのみ使って加算する。
     pub fn add_with_limbs(&self, other: &Self, active_limbs: usize) -> Self {
+        let mut out = Self::ZERO;
+        out.assign_add(self, other, active_limbs);
+        out
+    }
+
+    /// `self[start..] = a + b`。**`self[..start]` には触らない。**
+    ///
+    /// 呼び出し側は [`Self::ZERO`] で初期化した値を使い回すこと。
+    /// 下位リムは 0 のまま保たれるので、演算のたびに 256 バイトをゼロ埋めする必要がなくなる。
+    pub fn assign_add(&mut self, a: &Self, b: &Self, active_limbs: usize) {
+        self.assign_add_signed(a, b, b.negative, active_limbs);
+    }
+
+    /// `self[start..] = a - b`。制約は [`Self::assign_add`] と同じ。
+    pub fn assign_sub(&mut self, a: &Self, b: &Self, active_limbs: usize) {
+        self.assign_add_signed(a, b, !b.negative, active_limbs);
+    }
+
+    /// `b` の符号を `b_negative` として扱って `self[start..] = a + b` する。
+    ///
+    /// 減算を `negate()` 経由にすると、符号を反転するためだけに
+    /// 32リムまるごとのゼロ判定と 256 バイトのコピーが発生する。
+    /// 符号をフラグで渡せばそれが不要になる。
+    fn assign_add_signed(&mut self, a: &Self, b: &Self, b_negative: bool, active_limbs: usize) {
         let start = LIMBS - active_limbs.min(LIMBS);
-        if self.negative == other.negative {
-            let limbs = Self::add_limbs_ranged(&self.limbs, &other.limbs, start);
-            Self::new(limbs, self.negative)
+        debug_assert!(
+            self.limbs[..start].iter().all(|&x| x == 0),
+            "書き込み先の下位リムが0でない。より大きいactive_limbsで使ったバッファを使い回している"
+        );
+        if a.negative == b_negative {
+            Self::add_limbs_into(&mut self.limbs, &a.limbs, &b.limbs, start);
+            self.negative = a.negative && !self.is_zero_from(start);
         } else {
-            match self.cmp_magnitude_ranged(other, start) {
+            match a.cmp_magnitude_ranged(b, start) {
                 Ordering::Greater => {
-                    let limbs = Self::sub_limbs_ranged(&self.limbs, &other.limbs, start);
-                    Self::new(limbs, self.negative)
+                    Self::sub_limbs_into(&mut self.limbs, &a.limbs, &b.limbs, start);
+                    self.negative = a.negative && !self.is_zero_from(start);
                 }
                 Ordering::Less => {
-                    let limbs = Self::sub_limbs_ranged(&other.limbs, &self.limbs, start);
-                    Self::new(limbs, other.negative)
+                    Self::sub_limbs_into(&mut self.limbs, &b.limbs, &a.limbs, start);
+                    self.negative = b_negative && !self.is_zero_from(start);
                 }
-                Ordering::Equal => Self::ZERO,
+                Ordering::Equal => {
+                    // 値としてはZERO。下位リムはもともと0なので上位だけ潰せば足りる
+                    self.limbs[start..].fill(0);
+                    self.negative = false;
+                }
             }
         }
     }
@@ -116,7 +151,9 @@ impl Fixed2048 {
 
     /// 上位 `active_limbs` 個のリムのみ使って減算する。
     pub fn sub_with_limbs(&self, other: &Self, active_limbs: usize) -> Self {
-        self.add_with_limbs(&other.negate(), active_limbs)
+        let mut out = Self::ZERO;
+        out.assign_sub(self, other, active_limbs);
+        out
     }
 
     /// フル精度乗算。`mul_with_limbs(other, LIMBS)` と等価。
@@ -163,16 +200,38 @@ impl Fixed2048 {
     /// a[i]*a[j] == a[j]*a[i] の対称性を利用し、
     /// 対角以外の積を1回だけ計算して2倍することで乗算回数を約47%削減する。
     pub fn square_with_limbs(&self, active_limbs: usize) -> Self {
-        let start = LIMBS - active_limbs.min(LIMBS);
+        let mut out = Self::ZERO;
         let mut product = [0u64; PRODUCT_LIMBS];
+        out.assign_square(self, &mut product, active_limbs);
+        out
+    }
+
+    /// `self[start..] = a²`。**`self[..start]` には触らない。**
+    ///
+    /// `product` は呼び出し側が持つ作業領域で、中身は毎回このメソッドが
+    /// 必要な範囲 (`start * 2` 以上) だけ初期化する。
+    /// ループの外で 1 個確保して使い回すことで、1 反復あたり 512 バイトの
+    /// ゼロ埋めを `start * 2` 個分スキップできる。
+    pub(crate) fn assign_square(
+        &mut self,
+        a: &Self,
+        product: &mut [u64; PRODUCT_LIMBS],
+        active_limbs: usize,
+    ) {
+        let start = LIMBS - active_limbs.min(LIMBS);
+        debug_assert!(
+            self.limbs[..start].iter().all(|&x| x == 0),
+            "書き込み先の下位リムが0でない。より大きいactive_limbsで使ったバッファを使い回している"
+        );
+        // 実際に読み書きするのは start * 2 以上だけ。下位は触らないので消さなくてよい
+        product[start * 2..].fill(0);
 
         // Off-diagonal: i < j の組み合わせのみ計算
         for i in start..LIMBS {
             let mut carry = 0u128;
             for j in (i + 1)..LIMBS {
-                let p = (self.limbs[i] as u128) * (self.limbs[j] as u128)
-                    + product[i + j] as u128
-                    + carry;
+                let p =
+                    (a.limbs[i] as u128) * (a.limbs[j] as u128) + product[i + j] as u128 + carry;
                 product[i + j] = p as u64;
                 carry = p >> 64;
             }
@@ -198,7 +257,7 @@ impl Fixed2048 {
 
         // Diagonal: a[i]*a[i] を加算
         for i in start..LIMBS {
-            let p = (self.limbs[i] as u128) * (self.limbs[i] as u128);
+            let p = (a.limbs[i] as u128) * (a.limbs[i] as u128);
             let lo = p as u64;
             let hi = (p >> 64) as u64;
             let idx = i * 2;
@@ -219,12 +278,11 @@ impl Fixed2048 {
             }
         }
 
-        let mut limbs = [0u64; LIMBS];
         for i in start..LIMBS {
-            limbs[i] = product[i + FRAC_LIMBS];
+            self.limbs[i] = product[i + FRAC_LIMBS];
         }
         // 自乗は常に非負
-        Self::new(limbs, false)
+        self.negative = false;
     }
 
     /// 下位リムをゼロにして精度を制限する。
@@ -752,6 +810,108 @@ mod tests {
         assert_eq!(t.limbs[28], a.limbs[28]);
         for i in 0..28 {
             assert_eq!(t.limbs[i], 0);
+        }
+    }
+
+    /// 再現可能な擬似乱数 (xorshift64*)
+    fn next_rand(state: &mut u64) -> u64 {
+        let mut x = *state;
+        x ^= x >> 12;
+        x ^= x << 25;
+        x ^= x >> 27;
+        *state = x;
+        x.wrapping_mul(0x2545_f491_4f6c_dd1d)
+    }
+
+    /// active_limbs の範囲の値をランダムに埋めた Fixed2048 を作る。
+    ///
+    /// 下位リムは 0 のまま。実際の演算結果もそうなっているので入力もそれに合わせる。
+    fn random_fixed(state: &mut u64, start: usize) -> Fixed2048 {
+        let mut limbs = [0u64; LIMBS];
+        for limb in limbs.iter_mut().skip(start) {
+            *limb = next_rand(state);
+        }
+        Fixed2048::new(limbs, next_rand(state) & 1 == 0)
+    }
+
+    /// 演算結果の「意味のあるリム」と符号を FNV-1a で畳み込む。
+    ///
+    /// 下位リム (`0..start`) は捨てられる領域なので見ない。
+    /// ここを含めると「下位リムを触らない」系の最適化が結果不変でも落ちてしまう。
+    fn fold(hash: &mut u64, v: &Fixed2048, start: usize) {
+        for &limb in &v.limbs[start..] {
+            for byte in limb.to_le_bytes() {
+                *hash ^= byte as u64;
+                *hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+            }
+        }
+        *hash ^= v.negative as u64;
+        *hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+
+    /// add / sub / mul / square の出力をビット単位で固定する。
+    ///
+    /// [`super::tests`] の orbit 単位の golden は、参照点が集合内部寄りで誤差増幅が遅く、
+    /// 下位リムの差が f64 の仮数に届くまでに数万反復かかるため感度が足りない
+    /// (実際 `add_limbs_ranged` の範囲を 1 リムずらしても 7 ケース中 5 ケースが素通りした)。
+    /// こちらはプリミティブの出力を直接見るので、1 ビットでも変われば即座に落ちる。
+    ///
+    /// 多倍長ループの最適化はこのテストを通すことが必須条件。
+    #[test]
+    fn primitives_golden() {
+        // (active_limbs, expected_hash)
+        let cases: [(usize, u64); 7] = [
+            (2, 0x66b5_d780_eb48_6161),
+            (5, 0xdbd8_1b77_ebf9_7f1f),
+            (9, 0x30ee_7abb_70f1_0014),
+            (12, 0x2e23_c07a_e7cf_cea0),
+            (13, 0x73ad_c250_1cae_5d36),
+            (20, 0x0562_a977_d048_4077),
+            (32, 0x4200_7000_6bf4_e8e9),
+        ];
+
+        let actual: Vec<u64> = cases
+            .iter()
+            .map(|&(active_limbs, _)| {
+                let start = LIMBS - active_limbs;
+                let mut state = 0x9e37_79b9_7f4a_7c15;
+                let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+
+                for _ in 0..256 {
+                    let a = random_fixed(&mut state, start);
+                    let b = random_fixed(&mut state, start);
+
+                    fold(&mut hash, &a.add_with_limbs(&b, active_limbs), start);
+                    fold(&mut hash, &a.sub_with_limbs(&b, active_limbs), start);
+                    fold(&mut hash, &b.sub_with_limbs(&a, active_limbs), start);
+                    fold(&mut hash, &a.mul_with_limbs(&b, active_limbs), start);
+                    fold(&mut hash, &a.square_with_limbs(active_limbs), start);
+                    fold(&mut hash, &b.square_with_limbs(active_limbs), start);
+
+                    // 同符号・異符号の両方を踏ませる (加減算の分岐が変わる)
+                    let a_neg = a.negate();
+                    fold(&mut hash, &a_neg.add_with_limbs(&b, active_limbs), start);
+                    fold(&mut hash, &a_neg.sub_with_limbs(&b, active_limbs), start);
+
+                    // ge_integer は分岐にしか効かないのでboolを畳む
+                    hash ^= a.square_with_limbs(active_limbs).ge_integer(4) as u64;
+                    hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+                }
+
+                hash
+            })
+            .collect();
+
+        // 全件出してから検証する。goldenを作り直すときはこの出力を貼る
+        for ((active_limbs, _), hash) in cases.iter().zip(&actual) {
+            println!("{active_limbs:>2} limbs: 0x{hash:016x}");
+        }
+
+        for ((active_limbs, expected), hash) in cases.iter().zip(&actual) {
+            assert_eq!(
+                hash, expected,
+                "{active_limbs} limbs: 出力がビット単位で変わった"
+            );
         }
     }
 }
