@@ -63,6 +63,15 @@ export default {
         jade: {
           7: "var(--jade-7)",
         },
+        tomato: {
+          7: "var(--tomato-7)",
+        },
+        lime: {
+          7: "var(--lime-7)",
+        },
+        sage: {
+          7: "var(--sage-7)",
+        },
         white: {
           "a-12": "var(--white-a12)",
         },

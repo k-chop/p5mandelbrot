@@ -46,9 +46,6 @@ export type BenchmarkProgress = {
   phase: "warmup" | "sample" | "done";
 };
 
-/** presented待ちの上限。これを超えたらpresentedは計測不能(0)として扱う */
-const PRESENTED_TIMEOUT_MS = 2000;
-
 export type BenchmarkAllProgress = {
   poiIndex: number;
   poiCount: number;
@@ -62,18 +59,18 @@ export type BenchmarkAllProgress = {
  * refOrbit: spans[name="reference_orbit"].elapsed
  * iter: spans[name="iteration_*"].elapsedのmax (bottleneck worker)
  * iterMean: 同じspansのmean
- * presented: 計算開始から描画が画面に反映されるまで。取得できなかった場合は0
+ * presented: 計算開始から描画が画面に反映されるまで
  */
 const extractSample = (
   iteration: number,
   t0: number,
   t1: number,
-  presentedAt: number | null,
+  presentedAt: number,
   batchId: string,
 ): BenchmarkSample => {
   const batchCtx = getBatchContext(batchId);
   const total = t1 - t0;
-  const presented = presentedAt != null ? presentedAt - t0 : 0;
+  const presented = presentedAt - t0;
 
   if (batchCtx == null) {
     return { iteration, total, presented, refOrbit: 0, iter: 0, iterMean: 0 };
@@ -137,20 +134,13 @@ export const runBenchmark = async (
       const t0 = performance.now();
 
       let t1 = 0;
-      const presentedAt = await new Promise<number | null>((resolve) => {
-        let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
+      const presentedAt = await new Promise<number>((resolve) => {
         void startCalculation(
           () => {
             t1 = performance.now();
-            // 画面が更新されない状況 (タブが非アクティブでrAFが止まる等) でも止まらないようにする
-            timeoutId = setTimeout(() => resolve(null), PRESENTED_TIMEOUT_MS);
           },
           () => {},
-          () => {
-            clearTimeout(timeoutId);
-            resolve(performance.now());
-          },
+          () => resolve(performance.now()),
         );
       });
 
