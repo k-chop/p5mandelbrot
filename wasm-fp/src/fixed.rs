@@ -10,53 +10,6 @@ const FRAC_BITS: usize = FRAC_LIMBS * 64;
 /// 乗算の中間積リム数
 const PRODUCT_LIMBS: usize = LIMBS * 2;
 
-/// `active_limbs` を const generic 引数に振り分ける。
-///
-/// 単相化すると `start = LIMBS - active_limbs` がコンパイル時定数になり、
-/// 使わないリムへのゼロ埋めが dead store として除去でき、ループも展開できる。
-/// 分岐が入るので **hot loop の外側で 1 回だけ** 使うこと。
-///
-/// 範囲外の値は全精度 (`LIMBS`) にフォールバックする。
-macro_rules! dispatch_active_limbs {
-    ($active_limbs:expr, $f:ident $(, $arg:expr)* $(,)?) => {
-        match $active_limbs {
-            2 => $f::<2>($($arg),*),
-            3 => $f::<3>($($arg),*),
-            4 => $f::<4>($($arg),*),
-            5 => $f::<5>($($arg),*),
-            6 => $f::<6>($($arg),*),
-            7 => $f::<7>($($arg),*),
-            8 => $f::<8>($($arg),*),
-            9 => $f::<9>($($arg),*),
-            10 => $f::<10>($($arg),*),
-            11 => $f::<11>($($arg),*),
-            12 => $f::<12>($($arg),*),
-            13 => $f::<13>($($arg),*),
-            14 => $f::<14>($($arg),*),
-            15 => $f::<15>($($arg),*),
-            16 => $f::<16>($($arg),*),
-            17 => $f::<17>($($arg),*),
-            18 => $f::<18>($($arg),*),
-            19 => $f::<19>($($arg),*),
-            20 => $f::<20>($($arg),*),
-            21 => $f::<21>($($arg),*),
-            22 => $f::<22>($($arg),*),
-            23 => $f::<23>($($arg),*),
-            24 => $f::<24>($($arg),*),
-            25 => $f::<25>($($arg),*),
-            26 => $f::<26>($($arg),*),
-            27 => $f::<27>($($arg),*),
-            28 => $f::<28>($($arg),*),
-            29 => $f::<29>($($arg),*),
-            30 => $f::<30>($($arg),*),
-            31 => $f::<31>($($arg),*),
-            _ => $f::<32>($($arg),*),
-        }
-    };
-}
-
-pub(crate) use dispatch_active_limbs;
-
 /// 2048-bit fixed-point number: 64-bit integer + 1984-bit fraction.
 ///
 /// Representation: sign-magnitude, 32 × u64 little-endian limbs.
@@ -85,19 +38,6 @@ impl Fixed2048 {
         self.limbs.iter().all(|&x| x == 0)
     }
 
-    /// `limbs[..START]` が 0 だと分かっている場合の [`Self::new`]。
-    ///
-    /// 演算結果の limbs は必ず `[0u64; LIMBS]` から `START` 以上だけを埋めて作るので、
-    /// ゼロ判定は `START` 以上を見れば足りる。active_limbs が小さいほど走査が減る。
-    fn new_ranged<const A: usize>(limbs: [u64; LIMBS], negative: bool) -> Self {
-        let start = LIMBS - A;
-        let is_zero = limbs[start..].iter().all(|&x| x == 0);
-        Self {
-            limbs,
-            negative: negative && !is_zero,
-        }
-    }
-
     pub fn negate(&self) -> Self {
         if self.is_zero() {
             *self
@@ -109,8 +49,7 @@ impl Fixed2048 {
         }
     }
 
-    fn cmp_magnitude_ranged<const A: usize>(&self, other: &Self) -> Ordering {
-        let start = LIMBS - A;
+    fn cmp_magnitude_ranged(&self, other: &Self, start: usize) -> Ordering {
         for i in (start..LIMBS).rev() {
             match self.limbs[i].cmp(&other.limbs[i]) {
                 Ordering::Equal => continue,
@@ -120,8 +59,7 @@ impl Fixed2048 {
         Ordering::Equal
     }
 
-    fn add_limbs_ranged<const A: usize>(a: &[u64; LIMBS], b: &[u64; LIMBS]) -> [u64; LIMBS] {
-        let start = LIMBS - A;
+    fn add_limbs_ranged(a: &[u64; LIMBS], b: &[u64; LIMBS], start: usize) -> [u64; LIMBS] {
         let mut result = [0u64; LIMBS];
         let mut carry = 0u64;
         for i in start..LIMBS {
@@ -133,8 +71,7 @@ impl Fixed2048 {
         result
     }
 
-    fn sub_limbs_ranged<const A: usize>(a: &[u64; LIMBS], b: &[u64; LIMBS]) -> [u64; LIMBS] {
-        let start = LIMBS - A;
+    fn sub_limbs_ranged(a: &[u64; LIMBS], b: &[u64; LIMBS], start: usize) -> [u64; LIMBS] {
         let mut result = [0u64; LIMBS];
         let mut borrow = 0u64;
         for i in start..LIMBS {
@@ -148,42 +85,24 @@ impl Fixed2048 {
 
     /// フル精度加算。`add_with_limbs(other, LIMBS)` と等価。
     pub fn add(&self, other: &Self) -> Self {
-        self.add_const::<LIMBS>(other)
+        self.add_with_limbs(other, LIMBS)
     }
 
     /// 上位 `active_limbs` 個のリムのみ使って加算する。
     pub fn add_with_limbs(&self, other: &Self, active_limbs: usize) -> Self {
-        fn call<const A: usize>(a: &Fixed2048, b: &Fixed2048) -> Fixed2048 {
-            a.add_const::<A>(b)
-        }
-        dispatch_active_limbs!(active_limbs, call, self, other)
-    }
-
-    /// 上位 `A` 個のリムのみ使って加算する。
-    pub fn add_const<const A: usize>(&self, other: &Self) -> Self {
-        self.add_signed_const::<A>(other, other.negative)
-    }
-
-    /// `other` の符号を `other_negative` として扱って加算する。
-    ///
-    /// 減算を `negate()` 経由にすると、符号を反転するためだけに
-    /// 32リムまるごとのゼロ判定と 256 バイトのコピーが発生する。
-    /// 符号をフラグで渡せばそれが不要になる。
-    fn add_signed_const<const A: usize>(&self, other: &Self, other_negative: bool) -> Self {
-        const { assert!(A >= 1 && A <= LIMBS) }
-
-        if self.negative == other_negative {
-            let limbs = Self::add_limbs_ranged::<A>(&self.limbs, &other.limbs);
-            Self::new_ranged::<A>(limbs, self.negative)
+        let start = LIMBS - active_limbs.min(LIMBS);
+        if self.negative == other.negative {
+            let limbs = Self::add_limbs_ranged(&self.limbs, &other.limbs, start);
+            Self::new(limbs, self.negative)
         } else {
-            match self.cmp_magnitude_ranged::<A>(other) {
+            match self.cmp_magnitude_ranged(other, start) {
                 Ordering::Greater => {
-                    let limbs = Self::sub_limbs_ranged::<A>(&self.limbs, &other.limbs);
-                    Self::new_ranged::<A>(limbs, self.negative)
+                    let limbs = Self::sub_limbs_ranged(&self.limbs, &other.limbs, start);
+                    Self::new(limbs, self.negative)
                 }
                 Ordering::Less => {
-                    let limbs = Self::sub_limbs_ranged::<A>(&other.limbs, &self.limbs);
-                    Self::new_ranged::<A>(limbs, other_negative)
+                    let limbs = Self::sub_limbs_ranged(&other.limbs, &self.limbs, start);
+                    Self::new(limbs, other.negative)
                 }
                 Ordering::Equal => Self::ZERO,
             }
@@ -192,41 +111,23 @@ impl Fixed2048 {
 
     /// フル精度減算。`sub_with_limbs(other, LIMBS)` と等価。
     pub fn sub(&self, other: &Self) -> Self {
-        self.sub_const::<LIMBS>(other)
+        self.add(&other.negate())
     }
 
     /// 上位 `active_limbs` 個のリムのみ使って減算する。
     pub fn sub_with_limbs(&self, other: &Self, active_limbs: usize) -> Self {
-        fn call<const A: usize>(a: &Fixed2048, b: &Fixed2048) -> Fixed2048 {
-            a.sub_const::<A>(b)
-        }
-        dispatch_active_limbs!(active_limbs, call, self, other)
-    }
-
-    /// 上位 `A` 個のリムのみ使って減算する。
-    pub fn sub_const<const A: usize>(&self, other: &Self) -> Self {
-        self.add_signed_const::<A>(other, !other.negative)
+        self.add_with_limbs(&other.negate(), active_limbs)
     }
 
     /// フル精度乗算。`mul_with_limbs(other, LIMBS)` と等価。
     pub fn mul(&self, other: &Self) -> Self {
-        self.mul_const::<LIMBS>(other)
+        self.mul_with_limbs(other, LIMBS)
     }
 
     /// 上位 `active_limbs` 個のリムのみ使って乗算する。
-    pub fn mul_with_limbs(&self, other: &Self, active_limbs: usize) -> Self {
-        fn call<const A: usize>(a: &Fixed2048, b: &Fixed2048) -> Fixed2048 {
-            a.mul_const::<A>(b)
-        }
-        dispatch_active_limbs!(active_limbs, call, self, other)
-    }
-
-    /// 上位 `A` 個のリムのみ使って乗算する。
     /// 下位リムの計算をスキップして高速化する。
-    pub fn mul_const<const A: usize>(&self, other: &Self) -> Self {
-        const { assert!(A >= 1 && A <= LIMBS) }
-        let start = LIMBS - A;
-
+    pub fn mul_with_limbs(&self, other: &Self, active_limbs: usize) -> Self {
+        let start = LIMBS - active_limbs.min(LIMBS);
         let mut product = [0u64; PRODUCT_LIMBS];
         for i in start..LIMBS {
             let mut carry = 0u128;
@@ -250,29 +151,19 @@ impl Fixed2048 {
         for i in start..LIMBS {
             limbs[i] = product[i + FRAC_LIMBS];
         }
-        Self::new_ranged::<A>(limbs, self.negative != other.negative)
+        Self::new(limbs, self.negative != other.negative)
     }
 
     /// フル精度自乗。`square_with_limbs(LIMBS)` と等価。
     pub fn square(&self) -> Self {
-        self.square_const::<LIMBS>()
+        self.square_with_limbs(LIMBS)
     }
 
     /// 上位 `active_limbs` 個のリムのみ使って自乗する。
-    pub fn square_with_limbs(&self, active_limbs: usize) -> Self {
-        fn call<const A: usize>(a: &Fixed2048) -> Fixed2048 {
-            a.square_const::<A>()
-        }
-        dispatch_active_limbs!(active_limbs, call, self)
-    }
-
-    /// 上位 `A` 個のリムのみ使って自乗する。
     /// a[i]*a[j] == a[j]*a[i] の対称性を利用し、
     /// 対角以外の積を1回だけ計算して2倍することで乗算回数を約47%削減する。
-    pub fn square_const<const A: usize>(&self) -> Self {
-        const { assert!(A >= 1 && A <= LIMBS) }
-        let start = LIMBS - A;
-
+    pub fn square_with_limbs(&self, active_limbs: usize) -> Self {
+        let start = LIMBS - active_limbs.min(LIMBS);
         let mut product = [0u64; PRODUCT_LIMBS];
 
         // Off-diagonal: i < j の組み合わせのみ計算
@@ -332,11 +223,8 @@ impl Fixed2048 {
         for i in start..LIMBS {
             limbs[i] = product[i + FRAC_LIMBS];
         }
-        // 自乗は常に非負。negativeがfalse固定なのでゼロ判定そのものが要らない
-        Self {
-            limbs,
-            negative: false,
-        }
+        // 自乗は常に非負
+        Self::new(limbs, false)
     }
 
     /// 下位リムをゼロにして精度を制限する。
@@ -400,34 +288,19 @@ impl Fixed2048 {
     }
 
     pub fn to_f64(&self) -> f64 {
-        self.to_f64_const::<LIMBS>()
-    }
-
-    /// 上位 `A` 個のリムのみ見て f64 に変換する。
-    ///
-    /// `limbs[..LIMBS - A]` は常に 0 なので、走査をそこで止めても結果は変わらない
-    /// (下位リムしか値がなければ `to_f64` は 0.0 を返し、`top` が下限に達した場合の
-    /// `limbs[top - 1]` も 0 だった)。
-    /// **下位リムを読まないことで、演算側のゼロ埋めを dead store にできる。**
-    pub fn to_f64_const<const A: usize>(&self) -> f64 {
-        const { assert!(A >= 1 && A <= LIMBS) }
-        let start = LIMBS - A;
-
         let mut top = FRAC_LIMBS;
-        while top > start && self.limbs[top] == 0 {
+        while top > 0 && self.limbs[top] == 0 {
             top -= 1;
         }
         if self.limbs[top] == 0 {
             return 0.0;
         }
 
-        let (val, exp) = if top > start {
+        let (val, exp) = if top > 0 {
             let v = ((self.limbs[top] as u128) << 64) | (self.limbs[top - 1] as u128);
             (v, (top as i32 - LIMBS as i32) * 64)
         } else {
-            // top == start。下位リムは 0 なので下half は 0 として扱う
-            let v = (self.limbs[top] as u128) << 64;
-            (v, (top as i32 - LIMBS as i32) * 64)
+            (self.limbs[0] as u128, -(FRAC_BITS as i32))
         };
 
         let f = val as f64 * 2.0_f64.powi(exp);

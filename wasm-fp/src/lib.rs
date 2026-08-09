@@ -2,7 +2,6 @@ pub mod complex;
 pub mod fixed;
 
 use complex::ComplexFixed;
-use fixed::dispatch_active_limbs;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -23,34 +22,26 @@ pub struct CalculationRequest {
 pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
     let c = ComplexFixed::parse(&req.x, &req.y);
     let limbs = (req.active_limbs as usize).clamp(2, fixed::LIMBS);
-    dispatch_active_limbs!(limbs, orbit_loop, &c, req.max_iter)
-}
 
-/// reference orbit のループ本体。
-///
-/// リム数を const generic にして単相化することで `start = LIMBS - A` が
-/// コンパイル時定数になり、使わない下位リムの処理が除去される。
-/// 振り分けは [`perform_calculation`] で 1 回だけ行う。
-fn orbit_loop<const A: usize>(c: &ComplexFixed, max_iter: u32) -> Vec<f64> {
     let mut z = ComplexFixed::ZERO;
-    let mut result = Vec::with_capacity((max_iter as usize + 1) * 2);
+    let mut result = Vec::with_capacity((req.max_iter as usize + 1) * 2);
 
-    for _ in 0..=max_iter {
-        let re2 = z.re.square_const::<A>();
-        let im2 = z.im.square_const::<A>();
+    for _ in 0..=req.max_iter {
+        let re2 = z.re.square_with_limbs(limbs);
+        let im2 = z.im.square_with_limbs(limbs);
 
-        if re2.add_const::<A>(&im2).ge_integer(4) {
+        if re2.add_with_limbs(&im2, limbs).ge_integer(4) {
             break;
         }
 
-        result.push(z.re.to_f64_const::<A>());
-        result.push(z.im.to_f64_const::<A>());
+        result.push(z.re.to_f64());
+        result.push(z.im.to_f64());
 
-        let sum_sq = z.re.add_const::<A>(&z.im).square_const::<A>();
-        let two_re_im = sum_sq.sub_const::<A>(&re2).sub_const::<A>(&im2);
+        let sum_sq = z.re.add_with_limbs(&z.im, limbs).square_with_limbs(limbs);
+        let two_re_im = sum_sq.sub_with_limbs(&re2, limbs).sub_with_limbs(&im2, limbs);
         z = ComplexFixed::new(
-            re2.sub_const::<A>(&im2).add_const::<A>(&c.re),
-            two_re_im.add_const::<A>(&c.im),
+            re2.sub_with_limbs(&im2, limbs).add_with_limbs(&c.re, limbs),
+            two_re_im.add_with_limbs(&c.im, limbs),
         );
     }
 
