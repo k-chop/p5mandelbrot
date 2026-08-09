@@ -40,6 +40,9 @@ self.addEventListener("message", (event) => {
   const diffY = isSuperSampling ? 0.5 : 1;
 
   let hitCount = 0;
+  // progress postMessageのスロットリング用。前回送信時刻からPROGRESS_INTERVAL_MS経過時のみ送る
+  let lastProgressSentAt = 0;
+  const PROGRESS_INTERVAL_MS = 50;
 
   let scaledY = 0;
   for (let y = startY; y < endY; y = y + diffY, scaledY++) {
@@ -72,10 +75,14 @@ self.addEventListener("message", (event) => {
 
       if (n === N) hitCount++;
     }
-    self.postMessage({
-      type: "progress",
-      progress: (y - startY) / areaPixelHeight,
-    });
+    const nowMs = performance.now();
+    if (nowMs - lastProgressSentAt >= PROGRESS_INTERVAL_MS) {
+      lastProgressSentAt = nowMs;
+      self.postMessage({
+        type: "progress",
+        progress: (y - startY) / areaPixelHeight,
+      });
+    }
   }
 
   const elapsed = performance.now() - startedAt;
