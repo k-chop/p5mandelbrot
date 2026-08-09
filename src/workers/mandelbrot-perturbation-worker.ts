@@ -18,11 +18,6 @@ import wasmInit, {
 } from "../../wasm-iter/pkg/mandelbrot_iter.js";
 import type { IterationWorkerParams } from "../types";
 
-/**
- * wasmのhot loopを1回の呼び出しで回すscaled-yの行数。
- * JS境界のオーバーヘッドが誤差になる程度の粒度で、progressとterminatorのチェック粒度も兼ねる
- */
-const BAND_SCALED_ROWS = 64;
 /** progress postMessageのスロットリング間隔 */
 const PROGRESS_INTERVAL_MS = 50;
 
@@ -162,9 +157,10 @@ const calcHandler = (data: IterationWorkerParams) => {
 
     begin_pass(xDiff, yDiff, scaledAreaWidth, isSuperSampling, isResultPass);
 
-    for (let bandStart = 0; bandStart < scaledAreaHeight; bandStart += BAND_SCALED_ROWS) {
-      const bandEnd = Math.min(bandStart + BAND_SCALED_ROWS, scaledAreaHeight);
-      calc_iteration_band(bandStart, bandEnd);
+    // JS版と同じくscaled-y 1行ごとにterminatorとprogressを見る。
+    // 行単位に切っても呼び出し回数は1 passあたり高々数千回で、wasm境界のコストは誤差
+    for (let scaledY = 0; scaledY < scaledAreaHeight; scaledY++) {
+      calc_iteration_band(scaledY, scaledY + 1);
 
       if (terminateChecker[workerIdx] !== 0) {
         terminated = true;
