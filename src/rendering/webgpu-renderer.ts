@@ -414,9 +414,11 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
 };
 
 /**
- * iterationBufferQueueを全て処理してGPU iterations[]を更新し、完了を待つ
+ * iterationBufferQueueを全て処理してGPU iterations[]を更新する
  *
- * translate後にGPUバッファを即座に最新化し、次フレームで古いデータが描画されるのを防ぐ
+ * translate後にGPUバッファを最新化し、次フレームで古いデータが描画されるのを防ぐ。
+ * queueへの投入順に実行されるので、後から積まれるrender passは必ず更新後のiterations[]を読む。
+ * このためGPU側の完了をCPUで待つ必要はない。
  */
 export const flushIterationBufferQueue = async (): Promise<void> => {
   if (!gpuInitialized || iterationBufferQueue.length === 0) return;
@@ -424,12 +426,8 @@ export const flushIterationBufferQueue = async (): Promise<void> => {
   isFlushing = true;
 
   try {
-    // iterationBufferを0クリアして古い位置のデータを除去
-    {
-      const encoder = device.createCommandEncoder();
-      encoder.clearBuffer(root.unwrap(iterationBuffer));
-      device.queue.submit([encoder.finish()]);
-    }
+    /** iterationBufferの0クリア (古い位置のデータの除去) がまだ積まれていない */
+    let needsClear = true;
 
     const params = getCurrentParams();
     const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
@@ -469,10 +467,19 @@ export const flushIterationBufferQueue = async (): Promise<void> => {
       });
 
       const encoder = device.createCommandEncoder();
+      if (needsClear) {
+        encoder.clearBuffer(root.unwrap(iterationBuffer));
+        needsClear = false;
+      }
       encodeCopyComputePass(encoder, totalPixelCount);
       device.queue.submit([encoder.finish()]);
+    }
 
-      await device.queue.onSubmittedWorkDone();
+    if (needsClear) {
+      // 1グループも処理できなかった場合もクリアだけは流しておく
+      const encoder = device.createCommandEncoder();
+      encoder.clearBuffer(root.unwrap(iterationBuffer));
+      device.queue.submit([encoder.finish()]);
     }
   } finally {
     isFlushing = false;
