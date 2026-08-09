@@ -2,6 +2,7 @@ pub mod complex;
 pub mod fixed;
 
 use complex::ComplexFixed;
+use fixed::{Fixed2048, PRODUCT_LIMBS};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -23,26 +24,44 @@ pub fn perform_calculation(req: CalculationRequest) -> Vec<f64> {
     let c = ComplexFixed::parse(&req.x, &req.y);
     let limbs = (req.active_limbs as usize).clamp(2, fixed::LIMBS);
 
-    let mut z = ComplexFixed::ZERO;
     let mut result = Vec::with_capacity((req.max_iter as usize + 1) * 2);
 
-    for _ in 0..=req.max_iter {
-        let re2 = z.re.square_with_limbs(limbs);
-        let im2 = z.im.square_with_limbs(limbs);
+    // 全部ループの外で確保して使い回す。
+    // 下位リムは ZERO 初期化のあと assign_* が一切触らないので 0 のまま保たれ、
+    // 毎反復の 256/512 バイトのゼロ埋めが不要になる
+    let mut z_re = Fixed2048::ZERO;
+    let mut z_im = Fixed2048::ZERO;
+    let mut re2 = Fixed2048::ZERO;
+    let mut im2 = Fixed2048::ZERO;
+    let mut norm = Fixed2048::ZERO;
+    let mut re_plus_im = Fixed2048::ZERO;
+    let mut sum_sq = Fixed2048::ZERO;
+    let mut partial = Fixed2048::ZERO;
+    let mut two_re_im = Fixed2048::ZERO;
+    let mut re2_minus_im2 = Fixed2048::ZERO;
+    let mut product = [0u64; PRODUCT_LIMBS];
 
-        if re2.add_with_limbs(&im2, limbs).ge_integer(4) {
+    for _ in 0..=req.max_iter {
+        re2.assign_square(&z_re, &mut product, limbs);
+        im2.assign_square(&z_im, &mut product, limbs);
+
+        norm.assign_add(&re2, &im2, limbs);
+        if norm.ge_integer(4) {
             break;
         }
 
-        result.push(z.re.to_f64());
-        result.push(z.im.to_f64());
+        result.push(z_re.to_f64());
+        result.push(z_im.to_f64());
 
-        let sum_sq = z.re.add_with_limbs(&z.im, limbs).square_with_limbs(limbs);
-        let two_re_im = sum_sq.sub_with_limbs(&re2, limbs).sub_with_limbs(&im2, limbs);
-        z = ComplexFixed::new(
-            re2.sub_with_limbs(&im2, limbs).add_with_limbs(&c.re, limbs),
-            two_re_im.add_with_limbs(&c.im, limbs),
-        );
+        re_plus_im.assign_add(&z_re, &z_im, limbs);
+        sum_sq.assign_square(&re_plus_im, &mut product, limbs);
+        partial.assign_sub(&sum_sq, &re2, limbs);
+        two_re_im.assign_sub(&partial, &im2, limbs);
+        re2_minus_im2.assign_sub(&re2, &im2, limbs);
+
+        // ここから先で z_re / z_im は読まれないので直接上書きしてよい
+        z_re.assign_add(&re2_minus_im2, &c.re, limbs);
+        z_im.assign_add(&two_re_im, &c.im, limbs);
     }
 
     result
