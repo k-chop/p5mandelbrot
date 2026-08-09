@@ -754,4 +754,106 @@ mod tests {
             assert_eq!(t.limbs[i], 0);
         }
     }
+
+    /// 再現可能な擬似乱数 (xorshift64*)
+    fn next_rand(state: &mut u64) -> u64 {
+        let mut x = *state;
+        x ^= x >> 12;
+        x ^= x << 25;
+        x ^= x >> 27;
+        *state = x;
+        x.wrapping_mul(0x2545_f491_4f6c_dd1d)
+    }
+
+    /// active_limbs の範囲の値をランダムに埋めた Fixed2048 を作る。
+    ///
+    /// 下位リムは 0 のまま。実際の演算結果もそうなっているので入力もそれに合わせる。
+    fn random_fixed(state: &mut u64, start: usize) -> Fixed2048 {
+        let mut limbs = [0u64; LIMBS];
+        for limb in limbs.iter_mut().skip(start) {
+            *limb = next_rand(state);
+        }
+        Fixed2048::new(limbs, next_rand(state) & 1 == 0)
+    }
+
+    /// 演算結果の「意味のあるリム」と符号を FNV-1a で畳み込む。
+    ///
+    /// 下位リム (`0..start`) は捨てられる領域なので見ない。
+    /// ここを含めると「下位リムを触らない」系の最適化が結果不変でも落ちてしまう。
+    fn fold(hash: &mut u64, v: &Fixed2048, start: usize) {
+        for &limb in &v.limbs[start..] {
+            for byte in limb.to_le_bytes() {
+                *hash ^= byte as u64;
+                *hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+            }
+        }
+        *hash ^= v.negative as u64;
+        *hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+
+    /// add / sub / mul / square の出力をビット単位で固定する。
+    ///
+    /// [`super::tests`] の orbit 単位の golden は、参照点が集合内部寄りで誤差増幅が遅く、
+    /// 下位リムの差が f64 の仮数に届くまでに数万反復かかるため感度が足りない
+    /// (実際 `add_limbs_ranged` の範囲を 1 リムずらしても 7 ケース中 5 ケースが素通りした)。
+    /// こちらはプリミティブの出力を直接見るので、1 ビットでも変われば即座に落ちる。
+    ///
+    /// 多倍長ループの最適化はこのテストを通すことが必須条件。
+    #[test]
+    fn primitives_golden() {
+        // (active_limbs, expected_hash)
+        let cases: [(usize, u64); 7] = [
+            (2, 0x66b5_d780_eb48_6161),
+            (5, 0xdbd8_1b77_ebf9_7f1f),
+            (9, 0x30ee_7abb_70f1_0014),
+            (12, 0x2e23_c07a_e7cf_cea0),
+            (13, 0x73ad_c250_1cae_5d36),
+            (20, 0x0562_a977_d048_4077),
+            (32, 0x4200_7000_6bf4_e8e9),
+        ];
+
+        let actual: Vec<u64> = cases
+            .iter()
+            .map(|&(active_limbs, _)| {
+                let start = LIMBS - active_limbs;
+                let mut state = 0x9e37_79b9_7f4a_7c15;
+                let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+
+                for _ in 0..256 {
+                    let a = random_fixed(&mut state, start);
+                    let b = random_fixed(&mut state, start);
+
+                    fold(&mut hash, &a.add_with_limbs(&b, active_limbs), start);
+                    fold(&mut hash, &a.sub_with_limbs(&b, active_limbs), start);
+                    fold(&mut hash, &b.sub_with_limbs(&a, active_limbs), start);
+                    fold(&mut hash, &a.mul_with_limbs(&b, active_limbs), start);
+                    fold(&mut hash, &a.square_with_limbs(active_limbs), start);
+                    fold(&mut hash, &b.square_with_limbs(active_limbs), start);
+
+                    // 同符号・異符号の両方を踏ませる (加減算の分岐が変わる)
+                    let a_neg = a.negate();
+                    fold(&mut hash, &a_neg.add_with_limbs(&b, active_limbs), start);
+                    fold(&mut hash, &a_neg.sub_with_limbs(&b, active_limbs), start);
+
+                    // ge_integer は分岐にしか効かないのでboolを畳む
+                    hash ^= a.square_with_limbs(active_limbs).ge_integer(4) as u64;
+                    hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+                }
+
+                hash
+            })
+            .collect();
+
+        // 全件出してから検証する。goldenを作り直すときはこの出力を貼る
+        for ((active_limbs, _), hash) in cases.iter().zip(&actual) {
+            println!("{active_limbs:>2} limbs: 0x{hash:016x}");
+        }
+
+        for ((active_limbs, expected), hash) in cases.iter().zip(&actual) {
+            assert_eq!(
+                hash, expected,
+                "{active_limbs} limbs: 出力がビット単位で変わった"
+            );
+        }
+    }
 }
