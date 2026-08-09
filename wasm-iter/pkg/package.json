@@ -1,0 +1,15 @@
+{
+  "name": "mandelbrot_iter",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "mandelbrot_iter_bg.wasm",
+    "mandelbrot_iter.js",
+    "mandelbrot_iter.d.ts"
+  ],
+  "main": "mandelbrot_iter.js",
+  "types": "mandelbrot_iter.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
