@@ -14,7 +14,7 @@ import { clamp } from "../math/util";
 import type { IterationBuffer } from "../types";
 import { type MandelbrotParams } from "../types";
 import { isMobileViewport } from "../view/use-is-mobile";
-import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "./common";
+import { applyMaxCanvasSize } from "./common";
 import type { Renderer } from "./renderer";
 
 export interface Resolution {
@@ -131,8 +131,6 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
 
   unifiedIterationBuffer = new Uint32Array(w * h);
   mainBuffer.resizeCanvas(width, height);
-
-  rescaleIterationCacheForResize(from, { width, height });
 };
 
 /**
