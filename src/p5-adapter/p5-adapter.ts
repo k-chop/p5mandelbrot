@@ -12,6 +12,7 @@ import {
 import { startCalculation } from "../mandelbrot";
 import { calcAutoN } from "../mandelbrot-state/auto-iteration";
 import {
+  forceReRender,
   getAutoIterationEnabled,
   getCurrentParams,
   getManualN,
@@ -479,6 +480,11 @@ export const resizeTo = (_p: p5 = UNSAFE_p5Instance) => {
 
   if (elm) {
     resizeCanvas(elm.clientWidth, elm.clientHeight);
+
+    // 拡縮の基準点が古いキャンバスの中心のままだと、次の計算でキャッシュがずれる
+    resetScaleParams();
+    // 解像度が変わったので、引き伸ばしたキャッシュを新しい解像度で計算し直す
+    forceReRender();
   }
 };
 
