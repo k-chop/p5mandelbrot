@@ -1,14 +1,45 @@
 /// <reference lib="webworker" />
 
 import { generateLowResDiffSequence } from "../math/low-res-diff-sequence";
-import { BLATableView, ITEM_BYTE_LENGTH, SKIP_BLA_ENTRY_UNTIL_THIS_L } from "./bla-table-item";
+import { BLATableView, SKIP_BLA_ENTRY_UNTIL_THIS_L } from "./bla-table-item";
 import { ComplexArrayView } from "./xn-buffer";
 import BigNumber from "bignumber.js";
-import { mulIm, mulRe, nNorm } from "../math/complex";
+import wasmInit, {
+  alloc_job,
+  begin_iteration_job,
+  begin_pass,
+  bla_bytes_ptr,
+  bla_row_offsets_ptr,
+  calc_iteration_band,
+  get_calculated_count,
+  get_hit_count,
+  scaled_iterations_ptr,
+  xn_ptr,
+} from "../../wasm-iter/pkg/mandelbrot_iter.js";
 import type { IterationWorkerParams } from "../types";
-import type { RefOrbitContextPopulated } from "./calc-ref-orbit";
+
+/** progress postMessageのスロットリング間隔 */
+const PROGRESS_INTERVAL_MS = 50;
+
+let wasmMemory: WebAssembly.Memory | null = null;
+
+/**
+ * wasm-iterモジュールを初期化する。
+ * workerスクリプトのロード直後に開始しておき、最初のcalc受信時に完了を待つ
+ */
+async function initWasm(): Promise<void> {
+  const base = import.meta.env.BASE_URL ?? "/";
+  const wasmUrl = new URL(`${base}wasm/mandelbrot_iter_bg.wasm`, self.location.origin);
+  const output = await wasmInit(wasmUrl);
+  wasmMemory = output.memory;
+}
+
+const initPromise = initWasm();
 
 const calcHandler = (data: IterationWorkerParams) => {
+  if (wasmMemory == null) throw new Error("wasm-iter is not initialized");
+  const memory = wasmMemory;
+
   const {
     pixelHeight,
     pixelWidth,
@@ -31,7 +62,6 @@ const calcHandler = (data: IterationWorkerParams) => {
   } = data;
 
   const startedAt = performance.now();
-  // console.debug(`${jobId}: start`);
 
   const terminateChecker = new Uint8Array(terminator);
 
@@ -41,7 +71,6 @@ const calcHandler = (data: IterationWorkerParams) => {
   const areaWidth = endX - startX;
   const areaHeight = endY - startY;
   const pixelNum = areaHeight * areaWidth;
-  const iterations = new Uint32Array(pixelNum);
   const totalPixelCount = pixelNum * (isSuperSampling ? 4 : 1); // FIXME: supersamplingの倍率が固定値になっている
 
   const minDim = Math.min(pixelWidth, pixelHeight);
@@ -60,132 +89,6 @@ const calcHandler = (data: IterationWorkerParams) => {
   // データ節約のために空にしたBLATableの次のindexから開始
   const startBLAIndex = Math.floor(Math.log2(SKIP_BLA_ENTRY_UNTIL_THIS_L)) + 1;
 
-  function calcIterationAt(
-    pixelX: number,
-    pixelY: number,
-    context: RefOrbitContextPopulated,
-  ): number {
-    const { xnView, blaTableView } = context;
-    const maxRefIteration = xnView.length - 1;
-    const blaRows = blaTableView.length;
-
-    // hot loopでのメソッド呼び出しを避けるためrawバッファをローカルに取り出す
-    const xnRaw = xnView.view;
-    const blaView = blaTableView.view;
-    const rowOffsets = blaTableView.rowOffsets;
-
-    // Δn
-    let deltaNRe = 0.0;
-    let deltaNIm = 0.0;
-
-    // Δc = current - ref
-    //     = (cx + (pixelX - W/2) * deltaCScale) - (cx + (refPixelX - W/2) * deltaCScale)
-    //     = (pixelX - refPixelX) * deltaCScale
-    // cxとW/2が相殺される。BigNumbercのみなので、Δcはdoubleのみで計算できる。
-    const deltaCRe = (pixelX - refPixelX) * deltaCScale;
-    const deltaCIm = -(pixelY - refPixelY) * deltaCScale;
-
-    let iteration = 0;
-    let refIteration = 0;
-
-    const bailoutRadius = 4.0;
-
-    while (iteration < maxIteration) {
-      const refIdx2 = refIteration * 2;
-      const xRe = xnRaw[refIdx2];
-      const xIm = xnRaw[refIdx2 + 1];
-      const zRe = xRe + deltaNRe;
-      const zIm = xIm + deltaNIm;
-      const zNorm = nNorm(zRe, zIm);
-      if (zNorm > bailoutRadius) break;
-
-      // rebase
-      // https://fractalforums.org/fractal-mathematics-and-new-theories/28/another-solution-to-perturbation-glitches/4360
-      const dzNorm = nNorm(deltaNRe, deltaNIm);
-      let curXRe = xRe;
-      let curXIm = xIm;
-      if (zNorm < dzNorm || refIteration === maxRefIteration) {
-        deltaNRe = zRe;
-        deltaNIm = zIm;
-        refIteration = 0;
-        curXRe = xnRaw[0];
-        curXIm = xnRaw[1];
-      }
-
-      // BLA
-      let blaRowIdx = -1;
-      let blaColumnIdx = -1;
-
-      // refIteration === (jIdx << d) + 1と|dz| < rを満たす、最大のlを持つデータをblaTableから探す。
-      // 条件 refIteration === (jIdx << d) + 1 は「refM1 (=refIteration-1) の下位 d bit が 0」と等価で、
-      // これを満たす最大の d は refM1 の trailing zeros 数。上限をこれで決めれば、条件不成立の d に対する
-      // blaView.getFloat64 の読み出しを省ける。
-      // |dz| < r は sqrt を省くため dzNorm < r² で判定する (encode時にr²を書き込んでいる)
-      if (0 < refIteration) {
-        const refM1 = refIteration - 1;
-        // ctz(refM1): refM1===0 のときは上限なし (blaRows側に任せる)
-        const ctz = refM1 === 0 ? 32 : 31 - Math.clz32(refM1 & -refM1);
-        const maxD = ctz < blaRows ? ctz : blaRows - 1;
-        for (let d = startBLAIndex; d <= maxD; d++) {
-          const jIdx = refM1 >> d;
-          const byteOffset = rowOffsets[d * 2] + jIdx * ITEM_BYTE_LENGTH;
-          const rSq = blaView.getFloat64(byteOffset + 32, true);
-
-          if (dzNorm < rSq) {
-            blaRowIdx = d;
-            blaColumnIdx = jIdx;
-          } else {
-            break;
-          }
-        }
-      }
-
-      const hasBLA = blaRowIdx >= 0;
-
-      let skipped = 0;
-      let blaByteOffset = 0;
-      if (hasBLA) {
-        blaByteOffset = rowOffsets[blaRowIdx * 2] + blaColumnIdx * ITEM_BYTE_LENGTH;
-        skipped = blaView.getInt32(blaByteOffset + 40, true);
-      }
-      const n = refIteration + skipped;
-
-      if (hasBLA && n < maxRefIteration) {
-        const aRe = blaView.getFloat64(blaByteOffset, true);
-        const aIm = blaView.getFloat64(blaByteOffset + 8, true);
-        const bRe = blaView.getFloat64(blaByteOffset + 16, true);
-        const bIm = blaView.getFloat64(blaByteOffset + 24, true);
-
-        const dzRe = mulRe(aRe, aIm, deltaNRe, deltaNIm) + mulRe(bRe, bIm, deltaCRe, deltaCIm);
-        const dzIm = mulIm(aRe, aIm, deltaNRe, deltaNIm) + mulIm(bRe, bIm, deltaCRe, deltaCIm);
-
-        deltaNRe = dzRe;
-        deltaNIm = dzIm;
-
-        refIteration += skipped;
-        iteration += skipped;
-      } else {
-        // Δn+1 = 2 * Xn * Δn + Δn^2 + Δ0 を計算していく
-        const _deltaNRe = deltaNRe;
-        const _deltaNIm = deltaNIm;
-
-        // (2 * Xn + Δn) * Δn に展開して計算
-        const dzrT = curXRe * 2 + _deltaNRe;
-        const dziT = curXIm * 2 + _deltaNIm;
-
-        deltaNRe = mulRe(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaCRe;
-        deltaNIm = mulIm(dzrT, dziT, _deltaNRe, _deltaNIm) + deltaCIm;
-
-        refIteration++;
-        iteration++;
-      }
-    }
-
-    return Math.min(iteration, maxIteration);
-  }
-
-  const context = { xnView, blaTableView };
-
   let { xDiffs, yDiffs } = generateLowResDiffSequence(6, areaWidth, areaHeight);
 
   if (isSuperSampling) {
@@ -194,10 +97,53 @@ const calcHandler = (data: IterationWorkerParams) => {
     yDiffs = [0.5];
   }
 
-  let calculatedCount = 0;
-  // progress postMessageのスロットリング用。前回送信時刻からPROGRESS_INTERVAL_MS経過時のみ送る
+  // scaled_iterationsのバッファサイズ決定用に、全passで最大となるscaled pixel数を求める
+  let maxScaledPixels = 0;
+  for (let i = 0; i < xDiffs.length; i++) {
+    const scaledPixels = Math.floor(areaWidth / xDiffs[i]) * Math.floor(areaHeight / yDiffs[i]);
+    if (maxScaledPixels < scaledPixels) maxScaledPixels = scaledPixels;
+  }
+
+  const xnF64Length = xnView.view.length;
+  const blaBytesLength = blaTableBuffer.byteLength;
+  const rowOffsetsLength = blaTableView.rowOffsets.length;
+
+  // supersampling時はiterationsキャッシュを参照しないので確保させない
+  alloc_job(
+    xnF64Length,
+    blaBytesLength,
+    rowOffsetsLength,
+    isSuperSampling ? 0 : pixelNum,
+    maxScaledPixels,
+  );
+
+  // SAB → wasm memory へjobごとに1回だけコピーする。
+  // wasm memoryはVec確保時にgrowしてArrayBufferが差し替わるので、
+  // ptrの取得とviewの生成は必ずalloc_jobのあとに行うこと
+  new Float64Array(memory.buffer, xn_ptr(), xnF64Length).set(xnView.view);
+  new Uint8Array(memory.buffer, bla_bytes_ptr(), blaBytesLength).set(
+    new Uint8Array(blaTableBuffer),
+  );
+  new Int32Array(memory.buffer, bla_row_offsets_ptr(), rowOffsetsLength).set(
+    blaTableView.rowOffsets,
+  );
+
+  begin_iteration_job(
+    maxIteration,
+    xnView.length - 1,
+    blaTableView.length,
+    startBLAIndex,
+    deltaCScale,
+    refPixelX,
+    refPixelY,
+    areaWidth,
+    areaHeight,
+    startX,
+    startY,
+  );
+
   let lastProgressSentAt = 0;
-  const PROGRESS_INTERVAL_MS = 50;
+  let terminated = false;
 
   for (let i = 0; i < xDiffs.length; i++) {
     const xDiff = xDiffs[i];
@@ -205,50 +151,38 @@ const calcHandler = (data: IterationWorkerParams) => {
 
     // resultとして送るpassかどうか。hitCountはこのpassの書き込みだけを数える
     const isResultPass = isSuperSampling || i === xDiffs.length - 1;
-    let hitCount = 0;
 
     const scaledAreaWidth = Math.floor(areaWidth / xDiff);
     const scaledAreaHeight = Math.floor(areaHeight / yDiff);
-    const scaledIterations = new Uint32Array(scaledAreaWidth * scaledAreaHeight);
 
-    let scaledY = 0;
-    for (let y = startY; y < endY; y = y + yDiff, scaledY++) {
-      let scaledX = 0;
+    begin_pass(xDiff, yDiff, scaledAreaWidth, isSuperSampling, isResultPass);
 
-      for (let x = startX; x < endX; x = x + xDiff, scaledX++) {
-        const index = Math.floor(x - startX + (y - startY) * areaWidth);
-        const scaledIndex = scaledX + scaledY * scaledAreaWidth;
+    // JS版と同じくscaled-y 1行ごとにterminatorとprogressを見る。
+    // 行単位に切っても呼び出し回数は1 passあたり高々数千回で、wasm境界のコストは誤差
+    for (let scaledY = 0; scaledY < scaledAreaHeight; scaledY++) {
+      calc_iteration_band(scaledY, scaledY + 1);
 
-        if (!isSuperSampling) {
-          const cached = iterations[index];
-          if (cached !== 0) {
-            scaledIterations[scaledIndex] = cached;
-            if (isResultPass && cached === maxIteration) hitCount++;
-            continue;
-          }
-        }
-
-        const n = calcIterationAt(x, y, context);
-
-        calculatedCount++;
-        iterations[index] = n;
-        scaledIterations[scaledIndex] = n;
-        if (isResultPass && n === maxIteration) hitCount++;
+      if (terminateChecker[workerIdx] !== 0) {
+        terminated = true;
+        break;
       }
-
-      if (terminateChecker[workerIdx] !== 0) break;
 
       const nowMs = performance.now();
       if (nowMs - lastProgressSentAt >= PROGRESS_INTERVAL_MS) {
         lastProgressSentAt = nowMs;
         self.postMessage({
           type: "progress",
-          progress: calculatedCount / totalPixelCount,
+          progress: get_calculated_count() / totalPixelCount,
         });
       }
     }
 
-    if (terminateChecker[workerIdx] !== 0) break;
+    if (terminated) break;
+
+    // pass結果をwasm memoryからtransferできるバッファに複製する
+    const scaledPixels = scaledAreaWidth * scaledAreaHeight;
+    const scaledIterations = new Uint32Array(scaledPixels);
+    scaledIterations.set(new Uint32Array(memory.buffer, scaled_iterations_ptr(), scaledPixels));
 
     if (isResultPass) {
       // 最終passの結果はintermediateResultではなくresultとして送り、
@@ -260,7 +194,7 @@ const calcHandler = (data: IterationWorkerParams) => {
           iterations: scaledIterations,
           resolution: { width: scaledAreaWidth, height: scaledAreaHeight },
           elapsed,
-          hitCount,
+          hitCount: get_hit_count(),
         },
         [scaledIterations.buffer],
       );
@@ -275,6 +209,7 @@ const calcHandler = (data: IterationWorkerParams) => {
       );
     }
   }
+
   if (terminateChecker[workerIdx] !== 0) {
     console.debug(`${jobId}: terminated`);
     self.postMessage({
@@ -283,9 +218,10 @@ const calcHandler = (data: IterationWorkerParams) => {
   }
 };
 
-self.addEventListener("message", (event) => {
+self.addEventListener("message", async (event) => {
   switch (event.data.type) {
     case "calc": {
+      await initPromise;
       calcHandler(event.data);
       break;
     }

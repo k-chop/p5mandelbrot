@@ -20,5 +20,5 @@
   "env": {
     "builtin": true
   },
-  "ignorePatterns": ["wasm-fp/pkg"]
+  "ignorePatterns": ["wasm-fp/pkg", "wasm-iter/pkg"]
 }
