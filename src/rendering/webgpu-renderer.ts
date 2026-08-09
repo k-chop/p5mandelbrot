@@ -64,7 +64,10 @@ const UniformSchema = d.struct({
   totalPixelCount: d.f32,
 });
 
-const PaletteSchema = d.arrayOf(d.vec4f, 8192); // FIXME: paletteの最大サイズ分固定で確保している（手抜き）
+/** paletteに確保しているエントリ数 */
+const PALETTE_ENTRY_MAX = 8192;
+
+const PaletteSchema = d.arrayOf(d.vec4f, PALETTE_ENTRY_MAX); // FIXME: paletteの最大サイズ分固定で確保している（手抜き）
 
 /** metadataに格納できるiteration bufferの最大数 */
 const META_ENTRY_MAX = 1024;
@@ -105,6 +108,9 @@ const IterationInputMetadataSchema = d.arrayOf(
 
 /** metadata書き込み用の使い回しバッファ。毎フレームのallocを避けるために持つ */
 const metadataScratch = new Float32Array(META_ENTRY_MAX * META_STRIDE);
+
+/** palette書き込み用の使い回しバッファ。1エントリ = vec4f */
+const paletteScratch = new Float32Array(PALETTE_ENTRY_MAX * 4);
 
 export const getCanvasSize: Renderer["getCanvasSize"] = () => ({
   width,
@@ -535,12 +541,20 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
 export const updatePaletteData: Renderer["updatePaletteData"] = (palette: Palette) => {
   if (!gpuInitialized) return;
 
+  const count = Math.min(palette.length, PALETTE_ENTRY_MAX);
+
   // FIXME: Palette側に定義しとくといいよ
-  for (let i = 0; i < palette.length; i++) {
+  for (let i = 0; i < count; i++) {
     // offsetに影響しないpalette dataを取得したいのでignoreOffset: true
     const [r, g, b] = palette.rgb(i, true);
-    paletteBuffer.writePartial([{ idx: i, value: d.vec4f(r / 255, g / 255, b / 255, 1.0) }]);
+    const offset = i * 4;
+    paletteScratch[offset] = r / 255;
+    paletteScratch[offset + 1] = g / 255;
+    paletteScratch[offset + 2] = b / 255;
+    paletteScratch[offset + 3] = 1.0;
   }
+
+  device.queue.writeBuffer(root.unwrap(paletteBuffer), 0, paletteScratch, 0, count * 4);
 };
 
 const initializeGPU = async (): Promise<boolean> => {
