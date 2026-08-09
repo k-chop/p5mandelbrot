@@ -1,5 +1,6 @@
 import { markNeedsRerender } from "../camera/palette";
 import {
+  consolidateIterationCache,
   scaleIterationCacheAroundPoint,
   setIterationCache,
   translateRectInIterationCache,
@@ -141,6 +142,11 @@ export const rescaleIterationCacheForResize = (
     to.height,
   );
   setIterationCache(translated);
+
+  // rectを縮めただけではbufferは元のキャンバスサイズのままで、
+  // 縮小時にrenderer側のバッファに収まらなくなる。新サイズに焼き直しておく
+  consolidateIterationCache(to.width, to.height);
+
   addIterationBuffer();
 
   markNeedsRerender();
