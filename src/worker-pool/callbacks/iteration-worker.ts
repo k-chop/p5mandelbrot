@@ -26,7 +26,7 @@ export const onIterationWorkerProgress: IterationProgressCallback = (result, job
 };
 
 export const onIterationWorkerResult: IterationResultCallback = (result, job) => {
-  const { iterations, resolution, elapsed } = result;
+  const { iterations, resolution, elapsed, hitCount } = result;
   const { rect } = job;
   const batchContext = getBatchContext(job.batchId);
 
@@ -39,11 +39,6 @@ export const onIterationWorkerResult: IterationResultCallback = (result, job) =>
   const iterationsResult = new Uint32Array(iterations);
   const iterBuffer = upsertIterationCache(rect, iterationsResult, resolution, isSuperSampled);
 
-  const maxIter = batchContext.mandelbrotParams.N;
-  let hitCount = 0;
-  for (let i = 0; i < iterationsResult.length; i++) {
-    if (iterationsResult[i] === maxIter) hitCount++;
-  }
   batchContext.nHitCount += hitCount;
   batchContext.totalPixelCount += iterationsResult.length;
 

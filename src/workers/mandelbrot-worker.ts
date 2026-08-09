@@ -39,6 +39,8 @@ self.addEventListener("message", (event) => {
   const diffX = isSuperSampling ? 0.5 : 1;
   const diffY = isSuperSampling ? 0.5 : 1;
 
+  let hitCount = 0;
+
   let scaledY = 0;
   for (let y = startY; y < endY; y = y + diffY, scaledY++) {
     let scaledX = 0;
@@ -67,6 +69,8 @@ self.addEventListener("message", (event) => {
         const index = Math.floor(x - startX + (y - startY) * areaPixelWidth);
         iterations[index] = n;
       }
+
+      if (n === N) hitCount++;
     }
     self.postMessage({
       type: "progress",
@@ -81,6 +85,7 @@ self.addEventListener("message", (event) => {
       iterations,
       resolution: { width: areaPixelWidth, height: areaPixelHeight },
       elapsed,
+      hitCount,
     },
     [iterations.buffer],
   );
