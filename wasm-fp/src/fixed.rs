@@ -118,6 +118,10 @@ impl Fixed2048 {
     /// 符号をフラグで渡せばそれが不要になる。
     fn assign_add_signed(&mut self, a: &Self, b: &Self, b_negative: bool, active_limbs: usize) {
         let start = LIMBS - active_limbs.min(LIMBS);
+        debug_assert!(
+            self.limbs[..start].iter().all(|&x| x == 0),
+            "書き込み先の下位リムが0でない。より大きいactive_limbsで使ったバッファを使い回している"
+        );
         if a.negative == b_negative {
             Self::add_limbs_into(&mut self.limbs, &a.limbs, &b.limbs, start);
             self.negative = a.negative && !self.is_zero_from(start);
@@ -215,6 +219,10 @@ impl Fixed2048 {
         active_limbs: usize,
     ) {
         let start = LIMBS - active_limbs.min(LIMBS);
+        debug_assert!(
+            self.limbs[..start].iter().all(|&x| x == 0),
+            "書き込み先の下位リムが0でない。より大きいactive_limbsで使ったバッファを使い回している"
+        );
         // 実際に読み書きするのは start * 2 以上だけ。下位は触らないので消さなくてよい
         product[start * 2..].fill(0);
 
