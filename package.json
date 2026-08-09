@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "dev-p": "pnpm run build && pnpm run preview",
     "test": "vitest",
+    "bench:wasm": "vitest run --config vitest.bench.config.ts",
     "lint": "oxlint",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
