@@ -9,7 +9,8 @@ import type {
 
 export interface IterationIntermediateResult {
   type: "intermediateResult";
-  iterations: ArrayBuffer;
+  /** worker側はbufferをtransferして送るが、受け取るのはUint32Arrayそのもの */
+  iterations: Uint32Array<ArrayBuffer>;
   resolution: Resolution;
 }
 

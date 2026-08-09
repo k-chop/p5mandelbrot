@@ -17,7 +17,8 @@ import type { RefOrbitContext } from "../workers/calc-ref-orbit";
 
 export interface IterationResult {
   type: "result" | "terminated";
-  iterations: ArrayBuffer;
+  /** worker側はbufferをtransferして送るが、受け取るのはUint32Arrayそのもの */
+  iterations: Uint32Array<ArrayBuffer>;
   resolution: { width: number; height: number };
   elapsed: number;
   /** iterationがmaxIterationに到達したピクセル数。worker側のループ内で数えている */

@@ -36,11 +36,10 @@ export const onIterationWorkerResult: IterationResultCallback = (result, job) =>
   }
 
   const isSuperSampled = batchContext.mandelbrotParams.isSuperSampling;
-  const iterationsResult = new Uint32Array(iterations);
-  const iterBuffer = upsertIterationCache(rect, iterationsResult, resolution, isSuperSampled);
+  const iterBuffer = upsertIterationCache(rect, iterations, resolution, isSuperSampled);
 
   batchContext.nHitCount += hitCount;
-  batchContext.totalPixelCount += iterationsResult.length;
+  batchContext.totalPixelCount += iterations.length;
 
   // jobを完了させる
   batchContext.progressMap.set(job.id, 1.0);
@@ -103,6 +102,6 @@ export const onIterationWorkerIntermediateResult = (
 
   batchContext.onChangeProgress();
 
-  const iterBuffer = upsertIterationCache(rect, new Uint32Array(iterations), resolution);
+  const iterBuffer = upsertIterationCache(rect, iterations, resolution);
   addIterationBuffer(rect, [iterBuffer]);
 };
