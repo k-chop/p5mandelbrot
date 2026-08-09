@@ -30,7 +30,7 @@ let wasmMemory: WebAssembly.Memory | null = null;
 async function initWasm(): Promise<void> {
   const base = import.meta.env.BASE_URL ?? "/";
   const wasmUrl = new URL(`${base}wasm/mandelbrot_iter_bg.wasm`, self.location.origin);
-  const output = await wasmInit(wasmUrl);
+  const output = await wasmInit({ module_or_path: wasmUrl });
   wasmMemory = output.memory;
 }
 
