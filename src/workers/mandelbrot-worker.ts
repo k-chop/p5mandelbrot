@@ -39,6 +39,11 @@ self.addEventListener("message", (event) => {
   const diffX = isSuperSampling ? 0.5 : 1;
   const diffY = isSuperSampling ? 0.5 : 1;
 
+  let hitCount = 0;
+  // progress postMessageのスロットリング用。前回送信時刻からPROGRESS_INTERVAL_MS経過時のみ送る
+  let lastProgressSentAt = 0;
+  const PROGRESS_INTERVAL_MS = 50;
+
   let scaledY = 0;
   for (let y = startY; y < endY; y = y + diffY, scaledY++) {
     let scaledX = 0;
@@ -67,11 +72,17 @@ self.addEventListener("message", (event) => {
         const index = Math.floor(x - startX + (y - startY) * areaPixelWidth);
         iterations[index] = n;
       }
+
+      if (n === N) hitCount++;
     }
-    self.postMessage({
-      type: "progress",
-      progress: (y - startY) / areaPixelHeight,
-    });
+    const nowMs = performance.now();
+    if (nowMs - lastProgressSentAt >= PROGRESS_INTERVAL_MS) {
+      lastProgressSentAt = nowMs;
+      self.postMessage({
+        type: "progress",
+        progress: (y - startY) / areaPixelHeight,
+      });
+    }
   }
 
   const elapsed = performance.now() - startedAt;
@@ -81,6 +92,7 @@ self.addEventListener("message", (event) => {
       iterations,
       resolution: { width: areaPixelWidth, height: areaPixelHeight },
       elapsed,
+      hitCount,
     },
     [iterations.buffer],
   );

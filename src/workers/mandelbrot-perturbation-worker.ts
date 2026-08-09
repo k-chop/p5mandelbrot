@@ -203,6 +203,10 @@ const calcHandler = (data: IterationWorkerParams) => {
     const xDiff = xDiffs[i];
     const yDiff = yDiffs[i];
 
+    // resultとして送るpassかどうか。hitCountはこのpassの書き込みだけを数える
+    const isResultPass = isSuperSampling || i === xDiffs.length - 1;
+    let hitCount = 0;
+
     const scaledAreaWidth = Math.floor(areaWidth / xDiff);
     const scaledAreaHeight = Math.floor(areaHeight / yDiff);
     const scaledIterations = new Uint32Array(scaledAreaWidth * scaledAreaHeight);
@@ -216,8 +220,10 @@ const calcHandler = (data: IterationWorkerParams) => {
         const scaledIndex = scaledX + scaledY * scaledAreaWidth;
 
         if (!isSuperSampling) {
-          if (iterations[index] !== 0) {
-            scaledIterations[scaledIndex] = iterations[index];
+          const cached = iterations[index];
+          if (cached !== 0) {
+            scaledIterations[scaledIndex] = cached;
+            if (isResultPass && cached === maxIteration) hitCount++;
             continue;
           }
         }
@@ -227,6 +233,7 @@ const calcHandler = (data: IterationWorkerParams) => {
         calculatedCount++;
         iterations[index] = n;
         scaledIterations[scaledIndex] = n;
+        if (isResultPass && n === maxIteration) hitCount++;
       }
 
       if (terminateChecker[workerIdx] !== 0) break;
@@ -243,8 +250,7 @@ const calcHandler = (data: IterationWorkerParams) => {
 
     if (terminateChecker[workerIdx] !== 0) break;
 
-    const isLastPass = i === xDiffs.length - 1;
-    if (isSuperSampling || isLastPass) {
+    if (isResultPass) {
       // 最終passの結果はintermediateResultではなくresultとして送り、
       // 別途末尾でiterationsを送り直す重複を避ける
       const elapsed = performance.now() - startedAt;
@@ -254,6 +260,7 @@ const calcHandler = (data: IterationWorkerParams) => {
           iterations: scaledIterations,
           resolution: { width: scaledAreaWidth, height: scaledAreaHeight },
           elapsed,
+          hitCount,
         },
         [scaledIterations.buffer],
       );

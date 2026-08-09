@@ -20,6 +20,8 @@ export interface IterationResult {
   iterations: ArrayBuffer;
   resolution: { width: number; height: number };
   elapsed: number;
+  /** iterationがmaxIterationに到達したピクセル数。worker側のループ内で数えている */
+  hitCount: number;
 }
 
 export type RefOrbitResultCallback = (result: RefOrbitContext, job: CalcRefOrbitJob) => void;
@@ -83,9 +85,9 @@ export class CalcIterationWorker implements MandelbrotFacadeLike {
 
       switch (data.type) {
         case "result": {
-          const { iterations, resolution, elapsed } = data;
+          const { iterations, resolution, elapsed, hitCount } = data;
 
-          this.resultCallback?.({ type: "result", iterations, resolution, elapsed }, job);
+          this.resultCallback?.({ type: "result", iterations, resolution, elapsed, hitCount }, job);
 
           this.worker.removeEventListener("message", f);
           this.running = false;
