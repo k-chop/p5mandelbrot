@@ -2,7 +2,7 @@ import { getCurrentPalette, setPalette } from "../camera/palette";
 import type { Palette } from "../color";
 import { addTraceEvent } from "../event-viewer/event";
 import { getIterationCache } from "../iteration-buffer/iteration-buffer";
-import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "./common";
+import { applyMaxCanvasSize } from "./common";
 import { getCurrentParams } from "../mandelbrot-state/mandelbrot-state";
 import type { Rect } from "../math/rect";
 import type { IterationBuffer } from "../types";
@@ -508,8 +508,6 @@ export const addIterationBuffer: Renderer["addIterationBuffer"] = (
 export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeight) => {
   if (!gpuInitialized) return;
 
-  const from = getCanvasSize();
-
   const gpuCanvas = document.getElementById("gpu-canvas")! as HTMLCanvasElement;
 
   const { width: w, height: h } = applyMaxCanvasSize(requestWidth, requestHeight);
@@ -538,8 +536,6 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
   iterationInputBuffer = root.createBuffer(d.arrayOf(d.u32, width * height)).$usage("storage");
 
   bindGroup = createBindGroup(bindGroupLayout);
-
-  rescaleIterationCacheForResize(from, { width, height });
 };
 
 export const updatePaletteData: Renderer["updatePaletteData"] = (palette: Palette) => {

@@ -175,7 +175,7 @@ async function initWasm() {
   try {
     const base = import.meta.env.BASE_URL ?? "/";
     const wasmUrl = new URL(`${base}wasm/apfp_bg.wasm`, self.location.origin);
-    await wasmInit(wasmUrl);
+    await wasmInit({ module_or_path: wasmUrl });
     wasmReady = true;
     console.log("Wasm module initialized");
   } catch (e) {

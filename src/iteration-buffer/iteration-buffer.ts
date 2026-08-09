@@ -140,17 +140,37 @@ export const removeUnusedIterationCache = (): void => {
 };
 
 /**
+ * 既にキャンバス全体をカバーする等倍1枚に統合済みかどうか
+ */
+const isConsolidated = (cw: number, ch: number): boolean => {
+  if (iterationCache.length !== 1) return false;
+
+  const { rect, resolution } = iterationCache[0];
+  return (
+    rect.x === 0 &&
+    rect.y === 0 &&
+    rect.width === cw &&
+    rect.height === ch &&
+    resolution.width === cw &&
+    resolution.height === ch
+  );
+};
+
+/**
  * 断片化したiterationCacheをキャンバス全体をカバーする1枚のIterationBufferに統合する
  *
- * 全workerのバッチ完了後に呼び出すことで、ズーム・移動の繰り返しによる断片化を解消する
+ * 全workerのバッチ完了後に呼び出すことで、ズーム・移動の繰り返しによる断片化を解消する。
+ * リサイズ後に呼ぶと、キャッシュのバッファが新しいキャンバスサイズに焼き直される。
  */
 export const consolidateIterationCache = (canvasWidth?: number, canvasHeight?: number): void => {
-  if (iterationCache.length <= 1) return;
+  if (iterationCache.length === 0) return;
 
   const { width: cw, height: ch } =
     canvasWidth != null && canvasHeight != null
       ? { width: canvasWidth, height: canvasHeight }
       : getCanvasSize();
+
+  if (isConsolidated(cw, ch)) return;
 
   // 解像度比率が1に最も近いキャッシュのみ対象
   const targetRes = iterationCache.reduce((prev, ic) => {
@@ -162,8 +182,6 @@ export const consolidateIterationCache = (canvasWidth?: number, canvasHeight?: n
     const res = ic.resolution.width / ic.rect.width;
     return Math.abs(res - targetRes) < Number.EPSILON;
   });
-
-  if (targets.length <= 1) return;
 
   const mergedBuffer = new Uint32Array(cw * ch);
 

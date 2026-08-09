@@ -2,7 +2,7 @@ import type { Palette } from "../color";
 import type { Rect } from "../math/rect";
 import type { IterationBuffer } from "../types";
 import type p5 from "p5";
-import { getRenderer } from "./common";
+import { getRenderer, rescaleIterationCacheForResize } from "./common";
 
 import * as p5Renderer from "./p5-renderer";
 import * as webGPURenderer from "./webgpu-renderer";
@@ -94,17 +94,23 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (...args) => {
 
 export const resizeCanvas: Renderer["resizeCanvas"] = (...args) => {
   const rendererType = getRenderer();
+  const from = getCanvasSize();
 
   switch (rendererType) {
     case "p5js":
-      return p5Renderer.resizeCanvas(...args);
+      p5Renderer.resizeCanvas(...args);
+      break;
     case "webgpu": {
       // 手抜きして従来のp5rendererをそのままUI描画用canvasに使っているので両方リサイズする必要がある
       // FIXME: UI描画用canvasを分離する
       webGPURenderer.resizeCanvas(...args);
-      return p5Renderer.resizeCanvas(...args);
+      p5Renderer.resizeCanvas(...args);
+      break;
     }
   }
+
+  // renderer実装ごとに呼ぶと同じ変換が二重にかかるのでここで1回だけ行う
+  rescaleIterationCacheForResize(from, getCanvasSize());
 };
 
 export const addIterationBuffer: Renderer["addIterationBuffer"] = (
