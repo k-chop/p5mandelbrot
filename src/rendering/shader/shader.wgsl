@@ -37,7 +37,13 @@ fn fragmentMain(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
 
   let index = i32(y) * i32(uniforms.canvasWidth) + i32(x);
   let iteration = iterations[index];
-  
+
+  // iteration == 0 は「まだ計算されていない」ことを表す番兵 (worker側は必ず1以上を返す)。
+  // ドラッグ中の未描画領域と同じ黒のままにする。maxIterations到達時の黒とは意味が違う
+  if (iteration == 0u) {
+    return vec4f(0.0, 0.0, 0.0, 1.0);
+  }
+
   if (iteration >= u32(uniforms.maxIterations)) {
     return vec4f(0.0, 0.0, 0.0, 1.0);
   }
