@@ -1,3 +1,4 @@
+import { throttle } from "es-toolkit";
 import { addTraceEvent, removeBatchTrace, startBatchTrace } from "../event-viewer/event";
 import type {
   BatchContext,
@@ -8,7 +9,6 @@ import type {
   MandelbrotRenderingUnit,
   ResultSpans,
 } from "../types";
-import { throttle } from "es-toolkit";
 import {
   calcNormalizedWorkerIndex,
   findFreeWorkerIndex,
@@ -78,10 +78,6 @@ export const getNHitRatio = (): number | null => {
 
 /**
  * Footerで表示するための進捗情報をbatchContextから取得する
- *
- * totalはflush開始 (= startedAtのflushElapsed分手前) から画面反映までを含めた全体時間。
- * spansのflush/drainがこの範囲の外に出ないようにするため、startedAt起点にはしていない。
- * presentedAtが未確定の間はfinishedAtまでで暫定表示する。
  */
 export const getProgressData = (): string | ResultSpans => {
   const batchContext = getLatestBatchContext();
@@ -91,7 +87,10 @@ export const getProgressData = (): string | ResultSpans => {
   }
 
   if (batchContext.finishedAt) {
+    // startedAtはバッチの計算開始なので、計算開始前のflushにかかった時間を引いておく
+    // これでtotalがだいたいユーザ操作終了後から描画完了までになる
     const startedAt = batchContext.startedAt - batchContext.flushElapsed;
+    // presentedAtがない間は暫定表示
     const endedAt = batchContext.presentedAt ?? batchContext.finishedAt;
 
     return {

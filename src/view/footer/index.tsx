@@ -1,10 +1,10 @@
-import { useT } from "../../i18n/context";
-import { Separator } from "../../shadcn/components/ui/separator";
-import type { ResultSpans, Span } from "../../types";
 import clsx from "clsx";
 import { Tooltip } from "radix-ui";
 import React from "react";
+import { useT } from "../../i18n/context";
+import { Separator } from "../../shadcn/components/ui/separator";
 import { useStoreValue } from "../../store/store";
+import type { ResultSpans, Span } from "../../types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertSpans = (value: any): ResultSpans | undefined => {
@@ -68,7 +68,6 @@ const BarGraph = (props: ResultSpans) => {
             <AllSpansDetail spans={spans} />
           </TooltipPanel>
         </Tooltip.Root>
-        {/* min-w-0がないとflex itemが縮まずバーが枠からはみ出す */}
         <div className="flex min-w-0 grow">
           <Bar spans={spans} total={total} />
         </div>
@@ -165,7 +164,7 @@ const BarContent = (props: { name: string; elapsed: number; total: number; spans
 /**
  * ホバー内容を載せるパネル
  *
- * canvasより手前に出す必要があるのでz-indexを明示する
+ * z-indexはcanvasより手前に出すため
  */
 const TooltipPanel = (props: { children: React.ReactNode }) => (
   <Tooltip.Content side="top" sideOffset={4} className="z-200">
