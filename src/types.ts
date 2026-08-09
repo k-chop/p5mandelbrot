@@ -140,6 +140,8 @@ export interface ResultSpans {
 export interface BatchContext {
   onComplete: BatchCompleteCallback;
   onChangeProgress: BatchProgressChangedCallback;
+  /** 最後の描画結果が画面に反映されたときに呼ばれる */
+  onPresented?: () => void;
 
   mandelbrotParams: MandelbrotParams;
   refX: string;
@@ -150,10 +152,17 @@ export interface BatchContext {
   blaTable?: BLATableBuffer;
   terminator: SharedArrayBuffer;
 
+  /** iteration cacheのtranslateとGPUへのflushにかかった時間 */
+  flushElapsed: number;
+
   progressMap: Map<string, number>;
   refProgress: number;
   startedAt: number;
+  /** 最初のworkerが起動した時刻。queue-waitの算出に使う */
+  firstJobStartedAt?: number;
   finishedAt?: number;
+  /** 最後の描画結果が画面に反映された時刻 */
+  presentedAt?: number;
   spans: Span[];
 
   /** iteration値が N に到達した画素の累積数 (描画済みtile全体) */

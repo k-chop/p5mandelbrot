@@ -1,4 +1,5 @@
 import { markNeedsRerender } from "./camera/palette";
+import { addTraceEvent } from "./event-viewer/event";
 import {
   removeUnusedIterationCache,
   scaleIterationCacheAroundPoint,
@@ -34,6 +35,7 @@ import { cancelBatch, registerBatch, startBatch } from "./worker-pool/worker-poo
 export const startCalculation = async (
   onComplete: (elapsed: number) => void,
   onTranslated: () => void,
+  onPresented?: () => void,
 ) => {
   const { isSuperSampling } = getCurrentParams();
   // supersamplingは一回きりなのでここで変更はなかったことにする
@@ -65,6 +67,8 @@ export const startCalculation = async (
     ? { width: supersamplingWidth, height: supersamplingHeight }
     : getCanvasSize();
 
+  const flushStartedAt = performance.now();
+
   if (!isSuperSampling) {
     const rect = translateIterationCache(canvasWidth, canvasHeight, getOffsetParams());
 
@@ -79,6 +83,9 @@ export const startCalculation = async (
     // ドラッグ中に描画をずらしていたのを戻す
     onTranslated();
   }
+
+  const flushElapsed = performance.now() - flushStartedAt;
+  addTraceEvent("renderer", { type: "flushed", elapsed: Math.floor(flushElapsed) });
 
   // workerに分配するために描画範囲を分割
   const divideRectCount = getWorkerCount("calc-iteration") * (isSuperSampling ? 4 : 1);
@@ -102,10 +109,12 @@ export const startCalculation = async (
   registerBatch(currentBatchId, units, {
     onComplete,
     onChangeProgress: () => {},
+    onPresented,
     mandelbrotParams: currentParams,
     pixelWidth: canvasWidth,
     pixelHeight: canvasHeight,
     terminator,
+    flushElapsed,
   });
 };
 

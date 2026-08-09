@@ -1,3 +1,4 @@
+import { throttle } from "es-toolkit";
 import { addTraceEvent, removeBatchTrace, startBatchTrace } from "../event-viewer/event";
 import type {
   BatchContext,
@@ -8,7 +9,6 @@ import type {
   MandelbrotRenderingUnit,
   ResultSpans,
 } from "../types";
-import { throttle } from "es-toolkit";
 import {
   calcNormalizedWorkerIndex,
   findFreeWorkerIndex,
@@ -87,8 +87,14 @@ export const getProgressData = (): string | ResultSpans => {
   }
 
   if (batchContext.finishedAt) {
+    // startedAtはバッチの計算開始なので、計算開始前のflushにかかった時間を引いておく
+    // これでtotalがだいたいユーザ操作終了後から描画完了までになる
+    const startedAt = batchContext.startedAt - batchContext.flushElapsed;
+    // presentedAtがない間は暫定表示
+    const endedAt = batchContext.presentedAt ?? batchContext.finishedAt;
+
     return {
-      total: Math.floor(batchContext.finishedAt - batchContext.startedAt),
+      total: Math.floor(endedAt - startedAt),
       spans: batchContext.spans,
     };
   }
@@ -167,13 +173,34 @@ export function registerBatch(
     progressMap,
     startedAt: performance.now(),
     refProgress: -1,
-    spans: [],
+    spans: [{ name: "flush", elapsed: Math.floor(batchContext.flushElapsed) }],
     nHitCount: 0,
     totalPixelCount: 0,
   });
 
   tickWorkerPool();
 }
+
+/**
+ * 画面反映待ちのバッチにpresentedAtを記録し、drain spanを積む
+ *
+ * rendererのバッファが空になった次のフレームで呼ばれる
+ */
+export const markPresented = (presentedAt: number): void => {
+  for (const batchContext of batchContextMap.values()) {
+    if (batchContext.finishedAt == null || batchContext.presentedAt != null) continue;
+
+    batchContext.presentedAt = presentedAt;
+    batchContext.spans.push({
+      name: "drain",
+      elapsed: Math.floor(presentedAt - batchContext.finishedAt),
+    });
+
+    addTraceEvent("renderer", { type: "presented" });
+
+    batchContext.onPresented?.();
+  }
+};
 
 export function tickWorkerPool() {
   let jobStarted = false;
@@ -260,6 +287,8 @@ function start(workerIdx: number, job: MandelbrotJob) {
 
   const assignedJob = { ...job, workerIdx: workerIdxForTerminate };
   const workerFacade = getWorkerPool(assignedJob.type)[workerIdx];
+
+  batchContext.firstJobStartedAt ??= performance.now();
 
   workerFacade.startCalculate(assignedJob, batchContext, workerIdxForTerminate);
 

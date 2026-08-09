@@ -1,10 +1,10 @@
-import { useT } from "../../i18n/context";
-import { Separator } from "../../shadcn/components/ui/separator";
-import type { ResultSpans, Span } from "../../types";
 import clsx from "clsx";
 import { Tooltip } from "radix-ui";
 import React from "react";
+import { useT } from "../../i18n/context";
+import { Separator } from "../../shadcn/components/ui/separator";
 import { useStoreValue } from "../../store/store";
+import type { ResultSpans, Span } from "../../types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertSpans = (value: any): ResultSpans | undefined => {
@@ -47,7 +47,13 @@ const colorMap = (label: string) => {
   if (label.includes("iteration")) {
     return "bg-iris-7";
   }
-  return "bg-ruby-7";
+  if (label === "flush") {
+    return "bg-tomato-7";
+  }
+  if (label === "drain") {
+    return "bg-lime-7";
+  }
+  return "bg-sage-7";
 };
 
 const BarGraph = (props: ResultSpans) => {
@@ -56,12 +62,50 @@ const BarGraph = (props: ResultSpans) => {
   return (
     <Tooltip.Provider>
       <div className="flex w-full items-center">
-        <div className="mr-4 flex-none">Done! ({total}ms)</div>
-        <div className="flex grow">
+        <Tooltip.Root delayDuration={0}>
+          <Tooltip.Trigger className="mr-4 flex-none">Done! ({total}ms)</Tooltip.Trigger>
+          <TooltipPanel>
+            <AllSpansDetail spans={spans} />
+          </TooltipPanel>
+        </Tooltip.Root>
+        <div className="flex min-w-0 grow">
           <Bar spans={spans} total={total} />
         </div>
       </div>
     </Tooltip.Provider>
+  );
+};
+
+/**
+ * 全spanの内訳をリスト表示する
+ *
+ * バーが細くてホバーできないspan (flush, queue-wait, drain など) もここで確認できる。
+ * iteration_* はworker数だけあるので最大値1行にまとめる。
+ */
+const AllSpansDetail = (props: { spans: Span[] }) => {
+  const { spans } = props;
+
+  const iterationSpans = spans.filter((s) => s.name.includes("iteration"));
+  const otherSpans = spans.filter((s) => !s.name.includes("iteration"));
+
+  return (
+    <div>
+      {otherSpans.map((span, idx) => (
+        <React.Fragment key={span.name}>
+          {idx > 0 && <Separator />}
+          <ListItem label={span.name} value={`${span.elapsed} ms`} />
+        </React.Fragment>
+      ))}
+      {iterationSpans.length > 0 && (
+        <>
+          <Separator />
+          <ListItem
+            label={`iteration (max of ${iterationSpans.length})`}
+            value={`${Math.max(...iterationSpans.map((s) => s.elapsed))} ms`}
+          />
+        </>
+      )}
+    </div>
   );
 };
 
@@ -75,10 +119,10 @@ const Bar = (props: ResultSpans) => {
   const iterationSpans = spans.filter((s) => s.name.includes("iteration"));
 
   return (
-    <div className="bg-gray-7 flex h-8 w-full">
-      {iterationExceptedSpans.map((span, idx) => (
+    <div className="bg-gray-7 flex h-8 w-full overflow-hidden rounded-sm">
+      {iterationExceptedSpans.map((span) => (
         <BarContent
-          key={idx}
+          key={span.name}
           name={span.name}
           elapsed={span.elapsed}
           total={total}
@@ -95,47 +139,40 @@ const Bar = (props: ResultSpans) => {
   );
 };
 
+/**
+ * 1フェーズ分の色帯
+ *
+ * 幅が狭いフェーズではラベルが読めないので、バーは色分けのみとし詳細はホバーで出す
+ */
 const BarContent = (props: { name: string; elapsed: number; total: number; spans: Span[] }) => {
   const { name, elapsed, total, spans } = props;
 
-  const [displayText, setDisplayText] = React.useState(`${name}: ${elapsed}ms`);
-  const ref = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    if (ref.current && ref.current.offsetWidth < ref.current.scrollWidth) {
-      // 実際の幅がコンテナの幅より大きい場合は、`elapsed` のみを表示
-      setDisplayText(`${elapsed}ms`);
-    }
-  }, [name, elapsed]);
-
   const width = (elapsed / total) * 100;
-  const bgColorClassName = colorMap(name);
 
   return (
     <Tooltip.Root delayDuration={0}>
-      <div
-        ref={ref}
-        className={clsx(
-          "text-white-a-12 flex w-52 items-center justify-center truncate",
-          bgColorClassName,
-        )}
-        style={{ width: `${width}%` }}
-      >
-        <Tooltip.Trigger>{displayText}</Tooltip.Trigger>
-      </div>
-      <Tooltip.Content>
-        <div
-          className={clsx(
-            "border-teal-2 text-white-a-12 w-52 rounded-md border-2 p-2",
-            bgColorClassName,
-          )}
-        >
-          <SpansDetail name={name} spans={spans} />
-        </div>
-      </Tooltip.Content>
+      <Tooltip.Trigger asChild>
+        <div className={clsx("h-full", colorMap(name))} style={{ width: `${width}%` }} />
+      </Tooltip.Trigger>
+      <TooltipPanel>
+        <SpansDetail name={name} spans={spans} />
+      </TooltipPanel>
     </Tooltip.Root>
   );
 };
+
+/**
+ * ホバー内容を載せるパネル
+ *
+ * z-indexはcanvasより手前に出すため
+ */
+const TooltipPanel = (props: { children: React.ReactNode }) => (
+  <Tooltip.Content side="top" sideOffset={4} className="z-200">
+    <div className="bg-popover text-popover-foreground border-border w-64 rounded-md border p-2 shadow-lg">
+      {props.children}
+    </div>
+  </Tooltip.Content>
+);
 
 const SpansDetail = (props: { name: string; spans: Span[] }) => {
   const t = useT();

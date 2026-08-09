@@ -16,6 +16,7 @@ import { computeStats, type Stats } from "./benchmark-stats";
 export type BenchmarkSample = {
   iteration: number;
   total: number;
+  presented: number;
   refOrbit: number;
   iter: number;
   iterMean: number;
@@ -23,6 +24,7 @@ export type BenchmarkSample = {
 
 const METRIC_KEYS = [
   "total",
+  "presented",
   "refOrbit",
   "iter",
   "iterMean",
@@ -57,18 +59,21 @@ export type BenchmarkAllProgress = {
  * refOrbit: spans[name="reference_orbit"].elapsed
  * iter: spans[name="iteration_*"].elapsedのmax (bottleneck worker)
  * iterMean: 同じspansのmean
+ * presented: 計算開始から描画が画面に反映されるまで
  */
 const extractSample = (
   iteration: number,
   t0: number,
   t1: number,
+  presentedAt: number,
   batchId: string,
 ): BenchmarkSample => {
   const batchCtx = getBatchContext(batchId);
   const total = t1 - t0;
+  const presented = presentedAt - t0;
 
   if (batchCtx == null) {
-    return { iteration, total, refOrbit: 0, iter: 0, iterMean: 0 };
+    return { iteration, total, presented, refOrbit: 0, iter: 0, iterMean: 0 };
   }
 
   const refOrbit = batchCtx.spans.find((s) => s.name === "reference_orbit")?.elapsed ?? 0;
@@ -80,7 +85,7 @@ const extractSample = (
   const iterMean =
     iterElapsed.length > 0 ? iterElapsed.reduce((a, b) => a + b, 0) / iterElapsed.length : 0;
 
-  return { iteration, total, refOrbit, iter, iterMean };
+  return { iteration, total, presented, refOrbit, iter, iterMean };
 };
 
 /**
@@ -128,18 +133,21 @@ export const runBenchmark = async (
 
       const t0 = performance.now();
 
-      await new Promise<void>((resolve) => {
+      let t1 = 0;
+      const presentedAt = await new Promise<number>((resolve) => {
         void startCalculation(
-          () => resolve(),
+          () => {
+            t1 = performance.now();
+          },
           () => {},
+          () => resolve(performance.now()),
         );
       });
 
-      const t1 = performance.now();
       const batchId = getPrevBatchId();
 
       if (!isWarmup) {
-        samples.push(extractSample(i - opts.warmup, t0, t1, batchId));
+        samples.push(extractSample(i - opts.warmup, t0, t1, presentedAt, batchId));
       }
     }
   } finally {
@@ -203,11 +211,11 @@ export const formatResultAsMarkdown = (result: BenchmarkResult): string => {
   lines.push("");
 
   lines.push("### Samples (ms)");
-  lines.push("| # | total | refOrbit | iter | iterMean |");
-  lines.push("|---|------:|---------:|-----:|---------:|");
+  lines.push("| # | total | presented | refOrbit | iter | iterMean |");
+  lines.push("|---|------:|----------:|---------:|-----:|---------:|");
   for (const s of samples) {
     lines.push(
-      `| ${s.iteration + 1} | ${fmt(s.total)} | ${fmt(s.refOrbit)} | ${fmt(s.iter)} | ${fmt(s.iterMean)} |`,
+      `| ${s.iteration + 1} | ${fmt(s.total)} | ${fmt(s.presented)} | ${fmt(s.refOrbit)} | ${fmt(s.iter)} | ${fmt(s.iterMean)} |`,
     );
   }
   lines.push("");
@@ -234,6 +242,7 @@ export const formatSummaryAsMarkdown = (results: BenchmarkResult[]): string => {
   for (const r of results) {
     lines.push(`${r.poi.label}:`);
     lines.push(`- total: ${formatMetric(r.stats.total)}`);
+    lines.push(`- presented: ${formatMetric(r.stats.presented)}`);
     lines.push(`- ref: ${formatMetric(r.stats.refOrbit)}`);
     lines.push(`- iter: ${formatMetric(r.stats.iter)}`);
   }

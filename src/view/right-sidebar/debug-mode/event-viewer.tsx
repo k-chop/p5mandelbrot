@@ -177,6 +177,14 @@ export const EventViewer = () => {
             return (
               <div className="text-xs text-gray-600">Remaining: {rendererEvent.remaining}</div>
             );
+          case "flushed":
+            return (
+              <div className="text-xs text-gray-600">
+                Flush: {formatTime(rendererEvent.elapsed)}
+              </div>
+            );
+          case "presented":
+            return <div className="text-xs text-gray-600">Presented</div>;
         }
 
       case "job":

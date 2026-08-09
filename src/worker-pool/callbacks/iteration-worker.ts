@@ -79,6 +79,13 @@ export const onIterationWorkerResult: IterationResultCallback = (result, job) =>
     batchContext.finishedAt = finishedAt;
     const elapsed = finishedAt - batchContext.startedAt;
 
+    if (batchContext.firstJobStartedAt != null) {
+      batchContext.spans.push({
+        name: "queue-wait",
+        elapsed: Math.floor(batchContext.firstJobStartedAt - batchContext.startedAt),
+      });
+    }
+
     finalizeBatch(job.batchId, elapsed);
 
     batchContext.onComplete(elapsed);

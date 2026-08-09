@@ -1,3 +1,4 @@
+import type p5 from "p5";
 import {
   getCurrentPalette,
   markAsRendered,
@@ -5,16 +6,15 @@ import {
   needsRerender,
 } from "../camera/palette";
 import type { Palette } from "../color";
-import { getIterationCache } from "../iteration-buffer/iteration-buffer";
-import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "./common";
-import { getCurrentParams } from "../mandelbrot-state/mandelbrot-state";
-import { clamp } from "../math/util";
-import { isMobileViewport } from "../view/use-is-mobile";
-import type p5 from "p5";
 import type { InterestingPoint } from "../interesting-points/find-interesting-points";
+import { getIterationCache } from "../iteration-buffer/iteration-buffer";
+import { getCurrentParams } from "../mandelbrot-state/mandelbrot-state";
 import type { Rect } from "../math/rect";
+import { clamp } from "../math/util";
 import type { IterationBuffer } from "../types";
 import { type MandelbrotParams } from "../types";
+import { isMobileViewport } from "../view/use-is-mobile";
+import { applyMaxCanvasSize, rescaleIterationCacheForResize } from "./common";
 import type { Renderer } from "./renderer";
 
 export interface Resolution {
@@ -32,6 +32,14 @@ let height: number;
 let bufferRect: Rect;
 
 let unifiedIterationBuffer: Uint32Array<ArrayBuffer>;
+
+/**
+ * unifiedIterationBufferに書き込んだ内容がまだmainBufferに反映されていないかどうか
+ */
+let pendingIterationDraw = false;
+
+/** mainBufferへの反映が済んだときに呼ぶcallback */
+let onIterationBufferDrained: (() => void) | null = null;
 
 export const getCanvasSize: Renderer["getCanvasSize"] = () => ({
   width,
@@ -63,11 +71,20 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
   if (needsRerender()) {
     markAsRendered();
     renderToMainBuffer();
+
+    if (pendingIterationDraw) {
+      pendingIterationDraw = false;
+      onIterationBufferDrained?.();
+    }
   }
 
   const buffer = mainBuffer;
   p5Instance.clear();
   p5Instance.image(buffer, x, y, width, height);
+};
+
+export const setOnIterationBufferDrained: Renderer["setOnIterationBufferDrained"] = (callback) => {
+  onIterationBufferDrained = callback;
 };
 
 export const addIterationBuffer: Renderer["addIterationBuffer"] = (
@@ -83,6 +100,7 @@ export const addIterationBuffer: Renderer["addIterationBuffer"] = (
       unifiedIterationBuffer,
       iterBuffer ?? getIterationCache(),
     );
+    pendingIterationDraw = true;
     markNeedsRerender();
   }
 };
