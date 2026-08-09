@@ -78,6 +78,10 @@ export const getNHitRatio = (): number | null => {
 
 /**
  * Footerで表示するための進捗情報をbatchContextから取得する
+ *
+ * totalはflush開始 (= startedAtのflushElapsed分手前) から画面反映までを含めた全体時間。
+ * spansのflush/drainがこの範囲の外に出ないようにするため、startedAt起点にはしていない。
+ * presentedAtが未確定の間はfinishedAtまでで暫定表示する。
  */
 export const getProgressData = (): string | ResultSpans => {
   const batchContext = getLatestBatchContext();
@@ -87,8 +91,11 @@ export const getProgressData = (): string | ResultSpans => {
   }
 
   if (batchContext.finishedAt) {
+    const startedAt = batchContext.startedAt - batchContext.flushElapsed;
+    const endedAt = batchContext.presentedAt ?? batchContext.finishedAt;
+
     return {
-      total: Math.floor(batchContext.finishedAt - batchContext.startedAt),
+      total: Math.floor(endedAt - startedAt),
       spans: batchContext.spans,
     };
   }
@@ -167,13 +174,34 @@ export function registerBatch(
     progressMap,
     startedAt: performance.now(),
     refProgress: -1,
-    spans: [],
+    spans: [{ name: "flush", elapsed: Math.floor(batchContext.flushElapsed) }],
     nHitCount: 0,
     totalPixelCount: 0,
   });
 
   tickWorkerPool();
 }
+
+/**
+ * 画面反映待ちのバッチにpresentedAtを記録し、drain spanを積む
+ *
+ * rendererのバッファが空になった次のフレームで呼ばれる
+ */
+export const markPresented = (presentedAt: number): void => {
+  for (const batchContext of batchContextMap.values()) {
+    if (batchContext.finishedAt == null || batchContext.presentedAt != null) continue;
+
+    batchContext.presentedAt = presentedAt;
+    batchContext.spans.push({
+      name: "drain",
+      elapsed: Math.floor(presentedAt - batchContext.finishedAt),
+    });
+
+    addTraceEvent("renderer", { type: "presented" });
+
+    batchContext.onPresented?.();
+  }
+};
 
 export function tickWorkerPool() {
   let jobStarted = false;
@@ -260,6 +288,8 @@ function start(workerIdx: number, job: MandelbrotJob) {
 
   const assignedJob = { ...job, workerIdx: workerIdxForTerminate };
   const workerFacade = getWorkerPool(assignedJob.type)[workerIdx];
+
+  batchContext.firstJobStartedAt ??= performance.now();
 
   workerFacade.startCalculate(assignedJob, batchContext, workerIdxForTerminate);
 

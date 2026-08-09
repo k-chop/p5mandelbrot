@@ -56,12 +56,53 @@ const BarGraph = (props: ResultSpans) => {
   return (
     <Tooltip.Provider>
       <div className="flex w-full items-center">
-        <div className="mr-4 flex-none">Done! ({total}ms)</div>
-        <div className="flex grow">
+        <Tooltip.Root delayDuration={0}>
+          <Tooltip.Trigger className="mr-4 flex-none">Done! ({total}ms)</Tooltip.Trigger>
+          <Tooltip.Content side="top" align="start">
+            <div className="bg-gray-3 border-teal-2 text-gray-12 w-64 rounded-md border-2 p-2">
+              <AllSpansDetail spans={spans} />
+            </div>
+          </Tooltip.Content>
+        </Tooltip.Root>
+        {/* min-w-0がないとflex itemが縮まずバーが枠からはみ出す */}
+        <div className="flex min-w-0 grow">
           <Bar spans={spans} total={total} />
         </div>
       </div>
     </Tooltip.Provider>
+  );
+};
+
+/**
+ * 全spanの内訳をリスト表示する
+ *
+ * バーが細くてホバーできないspan (flush, queue-wait, drain など) もここで確認できる。
+ * iteration_* はworker数だけあるので最大値1行にまとめる。
+ */
+const AllSpansDetail = (props: { spans: Span[] }) => {
+  const { spans } = props;
+
+  const iterationSpans = spans.filter((s) => s.name.includes("iteration"));
+  const otherSpans = spans.filter((s) => !s.name.includes("iteration"));
+
+  return (
+    <div>
+      {otherSpans.map((span, idx) => (
+        <React.Fragment key={span.name}>
+          {idx > 0 && <Separator />}
+          <ListItem label={span.name} value={`${span.elapsed} ms`} />
+        </React.Fragment>
+      ))}
+      {iterationSpans.length > 0 && (
+        <>
+          <Separator />
+          <ListItem
+            label={`iteration (max of ${iterationSpans.length})`}
+            value={`${Math.max(...iterationSpans.map((s) => s.elapsed))} ms`}
+          />
+        </>
+      )}
+    </div>
   );
 };
 

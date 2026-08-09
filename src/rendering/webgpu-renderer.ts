@@ -47,6 +47,9 @@ const iterationBufferQueue: IterationBuffer[] = [];
 let gpuInitialized = false;
 let isFlushing = false;
 
+/** queueを空にし切ったフレームで呼ぶcallback */
+let onIterationBufferDrained: (() => void) | null = null;
+
 const UniformSchema = d.struct({
   maxIterations: d.f32,
   canvasWidth: d.f32,
@@ -353,6 +356,11 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
   renderPass.end();
 
   device.queue.submit([encoder.finish()]);
+
+  // このフレームで積まれていた分を処理し切った
+  if (0 < processableCount && iterationBufferQueue.length === 0) {
+    onIterationBufferDrained?.();
+  }
 };
 
 /**
@@ -419,6 +427,10 @@ export const flushIterationBufferQueue = async (): Promise<void> => {
   } finally {
     isFlushing = false;
   }
+};
+
+export const setOnIterationBufferDrained: Renderer["setOnIterationBufferDrained"] = (callback) => {
+  onIterationBufferDrained = callback;
 };
 
 export const addIterationBuffer: Renderer["addIterationBuffer"] = (

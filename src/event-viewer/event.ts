@@ -32,6 +32,13 @@ export type RendererEvent = EventBase & {/* common type */} & (
         type: "bufferSizeExceeded";
         remaining: number;
       }
+    | {
+        type: "flushed";
+        elapsed: number;
+      }
+    | {
+        type: "presented";
+      }
   );
 
 // Job Event ==================================================

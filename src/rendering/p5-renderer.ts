@@ -33,6 +33,16 @@ let bufferRect: Rect;
 
 let unifiedIterationBuffer: Uint32Array<ArrayBuffer>;
 
+/**
+ * unifiedIterationBufferに書き込んだ内容がまだmainBufferに反映されていないかどうか
+ *
+ * needsRerenderはpalette変更でも立つため、iteration bufferの反映待ち判定には使えない
+ */
+let pendingIterationDraw = false;
+
+/** mainBufferへの反映が済んだときに呼ぶcallback */
+let onIterationBufferDrained: (() => void) | null = null;
+
 export const getCanvasSize: Renderer["getCanvasSize"] = () => ({
   width,
   height,
@@ -63,11 +73,20 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
   if (needsRerender()) {
     markAsRendered();
     renderToMainBuffer();
+
+    if (pendingIterationDraw) {
+      pendingIterationDraw = false;
+      onIterationBufferDrained?.();
+    }
   }
 
   const buffer = mainBuffer;
   p5Instance.clear();
   p5Instance.image(buffer, x, y, width, height);
+};
+
+export const setOnIterationBufferDrained: Renderer["setOnIterationBufferDrained"] = (callback) => {
+  onIterationBufferDrained = callback;
 };
 
 export const addIterationBuffer: Renderer["addIterationBuffer"] = (
@@ -83,6 +102,7 @@ export const addIterationBuffer: Renderer["addIterationBuffer"] = (
       unifiedIterationBuffer,
       iterBuffer ?? getIterationCache(),
     );
+    pendingIterationDraw = true;
     markNeedsRerender();
   }
 };

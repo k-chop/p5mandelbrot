@@ -58,6 +58,10 @@ export type Renderer = {
    * iterationBufferQueueを全て処理してGPU iterations[]を更新し、完了を待つ
    */
   flushIterationBufferQueue: () => Promise<void>;
+  /**
+   * 未描画のiteration bufferを全て画面に反映し終えたときに呼ばれるcallbackを登録する
+   */
+  setOnIterationBufferDrained: (callback: () => void) => void;
 };
 
 export const initRenderer: Renderer["initRenderer"] = async (w, h, p5Instance?) => {
@@ -163,4 +167,12 @@ export const flushIterationBufferQueue: Renderer["flushIterationBufferQueue"] = 
     case "webgpu":
       return webGPURenderer.flushIterationBufferQueue();
   }
+};
+
+/**
+ * 描画途中でrendererを切り替えても取りこぼさないよう、両方のrendererに登録する
+ */
+export const setOnIterationBufferDrained: Renderer["setOnIterationBufferDrained"] = (callback) => {
+  p5Renderer.setOnIterationBufferDrained(callback);
+  webGPURenderer.setOnIterationBufferDrained(callback);
 };

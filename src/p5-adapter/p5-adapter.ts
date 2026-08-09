@@ -46,11 +46,17 @@ import {
   drawUIIterationAtCursor,
   drawUIScaleRate,
 } from "../rendering/p5-renderer";
-import { getCanvasSize, initRenderer, renderToCanvas, resizeCanvas } from "../rendering/renderer";
+import {
+  getCanvasSize,
+  initRenderer,
+  renderToCanvas,
+  resizeCanvas,
+  setOnIterationBufferDrained,
+} from "../rendering/renderer";
 import { getStore, updateStore } from "../store/store";
 import type { MandelbrotParams } from "../types";
 import { extractMandelbrotParams } from "../utils/mandelbrot-url-params";
-import { getNHitRatio, getProgressData } from "../worker-pool/worker-pool";
+import { getNHitRatio, getProgressData, markPresented } from "../worker-pool/worker-pool";
 import BigNumber from "bignumber.js";
 import type p5 from "p5";
 import { isMobileViewport } from "../view/use-is-mobile";
@@ -484,6 +490,11 @@ export const p5Setup = async (p: p5) => {
   UNSAFE_p5Instance = p;
 
   const { width, height } = initializeCanvasSize();
+
+  // 描画結果が画面に出た時刻を記録する。rendererが描き切ったフレームの次のフレーム開始時点を「見えた時刻」とする
+  setOnIterationBufferDrained(() => {
+    requestAnimationFrame(() => markPresented(performance.now()));
+  });
 
   // p5 renderer
   await initRenderer(width, height, p);
