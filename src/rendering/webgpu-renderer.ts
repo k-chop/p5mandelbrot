@@ -533,6 +533,10 @@ export const resizeCanvas: Renderer["resizeCanvas"] = (requestWidth, requestHeig
   iterationBuffer.destroy();
   iterationBuffer = root.createBuffer(d.arrayOf(d.u32, width * height)).$usage("storage");
 
+  // フルキャンバス1枚分のエントリが入る必要があるので、こちらも作り直す
+  iterationInputBuffer.destroy();
+  iterationInputBuffer = root.createBuffer(d.arrayOf(d.u32, width * height)).$usage("storage");
+
   bindGroup = createBindGroup(bindGroupLayout);
 
   rescaleIterationCacheForResize(from, { width, height });

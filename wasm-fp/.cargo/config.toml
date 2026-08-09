@@ -1,0 +1,7 @@
+# bulk-memory: 配列のゼロ埋め/コピーが memory.fill / memory.copy 1命令になる
+# simd128: LLVMがそれらを自動ベクトル化する。直接SIMDを書いているわけではない
+#
+# 有効/無効を同一セッションで実測して決めた。L=13 で orbit が -3.7%。
+# 要件は Chrome 91 / Firefox 89 / Safari 16.4 以降 (simd128 が一番厳しい)
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+simd128,+bulk-memory"]
