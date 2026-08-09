@@ -221,6 +221,50 @@ const writeIterationInputs = (
 };
 
 /**
+ * 1ピクセルあたりの粗さを返す。値が大きいほど解像度が荒い
+ */
+const getCoarseness = (item: IterationBuffer) => item.rect.width / item.resolution.width;
+
+/**
+ * queueを描画可能な形に整える
+ *
+ * 同一rectのエントリは最も細かい1件だけを残す。同じ領域を覆うので粗い方はGPUに送るだけ無駄になる。
+ * 残った分は粗い順に並べる。異なるrect同士は重なりうる (rect.tsのminSideによる拡張) ため、
+ * 細かい方が後に書き込まれるよう順序は保証する必要がある。
+ *
+ * @returns 重複排除で捨てたエントリ数
+ */
+const prepareIterationBufferQueue = (): number => {
+  if (iterationBufferQueue.length <= 1) return 0;
+
+  const finestByRect = new Map<string, IterationBuffer>();
+
+  for (const item of iterationBufferQueue) {
+    const { x, y, width: w, height: h } = item.rect;
+    const key = `${x},${y},${w},${h}`;
+    const current = finestByRect.get(key);
+
+    if (current == null) {
+      finestByRect.set(key, item);
+    } else if (getCoarseness(item) <= getCoarseness(current)) {
+      // 同解像度なら後から積まれた方が新しいので、Map上の位置ごと入れ替える
+      finestByRect.delete(key);
+      finestByRect.set(key, item);
+    }
+  }
+
+  const dropped = iterationBufferQueue.length - finestByRect.size;
+
+  const kept = Array.from(finestByRect.values());
+  kept.sort((a, b) => getCoarseness(b) - getCoarseness(a));
+
+  iterationBufferQueue.length = 0;
+  for (const item of kept) iterationBufferQueue.push(item);
+
+  return dropped;
+};
+
+/**
  * iterationInputBufferからiterations[]へコピーするcompute passを積む
  *
  * 1スレッドが1宛先ピクセルを担当するので、dispatch数は宛先ピクセル数から決まる
@@ -251,73 +295,7 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
   const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
   const palette = getCurrentPalette();
 
-  // queueに積まれたiteration bufferをGPUBufferに書き込む
-  const maxBufferSize = iterationInputBuffer.buffer.size;
-
-  // 解像度（rect.width/resolution.width）が荒い順にソートする
-  // 値が大きいほど1ピクセルあたりの解像度が荒い
-  if (iterationBufferQueue.length > 1) {
-    iterationBufferQueue.sort((a, b) => {
-      const resolutionA = a.rect.width / a.resolution.width;
-      const resolutionB = b.rect.width / b.resolution.width;
-      return resolutionB - resolutionA; // 降順（荒い順）
-    });
-  }
-
-  // 一度に処理できる最大数を計算
-  let processableCount = 0;
-  let tempBufferByteOffset = 0;
-  let currentResolution = -1; // 現在処理中の解像度
-
-  // ソートされたキューから同じ解像度のバッファのみを処理
-  for (let i = 0; i < iterationBufferQueue.length; i++) {
-    const iterBuffer = iterationBufferQueue[i];
-    const nextSize = iterBuffer.buffer.byteLength;
-    const resolution = iterBuffer.rect.width / iterBuffer.resolution.width;
-
-    // metadataに載る数を超えないようにする
-    if (processableCount >= META_ENTRY_MAX) break;
-
-    // バッファサイズオーバーチェック
-    if (tempBufferByteOffset + nextSize > maxBufferSize) {
-      const remaining = iterationBufferQueue.length - processableCount;
-      addTraceEvent("renderer", { type: "bufferSizeExceeded", remaining });
-      break;
-    }
-
-    // 初回または同じ解像度のみ処理
-    if (currentResolution === -1) {
-      currentResolution = resolution;
-    } else if (Math.abs(resolution - currentResolution) > 0.001) {
-      // 解像度が変わったら処理を中断
-      break;
-    }
-
-    tempBufferByteOffset += nextSize;
-    processableCount++;
-  }
-
-  let totalPixelCount = 0;
-
-  if (0 < processableCount) {
-    const remaining = iterationBufferQueue.length - processableCount;
-    const resolution =
-      iterationBufferQueue[0].rect.width / iterationBufferQueue[0].resolution.width;
-
-    const items = iterationBufferQueue.splice(0, processableCount);
-    totalPixelCount = writeIterationInputs(items, canvasWidth, canvasHeight);
-
-    addTraceEvent("renderer", {
-      type: "iterationBufferProcessing",
-      resolution,
-      count: processableCount,
-      remaining,
-      rects: items.map((item) => item.rect),
-    });
-  }
-
-  // write uniform buffer
-  uniformBuffer.write({
+  const renderUniforms = {
     maxIterations: params.N,
     canvasWidth: canvasWidth,
     canvasHeight: canvasHeight,
@@ -327,16 +305,88 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
     offsetY: y,
     width: width ?? canvasWidth,
     height: height ?? canvasHeight,
-    iterationBufferCount: processableCount,
-    totalPixelCount,
-  });
+    iterationBufferCount: 0,
+    totalPixelCount: 0,
+  };
+
+  const dropped = prepareIterationBufferQueue();
+  if (0 < dropped) {
+    addTraceEvent("renderer", {
+      type: "iterationBufferDeduped",
+      dropped,
+      kept: iterationBufferQueue.length,
+    });
+  }
+
+  // queueに積まれたiteration bufferをGPUBufferに書き込む
+  const maxBufferSize = iterationInputBuffer.buffer.size;
+
+  let processedCount = 0;
+
+  // 解像度グループごとにcompute passを積んでsubmitする。
+  // queueへの投入順に実行されるので、iterationInputBufferを使い回しても粗い順に上書きされる
+  while (0 < iterationBufferQueue.length) {
+    const groupCoarseness = getCoarseness(iterationBufferQueue[0]);
+
+    let processableCount = 0;
+    let tempBufferByteOffset = 0;
+
+    for (let i = 0; i < iterationBufferQueue.length; i++) {
+      const iterBuffer = iterationBufferQueue[i];
+
+      // metadataに載る数を超えないようにする
+      if (processableCount >= META_ENTRY_MAX) break;
+
+      // バッファサイズオーバーチェック
+      const nextSize = iterBuffer.buffer.byteLength;
+      if (tempBufferByteOffset + nextSize > maxBufferSize) break;
+
+      // 同じ解像度のバッファのみ処理する
+      if (Math.abs(getCoarseness(iterBuffer) - groupCoarseness) > 0.001) break;
+
+      tempBufferByteOffset += nextSize;
+      processableCount++;
+    }
+
+    if (processableCount === 0) {
+      // 単体でiterationInputBufferに収まらないので、このフレームでは処理できない
+      addTraceEvent("renderer", {
+        type: "bufferSizeExceeded",
+        remaining: iterationBufferQueue.length,
+      });
+      break;
+    }
+
+    const items = iterationBufferQueue.splice(0, processableCount);
+    const totalPixelCount = writeIterationInputs(items, canvasWidth, canvasHeight);
+
+    uniformBuffer.write({
+      ...renderUniforms,
+      iterationBufferCount: processableCount,
+      totalPixelCount,
+    });
+
+    const computeEncoder = device.createCommandEncoder();
+    encodeCopyComputePass(computeEncoder, totalPixelCount);
+    device.queue.submit([computeEncoder.finish()]);
+
+    processedCount += processableCount;
+
+    addTraceEvent("renderer", {
+      type: "iterationBufferProcessing",
+      resolution: groupCoarseness,
+      count: processableCount,
+      remaining: iterationBufferQueue.length,
+      rects: items.map((item) => item.rect),
+    });
+  }
 
   // 毎フレームのunifiedIterationBufferの転送は不要
   // GPUのcompute shaderによってiterationInputBufferからiterationBufferに直接書き込まれる
 
-  const encoder = device.createCommandEncoder();
+  uniformBuffer.write(renderUniforms);
 
-  encodeCopyComputePass(encoder, totalPixelCount);
+  const encoder = device.createCommandEncoder();
 
   const renderPass = encoder.beginRenderPass({
     colorAttachments: [
@@ -358,7 +408,7 @@ export const renderToCanvas: Renderer["renderToCanvas"] = (x, y, width, height) 
   device.queue.submit([encoder.finish()]);
 
   // このフレームで積まれていた分を処理し切った
-  if (0 < processableCount && iterationBufferQueue.length === 0) {
+  if (0 < processedCount && iterationBufferQueue.length === 0) {
     onIterationBufferDrained?.();
   }
 };

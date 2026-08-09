@@ -173,6 +173,12 @@ export const EventViewer = () => {
                 Remaining: {rendererEvent.remaining}
               </div>
             );
+          case "iterationBufferDeduped":
+            return (
+              <div className="text-xs text-gray-600">
+                Dropped: {rendererEvent.dropped}, Kept: {rendererEvent.kept}
+              </div>
+            );
           case "bufferSizeExceeded":
             return (
               <div className="text-xs text-gray-600">Remaining: {rendererEvent.remaining}</div>

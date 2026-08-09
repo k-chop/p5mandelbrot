@@ -29,6 +29,11 @@ export type RendererEvent = EventBase & {/* common type */} & (
         rects: Rect[];
       }
     | {
+        type: "iterationBufferDeduped";
+        dropped: number;
+        kept: number;
+      }
+    | {
         type: "bufferSizeExceeded";
         remaining: number;
       }
