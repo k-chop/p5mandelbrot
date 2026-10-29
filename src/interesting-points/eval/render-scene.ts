@@ -1,4 +1,5 @@
 import type { InterestingPoint } from "../find-interesting-points";
+import type { PeakScoreMap } from "../peak-detector";
 import { encodePNG } from "./png";
 
 /** 期待点（正解データ）。tolerance 以内にマーカーがあれば検出成功とみなす */
@@ -100,16 +101,16 @@ const drawCross = (
 
 /**
  * iteration buffer を着色し、検出結果（白リング、順位が高いほど大きい）と
- * 期待点（黒縁の白い十字）を重ねた PNG を返す
+ * 期待点（黒縁の白い十字）を重ねた RGBA バッファを返す
  */
-export const renderScene = (
+export const renderSceneRGBA = (
   buffer: Uint32Array,
   width: number,
   height: number,
   maxIteration: number,
   points: InterestingPoint[],
   expected: ExpectedPoint[],
-): Buffer => {
+): Uint8Array => {
   const valid = Array.from(buffer.filter((v) => v !== 0 && v < maxIteration)).sort((a, b) => a - b);
   const lo = valid[Math.floor(valid.length * 0.01)] ?? 0;
   const hi = Math.max(lo + 1, valid[Math.floor(valid.length * 0.99)] ?? 1);
@@ -135,6 +136,62 @@ export const renderScene = (
   points.forEach((p, rank) => {
     const radius = Math.max(6, 16 - rank);
     drawCircle(rgba, width, height, p.x, p.y, radius + 1.5, [0, 0, 0]);
+    drawCircle(rgba, width, height, p.x, p.y, radius, [255, 255, 255]);
+  });
+  return rgba;
+};
+
+/**
+ * renderSceneRGBA の結果を PNG にエンコードして返す
+ */
+export const renderScene = (
+  buffer: Uint32Array,
+  width: number,
+  height: number,
+  maxIteration: number,
+  points: InterestingPoint[],
+  expected: ExpectedPoint[],
+): Buffer =>
+  encodePNG(renderSceneRGBA(buffer, width, height, maxIteration, points, expected), width, height);
+
+/**
+ * 峰スコアマップをヒートマップ（黒 → 青 → 緑 → 黄 → 赤）にして、検出結果と期待点を重ねた PNG を返す。
+ * 色はマップ内の最大スコアで正規化する
+ */
+export const renderHeatmap = (
+  map: PeakScoreMap,
+  width: number,
+  height: number,
+  points: InterestingPoint[],
+  expected: ExpectedPoint[],
+): Buffer => {
+  let max = 0;
+  for (const v of map.score) if (v > max) max = v;
+  const rgba = new Uint8Array(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const gx = Math.min(map.cols - 1, Math.floor(x / map.stride));
+      const gy = Math.min(map.rows - 1, Math.floor(y / map.stride));
+      const t = max > 0 ? map.score[gy * map.cols + gx] / max : 0;
+      const stops: RGB[] = [
+        [0, 0, 0],
+        [0, 0, 255],
+        [0, 255, 0],
+        [255, 255, 0],
+        [255, 0, 0],
+      ];
+      const pos = t * (stops.length - 1);
+      const i0 = Math.min(stops.length - 2, Math.floor(pos));
+      const f = pos - i0;
+      const c: RGB = [0, 1, 2].map((k) =>
+        Math.round(stops[i0][k] * (1 - f) + stops[i0 + 1][k] * f),
+      ) as RGB;
+      setPixel(rgba, width, height, x, y, c);
+    }
+  }
+  for (const e of expected) drawCross(rgba, width, height, e.x, e.y, 9, [255, 255, 255]);
+  points.forEach((p, rank) => {
+    const radius = Math.max(6, 16 - rank);
     drawCircle(rgba, width, height, p.x, p.y, radius, [255, 255, 255]);
   });
   return encodePNG(rgba, width, height);

@@ -39,7 +39,7 @@ export const InterestingPointsViewer = () => {
   const blocks = useMemo(() => {
     if (!debugData) return [];
 
-    if (debugData.scoring === "symmetry") {
+    if (debugData.scoring !== "entropy-gradient") {
       return debugData.gridBlocks;
     }
 

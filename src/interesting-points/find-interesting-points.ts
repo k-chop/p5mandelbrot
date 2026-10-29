@@ -1,3 +1,5 @@
+import { findPeaks, peakMapToDebugBlocks } from "./peak-detector";
+
 export interface InterestingPoint {
   x: number;
   y: number;
@@ -14,8 +16,8 @@ export interface FindInterestingPointsOptions {
   scales?: number[];
   topK?: number;
   minIteration?: number;
-  /** スコアリング方式。デフォルト 'symmetry' */
-  scoring?: "symmetry" | "entropy-gradient";
+  /** スコアリング方式。デフォルト 'peak' */
+  scoring?: "peak" | "symmetry" | "entropy-gradient";
   /** trueの場合、中間データを収集してデバッグ情報を返す */
   debug?: boolean;
 }
@@ -39,8 +41,8 @@ export interface BlockDebugInfo {
 /** デバッグ用の中間データ */
 export interface InterestingPointsDebugData {
   /** 使用されたスコアリング方式 */
-  scoring: "symmetry" | "entropy-gradient";
-  /** symmetryモード時のグリッド情報 */
+  scoring: "peak" | "symmetry" | "entropy-gradient";
+  /** peak / symmetryモード時のグリッド情報 */
   gridBlocks: BlockDebugInfo[];
   /** entropy-gradientモード時のスケールごとのブロック情報 */
   scaleBlocks: Array<{ scale: number; blocks: BlockDebugInfo[] }>;
@@ -1180,7 +1182,8 @@ const excludeOverlappingWithCenter = (
  * iterationバッファから興味深いポイントを検出する
  *
  * スコアリング方式:
- * - 'symmetry'（デフォルト）: 回転対称性に基づく検出
+ * - 'peak'（デフォルト）: 多スケールの峰検出（peak-detector.ts）
+ * - 'symmetry': 回転対称性に基づく検出
  * - 'entropy-gradient': entropy × gradient に基づく検出（blockSize/scales指定時も自動選択）
  *
  * blockSize指定時は単一スケールで後方互換動作する。
@@ -1213,15 +1216,33 @@ export function findInterestingPoints(
   const suppressionRadius = Math.min(width, height) * 0.15;
 
   // スコアリング方式の決定:
-  // blockSize指定 → entropy-gradient
-  // scales指定 → entropy-gradient
-  // scoring: 'entropy-gradient' → entropy-gradient
-  // それ以外（デフォルト） → symmetry
-  const useSymmetry =
-    options?.scoring === "symmetry" ||
+  // scoring: 'peak' または指定なし（blockSize/scales もなし）→ peak
+  // scoring: 'symmetry' → symmetry
+  // それ以外（blockSize指定 / scales指定 / scoring: 'entropy-gradient'）→ entropy-gradient
+  const usePeak =
+    options?.scoring === "peak" ||
     (options?.scoring == null && options?.blockSize == null && options?.scales == null);
 
-  if (useSymmetry) {
+  if (usePeak) {
+    const { points, map } = findPeaks(buffer, width, height, maxIteration);
+    if (debug) {
+      return {
+        points,
+        debugData: {
+          scoring: "peak",
+          gridBlocks: peakMapToDebugBlocks(map),
+          scaleBlocks: [],
+          rawCandidates: points,
+          mergedCandidates: points,
+          selectedPoints: points,
+          centerPoint: null,
+        },
+      };
+    }
+    return points;
+  }
+
+  if (options?.scoring === "symmetry") {
     const blocks: BlockDebugInfo[] = [];
     const candidates = findSymmetryCandidates(
       buffer,

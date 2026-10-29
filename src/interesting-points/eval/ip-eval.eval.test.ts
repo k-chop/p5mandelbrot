@@ -1,11 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { findInterestingPoints } from "../find-interesting-points";
+import { findPeaks } from "../peak-detector";
 import { computeScene, type Scene } from "./compute-scene";
 import expectedJson from "./expected.json";
 import { evaluateScene, type SceneMetrics } from "./metrics";
-import { renderScene, type ExpectedPoint } from "./render-scene";
+import { renderHeatmap, renderScene, type ExpectedPoint } from "./render-scene";
 import scenesJson from "./scenes.json";
 
 /**
@@ -46,7 +46,7 @@ describe("interesting points eval", () => {
     for (const scene of scenes) {
       const buffer = loadBuffer(scene);
       const started = performance.now();
-      const points = findInterestingPoints(buffer, scene.width, scene.height, scene.N);
+      const { points, map } = findPeaks(buffer, scene.width, scene.height, scene.N);
       const ms = Math.round(performance.now() - started);
       const expected = expectedMap[scene.name] ?? [];
       const tolerance = Math.min(scene.width, scene.height) * TOLERANCE_RATIO;
@@ -61,6 +61,10 @@ describe("interesting points eval", () => {
       writeFileSync(
         join(OUT_DIR, `${scene.name}.png`),
         renderScene(buffer, scene.width, scene.height, scene.N, points, expected),
+      );
+      writeFileSync(
+        join(OUT_DIR, `${scene.name}-heatmap.png`),
+        renderHeatmap(map, scene.width, scene.height, points, expected),
       );
       writeFileSync(
         join(OUT_DIR, `${scene.name}.json`),
