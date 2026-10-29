@@ -4,7 +4,7 @@ import type { BlockDebugInfo, InterestingPoint } from "./find-interesting-points
  * 検出のパラメータ
  */
 export interface PeakDetectorOptions {
-  /** 峰検出の平滑化半径（px）。小さい順に並べる。各スケールが1つの feature になる */
+  /** ピーク検出の平滑化半径（px）。小さい順に並べる。各スケールが1つの feature になる */
   scales?: number[];
   /** 候補点のグリッド間隔（px） */
   stride?: number;
@@ -49,7 +49,7 @@ const DEFAULT_MIN_SCORE = 0.3;
 const DEFAULT_MAX_POINTS = 10;
 /** シーン内の最大スコアに対してこの比率未満の候補は捨てる */
 const RELATIVE_MIN_RATIO = 0.3;
-/** 峰 feature の重み。index が大きい（粗い）スケールほど重くする */
+/** ピーク feature の重み。index が大きい（粗い）スケールほど重くする */
 const peakWeight = (index: number): number => 0.5 + 0.25 * index;
 /** 円周サンプルの半径は平滑化半径の何倍か */
 const RING_RADIUS_RATIO = 2.5;
@@ -58,7 +58,7 @@ const ROBUST_MIN_RANK = 1;
 
 /**
  * iteration 値を画像内の値域（p1〜p99）で正規化する。
- * 未計算（0）は NaN、集合内部（maxIteration）は有効最大値より少し上の値にして峰の頂上として扱う
+ * 未計算（0）は NaN、集合内部（maxIteration）は有効最大値より少し上の値にしてピークの頂上として扱う
  */
 export const normalizeIterations = (buffer: Uint32Array, maxIteration: number): Float64Array => {
   const valid: number[] = [];
@@ -136,7 +136,7 @@ interface Grid {
 }
 
 /**
- * 各グリッド点の「峰らしさ」を1スケール分算出する。
+ * 各グリッド点の「ピークらしさ」を1スケール分算出する。
  *
  * 中心の平滑値から円周上の平滑値を引いた落差を全方向で求め、
  * 小さい方から ROBUST_MIN_RANK 番目を採用する。全方向で落ちている点（渦巻きやミニブロの中心）
@@ -168,7 +168,7 @@ const computePeakFeature = (
       for (let d = 0; d < directions; d++) {
         const px = Math.round(cx + ring * cos[d]);
         const py = Math.round(cy + ring * sin[d]);
-        // 画像外や未計算の方向は「落ちていない」扱い。端で尾根が峰に化けるのを防ぐ
+        // 画像外や未計算の方向は「落ちていない」扱い。端で尾根がピークに化けるのを防ぐ
         const v =
           px < 0 || py < 0 || px >= width || py >= height ? NaN : boxMean(sat, px, py, sigma);
         drops[d] = Number.isNaN(v) ? 0 : center - v;
@@ -181,7 +181,7 @@ const computePeakFeature = (
 
 /**
  * 全 feature を計算して合成スコアマップを作る。
- * 現状の feature はスケール別の峰らしさ（`peak{σ}`）のみ
+ * 現状の feature はスケール別のピークらしさ（`peak{σ}`）のみ
  */
 export const computeScoreMap = (
   buffer: Uint32Array,
@@ -282,7 +282,7 @@ export const selectPeaks = (
   }
 
   // NMS: 抑制半径は固定値と「両者の支配的スケールの円周半径」の大きい方。
-  // 粗いスケールで検出された峰の肩に現れる副次的な極大を落とす
+  // 粗いスケールで検出されたピークの肩に現れる副次的な極大を落とす
   candidates.sort((a, b) => b.score - a.score);
   const selected: Array<InterestingPoint & { scale: number }> = [];
   for (const c of candidates) {

@@ -16,19 +16,19 @@ const makeBuffer = (fn: (x: number, y: number) => number): Uint32Array => {
   return buffer;
 };
 
-/** 中心 (cx, cy) から離れるほど iteration が下がる峰 */
+/** 中心 (cx, cy) から離れるほど iteration が下がるピーク */
 const peakAt = (cx: number, cy: number, height: number) => (x: number, y: number) =>
   height / (1 + Math.hypot(x - cx, y - cy) / 10);
 
 describe("findPeaks", () => {
-  it("単一の峰の中心を検出する", () => {
+  it("単一のピークの中心を検出する", () => {
     const buffer = makeBuffer(peakAt(128, 128, 5000));
     const { points } = findPeaks(buffer, SIZE, SIZE, N);
     expect(points).toHaveLength(1);
     expect(Math.hypot(points[0].x - 128, points[0].y - 128)).toBeLessThan(6);
   });
 
-  it("2つの峰をスコア順に返す", () => {
+  it("2つのピークをスコア順に返す", () => {
     const buffer = makeBuffer((x, y) => peakAt(64, 64, 5000)(x, y) + peakAt(192, 192, 3000)(x, y));
     const { points } = findPeaks(buffer, SIZE, SIZE, N);
     expect(points).toHaveLength(2);
@@ -42,12 +42,12 @@ describe("findPeaks", () => {
     expect(findPeaks(buffer, SIZE, SIZE, N).points).toEqual([]);
   });
 
-  it("尾根（x方向にだけ峰）は検出しない", () => {
+  it("尾根（x方向にだけピーク）は検出しない", () => {
     const buffer = makeBuffer((x) => 5000 / (1 + Math.abs(x - 128) / 10));
     expect(findPeaks(buffer, SIZE, SIZE, N).points).toEqual([]);
   });
 
-  it("集合内部（N）の塊の中心を峰として検出する", () => {
+  it("集合内部（N）の塊の中心をピークとして検出する", () => {
     const buffer = makeBuffer((x, y) => (Math.hypot(x - 128, y - 128) < 12 ? N : 100));
     const { points } = findPeaks(buffer, SIZE, SIZE, N);
     expect(points).toHaveLength(1);
@@ -70,7 +70,7 @@ describe("normalizeIterations", () => {
 });
 
 describe("findInterestingPoints (peak)", () => {
-  it("デフォルトで峰検出の結果を返し、debug 時はグリッドブロックを含む", () => {
+  it("デフォルトでピーク検出の結果を返し、debug 時はグリッドブロックを含む", () => {
     const buffer = makeBuffer(peakAt(128, 128, 5000));
     const points = findInterestingPoints(buffer, SIZE, SIZE, N);
     expect(points).toEqual(findPeaks(buffer, SIZE, SIZE, N).points);

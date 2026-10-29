@@ -155,7 +155,7 @@ export const renderScene = (
   encodePNG(renderSceneRGBA(buffer, width, height, maxIteration, points, expected), width, height);
 
 /**
- * 峰スコアマップをヒートマップ（黒 → 青 → 緑 → 黄 → 赤）にして、検出結果と期待点を重ねた PNG を返す。
+ * ピークスコアマップをヒートマップ（黒 → 青 → 緑 → 黄 → 赤）にして、検出結果と期待点を重ねた PNG を返す。
  * 色はマップ内の最大スコアで正規化する
  */
 export const renderHeatmap = (

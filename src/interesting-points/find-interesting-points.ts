@@ -40,7 +40,7 @@ export interface InterestingPointsDebugResult {
 }
 
 /**
- * iterationバッファから興味深いポイントを検出する（多スケールの峰検出、peak-detector.ts）
+ * iterationバッファから興味深いポイントを検出する（多スケールのピーク検出、peak-detector.ts）
  *
  * debug: trueの場合、InterestingPointsDebugResultを返す。
  */
