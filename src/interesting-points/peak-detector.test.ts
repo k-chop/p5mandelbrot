@@ -76,7 +76,6 @@ describe("findInterestingPoints (peak)", () => {
     expect(points).toEqual(findPeaks(buffer, SIZE, SIZE, N).points);
 
     const { debugData } = findInterestingPoints(buffer, SIZE, SIZE, N, { debug: true });
-    expect(debugData.scoring).toBe("peak");
     expect(debugData.gridBlocks.length).toBeGreaterThan(0);
     expect(Object.keys(debugData.gridBlocks[0].factors)).toContain("s3");
   });

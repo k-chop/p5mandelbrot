@@ -289,7 +289,6 @@ export const peakMapToDebugBlocks = (map: PeakScoreMap): BlockDebugInfo[] => {
         blockSize: stride * step,
         factors,
         score: map.score[idx],
-        peak: null,
       });
     }
   }

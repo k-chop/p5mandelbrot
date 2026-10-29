@@ -249,9 +249,7 @@ export const drawUIInterestingPoints = (
 
   for (const point of points) {
     const isHovered = point === hoveredPoint;
-    const isCenter = point.isCenter === true;
-    // centerPointはスコアのスケールが異なるため固定サイズ
-    const ratio = isCenter ? 1 : maxScore > 0 ? point.score / maxScore : 0;
+    const ratio = maxScore > 0 ? point.score / maxScore : 0;
     const radius = MARKER_BASE_RADIUS + (MARKER_MAX_RADIUS - MARKER_BASE_RADIUS) * ratio;
 
     // 黒の影（太め）
@@ -259,13 +257,10 @@ export const drawUIInterestingPoints = (
     p.strokeWeight(isHovered ? 4 : 3);
     p.circle(point.x, point.y, (isHovered ? radius + 2 : radius) * 2);
 
-    // リング（ホバー時はシアン、中心点は淡い青、通常は白系）
+    // リング（ホバー時はシアン、通常は白系）
     if (isHovered) {
       p.stroke(0, 200, 255);
       p.strokeWeight(2.5);
-    } else if (isCenter) {
-      p.stroke(100, 140, 220);
-      p.strokeWeight(1.5);
     } else {
       p.stroke(0, 0, 100);
       p.strokeWeight(1.5);

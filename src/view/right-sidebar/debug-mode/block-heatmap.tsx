@@ -66,13 +66,11 @@ export const BlockHeatmap = memo(
   ({
     blocks,
     selectedPoints,
-    centerPoint,
     selectedFactor,
     onBlockClick,
   }: {
     blocks: BlockDebugInfo[];
     selectedPoints: InterestingPoint[];
-    centerPoint?: InterestingPoint | null;
     selectedFactor: string;
     onBlockClick: (block: BlockDebugInfo) => void;
   }) => {
@@ -135,19 +133,9 @@ export const BlockHeatmap = memo(
         ctx.arc(point.x * scaleX, point.y * scaleY, 4, 0, Math.PI * 2);
         ctx.stroke();
       }
-
-      // センターポイント（青い円）
-      if (centerPoint) {
-        ctx.strokeStyle = "#648cdc";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(centerPoint.x * scaleX, centerPoint.y * scaleY, 5, 0, Math.PI * 2);
-        ctx.stroke();
-      }
     }, [
       blocks,
       selectedPoints,
-      centerPoint,
       selectedFactor,
       effectiveWidth,
       effectiveHeight,
@@ -235,12 +223,6 @@ export const BlockHeatmap = memo(
                   {key}: {value.toFixed(6)}
                 </div>
               ))}
-              {hoveredBlock.peak && (
-                <div>
-                  Peak: ({hoveredBlock.peak.x}, {hoveredBlock.peak.y}) iter=
-                  {hoveredBlock.peak.iteration}
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -253,15 +235,6 @@ export const BlockHeatmap = memo(
             />
             <span className="text-amber-400">Selected</span>
           </div>
-          {centerPoint && (
-            <div className="flex items-center gap-1">
-              <div
-                className="h-3 w-3 rounded-full border-2"
-                style={{ borderColor: "#648cdc", backgroundColor: "transparent" }}
-              />
-              <span style={{ color: "#648cdc" }}>Center</span>
-            </div>
-          )}
           <div className="flex items-center gap-1">
             <div
               className="h-3 w-3"

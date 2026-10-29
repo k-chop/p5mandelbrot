@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Hono } from "hono";
-import { decodeDataURL } from "./eval-export";
 
 /** public/preset-poi/ のベースディレクトリ */
 const PRESET_DIR = join(process.cwd(), "public", "preset-poi");
@@ -63,6 +62,19 @@ interface AddPresetBody {
   palette?: string;
   thumbnail?: string;
 }
+
+/**
+ * base64 DataURLをBufferにデコードする
+ *
+ * "data:image/png;base64,..." 形式のDataURLからバイナリデータを抽出する。
+ */
+export const decodeDataURL = (dataURL: string): Buffer => {
+  const commaIndex = dataURL.indexOf(",");
+  if (commaIndex === -1) {
+    throw new Error("Invalid DataURL format");
+  }
+  return Buffer.from(dataURL.slice(commaIndex + 1), "base64");
+};
 
 /**
  * preset-poi用のルートをHonoアプリに登録する

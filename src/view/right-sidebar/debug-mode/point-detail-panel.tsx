@@ -26,10 +26,15 @@ export const PointDetailPanel = ({
     );
   }
 
-  // このブロックが選出ポイントに含まれているか判定
-  const rank = block.peak
-    ? selectedPoints.findIndex((p) => p.x === block.peak!.x && p.y === block.peak!.y) + 1
-    : 0;
+  // このブロック内に選出ポイントがあればその順位
+  const rank =
+    selectedPoints.findIndex(
+      (p) =>
+        p.x >= block.bx &&
+        p.x < block.bx + block.blockSize &&
+        p.y >= block.by &&
+        p.y < block.by + block.blockSize,
+    ) + 1;
 
   return (
     <div className="space-y-1 rounded border p-2 text-xs">
@@ -37,11 +42,6 @@ export const PointDetailPanel = ({
       <div>
         Position: ({block.bx}, {block.by}) size={block.blockSize}
       </div>
-      {block.peak && (
-        <div>
-          Peak: ({block.peak.x}, {block.peak.y}) iter={block.peak.iteration}
-        </div>
-      )}
       <div className="font-medium">Score: {block.score.toFixed(6)}</div>
       <div className="mt-1 font-medium">Factors:</div>
       {Object.entries(block.factors).map(([key, value]) => (
