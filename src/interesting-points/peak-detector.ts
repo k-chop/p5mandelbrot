@@ -51,6 +51,10 @@ const DEFAULT_MAX_POINTS = 10;
 const RELATIVE_MIN_RATIO = 0.3;
 /** ピーク feature の重み。index が大きい（粗い）スケールほど重くする */
 const peakWeight = (index: number): number => 0.5 + 0.25 * index;
+/** 局所コントラスト（z スコア）がこの値で 1.0 に飽和する */
+const CONTRAST_Z_CAP = 4;
+/** 局所コントラスト feature の重み（ピーク feature の重みに掛ける） */
+const CONTRAST_WEIGHT = 1;
 /** 円周サンプルの半径は平滑化半径の何倍か */
 const RING_RADIUS_RATIO = 2.5;
 /** 落差を小さい順に並べたとき何番目を採用するか（0 = 最小）。枝1本分の非降下を許容する */
@@ -81,6 +85,7 @@ export const normalizeIterations = (buffer: Uint32Array, maxIteration: number): 
 /** 有効画素のみを平均するための summed-area table（値の累積と有効数の累積） */
 interface SummedArea {
   sum: Float64Array;
+  sumSq: Float64Array;
   count: Float64Array;
   width: number;
   height: number;
@@ -89,42 +94,60 @@ interface SummedArea {
 const buildSummedArea = (values: Float64Array, width: number, height: number): SummedArea => {
   const w1 = width + 1;
   const sum = new Float64Array(w1 * (height + 1));
+  const sumSq = new Float64Array(w1 * (height + 1));
   const count = new Float64Array(w1 * (height + 1));
   for (let y = 1; y <= height; y++) {
     let rowSum = 0;
+    let rowSumSq = 0;
     let rowCount = 0;
     for (let x = 1; x <= width; x++) {
       const v = values[(y - 1) * width + (x - 1)];
       if (!Number.isNaN(v)) {
         rowSum += v;
+        rowSumSq += v * v;
         rowCount++;
       }
       sum[y * w1 + x] = sum[(y - 1) * w1 + x] + rowSum;
+      sumSq[y * w1 + x] = sumSq[(y - 1) * w1 + x] + rowSumSq;
       count[y * w1 + x] = count[(y - 1) * w1 + x] + rowCount;
     }
   }
-  return { sum, count, width, height };
+  return { sum, sumSq, count, width, height };
 };
 
-/** (cx, cy) を中心とする一辺 2r+1 の正方形の平均。有効画素がなければ NaN */
-const boxMean = (sat: SummedArea, cx: number, cy: number, r: number): number => {
+/** summed-area table から矩形の合計を引く */
+const boxSum = (
+  table: Float64Array,
+  w1: number,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): number => table[y1 * w1 + x1] - table[y0 * w1 + x1] - table[y1 * w1 + x0] + table[y0 * w1 + x0];
+
+/** (cx, cy) を中心とする一辺 2r+1 の正方形の平均と標準偏差。有効画素がなければ NaN */
+const boxStats = (
+  sat: SummedArea,
+  cx: number,
+  cy: number,
+  r: number,
+): { mean: number; sd: number } => {
   const x0 = Math.max(0, cx - r);
   const y0 = Math.max(0, cy - r);
   const x1 = Math.min(sat.width, cx + r + 1);
   const y1 = Math.min(sat.height, cy + r + 1);
-  if (x0 >= x1 || y0 >= y1) return NaN;
+  if (x0 >= x1 || y0 >= y1) return { mean: NaN, sd: NaN };
   const w1 = sat.width + 1;
-  const idx = (x: number, y: number) => y * w1 + x;
-  const c =
-    sat.count[idx(x1, y1)] -
-    sat.count[idx(x0, y1)] -
-    sat.count[idx(x1, y0)] +
-    sat.count[idx(x0, y0)];
-  if (c === 0) return NaN;
-  const s =
-    sat.sum[idx(x1, y1)] - sat.sum[idx(x0, y1)] - sat.sum[idx(x1, y0)] + sat.sum[idx(x0, y0)];
-  return s / c;
+  const c = boxSum(sat.count, w1, x0, y0, x1, y1);
+  if (c === 0) return { mean: NaN, sd: NaN };
+  const mean = boxSum(sat.sum, w1, x0, y0, x1, y1) / c;
+  const variance = boxSum(sat.sumSq, w1, x0, y0, x1, y1) / c - mean * mean;
+  return { mean, sd: Math.sqrt(Math.max(0, variance)) };
 };
+
+/** (cx, cy) を中心とする一辺 2r+1 の正方形の平均。有効画素がなければ NaN */
+const boxMean = (sat: SummedArea, cx: number, cy: number, r: number): number =>
+  boxStats(sat, cx, cy, r).mean;
 
 /** グリッドの寸法。feature 計算関数に共通で渡す */
 interface Grid {
@@ -147,9 +170,10 @@ const computePeakFeature = (
   grid: Grid,
   sigma: number,
   directions: number,
-): Float32Array => {
+): { drop: Float32Array; contrast: Float32Array } => {
   const { stride, cols, rows, width, height } = grid;
   const values = new Float32Array(cols * rows);
+  const contrast = new Float32Array(cols * rows);
   const ring = sigma * RING_RADIUS_RATIO;
   const cos = Array.from({ length: directions }, (_, d) =>
     Math.cos((2 * Math.PI * d) / directions),
@@ -173,15 +197,22 @@ const computePeakFeature = (
           px < 0 || py < 0 || px >= width || py >= height ? NaN : boxMean(sat, px, py, sigma);
         drops[d] = Number.isNaN(v) ? 0 : center - v;
       }
-      values[gy * cols + gx] = Math.max(0, drops.sort()[ROBUST_MIN_RANK]);
+      const drop = Math.max(0, drops.sort()[ROBUST_MIN_RANK]);
+      values[gy * cols + gx] = drop;
+      // 局所コントラスト: 円周半径の箱の中の散らばりに対する落差（z スコア風）。
+      // 画面全体の値域に対して小さくても、周囲に比べて明確なピークなら高くなる
+      const { sd } = boxStats(sat, cx, cy, Math.round(ring));
+      const z = sd > 0 ? drop / sd : 0;
+      contrast[gy * cols + gx] = Math.min(1, z / CONTRAST_Z_CAP);
     }
   }
-  return values;
+  return { drop: values, contrast };
 };
 
 /**
  * 全 feature を計算して合成スコアマップを作る。
- * 現状の feature はスケール別のピークらしさ（`peak{σ}`）のみ
+ * feature はスケール別の「落差」（`peak{σ}`）と「局所コントラスト」（`contrast{σ}`）。
+ * 前者は画面全体で大きな構造を、後者は画面の値域に対して小さくても周囲より明確に浮き出た構造を拾う
  */
 export const computeScoreMap = (
   buffer: Uint32Array,
@@ -203,12 +234,18 @@ export const computeScoreMap = (
     height,
   };
 
-  const features: ScoreFeature[] = scales.map((sigma, i) => ({
-    name: `peak${sigma}`,
-    scale: sigma,
-    weight: peakWeight(i),
-    values: computePeakFeature(sat, grid, sigma, directions),
-  }));
+  const features: ScoreFeature[] = scales.flatMap((sigma, i) => {
+    const { drop, contrast } = computePeakFeature(sat, grid, sigma, directions);
+    return [
+      { name: `peak${sigma}`, scale: sigma, weight: peakWeight(i), values: drop },
+      {
+        name: `contrast${sigma}`,
+        scale: sigma,
+        weight: CONTRAST_WEIGHT * peakWeight(i),
+        values: contrast,
+      },
+    ];
+  });
 
   const score = new Float32Array(grid.cols * grid.rows);
   for (const f of features) {
@@ -281,14 +318,15 @@ export const selectPeaks = (
     }
   }
 
-  // NMS: 抑制半径は固定値と「両者の支配的スケールの円周半径」の大きい方。
-  // 粗いスケールで検出されたピークの肩に現れる副次的な極大を落とす
+  // NMS: 抑制半径は固定値と「候補自身の支配的スケールの円周半径」の大きい方。
+  // 粗いスケールで検出されたピークの肩に現れる副次的な極大（それ自身も粗いスケール）を落としつつ、
+  // 広い丘の上にある小さく鋭いピークは別物として残す
   candidates.sort((a, b) => b.score - a.score);
   const selected: Array<InterestingPoint & { scale: number }> = [];
   for (const c of candidates) {
     if (selected.length >= maxPoints) break;
     const suppressed = selected.some((s) => {
-      const radius = Math.max(suppression, RING_RADIUS_RATIO * Math.max(s.scale, c.scale));
+      const radius = Math.max(suppression, RING_RADIUS_RATIO * c.scale);
       return (s.x - c.x) ** 2 + (s.y - c.y) ** 2 <= radius * radius;
     });
     if (!suppressed) selected.push(c);
