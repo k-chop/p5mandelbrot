@@ -51,6 +51,7 @@ export interface ScoreMap {
   /** 合成スコア: max(Σ 通常 feature の weight × √value, standalone feature の weight × √value)（rankOnly は含まない） */
   score: Float32Array;
   features: ScoreFeature[];
+  maxIteration: number;
 }
 
 const DEFAULT_SCALES = [3, 6, 12, 24, 48, 96];
@@ -96,6 +97,18 @@ const JUNCTION_FULL_SD = 0.03;
 const JUNCTION_MIN_ARMS = 3;
 /** 交点 feature の重み */
 const JUNCTION_WEIGHT = 4;
+/** 集合内部の判定: この半径（px）の円内がほぼ全部 N なら黒い塊の中とみなす */
+const INTERIOR_CORE_RADIUS = 16;
+/** 集合内部の判定: 円内の N の割合がこれ以上なら黒い塊の中 */
+const INTERIOR_CORE_RATIO = 0.9;
+/** 集合内部の判定: 外側へ広げた環の非 N 割合がこれ以上になったら「塊の外に出た」とみなす */
+const INTERIOR_EXIT_NON_N_RATIO = 0.5;
+/**
+ * 集合内部の判定: 塊の外に出た環の非 N 画素の iteration 中央値が N × この比率未満なら本物の内部。
+ * 本物のミニブロは境界の外で iteration が急落する（0.55N 程度）が、N 不足で黒いだけの塊は
+ * 外側でも N に近い値（0.85N 以上）が続く
+ */
+const INTERIOR_EXIT_ITERATION_RATIO = 0.7;
 /** 円周サンプルの半径は平滑化半径の何倍か */
 const RING_RADIUS_RATIO = 2.5;
 /** 落差を小さい順に並べたとき何番目を採用するか（0 = 最小）。枝1本分の非降下を許容する */
@@ -506,7 +519,7 @@ export const computeScoreMap = (
       score[i] = Math.max(score[i], f.weight * Math.sqrt(f.values[i]));
     }
   }
-  return { stride, cols: grid.cols, rows: grid.rows, score, features };
+  return { stride, cols: grid.cols, rows: grid.rows, score, features, maxIteration };
 };
 
 /**
@@ -638,7 +651,57 @@ export const selectPeaks = (
     });
     if (!suppressed) selected.push(c);
   }
-  return selected.map(({ scale: _, ...point }) => point);
+  return selected
+    .filter((c) => !isTrueInterior(buffer, width, height, map.maxIteration, c.x, c.y))
+    .map(({ scale: _, ...point }) => point);
+};
+
+/**
+ * 点が「本物の集合内部（拡大しても真っ黒）」にあるかを判定する。
+ *
+ * 半径 INTERIOR_CORE_RADIUS の円内がほぼ N なら黒い塊の中。そこから 8px 刻みで環を広げ、
+ * 非 N 画素が半分以上になった最初の環で非 N の iteration 中央値を見る。
+ * 中央値が低ければ境界で急落する本物の内部、N に近ければ N 不足で黒いだけ（まだ構造が隠れている）
+ */
+export const isTrueInterior = (
+  buffer: Uint32Array,
+  width: number,
+  height: number,
+  maxIteration: number,
+  x: number,
+  y: number,
+): boolean => {
+  const sampleRing = (r0: number, r1: number): { nonN: number[]; total: number } => {
+    const nonN: number[] = [];
+    let total = 0;
+    for (let dy = -r1; dy <= r1; dy += 2) {
+      for (let dx = -r1; dx <= r1; dx += 2) {
+        const d2 = dx * dx + dy * dy;
+        if (d2 > r1 * r1 || d2 <= r0 * r0) continue;
+        const px = x + dx;
+        const py = y + dy;
+        if (px < 0 || py < 0 || px >= width || py >= height) continue;
+        total++;
+        const v = buffer[py * width + px];
+        if (v !== 0 && v < maxIteration) nonN.push(v);
+      }
+    }
+    return { nonN, total };
+  };
+
+  const core = sampleRing(-1, INTERIOR_CORE_RADIUS);
+  if (core.total === 0 || 1 - core.nonN.length / core.total < INTERIOR_CORE_RATIO) return false;
+
+  const maxRadius = Math.floor(Math.min(width, height) / 2);
+  for (let r = INTERIOR_CORE_RADIUS + 8; r <= maxRadius; r += 8) {
+    const ring = sampleRing(r - 8, r);
+    if (ring.total === 0 || ring.nonN.length / ring.total < INTERIOR_EXIT_NON_N_RATIO) continue;
+    ring.nonN.sort((a, b) => a - b);
+    const median = ring.nonN[Math.floor(ring.nonN.length / 2)];
+    return median < maxIteration * INTERIOR_EXIT_ITERATION_RATIO;
+  }
+  // 画面の半分まで広げても塊の外に出ない → 判断できないので弾かない
+  return false;
 };
 
 /**

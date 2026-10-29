@@ -7,6 +7,8 @@ export interface ExpectedPoint {
   x: number;
   y: number;
   note?: string;
+  /** true ならこの点にマーカーが置かれてはいけない（本物のミニブロ内部など） */
+  exclude?: boolean;
 }
 
 type RGB = [number, number, number];
@@ -101,7 +103,7 @@ const drawCross = (
 
 /**
  * iteration buffer を着色し、検出結果（白リング、順位が高いほど大きい）と
- * 期待点（黒縁の白い十字）を重ねた RGBA バッファを返す
+ * 期待点（黒縁の白い十字。exclude は赤い十字）を重ねた RGBA バッファを返す
  */
 export const renderSceneRGBA = (
   buffer: Uint32Array,
@@ -132,7 +134,9 @@ export const renderSceneRGBA = (
       for (let k = 0; k < 3; k++) rgba[i + k] = Math.round(rgba[i + k] * (1 - a) + 255 * a);
     }
   }
-  for (const e of expected) drawCross(rgba, width, height, e.x, e.y, 9, [255, 255, 255]);
+  for (const e of expected) {
+    drawCross(rgba, width, height, e.x, e.y, 9, e.exclude ? [255, 60, 60] : [255, 255, 255]);
+  }
   points.forEach((p, rank) => {
     const radius = Math.max(6, 16 - rank);
     drawCircle(rgba, width, height, p.x, p.y, radius + 1.5, [0, 0, 0]);
