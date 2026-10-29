@@ -1,8 +1,10 @@
 import { serve } from "@hono/node-server";
-import { createEvalExportApp } from "./eval-export";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { registerPresetPOIRoutes } from "./preset-poi";
 
-const app = createEvalExportApp();
+const app = new Hono();
+app.use("/api/*", cors());
 registerPresetPOIRoutes(app);
 serve({ fetch: app.fetch, port: 8080 });
 
