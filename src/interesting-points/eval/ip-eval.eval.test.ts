@@ -38,10 +38,16 @@ describe("interesting points eval", () => {
   it("全シーンを評価してレポートを出力する", { timeout: 600000 }, () => {
     mkdirSync(OUT_DIR, { recursive: true });
     const lines: string[] = [
-      "| scene | hit/expected | falsePositive | detected | ms |",
-      "|---|---|---|---|---|",
+      "| scene | hit/expected | falsePositive | violation | detected | ms |",
+      "|---|---|---|---|---|---|",
     ];
-    const total: SceneMetrics = { hit: 0, expected: 0, falsePositive: 0, detected: 0 };
+    const total: SceneMetrics = {
+      hit: 0,
+      expected: 0,
+      falsePositive: 0,
+      detected: 0,
+      violation: 0,
+    };
 
     for (const scene of scenes) {
       const buffer = loadBuffer(scene);
@@ -55,8 +61,9 @@ describe("interesting points eval", () => {
       total.expected += m.expected;
       total.falsePositive += m.falsePositive;
       total.detected += m.detected;
+      total.violation += m.violation;
       lines.push(
-        `| ${scene.name} | ${m.hit}/${m.expected} | ${m.falsePositive} | ${m.detected} | ${ms} |`,
+        `| ${scene.name} | ${m.hit}/${m.expected} | ${m.falsePositive} | ${m.violation} | ${m.detected} | ${ms} |`,
       );
       writeFileSync(
         join(OUT_DIR, `${scene.name}.png`),
@@ -77,7 +84,7 @@ describe("interesting points eval", () => {
     }
 
     lines.push(
-      `| **total** | ${total.hit}/${total.expected} | ${total.falsePositive} | ${total.detected} | |`,
+      `| **total** | ${total.hit}/${total.expected} | ${total.falsePositive} | ${total.violation} | ${total.detected} | |`,
     );
     writeFileSync(join(OUT_DIR, "report.md"), lines.join("\n") + "\n");
     expect(total.detected).toBeGreaterThan(0);

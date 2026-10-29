@@ -9,6 +9,8 @@ export interface SceneMetrics {
   /** どの期待点からも tolerance より遠いマーカーの数（誤検出） */
   falsePositive: number;
   detected: number;
+  /** exclude 指定の点の tolerance 以内にマーカーが置かれた数（置かれてはいけない） */
+  violation: number;
 }
 
 /**
@@ -22,7 +24,12 @@ export const evaluateScene = (
   const tolSq = tolerance * tolerance;
   const used = new Set<number>();
   let hit = 0;
-  for (const e of expected) {
+  let violation = 0;
+  for (const e of expected.filter((e) => e.exclude)) {
+    if (points.some((p) => (p.x - e.x) ** 2 + (p.y - e.y) ** 2 <= tolSq)) violation++;
+  }
+  const positive = expected.filter((e) => !e.exclude);
+  for (const e of positive) {
     const idx = points.findIndex(
       (p, i) => !used.has(i) && (p.x - e.x) ** 2 + (p.y - e.y) ** 2 <= tolSq,
     );
@@ -32,7 +39,7 @@ export const evaluateScene = (
     }
   }
   const nearAny = (p: InterestingPoint) =>
-    expected.some((e) => (p.x - e.x) ** 2 + (p.y - e.y) ** 2 <= tolSq);
+    positive.some((e) => (p.x - e.x) ** 2 + (p.y - e.y) ** 2 <= tolSq);
   const falsePositive = points.filter((p) => !nearAny(p)).length;
-  return { hit, expected: expected.length, falsePositive, detected: points.length };
+  return { hit, expected: positive.length, falsePositive, detected: points.length, violation };
 };
