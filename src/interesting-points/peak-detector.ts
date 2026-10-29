@@ -52,7 +52,7 @@ const DEFAULT_SCALES = [3, 6, 12, 24, 48, 96];
 const DEFAULT_STRIDE = 4;
 const DEFAULT_DIRECTIONS = 16;
 const DEFAULT_MIN_SCORE = 0.3;
-const DEFAULT_MAX_POINTS = 10;
+const DEFAULT_MAX_POINTS = 12;
 /** シーン内の最大スコアに対してこの比率未満の候補は捨てる */
 const RELATIVE_MIN_RATIO = 0.3;
 /** ピーク feature の重み。index が大きい（粗い）スケールほど重くする */
