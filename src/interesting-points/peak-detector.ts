@@ -36,6 +36,11 @@ export interface ScoreFeature {
    * それ自体で候補を作ったり周囲の候補をまとめて底上げしたりしないようにする
    */
   rankOnly?: boolean;
+  /**
+   * true なら合成スコアに加算せず、合成スコア = max(通常 feature の合計, weight × √value) とする。
+   * ピークとは別種の構造（線の交点など）を、強いピークを底上げせずに候補にする
+   */
+  standalone?: boolean;
 }
 
 /** stride 間隔のグリッド上の合成スコアと、その内訳 */
@@ -43,7 +48,7 @@ export interface ScoreMap {
   stride: number;
   cols: number;
   rows: number;
-  /** 合成スコア: Σ feature.weight × √feature.values（rankOnly の feature は含まない） */
+  /** 合成スコア: max(Σ 通常 feature の weight × √value, standalone feature の weight × √value)（rankOnly は含まない） */
   score: Float32Array;
   features: ScoreFeature[];
 }
@@ -79,6 +84,18 @@ const RANK_ONLY_PEAK_RADIUS = 0.1;
 const RANK_ONLY_ATTACH_RADIUS = 32;
 /** 対称中心 feature の重み */
 const SYMMETRY_WEIGHT = 2;
+/** 交点 feature: 円周の半径（px） */
+const JUNCTION_RADII = [8, 16, 32];
+/** 交点 feature: 円周のサンプル数 */
+const JUNCTION_SAMPLES = 36;
+/** 交点 feature: 腕（線）とみなす山の最低プロミネンス（円周の sd に対する比率） */
+const JUNCTION_MIN_PROMINENCE = 0.5;
+/** 交点 feature: 円周の sd がこの値で振幅ゲートが 1.0 になる */
+const JUNCTION_FULL_SD = 0.03;
+/** 交点 feature: 交点とみなす最低の腕の本数 */
+const JUNCTION_MIN_ARMS = 3;
+/** 交点 feature の重み */
+const JUNCTION_WEIGHT = 4;
 /** 円周サンプルの半径は平滑化半径の何倍か */
 const RING_RADIUS_RATIO = 2.5;
 /** 落差を小さい順に並べたとき何番目を採用するか（0 = 最小）。枝1本分の非降下を許容する */
@@ -328,10 +345,105 @@ const computeSymmetryFeature = (sat: SummedArea, grid: Grid): Float32Array => {
 };
 
 /**
+ * 円環プロファイル上の山（局所最大）のうち、プロミネンスが閾値以上のものの位置を out に書き、個数を返す
+ */
+const findProminentArms = (
+  profile: Float64Array,
+  minProminence: number,
+  out: Int32Array,
+): number => {
+  const m = profile.length;
+  let arms = 0;
+  for (let k = 0; k < m; k++) {
+    const v = profile[k];
+    if (v <= profile[(k + m - 1) % m] || v < profile[(k + 1) % m]) continue;
+    // 左右それぞれ、次の山に当たるまでの最小値との差の小さい方をプロミネンスとする
+    let left = v;
+    for (let j = 1; j < m; j++) {
+      const u = profile[(k + m - j) % m];
+      if (u > v) break;
+      left = Math.min(left, u);
+    }
+    let right = v;
+    for (let j = 1; j < m; j++) {
+      const u = profile[(k + j) % m];
+      if (u > v) break;
+      right = Math.min(right, u);
+    }
+    if (v - Math.max(left, right) >= minProminence) out[arms++] = k;
+  }
+  return arms;
+};
+
+/**
+ * 各グリッド点の「線の交点らしさ」を算出する。
+ *
+ * 半径 8/16/32px の円周上の平滑値を取り、プロミネンスのある山の数 = その点から放射する線（フィラメント）の本数
+ * とみなす。全半径で JUNCTION_MIN_ARMS 本以上なら交点。線 1 本の上は 2 本、平坦部は 0 本になる。
+ * ピークとは独立に「複数の線が 1 点に集まる結節」を拾う
+ */
+const computeJunctionFeature = (sat: SummedArea, grid: Grid): Float32Array => {
+  const { stride, cols, rows, width, height } = grid;
+  const values = new Float32Array(cols * rows);
+  const profile = new Float64Array(JUNCTION_SAMPLES);
+  const armIndices = new Int32Array(JUNCTION_SAMPLES);
+  const cos = Array.from({ length: JUNCTION_SAMPLES }, (_, k) =>
+    Math.cos((2 * Math.PI * k) / JUNCTION_SAMPLES),
+  );
+  const sin = Array.from({ length: JUNCTION_SAMPLES }, (_, k) =>
+    Math.sin((2 * Math.PI * k) / JUNCTION_SAMPLES),
+  );
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      const cx = gx * stride;
+      const cy = gy * stride;
+      let minArms = Infinity;
+      let minAmplitude = Infinity;
+      for (const r of JUNCTION_RADII) {
+        const sigma = Math.max(1, Math.round(r / 4));
+        let sum = 0;
+        let valid = 0;
+        for (let k = 0; k < JUNCTION_SAMPLES; k++) {
+          const px = Math.round(cx + r * cos[k]);
+          const py = Math.round(cy + r * sin[k]);
+          const v =
+            px < 0 || py < 0 || px >= width || py >= height ? NaN : boxMean(sat, px, py, sigma);
+          profile[k] = v;
+          if (!Number.isNaN(v)) {
+            sum += v;
+            valid++;
+          }
+        }
+        if (valid < JUNCTION_SAMPLES) {
+          minArms = 0;
+          break;
+        }
+        const mean = sum / valid;
+        let sumSq = 0;
+        for (let k = 0; k < JUNCTION_SAMPLES; k++) sumSq += (profile[k] - mean) ** 2;
+        const sd = Math.sqrt(sumSq / JUNCTION_SAMPLES);
+        if (sd === 0) {
+          minArms = 0;
+          break;
+        }
+        const arms = findProminentArms(profile, JUNCTION_MIN_PROMINENCE * sd, armIndices);
+        minArms = Math.min(minArms, arms);
+        minAmplitude = Math.min(minAmplitude, Math.min(1, sd / JUNCTION_FULL_SD));
+        if (minArms < JUNCTION_MIN_ARMS) break;
+      }
+      if (minArms < JUNCTION_MIN_ARMS) continue;
+      values[gy * cols + gx] = minAmplitude * Math.min(1, (minArms - JUNCTION_MIN_ARMS + 1) / 2);
+    }
+  }
+  return values;
+};
+
+/**
  * 全 feature を計算して合成スコアマップを作る。
  * feature はスケール別の「落差」（`peak{σ}`）と「局所コントラスト」（`contrast{σ}`）、
- * それに順位付け専用の「対称中心らしさ」（`symmetry`）。
+ * 単独で候補になる「線の交点らしさ」（`junction`）、順位付け専用の「対称中心らしさ」（`symmetry`）。
  * 落差は画面全体で大きな構造を、コントラストは画面の値域に対して小さくても周囲より明確に浮き出た構造を拾い、
+ * 交点はピークではない「複数の線が集まる結節」を候補にし、
  * 対称中心は「盤面がその点を中心に回転対称」という、ピークの強さとは別の手がかりで順位を上げる
  */
 export const computeScoreMap = (
@@ -368,6 +480,13 @@ export const computeScoreMap = (
   });
 
   features.push({
+    name: "junction",
+    scale: scales[0],
+    weight: JUNCTION_WEIGHT,
+    values: computeJunctionFeature(sat, grid),
+    standalone: true,
+  });
+  features.push({
     name: "symmetry",
     // NMS の抑制半径を広げないよう、スケールは最小にしておく
     scale: scales[0],
@@ -378,8 +497,14 @@ export const computeScoreMap = (
 
   const score = new Float32Array(grid.cols * grid.rows);
   for (const f of features) {
-    if (f.rankOnly) continue;
+    if (f.rankOnly || f.standalone) continue;
     for (let i = 0; i < score.length; i++) score[i] += f.weight * Math.sqrt(f.values[i]);
+  }
+  for (const f of features) {
+    if (!f.standalone) continue;
+    for (let i = 0; i < score.length; i++) {
+      score[i] = Math.max(score[i], f.weight * Math.sqrt(f.values[i]));
+    }
   }
   return { stride, cols: grid.cols, rows: grid.rows, score, features };
 };

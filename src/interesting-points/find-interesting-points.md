@@ -26,8 +26,9 @@ iterationBuffer (Uint32Array, width×height)
    - `contrast{σ}` = 落差 ÷ 半径 2.5σ の箱内の標準偏差（z=4 で飽和）。画面全体では小さくても
      周囲より明確に浮き出た小さな構造（花びら型の中心など）を拾う
   ↓
-4. 合成スコア = Σ weight × √value。weight はスケール i に対して 0.5 + 0.25 i（contrast も同じ重み）。
-   粗いスケールほど重く、複数スケールで一貫してピークになる大きな構造を優先する
+4. 合成スコア = max(Σ weight × √value, 4 × √junction)。weight はスケール i に対して 0.5 + 0.25 i
+   （contrast も同じ重み）。粗いスケールほど重く、複数スケールで一貫してピークになる大きな構造を優先する。
+   `junction` は加算ではなく max で合成し、ピークではない結節を候補にしつつ強いピークを底上げしない
   ↓
 5. 8近傍の局所最大を候補にする → 最大値×0.3 で足切り
   ↓
@@ -36,6 +37,13 @@ iterationBuffer (Uint32Array, width×height)
   ↓
 7. スコア順に、候補自身の支配的スケールに応じた半径で NMS → 最大 12 件
    （広い丘の上にある小さく鋭いピークは別物として残す）
+
+### `junction` feature（線の交点らしさ）
+
+各グリッド点について半径 8/16/32px の円周上の平滑値（36 サンプル）を取り、プロミネンス（円周の sd × 0.5）以上の
+山の数を「その点から放射する線の本数」とみなす。全半径で 3 本以上なら交点で、値 = 振幅ゲート（sd 0.03 で 1.0）×
+min(1, (本数 − 2) / 2)。線 1 本の上は 2 本、平坦部は 0 本なので 0 になる。
+s17 Sixfold Sigil の軸上の結節や s19 Beacon Spire の星型コピーのような、iteration の鞍点にある構造を拾う。
 
 ### `symmetry` feature（対称中心らしさ）
 
@@ -49,7 +57,8 @@ n=2 は直線が通るだけで成立するので使わない。
 ## 指標の追加
 
 スコアマップは `ScoreFeature`（名前・スケール・重み・グリッド値）の集合で、合成スコア = Σ weight × √value。
-現状は `peak{σ}` と `contrast{σ}`。別の指標を足すときは `computeScoreMap` で feature を 1 つ追加する。
+現状は `peak{σ}`・`contrast{σ}`（加算）、`junction`（standalone: max 合成）、`symmetry`（rankOnly: 順位付けのみ）。
+別の指標を足すときは `computeScoreMap` で feature を 1 つ追加する。
 デバッグUIのヒートマップには feature 名でそのまま出る。
 
 ## 検証
