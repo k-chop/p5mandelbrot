@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://p5mandelbrot.pages.dev/sitemap.xml
