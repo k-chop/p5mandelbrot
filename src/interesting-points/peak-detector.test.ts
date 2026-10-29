@@ -77,7 +77,7 @@ describe("findInterestingPoints (peak)", () => {
 
     const { debugData } = findInterestingPoints(buffer, SIZE, SIZE, N, { debug: true });
     expect(debugData.gridBlocks.length).toBeGreaterThan(0);
-    expect(Object.keys(debugData.gridBlocks[0].factors)).toContain("s3");
+    expect(Object.keys(debugData.gridBlocks[0].factors)).toContain("peak3");
   });
 
   it("peakMapToDebugBlocks はブロック数を上限内に収める", () => {

@@ -1,5 +1,5 @@
 import type { InterestingPoint } from "../find-interesting-points";
-import type { PeakScoreMap } from "../peak-detector";
+import type { ScoreMap } from "../peak-detector";
 import { encodePNG } from "./png";
 
 /** 期待点（正解データ）。tolerance 以内にマーカーがあれば検出成功とみなす */
@@ -159,7 +159,7 @@ export const renderScene = (
  * 色はマップ内の最大スコアで正規化する
  */
 export const renderHeatmap = (
-  map: PeakScoreMap,
+  map: ScoreMap,
   width: number,
   height: number,
   points: InterestingPoint[],

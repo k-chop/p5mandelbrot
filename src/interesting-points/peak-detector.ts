@@ -1,33 +1,45 @@
 import type { BlockDebugInfo, InterestingPoint } from "./find-interesting-points";
 
 /**
- * 峰検出のパラメータ
+ * 検出のパラメータ
  */
 export interface PeakDetectorOptions {
-  /** 平滑化の半径（px）。小さい順に並べる。各スケールで独立に峰を評価する */
+  /** 峰検出の平滑化半径（px）。小さい順に並べる。各スケールが1つの feature になる */
   scales?: number[];
   /** 候補点のグリッド間隔（px） */
   stride?: number;
   /** 円周サンプルの方向数 */
   directions?: number;
-  /** 採用する最低スコア（画像の iteration 値域に対する落差の比率） */
+  /** 採用する最低合成スコア */
   minScore?: number;
-  /** 近接した峰を抑制する距離（px）。省略時は短辺の5% */
+  /** 近接した候補を抑制する距離（px）。省略時は短辺の5% */
   suppressionRadius?: number;
   /** 返す最大件数 */
   maxPoints?: number;
 }
 
-/** スコアマップ。stride 間隔のグリッド上のスコアと、スケール別の内訳 */
-export interface PeakScoreMap {
+/**
+ * 合成スコアを構成する1指標。グリッド上の値（0以上）を持つ。
+ * 合成スコア = Σ weight × √value。別種の指標（収束点らしさ等）を足すときはここに追加する
+ */
+export interface ScoreFeature {
+  /** ヒートマップ等で表示する名前 */
+  name: string;
+  /** この指標が見ている構造の大きさ（px）。NMS の抑制半径に使う */
+  scale: number;
+  /** 合成スコアへの重み */
+  weight: number;
+  values: Float32Array;
+}
+
+/** stride 間隔のグリッド上の合成スコアと、その内訳 */
+export interface ScoreMap {
   stride: number;
   cols: number;
   rows: number;
-  /** 合成スコア: Σ scaleWeight(i) × √perScale[i]。複数スケールで一貫して峰になる点ほど高い */
+  /** 合成スコア: Σ feature.weight × √feature.values */
   score: Float32Array;
-  /** スケール別スコア。scales と同じ順 */
-  perScale: Float32Array[];
-  scales: number[];
+  features: ScoreFeature[];
 }
 
 const DEFAULT_SCALES = [3, 6, 12, 24, 48, 96];
@@ -35,10 +47,10 @@ const DEFAULT_STRIDE = 4;
 const DEFAULT_DIRECTIONS = 16;
 const DEFAULT_MIN_SCORE = 0.3;
 const DEFAULT_MAX_POINTS = 10;
-/** シーン内の最大スコアに対してこの比率未満の峰は捨てる */
+/** シーン内の最大スコアに対してこの比率未満の候補は捨てる */
 const RELATIVE_MIN_RATIO = 0.3;
-/** スケール別スコアを合成する重み。index が大きい（粗い）スケールほど重くする */
-const scaleWeight = (index: number): number => 0.5 + 0.25 * index;
+/** 峰 feature の重み。index が大きい（粗い）スケールほど重くする */
+const peakWeight = (index: number): number => 0.5 + 0.25 * index;
 /** 円周サンプルの半径は平滑化半径の何倍か */
 const RING_RADIUS_RATIO = 2.5;
 /** 落差を小さい順に並べたとき何番目を採用するか（0 = 最小）。枝1本分の非降下を許容する */
@@ -114,29 +126,31 @@ const boxMean = (sat: SummedArea, cx: number, cy: number, r: number): number => 
   return s / c;
 };
 
+/** グリッドの寸法。feature 計算関数に共通で渡す */
+interface Grid {
+  stride: number;
+  cols: number;
+  rows: number;
+  width: number;
+  height: number;
+}
+
 /**
- * 各グリッド点の「峰らしさ」をスケール別に算出する。
+ * 各グリッド点の「峰らしさ」を1スケール分算出する。
  *
  * 中心の平滑値から円周上の平滑値を引いた落差を全方向で求め、
  * 小さい方から ROBUST_MIN_RANK 番目を採用する。全方向で落ちている点（渦巻きやミニブロの中心）
- * だけが正のスコアを持ち、尾根（フィラメント）や平坦部は 0 になる
+ * だけが正の値を持ち、尾根（フィラメント）や平坦部は 0 になる
  */
-export const computePeakScoreMap = (
-  buffer: Uint32Array,
-  width: number,
-  height: number,
-  maxIteration: number,
-  options?: PeakDetectorOptions,
-): PeakScoreMap => {
-  const scales = options?.scales ?? DEFAULT_SCALES;
-  const stride = options?.stride ?? DEFAULT_STRIDE;
-  const directions = options?.directions ?? DEFAULT_DIRECTIONS;
-
-  const sat = buildSummedArea(normalizeIterations(buffer, maxIteration), width, height);
-  const cols = Math.floor(width / stride);
-  const rows = Math.floor(height / stride);
-  const score = new Float32Array(cols * rows);
-  const perScale = scales.map(() => new Float32Array(cols * rows));
+const computePeakFeature = (
+  sat: SummedArea,
+  grid: Grid,
+  sigma: number,
+  directions: number,
+): Float32Array => {
+  const { stride, cols, rows, width, height } = grid;
+  const values = new Float32Array(cols * rows);
+  const ring = sigma * RING_RADIUS_RATIO;
   const cos = Array.from({ length: directions }, (_, d) =>
     Math.cos((2 * Math.PI * d) / directions),
   );
@@ -145,39 +159,70 @@ export const computePeakScoreMap = (
   );
   const drops = new Float64Array(directions);
 
-  scales.forEach((sigma, si) => {
-    const ring = sigma * RING_RADIUS_RATIO;
-    for (let gy = 0; gy < rows; gy++) {
-      for (let gx = 0; gx < cols; gx++) {
-        const cx = gx * stride;
-        const cy = gy * stride;
-        const center = boxMean(sat, cx, cy, sigma);
-        if (Number.isNaN(center)) continue;
-        for (let d = 0; d < directions; d++) {
-          const px = Math.round(cx + ring * cos[d]);
-          const py = Math.round(cy + ring * sin[d]);
-          // 画像外や未計算の方向は「落ちていない」扱い。端で尾根が峰に化けるのを防ぐ
-          const v =
-            px < 0 || py < 0 || px >= width || py >= height ? NaN : boxMean(sat, px, py, sigma);
-          drops[d] = Number.isNaN(v) ? 0 : center - v;
-        }
-        const sorted = drops.sort();
-        const s = Math.max(0, sorted[ROBUST_MIN_RANK]);
-        perScale[si][gy * cols + gx] = s;
-        score[gy * cols + gx] += scaleWeight(si) * Math.sqrt(s);
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      const cx = gx * stride;
+      const cy = gy * stride;
+      const center = boxMean(sat, cx, cy, sigma);
+      if (Number.isNaN(center)) continue;
+      for (let d = 0; d < directions; d++) {
+        const px = Math.round(cx + ring * cos[d]);
+        const py = Math.round(cy + ring * sin[d]);
+        // 画像外や未計算の方向は「落ちていない」扱い。端で尾根が峰に化けるのを防ぐ
+        const v =
+          px < 0 || py < 0 || px >= width || py >= height ? NaN : boxMean(sat, px, py, sigma);
+        drops[d] = Number.isNaN(v) ? 0 : center - v;
       }
+      values[gy * cols + gx] = Math.max(0, drops.sort()[ROBUST_MIN_RANK]);
     }
-  });
-
-  return { stride, cols, rows, score, perScale, scales };
+  }
+  return values;
 };
 
 /**
- * スコアマップから峰を選出する。
+ * 全 feature を計算して合成スコアマップを作る。
+ * 現状の feature はスケール別の峰らしさ（`peak{σ}`）のみ
+ */
+export const computeScoreMap = (
+  buffer: Uint32Array,
+  width: number,
+  height: number,
+  maxIteration: number,
+  options?: PeakDetectorOptions,
+): ScoreMap => {
+  const scales = options?.scales ?? DEFAULT_SCALES;
+  const stride = options?.stride ?? DEFAULT_STRIDE;
+  const directions = options?.directions ?? DEFAULT_DIRECTIONS;
+
+  const sat = buildSummedArea(normalizeIterations(buffer, maxIteration), width, height);
+  const grid: Grid = {
+    stride,
+    cols: Math.floor(width / stride),
+    rows: Math.floor(height / stride),
+    width,
+    height,
+  };
+
+  const features: ScoreFeature[] = scales.map((sigma, i) => ({
+    name: `peak${sigma}`,
+    scale: sigma,
+    weight: peakWeight(i),
+    values: computePeakFeature(sat, grid, sigma, directions),
+  }));
+
+  const score = new Float32Array(grid.cols * grid.rows);
+  for (const f of features) {
+    for (let i = 0; i < score.length; i++) score[i] += f.weight * Math.sqrt(f.values[i]);
+  }
+  return { stride, cols: grid.cols, rows: grid.rows, score, features };
+};
+
+/**
+ * スコアマップから興味深いポイントを選出する。
  * 8近傍での局所最大 → minScore と最大値×RELATIVE_MIN_RATIO で足切り → スコア順に NMS（近接抑制）→ maxPoints 件
  */
 export const selectPeaks = (
-  map: PeakScoreMap,
+  map: ScoreMap,
   buffer: Uint32Array,
   width: number,
   height: number,
@@ -191,17 +236,17 @@ export const selectPeaks = (
   for (const s of score) if (s > maxScore) maxScore = s;
   const threshold = Math.max(minScore, maxScore * RELATIVE_MIN_RATIO);
 
-  // 各候補の支配的スケール（合成スコアへの寄与が最大のスケール）。NMS の抑制半径に使う
+  // 各候補の支配的スケール（合成スコアへの寄与が最大の feature のスケール）。NMS の抑制半径に使う
   const dominantScale = (idx: number): number => {
     let best = 0;
     let bestValue = -1;
-    map.perScale.forEach((p, i) => {
-      const v = scaleWeight(i) * Math.sqrt(p[idx]);
+    for (const f of map.features) {
+      const v = f.weight * Math.sqrt(f.values[idx]);
       if (v > bestValue) {
         bestValue = v;
-        best = map.scales[i];
+        best = f.scale;
       }
-    });
+    }
     return best;
   };
 
@@ -252,7 +297,7 @@ export const selectPeaks = (
 };
 
 /**
- * 峰検出で興味深いポイントを求める（computePeakScoreMap + selectPeaks）
+ * 興味深いポイントを求める（computeScoreMap + selectPeaks）
  */
 export const findPeaks = (
   buffer: Uint32Array,
@@ -260,8 +305,8 @@ export const findPeaks = (
   height: number,
   maxIteration: number,
   options?: PeakDetectorOptions,
-): { points: InterestingPoint[]; map: PeakScoreMap } => {
-  const map = computePeakScoreMap(buffer, width, height, maxIteration, options);
+): { points: InterestingPoint[]; map: ScoreMap } => {
+  const map = computeScoreMap(buffer, width, height, maxIteration, options);
   return { points: selectPeaks(map, buffer, width, height, options), map };
 };
 
@@ -270,9 +315,9 @@ const MAX_DEBUG_BLOCKS = 40000;
 
 /**
  * スコアマップをデバッグUI（ヒートマップ）用の BlockDebugInfo 配列に変換する。
- * factors にはスケール別スコアを `s{σ}` の名前で入れる
+ * factors には各 feature の値を feature 名で入れる
  */
-export const peakMapToDebugBlocks = (map: PeakScoreMap): BlockDebugInfo[] => {
+export const peakMapToDebugBlocks = (map: ScoreMap): BlockDebugInfo[] => {
   const { stride, cols, rows } = map;
   const step = Math.max(1, Math.ceil(Math.sqrt((cols * rows) / MAX_DEBUG_BLOCKS)));
   const blocks: BlockDebugInfo[] = [];
@@ -280,9 +325,7 @@ export const peakMapToDebugBlocks = (map: PeakScoreMap): BlockDebugInfo[] => {
     for (let gx = 0; gx < cols; gx += step) {
       const idx = gy * cols + gx;
       const factors: Record<string, number> = {};
-      map.scales.forEach((sigma, i) => {
-        factors[`s${sigma}`] = map.perScale[i][idx];
-      });
+      for (const f of map.features) factors[f.name] = f.values[idx];
       blocks.push({
         bx: gx * stride,
         by: gy * stride,
